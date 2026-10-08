@@ -205,6 +205,8 @@ public class VillageManager {
       if (anyDirty) {
          VillageSavedData.get(level).setDirty();
       }
+
+      org.millenaire.chat.NpcGossipScheduler.tick(level);
    }
 
    private void tickVillageActivation(ServerLevel level, Village v) {

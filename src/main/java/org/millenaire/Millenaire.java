@@ -430,6 +430,7 @@ public class Millenaire {
          if (event.getEntity() instanceof ServerPlayer serverPlayer) {
             TravelBookNavigationState.clear(serverPlayer.getUUID());
             PlanPreviewRequestPayload.clearPrePicked(serverPlayer.getUUID());
+            org.millenaire.chat.NpcChatService.onPlayerLogout(serverPlayer);
          }
       });
       NeoForge.EVENT_BUS.addListener(PlayerLoggedInEvent.class, event -> {
@@ -461,6 +462,8 @@ public class Millenaire {
                spawnQueue.trySpawnNext(overworld);
             }
          }
+
+         org.millenaire.chat.NpcChatService.tickSessions(event.getServer());
 
          for (ServerPlayer player : event.getServer().getPlayerList().getPlayers()) {
             ServerLevel playerLevel = player.serverLevel();

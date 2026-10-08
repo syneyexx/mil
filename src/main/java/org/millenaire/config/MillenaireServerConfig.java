@@ -43,6 +43,17 @@ public final class MillenaireServerConfig {
    public final IntValue raidingRate;
    public final BooleanValue legacyAutoConvert;
    public final IntValue legacyAutoConvertMaxPngs;
+   public final BooleanValue npcChatEnabled;
+   public final ConfigValue<String> npcChatBaseUrl;
+   public final ConfigValue<String> npcChatModel;
+   public final ConfigValue<String> npcChatApiKey;
+   public final IntValue npcChatTimeoutSeconds;
+   public final IntValue npcChatMaxConcurrent;
+   public final IntValue npcChatMinMillisBetweenMessages;
+   public final IntValue npcChatChatRange;
+   public final IntValue npcChatLeaveRange;
+   public final BooleanValue npcChatGossip;
+   public final IntValue npcChatGossipExpiryDays;
 
    public static int getDefaultClearMargin() {
       try {
@@ -233,6 +244,52 @@ public final class MillenaireServerConfig {
          .translation("millenaire.config.legacyAutoConvertMaxPngs")
          .defineInRange("legacyAutoConvertMaxPngs", 2500, 0, 5000);
       builder.pop();
+      builder.comment("Free-form NPC chat backed by an OpenAI-compatible chat completions API").push("npcChat");
+      this.npcChatEnabled = builder.comment("Master switch for NPC free chat. When false, no HTTP calls are made.")
+         .translation("millenaire.config.npcChat.enabled")
+         .define("enabled", true);
+      this.npcChatBaseUrl = builder.comment("API base URL without a trailing slash (e.g. https://api.x.ai/v1)")
+         .translation("millenaire.config.npcChat.baseUrl")
+         .define("baseUrl", "https://api.x.ai/v1");
+      this.npcChatModel = builder.comment("Model id sent in the chat completions body")
+         .translation("millenaire.config.npcChat.model")
+         .define("model", "grok-4-latest");
+      this.npcChatApiKey = builder.comment(
+            new String[]{
+               "API key for NPC chat. Leave empty to read MILLENAIRE_NPC_API_KEY from the environment.",
+               "Never log this value. An empty key disables the model while still storing player quotes."
+            }
+         )
+         .translation("millenaire.config.npcChat.apiKey")
+         .define("apiKey", "");
+      this.npcChatTimeoutSeconds = builder.comment("HTTP request timeout in seconds")
+         .translation("millenaire.config.npcChat.timeoutSeconds")
+         .defineInRange("timeoutSeconds", 12, 4, 30);
+      this.npcChatMaxConcurrent = builder.comment("Maximum concurrent model requests on this server")
+         .translation("millenaire.config.npcChat.maxConcurrent")
+         .defineInRange("maxConcurrent", 4, 1, 8);
+      this.npcChatMinMillisBetweenMessages = builder.comment("Minimum milliseconds between chat send packets per player")
+         .translation("millenaire.config.npcChat.minMillisBetweenMessages")
+         .defineInRange("minMillisBetweenMessages", 1500, 0, 60000);
+      this.npcChatChatRange = builder.comment("Maximum distance to open or keep talking to a villager (blocks)")
+         .translation("millenaire.config.npcChat.chatRange")
+         .defineInRange("chatRange", 4, 2, 6);
+      this.npcChatLeaveRange = builder.comment("Distance at which an open chat session closes (blocks). Always at least chatRange.")
+         .translation("millenaire.config.npcChat.leaveRange")
+         .defineInRange("leaveRange", 6, 4, 10);
+      this.npcChatGossip = builder.comment("Allow same-culture rumor spreading from free chat")
+         .translation("millenaire.config.npcChat.gossip")
+         .define("gossip", true);
+      this.npcChatGossipExpiryDays = builder.comment("Days before an inactive rumor expires")
+         .translation("millenaire.config.npcChat.gossipExpiryDays")
+         .defineInRange("gossipExpiryDays", 30, 7, 120);
+      builder.pop();
+   }
+
+   public int effectiveNpcChatLeaveRange() {
+      int chat = this.npcChatChatRange.getAsInt();
+      int leave = this.npcChatLeaveRange.getAsInt();
+      return Math.max(chat, leave);
    }
 
    static {

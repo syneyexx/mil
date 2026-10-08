@@ -39,6 +39,7 @@ public final class DevCommand {
       SwitchVillageControlCommand.registerUnder(dev);
       GrantCultureControlCommand.registerUnder(dev);
       HireDevCommand.registerUnder(dev);
+      NpcChatDevCommand.registerUnder(dev);
       dispatcher.register((LiteralArgumentBuilder)Commands.literal("millenaire").then(dev));
    }
 }

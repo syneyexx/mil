@@ -49,7 +49,10 @@ public final class ModPayloads {
       new ModPayloads.ClientboundDef(OpenHireScreenPayload.TYPE, OpenHireScreenPayload.STREAM_CODEC),
       new ModPayloads.ClientboundDef(UnlockingToastPayload.TYPE, UnlockingToastPayload.STREAM_CODEC),
       new ModPayloads.ClientboundDef(PlanPreviewPayload.TYPE, PlanPreviewPayload.STREAM_CODEC),
-      new ModPayloads.ClientboundDef(ProjectCancelPromptPayload.TYPE, ProjectCancelPromptPayload.STREAM_CODEC)
+      new ModPayloads.ClientboundDef(ProjectCancelPromptPayload.TYPE, ProjectCancelPromptPayload.STREAM_CODEC),
+      new ModPayloads.ClientboundDef(org.millenaire.chat.NpcChatOpenPayload.TYPE, org.millenaire.chat.NpcChatOpenPayload.STREAM_CODEC),
+      new ModPayloads.ClientboundDef(org.millenaire.chat.NpcChatLinePayload.TYPE, org.millenaire.chat.NpcChatLinePayload.STREAM_CODEC),
+      new ModPayloads.ClientboundDef(org.millenaire.chat.NpcChatClosedPayload.TYPE, org.millenaire.chat.NpcChatClosedPayload.STREAM_CODEC)
    );
 
    private ModPayloads() {
@@ -60,7 +63,7 @@ public final class ModPayloads {
    }
 
    public static void register(RegisterPayloadHandlersEvent event) {
-      PayloadRegistrar registrar = event.registrar("2");
+      PayloadRegistrar registrar = event.registrar("3");
       if (FMLEnvironment.dist.isClient()) {
          Map<Type<?>, IPayloadHandler<?>> handlers = ModPayloads.ClientHandlers.handlers();
          Set<Type<?>> orphans = new HashSet<>(handlers.keySet());
@@ -123,6 +126,9 @@ public final class ModPayloads {
       registrar.playToServer(HireActionPayload.TYPE, HireActionPayload.STREAM_CODEC, HireActionPayload::handleOnServer);
       registrar.playToServer(ToggleStancePayload.TYPE, ToggleStancePayload.STREAM_CODEC, ToggleStancePayload::handleOnServer);
       registrar.playToServer(PlanPreviewRequestPayload.TYPE, PlanPreviewRequestPayload.STREAM_CODEC, PlanPreviewRequestPayload::handleOnServer);
+      registrar.playToServer(NpcChatOpenRequestPayload.TYPE, NpcChatOpenRequestPayload.STREAM_CODEC, NpcChatOpenRequestPayload::handleOnServer);
+      registrar.playToServer(NpcChatSendPayload.TYPE, NpcChatSendPayload.STREAM_CODEC, NpcChatSendPayload::handleOnServer);
+      registrar.playToServer(NpcChatCloseRequestPayload.TYPE, NpcChatCloseRequestPayload.STREAM_CODEC, NpcChatCloseRequestPayload::handleOnServer);
    }
 
    private static <T extends CustomPacketPayload> void registerNoop(PayloadRegistrar registrar, ModPayloads.ClientboundDef<T> def) {
@@ -171,6 +177,9 @@ public final class ModPayloads {
          put(map, UnlockingToastPayload.TYPE, ClientPayloadHandler::handleUnlockingToast);
          put(map, PlanPreviewPayload.TYPE, ClientPayloadHandler::handlePlanPreview);
          put(map, ProjectCancelPromptPayload.TYPE, ClientPayloadHandler::handleProjectCancelPrompt);
+         put(map, org.millenaire.chat.NpcChatOpenPayload.TYPE, ClientPayloadHandler::handleNpcChatOpen);
+         put(map, org.millenaire.chat.NpcChatLinePayload.TYPE, ClientPayloadHandler::handleNpcChatLine);
+         put(map, org.millenaire.chat.NpcChatClosedPayload.TYPE, ClientPayloadHandler::handleNpcChatClosed);
          return map;
       }
 

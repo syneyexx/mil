@@ -4,11 +4,15 @@ import com.mojang.logging.LogUtils;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.item.Item;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.millenaire.DisplayUtils;
 import org.millenaire.item.ItemHelper;
 import org.millenaire.language.DisplayNameResolver;
+import org.millenaire.network.NpcChatOpenRequestPayload;
 import org.millenaire.network.VillagerInfoPayload;
 import org.millenaire.village.panel.PanelLine;
 import org.slf4j.Logger;
@@ -52,6 +56,15 @@ public class VillagerInfoScreen extends AbstractMillenaireScreen {
             parchX, parchY, 256, button -> TravelBookNavHelper.openVillagerDetail(this, this.data.cultureKey(), this.data.villagerTypeKey())
          );
       }
+
+      this.addRenderableWidget(
+         Button.builder(Component.translatable("key.millenaire.talk"), btn -> {
+               PacketDistributor.sendToServer(new NpcChatOpenRequestPayload(this.data.entityId()), new CustomPacketPayload[0]);
+               this.onClose();
+            })
+            .bounds(parchX + 256 - 16 - 70, parchY + 200 - 36, 70, 20)
+            .build()
+      );
 
       this.updatePaginationButtons();
    }

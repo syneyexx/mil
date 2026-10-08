@@ -4854,5 +4854,20 @@
   "panel.millenaire.player_buildings.gift_available": "Aangeboden aan donateurs.",
   "panel.millenaire.village_has_no_walls": "Dit dorp heeft geen muren.",
   "panel.millenaire.wall_segment_resources_needed": "Benodigde grondstoffen voor het volgende muursegment",
-  "panel.millenaire.wall_segment_in_construction": "Muursegment in aanbouw"
+  "panel.millenaire.wall_segment_in_construction": "Muursegment in aanbouw",
+  "key.millenaire.talk": "Praten",
+  "hint.millenaire.talk": "%s — Praten",
+  "gui.millenaire.npcchat.send": "Verstuur",
+  "gui.millenaire.npcchat.placeholder": "Zeg iets…",
+  "gui.millenaire.npcchat.thinking": "…luistert aandachtig…",
+  "gui.millenaire.npcchat.no_model": "Ik heb nu niets meer te zeggen.",
+  "gui.millenaire.npcchat.busy": "Een ogenblik — ik denk nog na.",
+  "gui.millenaire.npcchat.too_far": "Je bent te ver weggelopen om verder te praten.",
+  "gui.millenaire.npcchat.asleep": "Zzz… laat me slapen.",
+  "gui.millenaire.npcchat.combat": "Niet nu — er is gevaar!",
+  "gui.millenaire.npcchat.refused": "Ik praat niet met jou.",
+  "gui.millenaire.npcchat.closed": "Het gesprek is afgelopen.",
+  "gui.millenaire.npcchat.failed": "Mijn woorden schieten tekort… vraag het later nog eens.",
+  "command.millenaire.npcchat.selfcheck.pass": "NPC-chat self-check: PASS",
+  "command.millenaire.npcchat.selfcheck.fail": "NPC-chat self-check: %s"
 }

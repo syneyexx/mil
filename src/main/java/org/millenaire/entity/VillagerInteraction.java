@@ -773,6 +773,10 @@ public final class VillagerInteraction {
    }
 
    private static String resolveReputationLabel(int reputation, ResourceLocation cultureId) {
+      return resolveReputationLabelPublic(reputation, cultureId);
+   }
+
+   public static String resolveReputationLabelPublic(int reputation, ResourceLocation cultureId) {
       List<ReputationLabel> labels = ModCultures.getReputationLabels(cultureId);
       String label = VillageReputation.getLabel(reputation, labels);
       return label != null ? label : "Unknown";

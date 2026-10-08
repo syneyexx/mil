@@ -4854,5 +4854,20 @@
   "travelbook.millenaire.seljuk.building.hamlettownhall_a_inn.desc": "A room built for the traders in the town hall.",
   "travelbook.millenaire.seljuk.building.hamlettownhallplayer_a_inn.desc": "A room built for the traders in the town hall.",
   "message.millenaire.panel_no_building": "§6[Panel]§r No linked building.",
-  "message.millenaire.panel_building_not_found": "§6[Panel]§r Building not found."
+  "message.millenaire.panel_building_not_found": "§6[Panel]§r Building not found.",
+  "key.millenaire.talk": "Talk",
+  "hint.millenaire.talk": "%s — Talk",
+  "gui.millenaire.npcchat.send": "Send",
+  "gui.millenaire.npcchat.placeholder": "Say something…",
+  "gui.millenaire.npcchat.thinking": "…listens carefully…",
+  "gui.millenaire.npcchat.no_model": "I have nothing more to say right now.",
+  "gui.millenaire.npcchat.busy": "Give me a moment — I am still thinking.",
+  "gui.millenaire.npcchat.too_far": "You have walked too far to keep talking.",
+  "gui.millenaire.npcchat.asleep": "Zzz… leave me to my rest.",
+  "gui.millenaire.npcchat.combat": "Not now — there is danger!",
+  "gui.millenaire.npcchat.refused": "I will not speak with you.",
+  "gui.millenaire.npcchat.closed": "The conversation ends.",
+  "gui.millenaire.npcchat.failed": "I lose my words… ask me again later.",
+  "command.millenaire.npcchat.selfcheck.pass": "NPC chat self-check: PASS",
+  "command.millenaire.npcchat.selfcheck.fail": "NPC chat self-check: %s"
 }

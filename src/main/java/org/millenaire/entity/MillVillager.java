@@ -342,6 +342,11 @@ public class MillVillager extends PathfinderMob {
                return InteractionResult.PASS;
             }
 
+            if (player.isShiftKeyDown()) {
+               org.millenaire.chat.NpcChatService.handleOpen(serverPlayer, this.getId());
+               return InteractionResult.SUCCESS;
+            }
+
             if (this.goalScheduler != null) {
                VillagerNavDriver nav = this.navManager;
                VillagerNavDriver.NavDiagnostics diag = nav.getDiagnostics();

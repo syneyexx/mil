@@ -28,8 +28,12 @@ import org.millenaire.client.gui.UnlockingToast;
 import org.millenaire.client.gui.VillageBookScreen;
 import org.millenaire.client.gui.VillageChiefScreen;
 import org.millenaire.client.gui.VillagePanelScreen;
+import org.millenaire.client.gui.NpcChatScreen;
 import org.millenaire.client.gui.VillagerInfoScreen;
 import org.millenaire.client.gui.WandDebugScreen;
+import org.millenaire.chat.NpcChatClosedPayload;
+import org.millenaire.chat.NpcChatLinePayload;
+import org.millenaire.chat.NpcChatOpenPayload;
 import org.millenaire.commerce.TradeMenu;
 import org.millenaire.language.DisplayNameResolver;
 import org.millenaire.language.SentenceRenderer;
@@ -48,6 +52,18 @@ public final class ClientPayloadHandler {
          ClientLanguageCache.update(cultureId, payload.languageScore());
          Minecraft.getInstance().setScreen(new VillagerInfoScreen(payload));
       });
+   }
+
+   public static void handleNpcChatOpen(NpcChatOpenPayload payload, IPayloadContext context) {
+      context.enqueueWork(() -> NpcChatScreen.open(payload));
+   }
+
+   public static void handleNpcChatLine(NpcChatLinePayload payload, IPayloadContext context) {
+      context.enqueueWork(() -> NpcChatScreen.handleLine(payload));
+   }
+
+   public static void handleNpcChatClosed(NpcChatClosedPayload payload, IPayloadContext context) {
+      context.enqueueWork(() -> NpcChatScreen.handleClosed(payload));
    }
 
    public static void handleUnlockingToast(UnlockingToastPayload payload, IPayloadContext context) {
