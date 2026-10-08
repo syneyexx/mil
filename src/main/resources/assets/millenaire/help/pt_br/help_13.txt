@@ -1,0 +1,34 @@
+version:3.4
+<darkblue>Perguntas frequentes
+
+<darkblue>Os aldeãos falam em uma língua diferente da minha. Isso é normal?
+
+Todos os aldeãos do Millénaire falam em "sua" língua, como o híndi para os indianos ou o francês para os normandos. Se você joga em uma língua diferente, "aprenderá" a língua deles interagindo com eles (comércio, missões...). Conforme você "aprende" a língua deles, o Millénaire fornecerá traduções, primeiro dos nomes dos edifícios, depois dos tipos de aldeãos e, por fim, dos diálogos dos aldeãos.
+
+<darkblue>Minha aldeia normanda precisa de blocos de madeira normanda e não consigo fazê-los. O que posso fazer?
+
+Os blocos de madeira normanda são feitos por um carpinteiro a partir de madeira. Espere até que sua aldeia construa uma "casa do carpinteiro" e um casal se instale lá. Paciência!
+
+<darkblue>Minha aldeia japonesa precisa de sapê e não consigo fazê-lo. O que posso fazer?
+
+Os japoneses produzem sapê a partir de trigo. Se eles próprios não estão colhendo o suficiente, venda um pouco para acelerar a produção.
+
+<darkblue>Construí minha casa perto da aldeia e os aldeãos a destruíram para construir outra coisa. Isso é normal?
+
+Sim. O território da aldeia pertence a eles; veja o mapa para conhecer seus limites. Se você quer construir na aldeia, compre um terreno com o líder.
+
+<darkblue>Alguns aldeãos morreram. Eles vão ressurgir?
+
+Sim, os aldeãos ressurgem toda noite, pouco depois do pôr do sol. Apenas evite dormir logo em seguida.
+
+<darkblue>Meus aldeãos não estão tendo filhos ou os filhos não estão crescendo. O que está acontecendo?
+
+Novos filhos podem aparecer quando um casal está em casa durante a noite. Da mesma forma, eles crescem à noite quando estão em casa. Alguns alimentos (bebidas, doces) aumentam as chances de bebês nascerem, e outros (pão, cereais) aceleram o crescimento das crianças.
+
+<darkblue>Um edifício da aldeia foi danificado. Eles vão consertá-lo?
+
+Não, os aldeãos não consertam edifícios (embora às vezes melhorias posteriores possam substituir os blocos faltantes), principalmente por motivos de desempenho. Você precisará consertá-lo por conta própria.
+
+<darkblue>Minha aldeia está sem espaço. Posso ajudar?
+
+Sim, olhando o mapa da aldeia para ver as áreas onde eles não podem construir. Cobrir um lago, rio ou desfiladeiro com uma camada de terra é suficiente para tornar a área utilizável pelos aldeãos.

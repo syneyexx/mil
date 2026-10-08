@@ -1,0 +1,6 @@
+{
+  "parent": "millenaire:block/mock_marker_carpet_base",
+  "textures": {
+    "icon": "minecraft:item/porkchop"
+  }
+}

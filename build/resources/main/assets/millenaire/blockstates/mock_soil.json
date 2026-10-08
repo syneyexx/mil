@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "crop=wheat": { "model": "millenaire:block/mock_soil_wheat" },
+    "crop=rice": { "model": "millenaire:block/mock_soil_rice" },
+    "crop=turmeric": { "model": "millenaire:block/mock_soil_turmeric" },
+    "crop=sugarcane": { "model": "millenaire:block/mock_soil_sugarcane" },
+    "crop=potato": { "model": "millenaire:block/mock_soil_potato" },
+    "crop=netherwart": { "model": "millenaire:block/mock_soil_netherwart" },
+    "crop=vine": { "model": "millenaire:block/mock_soil_vine" },
+    "crop=maize": { "model": "millenaire:block/mock_soil_maize" },
+    "crop=cacao": { "model": "millenaire:block/mock_soil_cacao" },
+    "crop=carrot": { "model": "millenaire:block/mock_soil_carrot" },
+    "crop=flower": { "model": "millenaire:block/mock_soil_flower" },
+    "crop=cotton": { "model": "millenaire:block/mock_soil_cotton" }
+  }
+}

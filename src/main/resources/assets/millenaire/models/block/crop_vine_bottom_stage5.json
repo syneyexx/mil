@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/crop",
+  "textures": {
+    "crop": "millenaire:block/crop_vine_bottom_stage5"
+  },
+  "render_type": "minecraft:cutout"
+}

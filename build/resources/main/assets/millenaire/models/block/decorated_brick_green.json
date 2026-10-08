@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "down": "millenaire:block/painted_brick_green",
+    "east": "millenaire:block/decorated_brick_green",
+    "north": "millenaire:block/decorated_brick_green",
+    "particle": "millenaire:block/decorated_brick_green",
+    "south": "millenaire:block/decorated_brick_green",
+    "up": "millenaire:block/painted_brick_green",
+    "west": "millenaire:block/decorated_brick_green"
+  }
+}

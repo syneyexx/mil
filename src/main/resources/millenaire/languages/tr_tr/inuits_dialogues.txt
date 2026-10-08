@@ -1,0 +1,106 @@
+newchat;key:rain,tag:notraining,weigth:10
+v1;0;Kar mı yağıyor?
+v2;30;Kara benziyor ama soğuk değil gibi.
+
+newchat;key:beautiful,weigth:10
+v1;0;Neredeyiz, daha önce hiç görmediğim bir yer. Aynı gibi ama farklı hissettiriyor.
+v2;30;Şamanlar yardımsever ruhların kutsal topraklarında olduğumuzu söylüyor, bu yüzden burası bu kadar harika!
+
+newchat;key:sunset,weigth:10
+v1;0;Yorgunum, bugün yeterince hızlı geçmiyor...
+
+newchat;key:seasons,weigth:10
+v1;0;Sence bu yıl av iyi olacak mı?
+v2;30;Bu havalarla kim bilir.
+v1;60;Burada mevsimlerin bir mantığı yok.
+
+newchat;key:normans,weigth:5
+v1;0;Tuhaf insanlarla tanıştım, kendilerine Normanlar diyorlar?
+v2;30;Evet Normanlar harikadır ama kesinlikle çok şeye ihtiyaçları var.
+v1;60;Ne demek istiyorsun?
+v2;90;Geçen gün biri geldi ve ona eşyalar vererek evimi boşalttım, görünüşe göre daha fazlasına ihtiyacı vardı.
+v1;120;Zavallı adam.
+
+newchat;key:japanese,v1:adult,v2:adult,weigth:5
+v1;0;O Japonlar balığı nasıl hazırlayacağını kesinlikle biliyor!
+v2;30;Balığı "hazırlamak" mı? Sadece pişirdiklerini mi kastediyorsun?
+v1;60;Hayır, yemeklerini tüm o özenli yöntemler ve tatlarla servis ediyorlar demek istiyorum.
+v2;90;Yemek sadece bozulmadan farklı tat alabilir mi?
+v1;120;Evet, bir dahaki sefer onları kontrol ettiğimde benimle gelmelisin!
+
+newchat;key:murderer,weigth:10
+v1;0;Kazadan sonra ona ne olduğunu duydun mu?
+v2;30;Kaza olsun olmasın, insan öldürmek yanlıştır.
+v1;60;Evet ama onu köyden atmamız gerekiyor muydu? Tek başına çıldırdığını duydum.
+v2;90;Mecburduk! En azından burada soğuk değil ve dışarıda donarak ölmeyecek.
+v1;120;Bu daha mı iyi? Şimdi tek başına yaşamaya zorlanıyor!
+
+newchat;key:kys,weigth:10
+v1;0;Yaşlı ne zaman ölmeye gidecek?
+v2;30;Burada bunu yapmamız gerektiğini sanmıyorum, bu yeni dünya çok daha rahat!
+v1;60;Sanırım... ama hâlâ hayatta olduğunu görmek tuhaf.
+
+newchat;key:visitors,weigth:10
+v1;0; Bu yer tuhaf, tuhaf insanlarla dolu.
+v2;30;$name gibi mi demek istiyorsun?
+v1;60;Şey $name sadece bir kişi, diğer hepsini demek istiyorum.
+
+newchat;key:endermen,weigth:10
+v1;0;Yaşlının o uzun, ince, korkutucu insanlar hakkında ne dediğini duydun mu?
+v2;30;Onların Gölge-İnsanlar olduğunu mu? Bilmiyorum...
+v1;60;Yine de mantıklı! Eğer gerçekten kutsal bir topraktaysak, böyle çarpılmış olurlardı!
+v2;90;Ama eğer kutsal bir topraktaysak, Gölge-İnsanlar burada ne arıyor?
+v2;120;Oh... şey, bilmiyorum...
+
+newchat;key:likingrain,tag:raining,v1:adult,v2:adult,weigth:10
+v1;0;Karı severim.
+v2;42;Bir İnuit için iyi şey!
+
+newchat;key:meat,weigth:10
+v1;0;Sanırım et depolarımız azalıyor, bittiğinde nefret ediyorum.
+v1;30;Et güveçle aynı şey değil...
+v2;60;Ama güveçlerin çoğunda et var?
+v1;90;Evet, ama aynı şey değil...
+
+newchat;key:carribou,weigth:10
+v1;0;Bütün karibular nerede? Karibu eti özledim.
+v2;30;Birçok kez avlandık ama hiç karibu bulamadık.
+v2;60;Ama bizona benzeyen bir sürü şey bulduk!
+v1;60;Iyy, bizondan nefret ederim, karibu daha iyi.
+v2;90;O zaman balık ye, ondan bol bol var.
+
+newchat;key:countingcows,v1:child,v2:adult,weigth:10
+v1;0;Burada yapacak pek bir şey yok.
+v2;30;İyi işte, sakin.
+v1;60;Ve sıkıcı...
+v2;75;Bir delik kazabilir veya bir kar iglosu yapabilirsin!
+v1;110;Kendi kar iglom mı?!
+
+newchat;key:shamans,v1:child,v2:adult,weigth:5
+v1;0;Şamanları kıskanıyorum, keşke onlar gibi ruhlarla konuşabilseydim.
+v2;30;Şamanın sana öğretip öğretmeyeceğini görebilirsin?
+v1;60;Belki... ama bazı ruhlar korkutucu.
+v2;70;Doğru, dikkat edilmesi gereken korkutucu ruhlar her zaman olacak.
+
+newchat;key:kids1,v1:child,v2:child,weigth:10
+v1;0;Benim babam seninkinden çok daha güçlü.
+v2;30;Benim babam köyün en güçlüsü, salak!
+v1;60;Hayal kurmaya devam et. Babam seninkini iki dakikada yener.
+
+newchat;key:badflirt,v1:adult,v2:child,v1:male,v2:female,weigth:11
+v1;0;Söyle bakalım güzelim, bu akşam ne yapıyorsun?
+v2;40;$targetfirstname, sana zaten söyledim, bir başkasına söz verildim!
+
+newchat;key:hunting,weigth:10
+v1;0;Becerilerimi yine geliştirdim.
+v2;30;Hızla harika bir avcı oluyorsun!
+v1;90;Gerçekten öyle mi düşünüyorsun?
+
+newchat;key:foodpreparer,building:foodpreparer,weigth:10
+v1;0;Yemek hazırlayıcısından gelen pişen et kokusunu severim.
+v2;30;Bilmiyorum, ben genellikle etimi çiğ tercih ederim, tadı değiştiriyor.
+v1;60;Hey ben o değişen tadı seviyorum!
+
+newchat;key:mikiruk,v1:adult,v2:adult,weigth:8
+v1;0;Iyy, buradaki bizonların ne kadar küçük ve hastalıklı olduğuna bak.
+v2;42;Yabancı tüccar onlara "inekler..?" diyor

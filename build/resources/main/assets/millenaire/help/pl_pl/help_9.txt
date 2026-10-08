@@ -1,0 +1,16 @@
+version:3.4
+<darkblue>Hindusi
+
+Pochodzą z północnych Indii i zamieszkują trzy rodzaje wiosek: osady wojskowe oparte na forcie, osady rolnicze skupione wokół domu sołtysa oraz osady pałacowe, którym przewodzi królewski pałac z dwoma towarzyszącymi przysiółkami. Mówią w hindi, lecz ich wypowiedzi są stopniowo tłumaczone w miarę „uczenia się” ich języka przez gracza w trakcie rozmów.
+
+<darkblue>Wyjątkowe przedmioty i bloki
+
+-Hindusi uprawiają ryż i kurkumę. Gracz może poprosić wodza, aby nauczył go uprawy tych roślin.
+-Cegły surowe i wypalane, powstające przez suszenie wilgotnych cegieł na słońcu. Wilgotne cegły wytwarzane są w formie do cegieł (do nabycia w wiosce).
+-Hinduskie płaskorzeźby, przedstawiające bóstwa i wykonywane przez rzeźbiarza.
+-Pyszne rasgulla, słodycze przygotowywane z trzciny cukrowej.
+
+<darkblue>Specjalne przepisy (bez kształtu)
+
+-Jeden ryż i jedna kurkuma dają curry wegetariańskie.
+-Jeden ryż, jedna kurkuma i surowy kurczak dają murgh curry.

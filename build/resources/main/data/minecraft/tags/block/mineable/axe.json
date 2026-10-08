@@ -1,0 +1,26 @@
+{
+  "replace": false,
+  "values": [
+    "millenaire:timber_frame_plain",
+    "millenaire:timber_frame_cross",
+    "millenaire:thatch",
+    "millenaire:timber_frame_stairs",
+    "millenaire:thatch_stairs",
+    "millenaire:timber_frame_slab",
+    "millenaire:thatch_slab",
+    "millenaire:wooden_bars",
+    "millenaire:wooden_bars_rosette",
+    "millenaire:wooden_bars_indian",
+    "millenaire:charpoy",
+    "millenaire:futon",
+    "millenaire:straw_bed",
+    "millenaire:locked_chest",
+    "millenaire:village_panel",
+    "millenaire:wooden_sliding_door",
+    "millenaire:japanese_sliding_door",
+    "millenaire:paper_wall",
+    "millenaire:rosette",
+    "millenaire:silk_worm",
+    "millenaire:import_table"
+  ]
+}

@@ -1,0 +1,82 @@
+//villager.cookbrick=This is strong stone.
+//villager.drybrick=We need stone to make our homes.
+//villager.gatherbrick=I'm carrying too much stone.
+
+female.becomeadult=Ichil k'a't ha ichki.
+male.becomeadult=Ichil k'a't ti tz'ak-b' ha ah tz'on.
+
+mayan_shaman.gopray.chosen=U- orasion tal teech
+mayan_shaman.greeting=Ts'aakik tal teech.
+
+villager.becomeadult=La la la la.
+
+villager.bringbackresourceshome=Ichil chuy ti yaab se'es ti kuch.
+
+villager.choptrees=Ya'ul pak.
+
+villager.construction=Ichil k'ab'eet ichil k'a'am et-meyah.
+villager.construction=Meyah meyah meyah.
+
+villager.delivergoodshousehold=Ti yaab han-ha ti kuch.
+
+villager.gathergoods=Ichil chuk u- se'es sut otoch.
+
+villager.getgoodshousehold=Ichil k'ab'eet he'-la a-d'a'ax-tak k'am- otoch
+
+villager.gethouseresources=Ichil chik nah yam ichil utz nah.
+
+villager.getresourcesforbuild=Yaab' ti- yaab' tunich.
+
+villager.goplay=Ichil kolom uk chun su'uk.
+
+villager.childobserveagriculture=I wonder what would happen if corn grains were heated very fast?
+villager.childobserveconstruction=Why can't we ever build in something else than stone, I wonder?
+villager.childobservesmithing=Everybody here uses obsidian for tools, but there must be something stronger!
+villager.childobserveproducefood=Why do the adults get all the cacauhaa? It's not fair!
+
+villager.childeatcacaobeans=Beans alone are a little bitter. I wonder if it would be better soaked in milk?
+
+
+villager.harvestmaize=Ki' k'aaxal ki' hoch.
+
+villager.harvestturmeric=A'-la yooch hoch si muk' ti han-ha.
+
+villager.maketools=Man in-wah a'-b'a'ax.
+
+villager.makeweapons=U- k'ab wa'yeh nik k'a'am.
+
+villager.plantmaize=K'aaxal tuuxtik gnat ichil k'a'am hoch.
+
+villager.plantsaplings=Ichil tz'ap tulakal he'-la -che'.
+
+villager.plantturmeric=Yooch men u- han-ha.
+
+villager.scultmayan=P'e k'in ichil k'am ti b'om.
+
+villager.slaughterchicken=Ah kax si gnat b'ak'.
+
+villager.calltoarms=Kin-s-ab u- k'as hun.
+villager.calltoarms=Ti k'ab!
+villager.calltoarms=U- k'in yam in-ti'a'al!
+villager.hitbyplayer=Eh! Ma' k'ool!
+
+villager.gopray.chosen=Ichil t'an u- orasion.
+villager.gopray=Pixan an gnat.
+villager.gopray=Pixan taka gnat ichil k'a'am hoch.
+
+villager.gorest=He'lel bisik na.
+villager.gorest=Ichil chuy ti wenel beora.
+villager.gorest=Yaaawn.
+
+villager.greeting=Ba'ax tumben?
+villager.greeting=Biix men u- pixan ts'aakik teech?
+villager.greeting=Biix yam teech pamilya?
+villager.greeting=Ola, $name!
+villager.greeting=Pixan tuuxtik gnat k'aaxal.
+villager.greeting=Tu'ux yam teech lu'um?
+villager.greeting=U- ka'an yam k'iinal behla'e'.
+
+villager.sellercoming=Táan in taal séeb!
+villager.tradecomplete=Dios bo'otik, suunak a taal.
+
+villager.makerasgulla=In-wah mo'nol pall yam k'oh.

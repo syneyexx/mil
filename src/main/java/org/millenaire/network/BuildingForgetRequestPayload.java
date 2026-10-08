@@ -1,0 +1,108 @@
+package org.millenaire.network;
+
+import com.mojang.logging.LogUtils;
+import io.netty.buffer.ByteBuf;
+import java.util.UUID;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import org.millenaire.building.BuildingId;
+import org.millenaire.building.BuildingInstance;
+import org.millenaire.building.BuildingPlanSet;
+import org.millenaire.culture.ModCultures;
+import org.millenaire.village.ControlledProjectsService;
+import org.millenaire.village.Village;
+import org.millenaire.village.VillageId;
+import org.millenaire.village.VillageSavedData;
+import org.slf4j.Logger;
+
+public record BuildingForgetRequestPayload(String villageUuid, String buildingId) implements CustomPacketPayload {
+   private static final Logger LOGGER = LogUtils.getLogger();
+   private static final int MAX_STRING_LENGTH = 256;
+   private static final PayloadRateLimiter RATE_LIMITER = new PayloadRateLimiter(200L);
+   public static final Type<BuildingForgetRequestPayload> TYPE = new Type(ResourceLocation.fromNamespaceAndPath("millenaire", "building_forget_request"));
+   public static final StreamCodec<ByteBuf, BuildingForgetRequestPayload> STREAM_CODEC = StreamCodec.of(
+      BuildingForgetRequestPayload::encode, BuildingForgetRequestPayload::decode
+   );
+
+   private static void encode(ByteBuf buf, BuildingForgetRequestPayload payload) {
+      ByteBufCodecs.STRING_UTF8.encode(buf, payload.villageUuid);
+      ByteBufCodecs.STRING_UTF8.encode(buf, payload.buildingId);
+   }
+
+   private static BuildingForgetRequestPayload decode(ByteBuf buf) {
+      String villageUuid = (String)ByteBufCodecs.STRING_UTF8.decode(buf);
+      if (villageUuid.length() > 256) {
+         villageUuid = villageUuid.substring(0, 256);
+      }
+
+      String buildingId = (String)ByteBufCodecs.STRING_UTF8.decode(buf);
+      if (buildingId.length() > 256) {
+         buildingId = buildingId.substring(0, 256);
+      }
+
+      return new BuildingForgetRequestPayload(villageUuid, buildingId);
+   }
+
+   public Type<? extends CustomPacketPayload> type() {
+      return TYPE;
+   }
+
+   public static void handleOnServer(BuildingForgetRequestPayload payload, IPayloadContext context) {
+      context.enqueueWork(() -> {
+         if (context.player() instanceof ServerPlayer player) {
+            if (player.level() instanceof ServerLevel serverLevel) {
+               ServerLevel overworld = serverLevel.getServer().getLevel(Level.OVERWORLD);
+               if (overworld != null) {
+                  UUID villageUuid;
+                  UUID buildingUuid;
+                  try {
+                     villageUuid = UUID.fromString(payload.villageUuid);
+                     buildingUuid = UUID.fromString(payload.buildingId);
+                  } catch (IllegalArgumentException e) {
+                     return;
+                  }
+
+                  VillageSavedData savedData = VillageSavedData.get(overworld);
+                  Village village = savedData.getVillageManager().getVillage(new VillageId(villageUuid));
+                  if (village == null) {
+                     LOGGER.warn("[Millenaire] BuildingForget: village {} not found", payload.villageUuid);
+                  } else if (!village.isControlledBy(player.getUUID())) {
+                     LOGGER.warn("[Millenaire] BuildingForget: player {} is not owner of village {}", player.getName().getString(), payload.villageUuid);
+                  } else if (!ServerPayloadGuards.isWithinVillageReach(player, village)) {
+                     LOGGER.warn("[Millenaire] BuildingForget: player {} too far from village {}", player.getName().getString(), payload.villageUuid);
+                  } else if (RATE_LIMITER.acquire(player.getUUID())) {
+                     BuildingInstance building = village.findBuildingById(new BuildingId(buildingUuid));
+                     if (building == null) {
+                        LOGGER.warn("[Millenaire] BuildingForget: building {} not found in village {}", payload.buildingId, payload.villageUuid);
+                     } else {
+                        String displayName = building.getPlanId().getPath();
+                        if (building.getPlanSetId() != null) {
+                           BuildingPlanSet set = ModCultures.getBuildingPlanSet(building.getPlanSetId());
+                           if (set != null && set.nativeName() != null) {
+                              displayName = set.nativeName();
+                           }
+                        }
+
+                        boolean forgotten = village.forgetBuilding(overworld, building);
+                        if (forgotten) {
+                           savedData.setDirty();
+                           player.sendSystemMessage(Component.translatable("gui.millenaire.controlled_projects.forgotten", new Object[]{displayName}));
+                           PacketDistributor.sendToPlayer(player, ControlledProjectsService.buildPayload(village, overworld), new CustomPacketPayload[0]);
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      });
+   }
+}

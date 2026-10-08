@@ -1,0 +1,34 @@
+version:3.4
+<darkblue>İtibar ve köy başı
+
+Millénaire'deki her köyün sizin hakkınızda bir görüşü vardır; başlangıçta tarafsızdır ve eylemlerinize göre değişir. Bu itibar çok önemlidir: birçok ödül yalnızca iyi bir itibarla mümkündür ve itibarınız fazla kötüleşirse köylüler sizinle ticaret yapmayı reddedebilir. İtibarınızı köy başıyla konuşarak (<darkblue>sağ tık<black>) kontrol edebilirsiniz.
+
+İtibarınızı artırmanın temel yolu köyle ticaret yapmaktır. Hem alımlar hem de satışlar fiyatla orantılı olarak itibarınızı artırır. Onlar için görevleri yerine getirerek de itibarınızı yükseltebilirsiniz. Tersine, bir köye saldırmak ya da bazı görevlerde başarısız olmak itibarınıza zarar verir.
+
+Ayrıca <darkblue>her kültürle ayrı bir itibarınız<black> vardır. Bu itibar, o kültürün köyleriyle gerçekleştirdiğiniz tüm etkileşimlerden etkilenir ve aynı kültürün diğer tüm köyleriyle yapacağınız ticareti de etkiler. Örneğin, bir Norman köyünde çok iyi bir itibarınız varsa, diğer Norman köyleri de sizi (biraz) daha çok sevecektir. Her kültürle olan itibarınızı bilgi ekranında ("M" tuşu varsayılan) kontrol edebilirsiniz.
+
+<darkblue>Belirli bir itibar gerektiren eylemler
+
+<darkblue>Köy parşömeni satın almak
+
+Yeterince iyi bir itibarınız olduğunda köy başından bir köy parşömeni satın alabilirsiniz. Bu parşömen, köyün çeşitli tabelalarında verilen tüm bilgileri içerir.
+
+<darkblue>Ev satın almak
+
+Yeterince iyi bir itibara ulaştığınızda köy başıyla konuşarak bir ev (ya da üzerine inşa edebileceğiniz bir arsa) satın alabilirsiniz. Eviniz, devam eden inşaat tamamlandıktan sonra köy tarafından inşa edilecektir. Köyün etrafındaki diğer alanın aksine, bu bina size aittir ve onu istediğiniz gibi düzenleyebilirsiniz.
+
+<darkblue>Tahıl yetiştirmeyi öğrenmek
+
+Bazı kültürlerin kullandığı Millénaire'e özgü bitkileri yetiştirmeyi öğrenebilirsiniz. Yeterli itibara sahip olduğunuzda köy başıyla iletişime geçin.
+
+<darkblue>Ek eşyalar satın almak
+
+Bazı değerli eşyalar köyde iyi bir itibara sahip olmanızı gerektirir. Bir eşyayı satın almak için gereken itibara sahip değilseniz, bu durum ticaret ekranında belirtilir.
+
+<darkblue>Ek görevler
+
+Yaratılış Görevi de dahil bazı görevler yalnızca iyi bir itibarla başlatılabilir (bkz. <darkblue>"görevler"<black>).
+
+<darkblue>Bir kültürde önder olmak
+
+En yüksek itibara (<darkblue>"doğal önder"<black>) ulaştığınızda, önderi olacağınız bir köy kurabilirsiniz (bkz. <darkblue>"köy kurmak"<black>).

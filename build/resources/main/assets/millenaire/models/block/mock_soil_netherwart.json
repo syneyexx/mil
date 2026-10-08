@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "millenaire:block/soil_netherwart"
+  },
+  "render_type": "minecraft:cutout"
+}

@@ -1,0 +1,96 @@
+female.becomeadult=Mainey socha tha kisi rajkumar sey shaadi hogi...
+
+female.gorest=Main ab aaraam karane jaoonga.
+female.gorest=Main thak gayi hoon.
+female.gorest=Subah sey kaam kar rahi hoon.
+
+armysmith.makeweapons=Hathiyaar bananey mein, upkaran bananey sey zyaada maan hai.
+
+lumberman.bringbackresourceshome=Itna saara lakri ghar ley jaaney mein mushkil hooga.
+lumberman.choptrees=Yeh lakri kaat-tey kaat-tey meri zindagi beet jayegi.
+lumberman.gathergoods=Ab saari lakriyan ikaththa karta hoon.
+lumberman.plantsaplings=Jitna zyaada ped lagaoonga, utna hi aagey jaakey aaram raheyga.
+
+pandit.gopray.chosen=Main mandir ki dekh bhaal nahin karoonga toh kaun karega?
+pandit.greeting=Jeetey raho.
+
+peasant.cookbrick= Dekho, aag mein kaisi badhiyan pakti hai yeh intein.
+
+peasant.drybrick=Ghar bananey key liye kitney inth chahiyey?
+
+peasant.gatherbrick=Aaj suraj teez hai, inth jaldi sookh rahaien hain.
+
+peasant.getresourcesforbuild=Hmmm, ek tan ka inth  chahiye, dau tan paththar ..
+
+peasant.slaughterchicken=Bahut kha liya ghas-phoos.
+peasant.slaughterchicken=Main murgiyon se napharat karata hoon ve zor se aur khae jaane ke alaava any kisee bhee any uddeshy kee seva nahin karate hain.
+
+peasant.construction=Hindu vastu-kala desh videsh mein mashoor hai.
+peasant.construction=Iskey baad, main lal kila banaoonga.
+
+peasantwife.delivergoodshousehold=Uffh, itna sara khana akeley kaisey leh jaoongi.
+peasantwife.getgoodshousehold=Inkey liye chahey jitna bhi khana lao, kam padta hai.
+peasantwife.gethousethresources=Sab kuch toh thakur ko dey dena padta hai.
+peasantwife.makerasgulla= Bacchon koh rasgulla bahut pasand hai.
+
+sculptor.scult=Murtikala ched aur gaanth ki kala hai.
+smith.maketools=Sabhi merey banaye huye upkaran istamal kartey hain, phir bhi mujhey neecha samachtey hain.
+
+male.becomeadult=Main badey hokar yodhdha ban-na chahta tha.
+
+male.gorest=Main ab aaraam karane jaoonga.
+male.gorest=Main thak gaya hoon.
+male.gorest=Subah sey kaam kar raha hoon.
+
+merchant_adivasi.keepstall= Sab kuch mere parivar dwara kheti ki gayi hai.
+merchant_adivasi.greeting=Main van se a raha hoon
+
+merchant_oriental.keepstall=Dekho yeh phaarsa ka gaurav!
+merchant_oriental.greeting=Salam alaikum, bhai!
+
+merchant_villagewoman.keepstall=Ghara ka bana khana, bhukhe yaatriyon ke lie!
+merchant_villagewoman.greeting=Ek akeelii mahila ke lie safar karna mushkil hai
+
+villager.becomeadult=Khel kud bahut ho gaya, ab kaam par chalo.
+
+villager.goplay=Mujjhey mitti sey khelna accha lagta hai.
+
+villager.childobserveagriculture=Phasalon ko ropan karana har din bahut ubaoo lagata hai. Mujhe saahas ka jeevan chaahie!
+villager.childobserveconstruction=Nirmaan mere lie bahut adhik kaam kee tarah dikhata hai.
+villager.childobservesmithing=Kitne mazbut hathiyaar!
+villager.childobserveproducefood=Meri Ma sabase achchhe rasagulle banaati hai.
+
+villager.childeatsugarcane=Ma kahati hain ki yah daanton ko nukasaan pahunchaata hai, lekin yah bahut achchha hai!
+
+villager.harvestrice=Adbhut baarish ke mausam kee vajah se, ab hamaare paas ek majaboot phasal hai..
+
+villager.harvestturmeric=Haldi ki kheti kartey kartey merey haath peeley ho gayein hain.
+
+villager.plantrice=Is saal barish achchi hui toh phasal accha hoga.
+
+villager.plantturmeric=Haldi toh sabhi ko chahiyein.
+
+villager.calltoarms=Dushmano ki haar.
+villager.calltoarms=Jeet hamari hoogi.
+villager.calltoarms=Sab apney apney hathiyar utha lo!
+villager.hitbyplayer=Arre! Dhyan se!
+
+villager.gopray.chosen=Mandir jaaney ka samay ho gaya.
+villager.gopray=Bhagwan, bas aap hi ka sahara hai.
+villager.gopray=Hey Bhagwan, is baar phasal achhi ho.
+
+villager.greeting=Aaj bahut garmi hai.
+villager.greeting=Ghar par sa theek hain?
+villager.greeting=Kya haal hai?
+villager.greeting=Kya khabar hai, $name-ji!?
+villager.greeting=Kya tum se kale pani se pare ho?
+villager.greeting=Namaste, $name-ji!
+villager.greeting=Yeh barish kyun nahin ho rahiee hai?
+
+villager.inspectconstruction=Mujhe lagata hai ki hamaare raajamistree aise achchhe kaam karate hain.
+
+villager.sellercoming=Main abhi aa raha hoon!
+villager.tradecomplete=Sauda pura hua, phir aaiyega.
+
+// Feminine forms — Hindi verbs inflect for speaker gender at the present tense.
+female.sellercoming=Main abhi aa rahi hoon!

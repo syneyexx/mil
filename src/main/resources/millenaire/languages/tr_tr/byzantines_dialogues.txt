@@ -1,0 +1,473 @@
+newchat;key:sun,tag:notraining,weigth:18
+v1;0;Güneşli günleri severim!
+v2;30;Kim sevmez ki?
+
+newchat;key:nicevillage,weigth:10
+v1;0;Sevimli küçük köyümüzü görmek her zaman bir zevk, değil mi?
+v2;30;Tabii ki, bu bizim çabalarımızın meyvesi!
+
+newchat;key:sunZombie,tag:notraining,weigth:2
+v1;0;Güneşli günleri severim!
+v2;30;Kim sevmez ki?
+v1;60;Ben sevmem.
+v2;120;Neden sevmiyorsun?
+v1;150;Güneş yakar! Dışarıda olmaktan nefret ediyorum!
+v2;180;Zombi gibi davranıyorsun!
+v1;210;Belki de öyleyim...
+
+newchat;key:nothomeyet,weigth:6
+v1;0;Güzel küçük köyümüzü görmek her zaman bir zevk, değil mi?
+v2;30;Tabii ki! Bu yerde çok zaman harcadık.
+v1;60;Neredeyse evimiz gibi, buraya gelmeden önce olduğu gibi.
+v2;90;Burası şimdi bizim evimiz, bunu kabul etmeliyiz.
+v1;120;Biliyorum, zamanla kabul edeceğim...
+
+newchat;key:ishome,weigth:6
+v1;0;Güzel küçük köyümüzü görmek her zaman bir zevk, değil mi?
+v2;30;Tabii ki! Bu yerde çok zaman harcadık.
+v1;60;Neredeyse evimiz gibi, buraya gelmeden önce olduğu gibi.
+v2;90;Burası şimdi bizim evimiz, bunu kabul etmeliyiz.
+v1;120;Gerçekten öyle, bu konuşma bana bunu fark ettirdi.
+
+newchat;key:harvest,weigth:10
+v1;0;Buğday bu yıl çok iyi büyüyor, üzümler de öyle. Harika değil mi?
+v2;30;Evet, öyle görünüyor: Buradaki tuhaf havaya teşekkür etmemiz gerek.
+v1;60;Bana mantıklı gelmese bile!
+
+newchat;key:lightning,weigth:7
+v1;0;Geçirdiğimiz fırtınayı hatırlıyor musun? Yani gerçekten şiddetli olanı!
+v2;30;Tabii ki. Hasadımızı neredeyse mahvediyordu. Doğa oldukça etkileyici, ha?
+v1;60;Etkileyici bir şey. Ama beni neredeyse yıldırım çarpıyordu!
+v2;100;Evinde değil miydin? Fırtına sırasında dışarıda olmanın tehlikeli olduğunu bilirsin!
+v1;120;Yaşa ve öğren.
+
+newchat;key:lightningPig,weigth:1,v1:adult,v2:adult
+v1;0;Kendimi iyi hissetmiyorum...
+v2;30;Neyin var? Hasta mısın?
+v1;60;Hayır, b-b-bir şey hatırladım.
+v2;100;Çok kötü görünüyorsun. Hasta olmadığından emin misin?
+v1;120;H-hayır, sadece k-korktum.
+v2;150;Ne oldu?
+v1;180;S-son fırtınada, köy dışında yürüyordum. Köye fırtınadan önce dönemeyeceğimi biliyordum. Bir ağacın altına saklandım.
+v2;210;Köyün dışında hayatını riske attın! Ölebilirdin!
+v1;240;Şey, güvendeydim. Ama sonra bir domuz gördüm. Yıldırım ona çarptı. Ve ölü d-domuz... K-kalktı ve b-bizim gibi hareket etti, p-parlak bir k-kılıçla beni k-kovaladı!
+v2;290;Saçmalıyorsun. Kabus görmüş olmalısın.
+v1;320;Doğruydu! Doğru! Doğru! Doğru!
+v2;350;Çıldırmışsın. Git biraz şarap iç ve sakinleş.
+v1;380;Y-yapacağım. Belki yardımı olur.
+
+newchat;key:souvlaki,v1:adult,v2:adult,v1:male,v2:female,weigth:10
+v1;0;Ah... Souvlaki, tek gerçek yemek!
+v2;30;Kutsal Meryem bizi korusun...
+v1;60;Kutsal üçleme bize güç versin!
+v2;100;Amin
+v1;130;Amin...
+v2;190;Şimdi tuzu nereye koydum?
+
+newchat;key:loneVillage,weigth:10
+v1;0;Sıkıcı. Burada her şey hep aynı.
+v2;30;En azından huzurlu.
+v1;60;Bizimki gibi uzak bir köy için özel bir şey yok!
+
+newchat;key:city,v1:adult,v2:adult,weigth:2
+v1;0;Gençken kaşif olmak, yeni topraklar keşfetmek ve ilginç yeni insanlarla tanışmak istiyordum. Ama şimdi? Bu uzak küçük köyde sıkışıp kaldım. Gidip yeni yerleri ziyaret etmek istiyorum.
+v2;30;Ama diğer köyde fazla fark bulamayacaksın. Hepimiz neredeyse aynıyız.
+v1;60;Köylerden bahsetmiyorum. Kasabalardan, hatta şehirden bahsediyorum!
+v2;90;ŞEHİR mi? Konstantinopolis'i mi kastediyorsun?
+v1;120;Evet! Görkemli imparatorluğumuzun merkezi. Dünyanın harikası.
+v1;150;Orada 500.000'den fazla insan yaşıyor, hayal edebiliyor musun?!
+v2;180;Bana imkansız geliyor. Tek bir yerde 500.000 insan? Hayal kurmaya devam et!
+
+newchat;key:wine,v1:adult,v2:adult,v1:male,v2:male,weigth:10
+v1;0;Şarabı yalnız içme!
+v2;30;Birlikte içmek daha eğlenceli!
+v1;50;Şaraba!
+v2;70;Şerefe!
+
+newchat;key:kids1,v1:child,v2:child,notrel:sibling,weigth:10
+v1;0;Benim babam seninkinden daha güçlü.
+v2;30;Hayır! Benim babam köyün en güçlüsü!
+v1;60;Hayır! Benim babam imparatorluğun en güçlüsü!
+v2;90;İmkansız! Benim babam dünyanın en güçlüsü!
+v1;120;Bahse girerim babam seninkini iki vuruşta yener!
+v2;150;Babanı dövüşe hazırla!
+
+newchat;key:kids2,v1:child,v1:male,v2:child,v2:female,weigth:10
+v1;0;Kızlar aptaldır.
+
+newchat;key:kids3,v2:child,v2:male,v1:child,v1:female,weigth:10
+v1;0;Bebeğimi gördün mü? Bulamıyorum...
+v2;30;Kılıcımı geri ver, sen de geri al!
+v1;60;Onu çaldın! Hırsız!
+
+newchat;key:clothes1,v1:adult,v1:female,v2:adult,v2:female,weigth:10
+v1;0;Yeni elbiselerimi gördün mü?
+v2;30;Gerçek bir güzelsin canım. Her şey sana yakışıyor!
+v1;60;Ama ben senin kadar güzel değilim!
+v2;90;Ohh bu doğru değil, $targetfirstname!
+
+newchat;key:clothes2,v1:adult,v1:female,v2:adult,v2:female,weigth:1
+v1;0;Yeni kıyafetimi gördün mü?
+v2;30;Bir güzelsin. Her şey sana yakışıyor, sevgili $targetfirstname!
+v1;60;Ama ben senin kadar güzel değilim!
+v2;90;Doğru.
+v1;100;!!!
+
+newchat;key:clothes3,v1:adult,v1:female,v2:adult,v2:male,weigth:5
+v1;0;Yeni elbiselerimi gördün mü, $targetfirstname?
+v2;30;Eski elbiselerinin sana çok daha iyi yakıştığını düşünüyorum.
+v1;60;NE?
+v2;70;Hayır.. Hayır! Güzelsin! Bu yeni... şeyleri sevdim!
+
+newchat;key:clothes4,v1:adult,v1:female,v2:adult,v2:male,weigth:5
+v1;0;Yeni elbisemi beğendin mi?
+v2;30;Eskisi sana daha çok yakışıyordu.
+v1;60;NE?
+v2;70;Hey $targetfirstname, sadece benim fikrim.
+v1;90;En azından dürüstsün!
+
+newchat;key:girl,v1:adult,v1:female,v2:child,v2:male,rel:parent,weigth:5
+v2;0;Bir kızı sevdiğinde ne yapmalısın?
+v1;30;Ona iltifat et ve ona iyi davran.
+v2;60;Hayır! Bu imkansız! O zaman diğerleri benim hakkımda ne düşünür?
+v1;90;Eğer onu gerçekten sevseydin, diğerlerini umursamazdın.
+
+newchat;key:householdTry,v1:adult,v1:female,v2:child,v2:female,rel:parent,weigth:10
+v1;0;Sana bir evin bakımını öğretme zamanı.
+v2;30;Harika, neyle başlayacağız? Souvlaki yapabilir miyim? Lütfeen!
+v1;60;Önce temizliği ne kadar iyi yaptığını görelim.
+v2;90;Tamam, ama sonra bana souvlaki yapmayı öğreteceksin, söz mü?
+v1;120;Söz.
+
+newchat;key:doll,v1:adult,v1:male,v2:child,v2:female,rel:parent,weigth:5
+v2;0;Bana bu yeni bebeği alır mısın? Benim dışımda herkesin yeni bir tane var...
+v1;30;Sihirli kelime nedir?
+v2;60;Bana LÜTFEN yeni bir bebek alır mısın?
+v1;90;Tamam, ama artık karşılık vermeyeceğine söz vermelisin!
+v2;120;Söz!
+
+newchat;key:woodSword,v1:adult,v1:male,v2:child,v2:male,rel:parent,weigth:5
+v2;0;Of...
+v1;30;Berbat görünüyorsun! Ne oldu?
+v2;60;Şey, benim dışımda herkesin ahşap bir kılıcı var.
+v2;80;Sonra bana saldırmaya karar verdiler!
+v2;100;Bana da bir tane almalısın!
+v1;120;Yaraların ve izlerin için boya kullandığını görüyorum. Güzel deneme!
+v2;150;Her neyse! Lütfen bana bir kılıç ver!
+v1;180;Kılıçlar tehlikelidir. Sana kılıç yok!
+
+newchat;key:pride1,v1:adult,v1:male,v2:adult,v2:male,v1:vtype:architect_byzantine,weigth:3
+v1;0;Binalarımız o kadar güzel ki, eserlerimizi görmek her zaman harika!
+v2;30;O Maya halkı da çok güzel yapılar inşa ediyor.
+v1;60;Bu tür ucubelerle beni sıkma. Bizim binalarımız çok daha iyi görünüyor!
+v2;90;Şey...
+v1;100;Hain! Milli gururun yok mu?
+
+newchat;key:pride2,weigth:10
+v1;0;Biz Romalılar başardıklarımızla gerçekten gurur duyabiliriz!
+v2;30;Tabii ki! Gördüğün her şey bizim tarafımızdan yapıldı!
+v1;60;Dünya tarihinin en güçlü imparatorluğu!
+v2;90;Diğer uluslar bizim şanımızda yıkanmalı.
+v1;120;Yıkanmalılar! Biz hükümdarlarız!
+
+newchat;key:pride3,weigth:10
+v1;0;Roma İmparatorluğu bir kez daha dünyayı yönetecek!
+v2;30;Yöneteceğiz!
+v1;60;O zaman her şey daha iyi olacak!
+v2;90;Evet!
+v1;100;İmparatorluğa şerefe!
+v2;110;Şerefe!
+
+newchat;key:rain,tag:notraining,weigth:10
+v1;0;Yağmur yağacak. Yakında.
+v2;30;Ben de hissedebiliyorum.
+v1;60;Tuhaf. Yağmur yağana kadar hep aynı sayıda gün geçiyor.
+v2;100;Sen de mi öyle düşünüyorsun?
+v2;125;Burada hayat tuhaf, değil mi?
+v1;155;Kesinlikle!
+
+newchat;key:weird1,v2:child,weigth:1
+v1;0;Şu domuza bak! Sevimli, değil mi?
+v2;30;WAAAaaah, git!
+v1;60;Domuzlardan mı korkuyorsun?
+v2;80;H-hayır! Değilim!
+v1;110;Hahahahahaha! İşte bu komik!
+
+newchat;key:weird2,weigth:1
+v2;0;Ahh... Güzel souvlaki. Bir ısırık ister misin?
+v1;30;*Isırır*
+v1;40;Teşekkür ederim! Souvlakiyi severim.
+v2;70;Kim sevmez ki!
+v1;100;Souvlaki üzerine biraz toprak koymayı denedin mi?
+v2;140;...
+v2;150;Hayır?
+v1;170;Bazen yaparım... Ah... Geçen yıl souvlakim yere düştüğünde başladı her şey... Lezzetli!
+v2;220;Dur! Souvlakini toprağa koyup yiyor musun? Ne halt...?
+v1;260;Ama tadı güzel!
+v2;280;Sen gerçekten delisin.
+
+newchat;key:weird3,weigth:1
+v1;0;Bir domuza binmek istiyorum!
+v2;30;Neden?
+v1;60;Eğlenceli!
+v2;80;Neden bir domuza binmek istersin ki?
+v1;110;Çünkü eğlenceli!
+v2;120;Delisin.
+
+newchat;key:chatter1,v1:female,v2:female,v1:adult,v2:adult,weigth:15
+v1;0;Odununun sırrını duydun mu hiç?
+v2;30;Hayır, onun neyi var?
+v1;60;Elma topluyor ve onları Normanlara satıyormuş!
+v2;90;Olamaz! Ve parayı kendine mi saklıyor?
+v1;120;Tabii ki!
+
+newchat;key:chatter2,v1:female,v2:female,v1:adult,v2:adult,weigth:15
+v1;0;Kocam bir baronun yakında köyümüzü ziyaret edeceğini söyledi!
+v2;30;Neden buraya gelsin?
+v2;40;Bu kadar güçlü, kudretli ve yakışıklı bir adam...
+v1;70;Ne? Onları beğeniyor musun?
+v2;100;Çekici olduklarını kabul etmelisin!
+
+newchat;key:chatter3,v1:female,v2:female,v1:adult,v2:adult,v1:hasspouse,v2:hasspouse,weigth:15
+v1;0;Komşu köyde hafifmeşrep bir kadın var!
+v1;20;Söylendiğine göre, köyümüzün erkekleri bile oraya gitmiş!
+v2;60;Korkunç haber! Kocama soracağım!
+v1;90;Benimki masum gibi görünüyor. Seninkinden emin değilim, canım!
+v2;120;Umarım o da öyledir. Öyle olsa iyi olur.
+
+newchat;key:chatter4,v1:female,v2:female,v1:adult,v2:adult,,v1:hasspouse,weigth:15
+v1;0;Çocukların oynadığını görmeyi seviyorum!
+v1;20;Bu hep bana bebek istemeyi düşündürüyor!
+v2;50;Karşılayabileceğinden emin misin?
+v2;70;Çocuklar pahalıdır!
+v1;100;Burada endişe yok! Adamımın yeterinden fazla parası var.
+
+newchat;key:chatter5,v1:female,v2:female,v1:adult,v2:adult,v2:hasspouse,weigth:15
+v1;0;Canım, kocan bir ayyaş!
+v2;15;Bunu nasıl söylersin?
+v1;45;Kocan dün gece sarhoş bir şekilde evimize geldi!
+v1;70;Bir koyunla evlenmek istediğini söyledi.
+v1;100;Ve büyük bir düğün töreni olacağını!
+v1;130;Lütfen, adamının kontrolünü yeniden ele al.
+v1;150;Gerçekten ürkütücü.
+v2;180;Tamam tamam, onu cezalandıracağım!
+v2;210;Ona şarap yok!
+
+newchat;key:chatter6,v1:female,v2:female,v1:adult,v2:adult,weigth:15
+v1;0;Ekmeğin çok lezzetli! Sırrın ne?
+v2;30;İçine biraz şeker eklemen yeterli.
+v1;60;Sahi mi? Daha fazlası yok mu?
+v2;90;Bu kadar! Farkı tadacaksın.
+
+newchat;key:chatter7,v1:female,v2:female,v1:adult,v2:adult,v2:hasspouse,weigth:15
+v1;0;Dün gece seni ziyaret eden adam kimdi?
+v2;30;Hangi adam?
+v1;40;Pencerenden gizlice çıkan adam!
+v1;45;Fark etmediğimi sanma!
+v2;60;Nasıl cüret edersin..? Kocama her zaman sadık oldum ve hâlâ öyleyim.
+v1;80;Evet, evet. Yerinde olsam ben de öyle derdim.
+v2;110;Bu adil değil! Hakkımda dedikodu yayma.
+
+newchat;key:chatter8,v1:female,v2:female,v1:adult,v2:adult,weigth:15
+v1;0;Bu yeni mutfak aletleri olağanüstü!
+v2;30;Evet, yemek yapmayı çok kolaylaştırıyor! Eğlenceli!
+v1;60;Bunu düşünen demircilere ve zanaatkârlara teşekkürler!
+v2;90;Evet! Bu yüzden Romalı olmayı seviyorum.
+
+newchat;key:chatter9,v1:female,v2:female,v1:adult,v2:adult,v1:notvtype:lady_byzantine,v2:notvtype:lady_byzantine,weigth:15
+v1;0;O zengin insanları kıskanıyorum.
+v1;20;Ne güzel ipek elbiseleri var!
+v2;50;Bu gerçekten adil değil. Hiçbir şey yapmıyorlar ve yine de en iyi şeyleri alıyorlar.
+
+newchat;key:chatter10,v1:female,v2:female,v1:adult,v2:adult,weigth:1
+v1;0;Komşu köydeki baron hakkında bir şey duydun mu?
+v2;30;Evet, karısı öldürülmüş halde bulunan baron mu?
+v1;60;Aynen! Kocam, baronun kendi karısını öldürdüğünü söyledi!
+v2;100;Ne..?
+v2;130;Bunu yapacağını her zaman biliyordum!
+v2;150;Ama bana kimse inanmadı..!
+
+newchat;key:chatter11,v1:female,v2:female,v1:adult,v2:adult,v1:hasspouse,weigth:15
+v1;0;Savaş olsaydı nasıl olurdu hiç düşündün mü?
+v1;30;Şu anda bile ülkemiz için savaşan erkekler var!
+v1;55;Onlara gerçekten hayranım!
+v2;80;Savaş korkunç olurdu.
+v2;110;Sanırım sen sadece askerleri seviyorsun.
+v2;140;Ama bir kocan var!
+v1;170;Ama tembel ve genellikle sarhoş biri!
+
+newchat;key:talking3,v1:male,v2:male,v1:adult,v2:adult,v1:hasspouse,v2:hasspouse,weigth:15
+v1;0;Bu köyde yeterince şarap yok!
+v2;30;Katılıyorum! Daha fazla bağ inşa etmeliyiz!
+v1;60;Ve daha fazla meyhane!
+v2;90;Kendi meyhanemizi açmaya ne dersin?
+v1;120;Harika fikir! Bunu planlayalım.
+v2;150;Ama nereden başlayalım?
+v1;180;Ve eşlerimiz bunu duymaktan mutlu olmayacaklar!
+v2;210;Hayır, Roma şarabı satmak her zaman bir bahane!
+v1;240;Tamam! O zaman paramızı biriktirelim.
+v1;270;Yeterince kazandığımızda, planımızı gerçekleştirelim!
+v2;300;Tüm imparatorluğun en büyük meyhanesine sahip olacağız!
+v1;325;Kesinlikle!
+
+newchat;key:talking6,v1:male,v2:male,v1:adult,v2:adult,weigth:15
+v1;0;Harika yemek, harika silahlar, harika sanat - milletimiz işte budur!
+v2;30;Ve harika şarap!
+
+newchat;key:talking7,v1:male,v2:male,v1:adult,v2:adult,v1:hasspouse,v2:hasspouse,weigth:15
+v1;0;Karımdan sıkıldım. Yeni bir tane istiyorum!
+v2;30;Kim istemez ki?
+v1;60;Belki köyden aniden ayrılıp yenilerini aramalıyız!
+v2;90;Evet! Mayalar ve Hindular çok güzel eşlere sahip, gördün mü?
+v2;140;Ama... Bu köy bizsiz mahvolur.
+v2;160;Ve çocuklarımızı unutma!
+v1;180;Ürgh! Çocuklarımız! Bir baba olmadan hayatta kalamazlar!
+v1;220;Ama... bu, sıkıcı hayatımızla burada devam etmek zorunda olduğumuz anlamına mı geliyor?
+v2;255;Sanırım gidilecek en iyi yol bu.
+
+newchat;key:talking8,v1:male,v2:male,v1:adult,v2:adult,v2:vtype:silkfarmer_byzantine,weigth:15
+v1;0;İkonalarınızın ne kadar ayrıntılı göründüğü oldukça inanılmaz.
+v2;30;Tabii ki, çünkü bu büyük Roma sanatı!
+v1;60;Yaptığımız her şey gibi. Güzel evlerimize bak!
+v2;90;Ve görkemli tarihimizi unutma!
+
+newchat;key:talking9,v1:male,v2:male,v1:adult,v2:adult,weigth:15
+v1;0;Çocukluğumuzda uğruna kavga ettiğimiz kızı hatırlıyor musun?
+v2;30; Evet... Çok kötü bir zamandı. Bitmesi iyi oldu.
+v1;60;Bunu duyduğuma sevindim, çünkü bana her zaman beni sevdiğini söyledi!
+v2;90;Ne? Bu doğru değil!
+
+newchat;key:flirt1,v1:male,v2:female,v1:adult,v2:adult,v1:hasspouse,v2:nospouse,notrel:sibling,notrel:child,notrel:parent,weigth:5
+v1;0;Hey güzelim, gördüklerin hoşuna gitti mi?
+v2;20;*tokat*
+v2;25;Karın var.
+
+newchat;key:flirt2,v1:male,v2:female,v1:adult,v2:adult,notrel:sibling,notrel:child,notrel:parent,weigth:5
+v1;0;Hey, bugün çok güzel görünüyorsun $targetfirstname!
+v2;30;Teşekkür ederim!
+v1;60;Her zaman olduğu gibi, canım!
+
+newchat;key:flirt3,v1:male,v2:female,v1:adult,v2:adult,v1:hasspouse,v2:hasspouse,notrel:sibling,notrel:child,notrel:parent,weigth:5
+v1;0;Hey $targetfirstname, senin gibi bir güzel benim gibi yakışıklı bir adam ister mi?
+v2;40;Sen evlisin, ben de.
+v2;60;Sanırım sadık değilsin! Karına söyleyeceğim!
+v1;75;HAYIR - Bunu yapma-
+v1;85;Ben onun kötü ikiz kardeşiyim!
+v2;120;Tabii öylesin! Hep sarhoş olan aynı kötü ikiz!
+
+newchat;key:flirt4,v1:male,v2:female,v1:adult,v2:adult,notrel:sibling,notrel:child,notrel:parent,weigth:10
+v1;0;Kadınsı işlerin nasıl gidiyor?
+v2;30;İyi iyi, sadece biraz kötü hissediyorum...
+v1;60;Olamaz, ne oldu?
+v2;90;Kocam bana bağırdı.
+v1;120;Böyle bir güzele nasıl yapar?
+v2;150;Moralimi düzelttiğin için teşekkürler, $targetfirstname!
+
+newchat;key:flirt5,v1:male,v2:female,v1:adult,v2:adult,notrel:sibling,notrel:child,notrel:parent,weigth:10
+v2;0;*urgh*
+v1;30;İyi misin, $targetfirstname?
+v2;50;Evet, sadece zor iş!
+v1;70;Sana yardım edebilir miyim? Daha iyi hisseder misin?
+v2;90;Tabii ki! Teşekkür ederim!
+
+newchat;key:flirt6,v1:male,v2:female,v1:adult,v2:adult,,weigth:10
+v1;0;Nasıl gidiyor?
+v2;30;Her şey iyi, sen nasılsın?
+v1;60;Ben de! Sorduğun için teşekkürler.
+v1;75;Ama seni rahatsız eden bir şey olduğunu görüyorum!
+v2;90;Hiçbir şey - hiçbir şey.
+v1;110;Lütfen söyle!
+v2;130;Sadece buradaki hayatım çok donuk.
+v2;160;Keşke gençken bir şehre gitmeye karar verseydim!
+
+newchat;key:brothertalk1,v1:male,v1:adult,v2:male,v2:adult,rel:sibling,weigth:10
+v1;0;Kardeşim $targetfirstname, seni görmek güzel!
+v1;30;Eski tahta kılıcımızı buldum!
+v1;50;Hatırlıyor musun?
+v2;80;Dur! Babamın bize verdiği kılıç mı bu?
+v1;110;Bu! Onunla yaptığımız kavgaları hatırlıyor musun?
+v2;140;Nasıl unutabilirim! Hâlâ bazı yaralarım var.
+v2;170;Daha çok düşününce...
+v2;200;Bize tek bir kılıç vermek babamızın biraz acımasızcasıydı!
+v2;240;Onun için kavga edeceğimizi biliyordu!
+v1;270;Sanırım sorun değil!
+v2;300;Çünkü sen onu sakladın!
+
+newchat;key:sistertalk1,v1:female,v1:adult,v2:female,v2:adult,rel:sibling,weigth:10
+v1;0;Çocukluğumuzda çok sevdiğimiz arabacıyı hatırlıyor musun?
+v2;30;Tabii ki kız kardeşim. En büyük hayranlarıydık!
+v1;60;Ona ne olduğunu merak ediyorum.
+v1;90;Artık onun hakkında hiçbir şey duymuyorsun...
+v2;120;Muhtemelen bizimki gibi bir köye yerleşip karısı ve çocukları olmuştur.
+v1;150;Yine de bir gün onunla tanışmayı umuyorum!
+v2;180;Ben de!
+
+newchat;key:brothersister,v1:male,v1:adult,v2:female,v2:adult,v2:hasspouse,rel:sibling,weigth:10
+v1;0;$targetfirstname, kız kardeşim, bu pislikle neden evlendiğini her zaman bilmek istedim.
+v2;30;Çünkü onu seviyorum!
+v1;60;Ve şimdi adın $targetlastname. $targetlastname! Çok kötü geliyor!
+v2;90;Hey! Bu kadar acımasız olma! Kavgayı başlatan sendin.
+v2;110; Sarhoştun!
+
+newchat;key:seljuks,v1:adult,v2:adult,weigth:10
+v1;0;Buraya geldiğimizden beri Selçuklular hakkında bir şey duydun mu?
+v2;30;Hayır, duymadım, bizimle bu topraklara geldiklerini mi düşündün?
+v1;60;Şüpheliyim, var olduğunu bilmediğimiz insanlardan zaten haber aldık.
+v2;90;Sanırım bu topraklarda yeni düşmanlar edinmemiz gerekecek.
+v1;120;Hâlâ uğraşacağımız Normanlarımız var.
+v2;150;Şey, biz Romalıyız! Böyle akıncıları kolayca yenebiliriz, Roma'ya!
+v1;165;Roma'ya!
+
+newchat;key:normans,v1:adult,v2:adult,weigth:6
+v1;0;Yakındaki Norman köyünü duydun mu?
+v2;30;Bu iyi değil, buraya gelmeden önce Güney İtalya'ya saldırıp durduklarını hatırlıyorum.
+v1;60;Umarım bize saldırmazlar.
+v2;90;Ben de umuyorum.
+
+newchat;key:constantinople,v1:adult,v2:adult,weigth:9
+v1;0;Konstantinopolis'e ne olduğunu merak ediyorum.
+v2;30;Sanırım o da bizimle bu yeni topraklara geldi.
+v1;60;Neden böyle düşünüyorsun?
+v2;90;Büyük şehrin yakınında yaşıyordum ve buraya getirildim.
+v1;120;Doğru, ama orada çok fazla insan var. Şimdiye kadar bunu duymuş olurduk.
+v2;150;Çok uzakta olabilir.
+v1;180;Evet, ama Konstantinopolis'in şanı ve görkemi o kadar büyük ki Çin'deki insanlar bile bunu duydu.
+v2;210;Çin hakkındaki o hikayelere inandığını söyleme bana?
+v1;240;Onlarda bir gerçek payı olduğuna inanıyorum.
+v2;270;Ama Çin hakkında o kadar çok gizem var ki, herhangi bir gerçeklik olduğunu varsayamayız.
+v1;300;Konstantinopolis buradaysa o kadar çok gizem var ki, onu da varsayamayız.
+v2;330;Şey, evet, ama Konstantinopolis burada olmasa bile. Roma İmparatorluğu'nu büyütmeli ve korumalıyız.
+v1;360;Şimdi bu konuda seninle hemfikir olabilirim!
+v2;390;Roma sonsuza dek yaşasın!
+
+newchat;key:Inuit,v1:adult,v2:adult,weigth:10
+v1;0;Önceden bir Bizans tüccarıyla konuşuyordum ve bana uzaktaki karlardaki köylerden bahsetti.
+v2;30;Karlardaki köyler mi?
+v1;60;Evet, onlara "İnuit" deniyor.
+v2;90;İnuit? Ne tuhaf bir isim, nasıllardı?
+v1;120;Tüccar paraya inanmadıklarını söyledi.
+v2;150;Paraya inanmıyorlar mı?! Nasıl yaşayabiliyorlar?
+v1;180;Sadece her şeyi eşit olarak paylaşıyorlarmış. Bu da onlarla ticaret yapmayı çok zorlaştırıyormuş.
+v2;210;Zavallı tüccar. En azından Roma İmparatorluğu'na geri döndü, o barbarlardan uzakta.
+v1;240;Katılıyorum! Roma İmparatorluğu ticaret yapmak için en iyi topraktır!
+
+newchat;key:soldiers2,v1:adult,v1:male,v1:vtype:soldier_byzantine,v2:adult,v2:male,v2:vtype:soldier_byzantine,weigth:3
+v1;0;Umarım yakında dışarı çıkıp barbarlarla savaşmak zorunda kalmayız.
+v2;30;Ne? Biz askeriz, işimiz dışarı çıkıp barbarları öldürmek. Eğer savaşmayı sevmiyorsan neden orduya katıldın?
+v1;60;Asker olmanın daha kolay olacağını düşünüyordum, tek beklediğim etrafta durup birkaç mob ve ara sıra bir barbar öldürmekti. Ama şimdi bir barbarı öldürdüğümde, yüzüne bakıyorum ve düşünüyorum, "Belki bu insanları öldürmemeliyiz."
+v2;120;Çok düşünüyorsun! Dışarı çık ve Roma için barbarları öldür. Bizi öldürür ve evlerimizi yok ederler! Onlar sadece medeniyetsiz vahşilerdir.
+v1;150;Öldürmek için propaganda yaptığın bu insanlarla tanıştın mı? Hayır, tanışmadın, belki bize söylenenden farklıdırlar.
+v2;180;Doğru, çok daha kötü olabilirlerdi.
+v1;210;Yaşadığım düşünceleri ve sıkıntıyı anladığını sanmıyorum.
+v2;240;Ben bir askerim, filozof değilim. Açıkça ihtiyacın olduğu için Tanrı'ya rehberlik için dua etmelisin.
+v1;270;Zaten ettim ve Tanrı'dan daha fazlasını alamadım. Dua ettiğimde, şimdi olduğum gibi aynı sonuçla kaldım.
+v2;300;Ne? Tanrı'yı açıkça terk etmişsin ki sana gerçeği söylemesin! Tekrar barbar öldürebilene kadar dua etmeye geri dön!
+v1;330;Belki Tanrı'nın benim için anladığı sonuç budur!
+v2;360;Daha çok Tanrı'nın emekli olmanı istediği gibi geliyor...
+
+newchat;key:kidsBos,v1:child,v2:child,weigth:5
+v1;0;Bahhh… Bahhh… Ben çobanların kralıyım!
+v2;30;Kes şunu! Onu böyle çağıracaksın!
+v1;60;Ey Boskokrator, sana kutsal bir yer inşa ediyorum…
+v2;90;Kapa çeneni! Efsanede ne olduğunu bilmiyor musun?
+v1;120;$targetfirstname, ağlak bebek! Bu sadece bir efsane!

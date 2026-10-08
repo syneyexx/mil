@@ -1,0 +1,14 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "millenaire:block/japanese_stone_tiles"
+    },
+    "axis=y": {
+      "model": "millenaire:block/japanese_stone_tiles"
+    },
+    "axis=z": {
+      "model": "millenaire:block/japanese_stone_tiles",
+      "y": 90
+    }
+  }
+}

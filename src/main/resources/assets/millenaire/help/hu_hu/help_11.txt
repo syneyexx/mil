@@ -1,0 +1,14 @@
+version:4.8.0
+<darkblue>A japánok
+
+Vallási, katonai, kereskedelmi vagy császári falvakban élnek, és elegáns építészetükről ismertek. Japánul beszélnek, de a párbeszédeik fordítása megjelenik, ahogy a játékos „megtanulja” a nyelvüket a velük folytatott interakciók révén.
+
+<darkblue>Egyedi tárgyak és blokkok
+
+-Rizst termesztenek. A játékos megkérheti az elöljárót, hogy tanítsa meg neki, hogyan termessze ezt a gabonát.
+-Búzából és csirkéből finom udon tésztát készítenek.
+-A kereskedelmi falvakban a szakéfőzők szakét készítenek rizsből.
+-A normannokhoz hasonlóan gerendavázas épületeket emelnek.
+-Sok zsúpblokkot használnak, amelyet búzából állítanak elő.
+-A fejlettebb épületeikhez elegáns rizspapír falakat készítenek.
+-Fegyverkovácsaik félelmetes tachi kardokat és yumi hosszúíjakat, valamint háromféle, igen hatékony páncélt kovácsolnak.

@@ -1,0 +1,10 @@
+version:3.4
+<darkblue>Byns utveckling
+
+Alla byar börjar små runt en central byggnad (av varierande slag: fort, palats, kloster osv. — vanligtvis kallad "rådhuset"), med ett fåtal hus eller andra byggnader. Byinvånarnas främsta mål är att utvidga sin by genom att välja nya byggnader att uppföra och förbättringar av befintliga byggnader. Av denna anledning behöver de resurser — de kan framställa vissa själva (skogshuggare avverkar trä, gruvarbetare bryter sten ...) men är beroende av spelaren för andra. Deras materialbehov för det planerade bygget visas i huvudbyggnaden. Du kan hjälpa till genom att sälja dessa resurser i första hand.
+
+Byns befolkning ökar också med tiden — om natten kan gifta byinvånare få barn. När barnen vuxit upp flyttar de in i nya hem om sådana finns och blir vuxna.
+
+En bys utveckling avstannar i allmänhet på två sätt: antingen för att byn har slutfört alla byggbara konstruktioner, eller för att den inte har någon plats kvar. I det senare fallet kan du titta på bykartan för att se vilka områden som är obyggbara. Det är ibland möjligt att göra dem byggbara, till exempel genom att fylla igen en sjö.
+
+Ibland behöver en by en blocktyp som du inte kan tillverka själv, såsom normandiskt och japanskt korsvirke. Du måste då vänta tills byn bygger en verkstad och en uppvuxen invånare slår sig ner där som hantverkare.

@@ -1,0 +1,13 @@
+{
+  "parent": "millenaire:leader_seljuk",
+  "display": {
+    "icon": { "item": "minecraft:golden_apple" },
+    "title": { "translate": "advancement.millenaire.seljuk_istanbul" },
+    "description": { "translate": "advancement.millenaire.seljuk_istanbul.desc" }
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

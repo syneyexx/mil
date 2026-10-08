@@ -1,0 +1,60 @@
+
+boy.greeting=मेरी माँ तुम्हारे कपड़ों के छेद सिल सकती है.
+boy.greeting=मुझे खेलना है.
+boy.greeting=तुम कैसे हो?
+
+chef.greeting=मुझे खाना बनाना अच्छा लगता है. खाओ, खाओ!
+chef.greeting=खाने का समय.
+
+farmer.greeting=मुझे खेती पसंद है, खासकर आलू!
+
+fisherman.greeting=मुझे सर्दियों में मछली पकड़ना पसंद है.
+
+girl.greeting=मैं नाच सकती हूँ.
+girl.greeting=तुम कैसे हो?
+girl.greeting=मैं दौड़ सकती हूँ.
+
+hunter.greeting=क्या तुम कुत्तों की टीम से यात्रा करते हो?
+hunter.greeting=मुझे शरद ऋतु में शिकार करना पसंद है.
+
+husband.greeting=मुझे आज के अपने कामों पर निकलना है.
+
+lumberman.greeting=यहाँ के पेड़ इतनी जल्दी इतने मज़बूत और बलवान हो जाते हैं, क्या अद्भुत भूमि है.
+
+oldlady.greeting=उसने उन्हें अपनी सीमा से भागने का श्राप दिया.
+oldlady.greeting=उनकी आँखों में मत देखो!
+oldlady.greeting=शापित आत्माएँ हमें घेरे हुए हैं!?
+
+shaman.greeting=आत्माएँ तुम्हें आशीर्वाद दें.
+shaman.greeting=मुझे आत्माओं से बात करनी है.
+
+sodder.greeting=मुझे घास-मिट्टी इकट्ठा करने जाना है.
+
+villager.greeting=नमस्ते, $name!
+villager.greeting=उत्तरी रोशनी कितनी सुंदर थी.
+villager.greeting=तुम्हारा परिवार कैसा है?
+villager.greeting=तुमसे मिलकर ख़ुशी हुई.
+villager.greeting=तुम कहाँ से आए हो?
+villager.greeting=क्या तुमने खाना खा लिया?
+villager.greeting=क्या तुम अच्छे से सोए?
+villager.greeting=तुम्हें युगों से नहीं देखा.
+villager.greeting=स्वागत है.
+villager.greeting=तुम्हारा दिन शुभ हो
+
+wife.greeting=यह मिट्टी इतनी उपजाऊ है, फ़सलें पागलों की तरह उगती हैं!
+wife.greeting=तुम्हारे देश में मौसम कैसा है?
+
+art_merchant.greeting=दुनिया का कोई शहर कॉन्स्टैन्टिनोपल की बराबरी नहीं कर सकता!
+art_merchant.greeting=यहाँ के लोग बर्बर हैं.
+
+oriental_merchant.greeting=यह भूमि समृद्ध है, पर इतनी ठंडी क्यों होनी चाहिए?
+oriental_merchant.greeting=क्या तुम कोर्डोबा गए हो? वही असली सभ्य जगह है.
+
+plant_merchant.greeting=कुछ लोग कहते हैं मैं सपने देखने वाला हूँ, पर मैं अकेला नहीं हूँ... /
+
+viking_merchant.greeting=आज मैं व्यापार करने आया हूँ. कल...
+viking_merchant.greeting=यह भूमि वाइकिंग की है. इंग्लैंड वाइकिंग की भूमि है. सिसली वाइकिंग की भूमि है. हम राज करते हैं!
+
+weapon_merchant.greeting=क्या जानना चाहोगे मैं इन सालों में अकेले क़ीमती सामान लेकर यात्रा कैसे करता रहा?
+villager.sellercoming=मैं आ रहा हूँ!
+villager.tradecomplete=सौदा हो गया, अलविदा.

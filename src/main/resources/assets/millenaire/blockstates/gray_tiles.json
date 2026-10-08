@@ -1,0 +1,14 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "millenaire:block/gray_tiles"
+    },
+    "axis=y": {
+      "model": "millenaire:block/gray_tiles"
+    },
+    "axis=z": {
+      "model": "millenaire:block/gray_tiles",
+      "y": 90
+    }
+  }
+}

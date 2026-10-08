@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "millenaire:block/import_table_front",
+    "down": "minecraft:block/oak_planks",
+    "up": "millenaire:block/import_table_top",
+    "north": "millenaire:block/import_table_side",
+    "east": "millenaire:block/import_table_side",
+    "south": "millenaire:block/import_table_front",
+    "west": "millenaire:block/import_table_front"
+  }
+}

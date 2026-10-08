@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "group": "paint_bucket",
+  "ingredients": [
+    {
+      "item": "millenaire:paint_bucket_white"
+    },
+    {
+      "item": "minecraft:light_gray_dye"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "millenaire:paint_bucket_light_gray"
+  }
+}

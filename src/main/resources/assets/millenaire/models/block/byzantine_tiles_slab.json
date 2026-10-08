@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab",
+  "textures": {
+    "bottom": "millenaire:block/byzantine_tiles_side",
+    "side": "millenaire:block/byzantine_tiles_side",
+    "top": "millenaire:block/byzantine_tiles_side"
+  }
+}

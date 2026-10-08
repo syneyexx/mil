@@ -1,0 +1,34 @@
+version:3.4
+<darkblue>Hírnév és falu elöljárója
+
+Minden Millénaire-falunak van rólad véleménye, ami kezdetben semleges, és a tetteid alapján változik. Ez a hírnév nagyon fontos: sok jutalom csak jó hírnévvel érhető el, ha pedig a hírneved túl rossz lesz, a falubeliek megtagadhatják veled a kereskedést. A hírnevedet a falu elöljárójával beszélgetve (<darkblue>jobbklikk<black>) ellenőrizheted.
+
+A hírneved javításának fő módja a faluval való kereskedelem. A vásárlások és az eladások egyaránt javítják a hírnevedet az árral arányosan. A hírnevedet küldetések teljesítésével is növelheted. Ezzel szemben egy falu megtámadása vagy bizonyos küldetések elbukása rontja a hírnevedet.
+
+Emellett <darkblue>minden kultúrával szemben is van hírneved<black>. Ezt a hírnevet az adott kultúra falvaival folytatott összes interakciód befolyásolja, és kihat az ugyanahhoz a kultúrához tartozó többi faluval való kereskedelemre is. Például, ha nagyon jó a hírneved egy normann faluban, a többi normann falu is (kicsit) jobban kedvel majd. Az egyes kultúrákkal szemben fennálló hírnevedet az információs képernyőn ellenőrizheted (alapértelmezetten „M” billentyű).
+
+<darkblue>Bizonyos hírnevet igénylő tevékenységek
+
+<darkblue>Falu-tekercs vásárlása
+
+Elég jó hírnévvel falu-tekercset vásárolhatsz a falu elöljárójától. Ez a tekercs tartalmazza a falu különböző tábláin szereplő összes információt.
+
+<darkblue>Ház vásárlása
+
+Ha elég jó hírnevet szereztél, vásárolhatsz egy házat (vagy egy építési telket) a falu elöljárójával beszélve. A házadat a falu építi fel, miután a folyamatban lévő építkezés befejeződött. A falu körüli többi területtel ellentétben ez az épület hozzád tartozik, és tetszés szerint alakíthatod.
+
+<darkblue>Növénytermesztés megtanulása
+
+Megtanulhatod, hogyan termeszd a Millénaire-re jellemző növényeket, amelyeket egyes kultúrák használnak. Fordulj a falu elöljárójához, ha elég jó a hírneved.
+
+<darkblue>További tárgyak vásárlása
+
+Egyes értékesebb tárgyak vásárlásához jó falubeli hírnévre van szükség. Ha nincs meg a szükséges hírneved, ez jelezve lesz a kereskedelmi képernyőn.
+
+<darkblue>További küldetések
+
+Egyes küldetések, köztük a Teremtésküldetés, csak jó hírnévvel indíthatók (lásd a <darkblue>„küldetések”<black> fejezetet).
+
+<darkblue>Vezetővé válás egy kultúrában
+
+Ha elérted a legmagasabb hírnevet (<darkblue>„született vezető”<black>), saját falut alapíthatsz, amelynek te leszel a vezetője (lásd a <darkblue>„falu létrehozása”<black> fejezetet).

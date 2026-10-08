@@ -1,0 +1,22 @@
+{
+  "parent": "minecraft:block/block",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "wool": "minecraft:block/white_wool",
+    "particle": "minecraft:block/white_wool"
+  },
+  "elements": [
+    {
+      "from": [ 3, 0, 7 ],
+      "to":   [13, 16, 9],
+      "faces": {
+        "north": { "texture": "#icon", "uv": [0, 0, 16, 16] },
+        "south": { "texture": "#icon", "uv": [0, 0, 16, 16] },
+        "west":  { "texture": "#wool", "uv": [0, 0, 2, 16] },
+        "east":  { "texture": "#wool", "uv": [0, 0, 2, 16] },
+        "up":    { "texture": "#wool", "uv": [0, 0, 10, 2] },
+        "down":  { "texture": "#wool", "uv": [0, 0, 10, 2] }
+      }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "down": "millenaire:block/painted_brick_yellow",
+    "east": "millenaire:block/decorated_brick_yellow",
+    "north": "millenaire:block/decorated_brick_yellow",
+    "particle": "millenaire:block/decorated_brick_yellow",
+    "south": "millenaire:block/decorated_brick_yellow",
+    "up": "millenaire:block/painted_brick_yellow",
+    "west": "millenaire:block/decorated_brick_yellow"
+  }
+}

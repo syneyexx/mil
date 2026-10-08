@@ -1,0 +1,13 @@
+{
+  "parent": "millenaire:friendindeed",
+  "display": {
+    "icon": { "item": "minecraft:cherry_sapling" },
+    "title": { "translate": "advancement.millenaire.rep_japanese" },
+    "description": { "translate": "advancement.millenaire.rep_japanese.desc" }
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

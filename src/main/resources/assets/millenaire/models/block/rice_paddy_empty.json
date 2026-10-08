@@ -1,0 +1,23 @@
+{
+  "ambientocclusion": false,
+  "textures": {
+    "mud": "millenaire:block/rice_paddy_mud",
+    "particle": "millenaire:block/rice_paddy_mud"
+  },
+  "elements": [
+    {
+      "comment": "slab de boue",
+      "from": [0, 0, 0],
+      "to": [16, 7, 16],
+      "faces": {
+        "down":  { "texture": "#mud", "cullface": "down" },
+        "up":    { "texture": "#mud" },
+        "north": { "texture": "#mud", "cullface": "north", "uv": [0, 9, 16, 16] },
+        "south": { "texture": "#mud", "cullface": "south", "uv": [0, 9, 16, 16] },
+        "east":  { "texture": "#mud", "cullface": "east",  "uv": [0, 9, 16, 16] },
+        "west":  { "texture": "#mud", "cullface": "west",  "uv": [0, 9, 16, 16] }
+      }
+    }
+  ],
+  "render_type": "minecraft:cutout"
+}

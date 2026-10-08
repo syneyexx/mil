@@ -1,0 +1,10 @@
+
+version:3.4
+<darkblue>Opgaver
+Opgaver er ekstra ærinder, som du kan udføre for landsbyboerne. Når en opgave er tilgængelig, vises den over hovedet på en landsbyboer i firkantede parenteser, for eksempel: "<darkblue>[Tørstig!]<black>". Højreklik på ham for at få en beskrivelse af opgaven og mulighed for at acceptere eller afvise. Opgaver belønnes med penge, omdømme eller genstande. Visse opgaver kræver, at du har et godt omdømme i landsbyen for at være tilgængelige.
+For at se, hvilke opgaver du har accepteret, og hvad du skal gøre, tryk på "M".
+<darkblue>Skabelsesopgaven
+Denne særlige samling omfatter mange missioner og har to uafhængige kapitler, der fokuserer på den normanniske og den indiske kultur. Den første mission i hvert kapitel vil blive tildelt dig af en indisk eller normannisk landsbyboer, når du har nået omdømmeniveauet "Ven af landsbyen" (opgaven starter tilfældigt, så det kan tage noget tid, før opgaven er tilgængelig).
+Begge opgaver kræver, at du finder en særlig isoleret bygning. Du må udforske, indtil du finder den; vær forsigtig, da den er meget sjælden. I modsætning til andre isolerede bygninger vises disse bygninger dog, når du bruger "V"-tasten.
+Denne særlige mission er i bund og grund et sæt af adskillige missioner opdelt i to uafhængige kapitler og centreret omkring den normanniske og den hinduistiske kultur. Den indledende mission i hvert kapitel bliver gjort tilgængelig af en hinduistisk eller normannisk landsbyboer, når han når omdømmet "Ven af landsbyen" (han kan være nødt til at vente et stykke tid, før den indledende mission bliver tilgængelig, selv efter at han har opnået det nødvendige omdømme).
+I begge indledende missioner skal du finde en særlig isoleret konstruktion; du skal udforske kortet, indtil du finder dem. Bemærk dog, at de er unikke, og at de i modsætning til de almindelige isolerede konstruktioner er opført på listen over landsbyer, som kan tilgås med "V"-tasten.

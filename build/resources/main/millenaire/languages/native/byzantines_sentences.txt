@@ -1,0 +1,533 @@
+//* Native sentences for the Byzantine culture: modern Greek, Latin transliteration without diacritics.
+//* Mirrors en_us/byzantines_sentences.txt key by key and variant by variant (index-aligned).
+
+architect_byzantine.construction=$name! To ikseres pos oi Romaioi einai oi kalyteroi arxitektones?
+architect_byzantine.construction=$name! Ela na deis pos xtizetai ena omorfo ktirio!
+architect_byzantine.construction=Auto to ktirio tha ginei panemorfo!
+architect_byzantine.construction=Den exei teleiosei akoma, ma idi vlepo tin omorfia sti douleia mou.
+architect_byzantine.construction=Xtizo periploka oikodomimata. I oikodomiki einai i pio omorfi morfi texnis.
+architect_byzantine.construction=I Romi den xtistike se mia mera. Xtistike petra tin petra.
+architect_byzantine.construction=I arxitektoniki mas einai anoteri ap' oles tis alles ston kosmo.
+architect_byzantine.construction=Opoios xtizei romaika, xtizei sosta!
+architect_byzantine.construction=Sou aresei i texni mou?
+architect_byzantine.construction=Xtizo apo tote pou thymamai. To xtisimo egine i zoi mou.
+
+architect_byzantine.getresourcesforbuild=Apo pou vriskei to xorio ola auta ta ylika?
+architect_byzantine.getresourcesforbuild=Xreiazomai ylika gia na xtiso ta kalytera ktiria!
+architect_byzantine.getresourcesforbuild=Kathe xtisimo ksekinaei apo ta ylika.
+architect_byzantine.getresourcesforbuild=Prepei na dialekso ta ylika o idios, me prosoxi.
+architect_byzantine.getresourcesforbuild=Pos kouvalas tosa ylika otan xtizeis, $name?
+architect_byzantine.getresourcesforbuild=To xeirotero meros tis douleias einai to kouvalima ton ylikon.
+
+architect_byzantine.godrink=Ftanei to xtisimo! Krasi tora!
+architect_byzantine.godrink=Ena potiraki tha mou dosei empneusi!
+architect_byzantine.godrink=Kathe kalos arxitektonas thelei to potiraki tou sto telos tis meras.
+architect_byzantine.godrink=To xtisimo mou anoigei dipsa gia krasi.
+
+architect_byzantine.gopray=Makari o Theos na mou dosei empneusi gia to epomeno ktirio!
+architect_byzantine.gopray=Giati o Theos me ekane arxitektona?
+architect_byzantine.gopray=I prosefxi einai kommati tis romaikis oikodomikis.
+architect_byzantine.gopray=Ekeinos katalavainei ta vasana pou exoume oi arxitektones.
+
+architect_byzantine.gorest=An den koimitho, tha kano kamia patata sto xtisimo.
+architect_byzantine.gorest=Den mporo na xtizo kourasmenos.
+architect_byzantine.gorest=Dyskolo na xtizeis sta skotadia.
+architect_byzantine.gorest=Telos vardias, kalinyxta.
+architect_byzantine.gorest=Isos oneireuto ta kalytera ktiria tou kosmou!
+
+architect_byzantine.gosocialise=Kaneis sto xorio den katalavainei ta vasana tou xtisimatos.
+architect_byzantine.gosocialise=Kathe arxitektonas thelei empneusi apo tous allous.
+architect_byzantine.gosocialise=Xoris tis gnomes ton allon, o arxitektonas den proodeuei.
+architect_byzantine.gosocialise=Ti na leei arage to xorio gia ta ktiria mou?
+
+//armysmith_byzantine.MakeIndianTools=Ta romaika ergaleia einai ta kalytera tou kosmou.
+armysmith_byzantine.makebyzantinemace=Min ta vazeis me opoion krataei ta opla mou...
+armysmith_byzantine.makebyzantinemace=Auto to ropalo tha steilei tous barbarous sto gamo tou Karagkiozi!
+armysmith_byzantine.makebyzantinemace=To na to xrisimopoieis eukolo, to na to ftiaxneis dyskolo.
+armysmith_byzantine.makebyzantinemace=O stratos xreiazetai ropala.
+
+armysmith_byzantine.gopray=Enas kalos sideras prepei pou kai pou na prosefxetai.
+armysmith_byzantine.gopray=Giati o Theos me ekane sidera?
+armysmith_byzantine.gopray=I prosefxi einai kommati tis romaikis texnis.
+armysmith_byzantine.gopray=Ekeinos katalavainei ta vasana pou exoume oi siderades.
+
+armysmith_byzantine.gorest=Avrio tha ftiakso akoma pio omorfa pragmata!
+armysmith_byzantine.gorest=Ftanei i douleia gia simera.
+armysmith_byzantine.gorest=Isos oneireuto oti ftiaxno ta kalytera opla tou kosmou!
+armysmith_byzantine.gorest=Isos oneireuto oti ftiaxno tin kalyteri panoplia tou kosmou!
+armysmith_byzantine.gorest=Isos oneireuto oti ftiaxno ta kalytera ergaleia tou kosmou!
+
+armysmith_byzantine.gosocialise=Tha rotiso an xreiazetai kaneis kati na tou ftiakso.
+armysmith_byzantine.gosocialise=Elpizo to xorio na ektimaei ta ergaleia mou.
+
+armysmith_byzantine.godrink=Ftanei i douleia! Krasi tora!
+armysmith_byzantine.godrink=Ena potiraki tha mou dosei empneusi!
+armysmith_byzantine.godrink=Kathe kalos sideras thelei to potiraki tou sto telos tis meras.
+armysmith_byzantine.godrink=I douleia sto amoni anoigei dipsa gia krasi.
+
+armysmith_byzantine.makearrow=$name, xalas polla veli stis peripeteies sou?
+armysmith_byzantine.makearrow=Kathe tokso thelei ena kalo veli.
+armysmith_byzantine.makearrow=Kathe veli pou ftiaxno tha vrei enan exthro tis Autokratorias.
+armysmith_byzantine.makearrow=O romaikos stratos xreiazetai veli gia na mas fylaei apo tous ksenous.
+
+armysmith_byzantine.makebow=O romaikos stratos xreiazetai toksa.
+armysmith_byzantine.makebow=Geia sou! Sou aresoun ta toksa mou, $name?
+armysmith_byzantine.makebow=Kalo tokso vgainei mono apo kalo ksylo.
+armysmith_byzantine.makebow=Auto to tokso tha riksei polous barbarous. Alithina, eimai mastoras sta toksa.
+
+armysmith_byzantine.makebyzantineboots=O romaikos stratos xreiazetai mpotes!
+armysmith_byzantine.makebyzantineboots=Oi Romaioi ftiaxnoun tis kalyteres mpotes tou kosmou.
+armysmith_byzantine.makebyzantineboots=Kapoios prepei na ftiaxnei tis mpotes ton stratioton...
+armysmith_byzantine.makebyzantineboots=Emeis ftiaxnoume tis kalyteres mpotes.
+armysmith_byzantine.makebyzantineboots=Geia! Sou aresoun oi mpotes mou, $name?
+armysmith_byzantine.makebyzantineboots=Telika den eimai para enas fantasmenos papoutsis.
+armysmith_byzantine.makebyzantineboots=Kathe kommati tis panoplias metraei! Akoma kai oi mpotes sta podia sou!
+
+armysmith_byzantine.makebyzantinechest=O romaikos stratos xreiazetai thorakes!
+armysmith_byzantine.makebyzantinechest=Oi Romaioi ftiaxnoun tous kalyterous thorakes tou kosmou.
+armysmith_byzantine.makebyzantinechest=Geia! Sou aresei i panoplia mou, $name?
+armysmith_byzantine.makebyzantinechest=Emeis ftiaxnoume tin kalyteri panoplia.
+armysmith_byzantine.makebyzantinechest=Auto antexei pio polla xtypimata ki apo sena!
+armysmith_byzantine.makebyzantinechest=Telika den eimai para enas fantasmenos raftis.
+
+armysmith_byzantine.makebyzantinehelmet=O romaikos stratos xreiazetai krani!
+armysmith_byzantine.makebyzantinehelmet=Kapoios prepei na ftiaxnei ta krani ton stratioton...
+armysmith_byzantine.makebyzantinehelmet=Oi Romaioi ftiaxnoun tis kalyteres mpotes tou kosmou.
+armysmith_byzantine.makebyzantinehelmet=Geia! Sou aresoun ta krani mou, $name?
+armysmith_byzantine.makebyzantinehelmet=Emeis ftiaxnoume ta kalytera krani.
+armysmith_byzantine.makebyzantinehelmet=Telika den eimai para enas fantasmenos kapelas.
+
+armysmith_byzantine.makebyzantinelegs=O romaikos stratos xreiazetai periknimides!
+armysmith_byzantine.makebyzantinelegs=Kapoios prepei na ftiaxnei tis periknimides ton stratioton...
+armysmith_byzantine.makebyzantinelegs=Oi Romaioi ftiaxnoun tis kalyteres periknimides tou kosmou.
+armysmith_byzantine.makebyzantinelegs=Geia! Sou aresoun oi periknimides mou, $name?
+armysmith_byzantine.makebyzantinelegs=Emeis ftiaxnoume tis kalyteres periknimides.
+armysmith_byzantine.makebyzantinelegs=Telika den eimai para enas fantasmenos vrakas.
+
+armysmith_byzantine.makesteelaxe=Xoris tsekouri, dentro den koveis!
+armysmith_byzantine.makesteelaxe=Ta tsekouria mou einai ena ki ena.
+armysmith_byzantine.makesteelaxe=Ta romaika tsekouria einai apo ta kalytera tou kosmou!
+armysmith_byzantine.makesteelaxe=Oi ksylokopoi perimenoun apo emas ta tsekouria tous.
+armysmith_byzantine.makesteelaxe=Esy pos ftiaxneis ta tsekouria sou, $name?
+
+armysmith_byzantine.makesteelhoe=Xoris tsapa, xorafi den douleuetai!
+armysmith_byzantine.makesteelhoe=Oi tsapes mou einai ena ki ena.
+armysmith_byzantine.makesteelhoe=Ta romaika ergaleia tou xorafiou einai apo ta kalytera tou kosmou!
+armysmith_byzantine.makesteelhoe=Oi agrotes perimenoun apo emas ta ergaleia tous.
+armysmith_byzantine.makesteelhoe=Esy pos ftiaxneis ta ergaleia sou gia to xorafi, $name?
+
+armysmith_byzantine.makesteelpickaxe=Xoris kasma, metallo den vgazeis!
+armysmith_byzantine.makesteelpickaxe=Ftiaxno kasmades gerous.
+armysmith_byzantine.makesteelpickaxe=Oi romaikoi kasmades einai apo tous kalyterous tou kosmou!
+armysmith_byzantine.makesteelpickaxe=Oi metallorixoi perimenoun apo emas tous kasmades tous.
+armysmith_byzantine.makesteelpickaxe=Esy pos ftiaxneis tous kasmades sou, $name?
+
+armysmith_byzantine.makesteelshovel=Xoris ftyari, oute xtizeis oute skaveis!
+armysmith_byzantine.makesteelshovel=Ftiaxno ftyaria pou den spane me tipota.
+armysmith_byzantine.makesteelshovel=Ta romaika ftyaria einai apo ta kalytera tou kosmou!
+armysmith_byzantine.makesteelshovel=Oi arxitektones perimenoun apo emas ta ftyaria tous.
+armysmith_byzantine.makesteelshovel=Esy pos ftiaxneis ta ftyaria sou, $name?
+
+//artisan_byzantine.makePainting=I romaiki texni einai i pio proigmeni ston kosmo.
+
+artisan_byzantine.gopray=Enas kalos texnitis prepei pou kai pou na prosefxetai.
+artisan_byzantine.gopray=Giati o Theos me ekane texniti?
+artisan_byzantine.gopray=I prosefxi einai kommati tis romaikis texnis.
+artisan_byzantine.gopray=Ekeinos katalavainei ta vasana pou exoume oi texnites.
+
+artisan_byzantine.gorest=Avrio tha ftiakso akoma pio omorfa pragmata!
+artisan_byzantine.gorest=Ftanei i douleia gia simera.
+artisan_byzantine.gorest=Isos oneireuto oti ftiaxno ta kalytera touvla tou kosmou!
+artisan_byzantine.gorest=Isos oneireuto oti ftiaxno ta kalytera keramidia tou kosmou!
+
+artisan_byzantine.gosocialise=Tha rotiso an xreiazetai kaneis kati na tou ftiakso.
+artisan_byzantine.gosocialise=Elpizo to xorio na ektimaei ta keramidia mou.
+artisan_byzantine.gosocialise=Elpizo to xorio na ektimaei ta touvla mou.
+
+artisan_byzantine.godrink=Ftanei i douleia! Krasi tora!
+artisan_byzantine.godrink=Ena potiraki tha mou dosei empneusi!
+artisan_byzantine.godrink=Kathe kalos texnitis thelei to potiraki tou sto telos tis meras.
+artisan_byzantine.godrink=I douleia anoigei dipsa gia krasi.
+
+artisan_byzantine.greeting=Zo kalytera ap' olous se auto to xorio.
+artisan_byzantine.greeting=Geia sou $name! Mipos xreiazesai gnisia romaika ylika?
+
+artisan_byzantine.makebrick=Kapoios prepei na ftiaxnei kai ta touvla.
+artisan_byzantine.makebrick=To xorio perimenei apo emena touvla gia tous toixous tou.
+artisan_byzantine.makebrick=Ta romaika touvla einai apo ta pio omorfa ylika tou kosmou!
+artisan_byzantine.makebrick=Emeis douleuoume sto paraskinio kai ti doksa tin pairnoun oi xtistes.
+artisan_byzantine.makebrick=Oute o kalyteros xtistis den xtizei xoris ylika.
+artisan_byzantine.makebrick=Poios na skeftike arage na kanei ton pilo touvla?
+
+artisan_byzantine.makebookshelves=Kapoios prepei na valei ta vivlia sta rafia.
+artisan_byzantine.makebookshelves=To xorio perimenei apo emena tis vivliothikes tou.
+artisan_byzantine.makebookshelves=Ta romaika vivlia einai apo ta kalytera anagnosmata tou kosmou!
+artisan_byzantine.makebookshelves=Emeis douleuoume sto paraskinio kai ti doksa tin pairnoun oi syngrafeis.
+artisan_byzantine.makebookshelves=Kamia fora ksefyllizo ta vivlia prin ta valo sto rafi... Makari na iksera na diavazo.
+artisan_byzantine.makebookshelves=Poios na skeftike protos na grapsei ta pragmata se xarti?
+
+artisan_byzantine.makebyzantinetiles=Kapoios prepei na ftiaxnei kai ta keramidia.
+artisan_byzantine.makebyzantinetiles=To xorio perimenei apo emena tis steges tou.
+artisan_byzantine.makebyzantinetiles=Ta romaika keramidia einai apo ta pio omorfa ylika tou kosmou!
+artisan_byzantine.makebyzantinetiles=Emeis douleuoume sto paraskinio kai ti doksa tin pairnoun oi xtistes.
+artisan_byzantine.makebyzantinetiles=Oute o kalyteros xtistis den xtizei xoris ylika.
+artisan_byzantine.makebyzantinetiles=Poios na skeftike arage na kanei ton pilo steges?
+
+artisanwife_byzantine.gopray=I prosefxi einai kommati tis romaikis texnis.
+artisanwife_byzantine.gopray=Makari o Theos na me voithaei na ravo ta kalytera rouxa!
+artisanwife_byzantine.gopray=Giati o Theos me ekane "ti gynaika tou arxitektona"?
+
+artisanwife_byzantine.gosocialise=A! Auto to poukamiso pou foraei ekeinos, ego to erapsa!
+artisanwife_byzantine.gosocialise=Edo me kseroun mono os "ti gynaika tou arxitektona".
+artisanwife_byzantine.gosocialise=Exo varethei na me lene "ti gynaika tou arxitektona"!
+
+artisanwife_byzantine.makeclothes_byz_silk=Ravo merika apo ta kalytera rouxa tou xoriou!
+artisanwife_byzantine.makeclothes_byz_silk=To romaiko metaksi einai to kalytero yfasma tou kosmou!
+artisanwife_byzantine.makeclothes_byz_silk=Kalytera metaksota rouxa para fantaxtero spiti.
+artisanwife_byzantine.makeclothes_byz_silk=$name, exeis foresei pote metaksi?
+artisanwife_byzantine.makeclothes_byz_silk=Oloi xreiazontai rouxa, an theloun na legontai politismenoi.
+artisanwife_byzantine.makeclothes_byz_silk=I alithini omorfia den einai stis petres, einai sta rouxa.
+artisanwife_byzantine.makeclothes_byz_silk=Yparxei logos pou to yfaino ego ki oxi o antras mou.
+artisanwife_byzantine.makeclothes_byz_silk=To metaksi to yfainoun mono oi pio arxontisses gynaikes.
+artisanwife_byzantine.makeclothes_byz_silk=Xairomai pou exo mia douleia tis prokopis.
+
+artisanwife_byzantine.makeclothes_byz_wool=Ravo merika apo ta kalytera mallina rouxa tou xoriou!
+artisanwife_byzantine.makeclothes_byz_wool=Kalytera omorfa rouxa para fantaxtero spiti.
+artisanwife_byzantine.makeclothes_byz_wool=$name, exeis foresei pote mallino?
+artisanwife_byzantine.makeclothes_byz_wool=I alithini omorfia den einai stis petres, einai sta rouxa.
+artisanwife_byzantine.makeclothes_byz_wool=Oloi xreiazontai rouxa, an theloun na legontai politismenoi.
+artisanwife_byzantine.makeclothes_byz_wool=Yparxei logos pou to yfaino ego ki oxi o antras mou.
+artisanwife_byzantine.makeclothes_byz_wool=Den mporei kathe gynaika na doulepsei to malli.
+artisanwife_byzantine.makeclothes_byz_wool=Xairomai pou exo mia douleia tis prokopis.
+
+artisanwife_byzantine.delivergoodshousehold=Pragmata san ki auto einai ta mona pou mporo na kano edo.
+artisanwife_byzantine.gethousethresources=Epitelous o syzygos mou efere ta agatha, opos tou eipa.
+artisanwife_byzantine.getgoodshousehold=Ora na frontiso tin oikogeneia mou.
+artisanwife_byzantine.greeting=Tha mporousa na kano tosa perissotera edo an imoun antras... ax kai na 'moun!
+artisanwife_byzantine.greeting=Kathikon mas einai na elegxoume tous antres mas.
+
+baron_byzantine.greeting=$name, to xorio mou exei ta kalytera emporeumata tis agoras!
+baron_byzantine.greeting=Xaire, plousie taksidioti!
+baron_byzantine.greeting=Theleis na me voithiseis na exo to nou mou stous xorikous, $name?
+
+baron_byzantine.godrink=Ftanei i dioikisi gia simera! Thelo ena potiraki.
+baron_byzantine.godrink=Mou aksizei to kalytero krasi!
+baron_byzantine.godrink=As do an i taverna fernei kerdos.
+baron_byzantine.godrink=Kathe anthropos me eksousia prepei na pinei, allios tha skasei apo ti stenoxoria!
+
+baron_byzantine.gopray=Giati o Theos me ekane Eparxo?
+baron_byzantine.gopray=I prosefxi einai kommati tis romaikis dioikisis.
+baron_byzantine.gopray=Ekeinos katalavainei ta vasana pou exoume oi Eparxoi.
+baron_byzantine.gopray=To xorio mou thelei apantiseis apo ton Theo!
+
+baron_byzantine.gorest=Ftanei to kynigi ton xorikon gia simera! Thelo ypno.
+baron_byzantine.gorest=*Xasmourito* Den ginetai na kyverno xorikous nystagmenos.
+baron_byzantine.gorest=Ora gia ypno sti metaksoti mou kouverta.
+baron_byzantine.gorest=Oloi xreiazontai ypno, poso mallon o arxontas tou xoriou.
+
+baron_byzantine.gosocialise=Giati oi anoitoi xorikoi me vlepoun mono san ton "Eparxo"?
+baron_byzantine.gosocialise=Xe xe xe, gia na doume, plirose tous forous tou?
+baron_byzantine.gosocialise=Ora na empneusoume tous ftoxous na vgaloun kana dinario!
+baron_byzantine.gosocialise=Prepei sonei kai kala na milao me ton oxlo?
+baron_byzantine.gosocialise=Os Eparxos, prepei na milao sto lao mou, akoma ki an den to thelo.
+
+baron_byzantine.inspectconstruction=Prepei na sigoureuto oti oi xorikoi den ta ekanan thalassa.
+baron_byzantine.inspectconstruction=Auto to ktirio tha ferei kerdos sto xorio mou.
+baron_byzantine.inspectconstruction=Omorfia einai na vlepeis to xorio sou na ploutizei.
+baron_byzantine.inspectconstruction=To ksero oti i Romi den xtistike se mia mera, alla giati argei toso o arxitektonas mou?
+baron_byzantine.inspectconstruction=Douleia mou einai na xtizontai ola sosta.
+baron_byzantine.inspectconstruction=Oi arxitektones mou kanoun kali douleia synithos, alla thelo panta na tous elegxo.
+
+boy_byzantine.becomeadult=Ora na gino dynatos antras!
+boy_byzantine.becomeadult=Megalosa pia, mporo na doulepso!
+boy_byzantine.becomeadult=Tora xreiazomai douleia.
+boy_byzantine.becomeadult=Teleiosan ta paidika mou xronia.
+
+boy_byzantine.goplay=Thelo na palepso me kapoion!
+boy_byzantine.goplay=Thelo na paikso "Xtypa ton Barbaro"!
+boy_byzantine.goplay=Tha deikso se olous poso megalos kai dynatos eimai!
+boy_byzantine.goplay=Ora na paiksoume tous stratiotes!
+
+boy_byzantine.gopray=Thelo na matho gia ton Theo!
+boy_byzantine.gopray=Mporei o Theos na mou eksigisei tous megalous?
+boy_byzantine.gopray=Pos kanoume tin prosefxi?
+boy_byzantine.gopray=Den thelo na prosefxitho! Thelo na paikso!
+
+boy_byzantine.childobservesmithing=Otan megaloso, thelo na gino ki ego sideras. I stratiotis. I stratigos!
+
+centurio_byzantine.godrink=Kathe anthropos me eksousia prepei na pinei, allios tha skasei apo ti stenoxoria!
+centurio_byzantine.godrink=San stratiotis, xreiazomai krasi. San Strategos, akoma perissotero.
+centurio_byzantine.godrink=Prepei na ksekourasto ligo, allios den tha aksizo tipota otan erthoun oi barbaroi.
+
+centurio_byzantine.gopray=Giati o Theos me ekane Stratego?
+centurio_byzantine.gopray=I prosefxi einai kommati tis romaikis polemikis texnis.
+centurio_byzantine.gopray=Ekeinos katalavainei ta vasana pou exoume oi Strategoi.
+centurio_byzantine.gopray=O stratos mou thelei apantiseis apo ton Theo!
+
+centurio_byzantine.gorest=Ftanei i dioikisi ton stratioton gia simera! Thelo ypno.
+centurio_byzantine.gorest=Ora na vgalo tin panoplia kai na peso gia ypno.
+centurio_byzantine.gorest=*Xasmourito* Den ginetai na diatazo stratiotes nystagmenos.
+centurio_byzantine.gorest=Oloi xreiazontai ypno, poso mallon o arxontas tou xoriou.
+
+centurio_byzantine.gosocialise=Ora na anevaso to ithiko ton stratioton!
+centurio_byzantine.gosocialise=An theleis pisti, akou tous anthropous sou.
+centurio_byzantine.gosocialise=Xreiazomai ki allous neosyllektous gia to strato!
+centurio_byzantine.gosocialise=Oi antres mou prepei na kseroun ta amyntika mou sxedia.
+centurio_byzantine.gosocialise=Oi antres mou prepei na kseroun ta epithetika mou sxedia.
+centurio_byzantine.gosocialise=O kosmos prepei na katalavei ti tha pei epidromi barbaron!
+centurio_byzantine.gosocialise=Prepei na thymizo se olous oti i maxi mporei na erthei ana pasa stigmi!
+
+centurio_byzantine.huntmonster=Akoma kai Strategos, den kanei na skouriaso san stratiotis.
+centurio_byzantine.huntmonster=Pou einai oi antres mou? Auti i douleia einai diki tous.
+centurio_byzantine.huntmonster=Eimai Strategos tis Romaikis Autokratorias kai nomizeis oti mporeis na ta valeis mazi mou? Xa!
+
+centurio_byzantine.inspectconstruction=Omorfia einai na vlepeis to xorio sou na dynamonei.
+
+farmiller_wife_byzantine.delivergoodshousehold=Pragmata san ki auto einai ta mona pou mporo na kano edo.
+farmiller_wife_byzantine.gethousethresources=Epitelous o syzygos mou efere ta agatha, opos tou eipa.
+farmiller_wife_byzantine.getgoodshousehold=Ora na frontiso tin oikogeneia mou.
+farmiller_wife_byzantine.greeting=Tha mporousa na kano tosa perissotera edo an imoun antras... ax kai na 'moun!
+farmiller_wife_byzantine.greeting=Kathikon mas einai na elegxoume tous antres mas.
+
+girl_byzantine.childobserveproducefood=Eutyxos pou den mageirevoun oi antres — tha ta ekaigan ola!
+
+keeperbirch_byzantine.greeting=Einai toso bareta edo, den symvainei sxedon tipota...
+keeperbirch_byzantine.greeting=Einai diki mou douleia na parakoloutho autes tis perioxes.
+keeperbirch_byzantine.greeting=Kalispera taksidioti, anarotiemai pos eftases os edo.
+keeperbirch_byzantine.greeting=Pos skeftike kapoios oti eprepe na stalthei anthropos edo pera...
+
+keeperoak_byzantine.greeting=Autoi edo, pou autoapokalountai "Normandoi", mou thymizoun tin ksakousti autokratoria mas.
+keeperoak_byzantine.greeting=Einai toso bareta edo, den symvainei sxedon tipota...
+keeperoak_byzantine.greeting=Einai diki mou douleia na parakoloutho autes tis perioxes.
+keeperoak_byzantine.greeting=Kalispera taksidioti, anarotiemai pos eftases os edo.
+keeperoak_byzantine.greeting=Pos skeftike kapoios oti eprepe na stalthei anthropos edo pera...
+
+keeperpine_byzantine.greeting=Auto to kryo einai tsouxtero. Logiko na min einai kaneis edo gyro...
+keeperpine_byzantine.greeting=Einai toso bareta edo, den symvainei sxedon tipota...
+keeperpine_byzantine.greeting=Einai diki mou douleia na parakoloutho autes tis perioxes.
+keeperpine_byzantine.greeting=Kalispera taksidioti, anarotiemai pos eftases os edo.
+keeperpine_byzantine.greeting=Pos skeftike kapoios oti eprepe na stalthei anthropos edo pera...
+
+keepertropical_byzantine.greeting=Einai toso bareta edo, den symvainei sxedon tipota...
+keepertropical_byzantine.greeting=Einai diki mou douleia na parakoloutho autes tis perioxes.
+keepertropical_byzantine.greeting=Ti zesti einai auti! Den katalavaino pos zoun oi Indoi se tetoia meri.
+keepertropical_byzantine.greeting=Exeis dei autous tous periergous tous "Maya"? Ta ktiria tous moiazoun etoima na katarreusoun apo stigmi se stigmi.
+keepertropical_byzantine.greeting=Kalispera taksidioti, anarotiemai pos eftases os edo.
+keepertropical_byzantine.greeting=Pos skeftike kapoios oti eprepe na stalthei anthropos edo pera...
+
+lumberman_byzantine.bringbackresourceshome=Makari auta na ftasoun gia na prokopsei to xorio!
+lumberman_byzantine.bringbackresourceshome=Kalos ksylokopos eimai: oi apothikes mou einai gemates kormous!
+lumberman_byzantine.bringbackresourceshome=Kouvalao ena soro dentra ki as min varainoun katholou. Paraksero pragma.
+lumberman_byzantine.bringbackresourceshome=Kali douleia kaname simera.
+lumberman_byzantine.bringbackresourceshome=I gynaika mou prepei na einai perifani me olo to ksylo pou efera.
+
+lumberman_byzantine.choptrees=Kathe ktirio edo xreiazetai ksylo, kai douleia mou einai na to ferno!
+lumberman_byzantine.choptrees=Ki allo dentro kato, ki allo ksylo gia to xorio!
+lumberman_byzantine.choptrees=Ena akoma dentro epese — perissotero ksylo gia to xorio!
+lumberman_byzantine.choptrees=$name, exeis kopsei pote sou dentro?
+lumberman_byzantine.choptrees=Ela sto tsekouri mou, dentraki!
+lumberman_byzantine.choptrees=Pethane dentro, pethane! XAXAXA! Pethane! Pethane! Pethane! Xa— A, geia sou $name! Tipota... paraksero... den symvainei edo.
+lumberman_byzantine.choptrees=Den thelo na se skotoso, alla prepei... Antio, dentro!
+lumberman_byzantine.choptrees=Exeis anarotithei pote, $name, giati ta kommena dentra den peftoun edo pera? Otan kovo ton kormo, to apo pano meros stekei ston aera kai prepei na to spaso kommati kommati. Megalo vasano.
+
+lumberman_byzantine.gathergoods=Re $name! Min to pairneis auto!
+lumberman_byzantine.gathergoods=Kala megalosan ta dentra fetos: kormoi kai dentrylia me to tsouvali!
+lumberman_byzantine.gathergoods=Elpizo to xorio na ta xreiazetai ola auta ta ksyla.
+lumberman_byzantine.gathergoods=Auto itan theorato dentro! Tora to xorio exei mpolikous kormous.
+lumberman_byzantine.gathergoods=Koita posa kainouria ksyla kai dentrylia mazepsa apo ta dentra pou ekopsa!
+lumberman_byzantine.gathergoods=Oraio dentryllio auto ekei.
+
+lumberman_byzantine.plantsaplings=Toso mikra ta dentrylia, pou kamia fora den to pisteuo oti tha ginoun theorata dentra.
+lumberman_byzantine.plantsaplings=Ti glyko dentryllio pou eisai! Kontepsa na ksexaso oti tha se kopso otan megaloseis.
+lumberman_byzantine.plantsaplings=$name, theleis na fytepsoume ena dentryllio?
+lumberman_byzantine.plantsaplings=Ta dentra megalonoun toso grigora edo: mesa se liges meres to dentryllio ginetai olokliro dentro.
+lumberman_byzantine.plantsaplings=To fytema einai i pio efkoli douleia: ta akoumpas sto xoma kai teleioses.
+lumberman_byzantine.plantsaplings=Syntoma tha ginei ena megalo, panemorfo dentro! Kai tha to kopso.
+
+merchant_art.greeting=Kamia poli ston kosmo den sygkrinetai me tin omorfia kai ti dynami tis Konstantinoupolis.
+merchant_art.greeting=Eimaste oi teleutaioi alithinoi Romaioi!
+
+miner_byzantine.mining=I douleia mou? Spao petres kai tis pao gia liosimo. Auto einai olo.
+miner_byzantine.mining=Ponaei to xeri mou apo ton kasma, mera mpainei mera vgainei.
+miner_byzantine.mining=Mia petra, dyo petres, treis petres, tesseris... den exei telos. Ta idia kai ta idia, ksana kai ksana.
+miner_byzantine.mining=Mia petra, dyo petres, treis — gia stasou, xrysos einai autos? Einai? VRIKA XRYSO! XRYSO! XRYSO! Eimai plousios! XAXA— a, oxi. Sidero itan, pou gyalize sto misoskotado. Piso sto sidero kai sto karvouno...
+miner_byzantine.mining=Ogdonta petres, ogdonta mia, ogdonta dyo, ogdonta treis...
+miner_byzantine.mining=E! Pos kouvalas tosa ylika kai skaveis toso grigora? Ego xreiazomai ores gia osa kaneis esy se mia mera.
+miner_byzantine.mining=*Gxou* *gxou*... Sixainomai to karvouno.
+miner_byzantine.mining=Gia na kaneis auti ti douleia, thelei dynami kai antoxi. Ma kaneis den to katalavainei...
+miner_byzantine.mining=Eimai perifanos pou eimai Romaios politis kai douleuo gia tin autokratoria, ki as einai dyskoli douleia.
+
+metropolit_byzantine.makebooks=Ta vivlia mou einai apo ta kalytera xeirografa pou kykloforoun.
+
+metropolit_byzantine.gopray=Giati o Theos me ekane enan apo tous pio agapimenous tou ypiretes?
+metropolit_byzantine.gopray=Os Patriarxis, prepei ego na odigo tin prosefxi.
+metropolit_byzantine.gopray=Katalavaino ta vasana pou exei Ekeinos.
+metropolit_byzantine.gopray=Ekeinos katalavainei ta vasana pou exoume oi patriarxes.
+metropolit_byzantine.gopray=To xorio mou thelei apantiseis apo ton Theo!
+
+metropolit_byzantine.gorest=Oloi xreiazontai ypno, poso mallon o poimenas tou xoriou.
+metropolit_byzantine.gorest=*Xasmourito* Den ginetai na kathodigo iereis nystagmenos.
+
+metropolit_byzantine.inspectconstruction=Omorfia einai na vlepeis to xorio sou na plisiazei ston Theo.
+
+pastor_byzantine.makebooks=Ta vivlia mou einai apo ta kalytera xeirografa pou kykloforoun.
+
+//smith_byzantine.MakeIndianTools=Ta romaika ergaleia einai ta kalytera tou kosmou.
+
+smith_byzantine.gopray=Enas kalos sideras prepei pou kai pou na prosefxetai.
+smith_byzantine.gopray=Giati o Theos me ekane sidera?
+smith_byzantine.gopray=I prosefxi einai kommati tis romaikis texnis.
+smith_byzantine.gopray=Ekeinos katalavainei ta vasana pou exoume oi siderades.
+
+smith_byzantine.gorest=Avrio tha ftiakso akoma pio omorfa pragmata!
+smith_byzantine.gorest=Ftanei i douleia gia simera.
+smith_byzantine.gorest=Isos oneireuto oti ftiaxno ta kalytera ergaleia tou kosmou!
+
+smith_byzantine.gosocialise=Tha rotiso an xreiazetai kaneis kati na tou ftiakso.
+smith_byzantine.gosocialise=Elpizo to xorio na ektimaei ta ergaleia mou.
+
+smith_byzantine.godrink=Ftanei i douleia! Krasi tora!
+smith_byzantine.godrink=Ena potiraki tha mou dosei empneusi!
+smith_byzantine.godrink=Kathe kalos sideras thelei to potiraki tou sto telos tis meras.
+smith_byzantine.godrink=I douleia sto amoni anoigei dipsa gia krasi.
+
+smith_byzantine.makesteelaxe=Xoris tsekouri, dentro den koveis!
+smith_byzantine.makesteelaxe=Ta tsekouria mou einai ena ki ena.
+smith_byzantine.makesteelaxe=Ta romaika tsekouria einai apo ta kalytera tou kosmou!
+smith_byzantine.makesteelaxe=Oi ksylokopoi perimenoun apo emas ta tsekouria tous.
+smith_byzantine.makesteelaxe=Esy pos ftiaxneis ta tsekouria sou, $name?
+
+smith_byzantine.makesteelhoe=Xoris tsapa, xorafi den douleuetai!
+smith_byzantine.makesteelhoe=Oi tsapes mou einai ena ki ena.
+smith_byzantine.makesteelhoe=Ta romaika ergaleia tou xorafiou einai apo ta kalytera tou kosmou!
+smith_byzantine.makesteelhoe=Oi agrotes perimenoun apo emas ta ergaleia tous.
+smith_byzantine.makesteelhoe=Esy pos ftiaxneis ta ergaleia sou gia to xorafi, $name?
+
+smith_byzantine.makesteelpickaxe=Xoris kasma, metallo den vgazeis!
+smith_byzantine.makesteelpickaxe=Ftiaxno kasmades gerous.
+smith_byzantine.makesteelpickaxe=Oi romaikoi kasmades einai apo tous kalyterous tou kosmou!
+smith_byzantine.makesteelpickaxe=Oi metallorixoi perimenoun apo emas tous kasmades tous.
+smith_byzantine.makesteelpickaxe=Esy pos ftiaxneis tous kasmades sou, $name?
+
+smith_byzantine.makesteelshovel=Xoris ftyari, oute xtizeis oute skaveis!
+smith_byzantine.makesteelshovel=Ftiaxno ftyaria pou den spane me tipota.
+smith_byzantine.makesteelshovel=Ta romaika ftyaria einai apo ta kalytera tou kosmou!
+smith_byzantine.makesteelshovel=Oi arxitektones perimenoun apo emas ta ftyaria tous.
+smith_byzantine.makesteelshovel=Esy pos ftiaxneis ta ftyaria sou, $name?
+
+villager.greeting=Xaire, $name!
+villager.greeting=Omorfi mera, etsi den einai?
+villager.greeting=Tha brexei syntoma.
+villager.greeting=Kamia poli ston kosmo den sygkrinetai me tin Konstantinoupoli.
+villager.greeting=Den eimaste Ellines, eimaste Romaioi.
+villager.greeting=Eimaste oi teleutaioi alithinoi Romaioi.
+villager.greeting=Apolause ti doksa tou politismou mas oso menis edo.
+villager.greeting=Kalos irthes sto xorio mas, $name!
+villager.greeting=Gia des! $name!
+villager.greeting=Eimaste oi Byzantinoi, oi teleutaioi alithinoi Romaioi. Ypoklithite sti doksa tou politismou mas.
+
+villager.becomeadult=Epitelous, egina Romaios politis!
+
+villager.huntmonster=Prepei na skotoso auton ton barbaro!
+
+villager.goplay=Mallon tha paikso ekso.
+villager.goplay=Pao na paikso tora.
+villager.goplay=$name! Theleis na paiksoume mazi?
+villager.goplay=Thelo na trekso!
+
+villager.calltoarms=Ixiste synagermo! Dexomaste epithesi!
+villager.calltoarms=Barbaroi! Sta opla Romaioi!
+villager.hitbyplayer=Prosexe, file mou!
+
+villager.childeatgrapes=T' orkizomai, auta ta stafylia epesan mona tous!
+
+villager.childobservevines=Oi megaloi na stamatisoun na xalane ta nostima stafylia gia na kanoun auto to apaisio krasi!
+villager.childobserveconstruction=Mia mera tha pao stin Konstantinoupoli na do pos einai ta alithina romaika ktiria!
+villager.childobserveproducealcohol=Dokimasa mia fora krasi — mpliax! Apaisio.
+
+villager.gorest=An den koimitho, tha ginei kana atyxima.
+villager.gorest=Kourastika. Pao spiti gia ypno.
+villager.gorest=Mallon tha pao gia ypno.
+
+villager.makebread=To psomi myrizei idi oraia...
+
+villager.gopray=Di' efxon ton agion pateron imon.
+villager.gopray=Basileu ouranie, paraklite...
+villager.gopray=Oi paides eulogeite, oi iereis anymneite!
+villager.gopray=Xaire nymfe anymfeute!
+villager.gopray=Tin ypermaxo stratigo ta nikitiria!
+villager.gopray=Os lytrotheisa ton deinon euxaristiria...
+villager.gopray=Kai yperypsoute eis pantas tous aionas!
+
+villager.godrink=Ora gia fresko romaiko krasi!
+villager.godrink=Thelo ena potiraki.
+villager.godrink=To krasi ksepleni ta vasana.
+villager.godrink=To ikseres oti to romaiko krasi einai to kalytero tou kosmou?
+villager.godrink=Exo kairo na pio ena potiraki.
+
+wife_byzantine.delivergoodshousehold=Pragmata san ki auto einai ta mona pou mporo na kano edo.
+wife_byzantine.gethousethresources=Epitelous o syzygos mou efere ta agatha, opos tou eipa.
+wife_byzantine.cooking=I mageiriki einai poly diaskedastiki.
+wife_byzantine.getgoodshousehold=Ora na frontiso tin oikogeneia mou.
+wife_byzantine.greeting=Tha mporousa na kano tosa perissotera edo an imoun antras... ax kai na 'moun!
+wife_byzantine.greeting=Kathikon mas einai na elegxoume tous antres mas.
+
+villager.givespeech=I Romaiki Autokratoria einai megali, kai to xorio mas einai to spoudaioteron!
+villager.givespeech=To xorio mas as euxaristei tous arxontes tou gia ola ta megaleia.
+villager.givespeech=Emeis oi Romaioi exoume tous kalyterous igetes kai ton kalytero lao.
+
+villager.listentospeech=Exei dikio!
+villager.listentospeech=Doksa imin!
+villager.listentospeech=Mporoume na nikisoume ton kathena!
+villager.listentospeech=Doksa ston Theo kai ston theostalto igeti mas!
+
+special_byzantine.greeting=Bahhh, $name.
+special_byzantine.calltoarms=Bahhh! Bah! Bahhhhh! Bah.
+special_byzantine.gopray=Bahhhhh… Bahhhh…
+
+oldshepherd_byzantine.greeting=Oi pepoithiseis mou me kratisan zontano…
+oldshepherd_byzantine.greeting=Voithise me na ekpliroso to oneiro mou, $name, kai tha antameiftheis…
+oldshepherd_byzantine.calltoarms=Gia ton Boskokratora!
+oldshepherd_byzantine=Agie Boskokrator, eulogise emena kai ta provata mou.
+
+merchant_armour.greeting=Mono oi kalyteres panoplies kai ta kalytera opla!
+merchant_armour.keepstall=Kalos irthate, kalos irthate! Sas ferno ta kalytera spathia pou tha vreite pote!
+
+merchant_dyes.greeting=Erxomai ntymenos sta xromata kathe mera! Mia stigmi — den eimai Indos.
+merchant_dyes.keepstall=Ela na deis! Vafes ap' olo ton kosmo!
+
+merchant_food.greeting=Ti les gia kana nostimo souvlaki, $name?
+merchant_food.keepstall=O,ti fagito travaei i psyxi sou!
+
+merchant_materials.greeting=Elate na parete ta kalytera oikodomika ylika! Ego kai i mesi mou tha sas euxaristisoume.
+merchant_materials.keepstall=Ammos, petra kai touvla! Dioritis kai xalazias!
+
+merchant_relics.greeting=Poulao polytima xeirotexnimata kai iera keimilia, $name.
+merchant_relics.keepstall=Elate na deite tin korifi tis romaikis texnis.
+
+merchant_textiles.greeting=Sovara, $name? Auto to endyma?
+merchant_textiles.keepstall=Xalia kai rouxa tis modas, opos akrivos stin Konstantinoupoli!
+
+loneabbot_byzantine.greeting=Kalos irthes, $name. Ksekourasou apo to taksidi sou, edo eisai asfalis.
+lonemonk_byzantine.greeting=Den exo na sou prosfero tipota, $name.
+
+loneabbot_byzantine.gosocialise=Anypomono na moirasto tis meletes mou.
+
+lonemonk_byzantine.gosocialise=Anypomono na moirasto tis meletes mou.
+lonemonk_byzantine.plantseeds=O Theos na eulogisei autous tous sporous.
+lonemonk_byzantine.collectcrop=Auti i sodeia einai doro apo ton idio ton Theo.
+lonemonk_byzantine.makebread=Me auto to psomi tha teleioume ti megali thysia tou Yiou.
+
+villager.plantseeds=To niotho, fetos tha exoume plousia sodeia.
+villager.collectcrop=To iksera! Plousia sodeia!
+
+villager.gostudy=Se parakalo, min me apospas, $name.
+
+villager.gotreerelax=Auti i skia einai o,ti prepei…
+villager.gotreerelax=Tha kathomoun kato apo auto to dentro oli mera…
+
+villager.relight=I agapi tou Theou einai i moni mou epithymia!
+villager.golookout=Simera tha 'rthei karavi. To niotho.
+villager.golookout=Bareti douleia, ma toulaxiston plironomai.
+villager.sellercoming=Erxomai amesos!
+villager.tradecomplete=Efxaristo poly, kales douleies!

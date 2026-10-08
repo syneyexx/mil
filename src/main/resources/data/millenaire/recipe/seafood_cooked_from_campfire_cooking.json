@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:campfire_cooking",
+  "category": "food",
+  "cookingtime": 600,
+  "experience": 1.0,
+  "ingredient": {
+    "item": "millenaire:seafood_raw"
+  },
+  "result": {
+    "count": 1,
+    "id": "millenaire:seafood_cooked"
+  }
+}

@@ -1,0 +1,531 @@
+architect_byzantine.construction=$name! क्या तुम जानते हो कि रोमन सबसे बेहतरीन वास्तुकार हैं?
+architect_byzantine.construction=$name! देखो मैं एक सुंदर रचना बनाता हूँ.
+architect_byzantine.construction=यह इमारत सुंदर होगी!
+architect_byzantine.construction=अभी पूरी नहीं हुई, फिर भी मुझे अपने काम में सुंदरता दिख रही है.
+architect_byzantine.construction=मैं ऐसी विस्तृत संरचनाएँ बनाता हूँ. निर्माण सच में कला का सबसे सुंदर रूप है.
+architect_byzantine.construction=रोम एक दिन में नहीं बना था, ईंट-ईंट जोड़कर बना था.
+architect_byzantine.construction=हमारी वास्तुकला दुनिया की सभी इमारतों से श्रेष्ठ है.
+architect_byzantine.construction=रोमन तरीक़े से बनाना ही सबसे अच्छा तरीक़ा है.
+architect_byzantine.construction=क्या तुम्हें मेरी शैली पसंद है?
+architect_byzantine.construction=मैं याद से भी पहले से निर्माण कर रहा हूँ. निर्माण अब मेरी ज़िंदगी बन गया है.
+
+architect_byzantine.getresourcesforbuild=गाँव को ये ईंटें कहाँ से मिलती हैं?
+architect_byzantine.getresourcesforbuild=सबसे बेहतरीन संरचनाएँ बनाने के लिए मुझे ईंटें चाहिए!
+architect_byzantine.getresourcesforbuild=हर निर्माण ईंटों से शुरू होता है.
+architect_byzantine.getresourcesforbuild=मुझे ख़ुद ईंटों का चयन सावधानी से करना होगा.
+architect_byzantine.getresourcesforbuild=जब तुम निर्माण करते हो, इतनी सारी ईंटें कैसे ढोते हो, $name?
+architect_byzantine.getresourcesforbuild=निर्माण का सबसे बुरा हिस्सा ईंटें लाना है.
+
+architect_byzantine.godrink=बहुत हुआ निर्माण! मुझे थोड़ी मदिरा चाहिए!
+architect_byzantine.godrink=मुझे प्रेरणा के लिए एक प्याला चाहिए!
+architect_byzantine.godrink=हर अच्छे वास्तुकार को दिन के अंत में एक प्याला चाहिए.
+architect_byzantine.godrink=निर्माण करते-करते मदिरा की प्यास लग गई.
+
+architect_byzantine.gopray=उम्मीद है परमेश्वर मुझे अगली इमारत के लिए प्रेरणा दें!
+architect_byzantine.gopray=परमेश्वर ने मुझे वास्तुकार क्यों बनाया?
+architect_byzantine.gopray=प्रार्थना रोमन निर्माण का एक अहम हिस्सा है.
+architect_byzantine.gopray=वे वास्तुकारों की मुश्किलें समझते हैं.
+
+architect_byzantine.gorest=अगर मैं नहीं सोऊँगा तो कुछ बनाते समय गड़बड़ हो सकती है.
+architect_byzantine.gorest=थका होने पर मैं निर्माण नहीं कर सकता.
+architect_byzantine.gorest=अँधेरे में निर्माण करना मुश्किल है.
+architect_byzantine.gorest=आज के लिए निर्माण ख़त्म.
+architect_byzantine.gorest=शायद मैं सपने में दुनिया की सबसे शानदार इमारतें बनाऊँगा!
+
+architect_byzantine.gosocialise=इस गाँव में कोई निर्माण की मुश्किलें नहीं समझता.
+architect_byzantine.gosocialise=हर वास्तुकार को दूसरों से प्रेरणा चाहिए.
+architect_byzantine.gosocialise=वास्तुकारों को आगे बढ़ने के लिए राय चाहिए.
+architect_byzantine.gosocialise=गाँव मेरी इमारतों के बारे में क्या सोचता है?
+
+//armysmith_byzantine.MakeIndianTools=रोमन औज़ार दुनिया में सबसे बेहतरीन हैं.
+armysmith_byzantine.makebyzantinemace=मेरे हथियारों का इस्तेमाल करने वाले पर हमला मत करो.
+armysmith_byzantine.makebyzantinemace=यह गदा बर्बरों को दूर उड़ा देगी!
+armysmith_byzantine.makebyzantinemace=गदा बनाना उसे चलाने से कहीं ज़्यादा कठिन है.
+armysmith_byzantine.makebyzantinemace=सेना को गदाएँ चाहिए.
+
+armysmith_byzantine.gopray=अच्छे लोहार को कभी-कभी प्रार्थना करनी चाहिए.
+armysmith_byzantine.gopray=परमेश्वर ने मुझे लोहार क्यों बनाया?
+armysmith_byzantine.gopray=प्रार्थना रोमन शिल्प का एक अहम हिस्सा है.
+armysmith_byzantine.gopray=वे लोहारों की मुश्किलें समझते हैं.
+
+armysmith_byzantine.gorest=कल मैं और सुंदर चीज़ें बनाऊँगा!
+armysmith_byzantine.gorest=आज के लिए शिल्प-काम ख़त्म.
+armysmith_byzantine.gorest=शायद मैं सपने में दुनिया के सबसे बेहतरीन हथियार बनाऊँगा!
+armysmith_byzantine.gorest=शायद मैं सपने में दुनिया का सबसे बेहतरीन कवच बनाऊँगा!
+armysmith_byzantine.gorest=शायद मैं सपने में दुनिया के सबसे बेहतरीन औज़ार बनाऊँगा!
+
+armysmith_byzantine.gosocialise=मैं पूछूँगा कि किसी को कुछ बनवाना है क्या.
+armysmith_byzantine.gosocialise=उम्मीद है कि गाँव मेरे औज़ारों की क़द्र करता है.
+
+armysmith_byzantine.godrink=बहुत हुआ काम! मुझे थोड़ी मदिरा चाहिए!
+armysmith_byzantine.godrink=मुझे प्रेरणा के लिए एक प्याला चाहिए!
+armysmith_byzantine.godrink=हर अच्छे लोहार को दिन के अंत में एक प्याला चाहिए.
+armysmith_byzantine.godrink=शिल्प-काम से मदिरा की प्यास लग जाती है.
+
+armysmith_byzantine.makearrow=$name, क्या तुम अपने सफ़र में बहुत सारे तीर इस्तेमाल करते हो?
+armysmith_byzantine.makearrow=हर धनुष को एक बढ़िया तीर चाहिए.
+armysmith_byzantine.makearrow=मेरा बनाया हर तीर साम्राज्य के एक शत्रु को घायल करेगा.
+armysmith_byzantine.makearrow=रोमन सेना को बाहरी लोगों से बचाने के लिए तीर चाहिए.
+
+armysmith_byzantine.makebow=रोमन सेना को धनुष चाहिए.
+armysmith_byzantine.makebow=अरे! क्या तुम्हें मेरे धनुष पसंद हैं, $name?
+armysmith_byzantine.makebow=हर अच्छा धनुष सबसे अच्छी लकड़ी से बनता है.
+armysmith_byzantine.makebow=यह धनुष कई बर्बरों को हराएगा. मैं सच में माहिर धनुष-कारीगर हूँ.
+
+armysmith_byzantine.makebyzantineboots=रोमन सेना को जूते चाहिए!
+armysmith_byzantine.makebyzantineboots=रोमन दुनिया के सबसे बेहतरीन जूते बनाते हैं.
+armysmith_byzantine.makebyzantineboots=किसी को तो सैनिकों के जूते बनाने हैं...
+armysmith_byzantine.makebyzantineboots=हम सबसे बेहतरीन जूते बनाते हैं.
+armysmith_byzantine.makebyzantineboots=अरे! क्या तुम्हें मेरे जूते पसंद हैं, $name?
+armysmith_byzantine.makebyzantineboots=मुझे लगता है मैं बस एक बढ़े-चढ़े नाम वाला मोची हूँ.
+armysmith_byzantine.makebyzantineboots=हर कवच का काम महत्वपूर्ण है! वे जूते भी जो तुम्हारे पैरों में जाते हैं!
+
+armysmith_byzantine.makebyzantinechest=रोमन सेना को कवच चाहिए!
+armysmith_byzantine.makebyzantinechest=रोमन दुनिया के सबसे बेहतरीन कवच बनाते हैं.
+armysmith_byzantine.makebyzantinechest=अरे! क्या तुम्हें मेरा कवच पसंद है, $name?
+armysmith_byzantine.makebyzantinechest=हम सबसे बेहतरीन कवच बनाते हैं.
+armysmith_byzantine.makebyzantinechest=यह तुम्हारी सहन-शक्ति से ज़्यादा वार झेल सकेगा.
+armysmith_byzantine.makebyzantinechest=मुझे लगता है मैं बस एक बढ़े-चढ़े नाम वाला दर्ज़ी हूँ.
+
+armysmith_byzantine.makebyzantinehelmet=रोमन सेना को टोप चाहिए!
+armysmith_byzantine.makebyzantinehelmet=किसी को तो सैनिकों के टोप बनाने हैं...
+armysmith_byzantine.makebyzantinehelmet=रोमन दुनिया के सबसे बेहतरीन जूते बनाते हैं.
+armysmith_byzantine.makebyzantinehelmet=अरे! क्या तुम्हें मेरे टोप पसंद हैं, $name?
+armysmith_byzantine.makebyzantinehelmet=हम सबसे बेहतरीन टोप बनाते हैं.
+armysmith_byzantine.makebyzantinehelmet=मुझे लगता है मैं बस एक बढ़े-चढ़े नाम वाला टोपी-कारीगर हूँ.
+
+armysmith_byzantine.makebyzantinelegs=रोमन सेना को पाँव-कवच चाहिए!
+armysmith_byzantine.makebyzantinelegs=किसी को तो सैनिकों के पाँव-कवच बनाने हैं...
+armysmith_byzantine.makebyzantinelegs=रोमन दुनिया के सबसे बेहतरीन पाँव-कवच बनाते हैं.
+armysmith_byzantine.makebyzantinelegs=अरे! क्या तुम्हें मेरे पाँव-कवच पसंद हैं, $name?
+armysmith_byzantine.makebyzantinelegs=हम सबसे बेहतरीन पाँव-कवच बनाते हैं.
+armysmith_byzantine.makebyzantinelegs=मुझे लगता है मैं बस एक बढ़े-चढ़े नाम वाला पतलून-कारीगर हूँ.
+
+armysmith_byzantine.makesteelaxe=कुल्हाड़ी के बिना तुम पेड़ नहीं काट सकते!
+armysmith_byzantine.makesteelaxe=मैं अद्भुत कुल्हाड़ियाँ बनाता हूँ.
+armysmith_byzantine.makesteelaxe=रोमन कुल्हाड़ियाँ दुनिया में सबसे बेहतरीन में से हैं!
+armysmith_byzantine.makesteelaxe=लकड़हारों को अपनी कुल्हाड़ियों के लिए हमारी ज़रूरत है.
+armysmith_byzantine.makesteelaxe=तुम अपनी कुल्हाड़ियाँ कैसे बनाते हो, $name?
+
+armysmith_byzantine.makesteelhoe=खेती के औज़ारों के बिना तुम खेती नहीं कर सकते!
+armysmith_byzantine.makesteelhoe=मैं अद्भुत खेती के औज़ार बनाता हूँ.
+armysmith_byzantine.makesteelhoe=रोमन खेती के औज़ार दुनिया में सबसे बेहतरीन में से हैं!
+armysmith_byzantine.makesteelhoe=किसानों को अपने औज़ारों के लिए हमारी ज़रूरत है.
+armysmith_byzantine.makesteelhoe=तुम अपने खेती के औज़ार कैसे बनाते हो, $name?
+
+armysmith_byzantine.makesteelpickaxe=गैंती के बिना तुम खनन नहीं कर सकते!
+armysmith_byzantine.makesteelpickaxe=मैं मज़बूत गैंतियाँ बनाता हूँ.
+armysmith_byzantine.makesteelpickaxe=रोमन गैंतियाँ दुनिया में सबसे बेहतरीन में से हैं!
+armysmith_byzantine.makesteelpickaxe=खनिकों को अपनी गैंतियों के लिए हमारी ज़रूरत है.
+armysmith_byzantine.makesteelpickaxe=तुम अपनी गैंतियाँ कैसे बनाते हो, $name?
+
+armysmith_byzantine.makesteelshovel=फावड़े के बिना तुम न निर्माण कर सकते हो न खुदाई!
+armysmith_byzantine.makesteelshovel=मैं टिकाऊ फावड़े बनाता हूँ.
+armysmith_byzantine.makesteelshovel=रोमन फावड़े दुनिया में सबसे बेहतरीन में से हैं!
+armysmith_byzantine.makesteelshovel=वास्तुकारों को अपने फावड़ों के लिए हमारी ज़रूरत है.
+armysmith_byzantine.makesteelshovel=तुम अपने फावड़े कैसे बनाते हो, $name?
+
+//artisan_byzantine.makePainting=रोमन कला दुनिया में सबसे विकसित है.
+
+artisan_byzantine.gopray=अच्छे कारीगर को कभी-कभी प्रार्थना करनी चाहिए.
+artisan_byzantine.gopray=परमेश्वर ने मुझे कारीगर क्यों बनाया?
+artisan_byzantine.gopray=प्रार्थना रोमन शिल्प का एक अहम हिस्सा है.
+artisan_byzantine.gopray=वे कारीगरों की मुश्किलें समझते हैं.
+
+artisan_byzantine.gorest=कल मैं और सुंदर चीज़ें बनाऊँगा!
+artisan_byzantine.gorest=आज के लिए शिल्प-काम ख़त्म.
+artisan_byzantine.gorest=शायद मैं सपने में दुनिया की सबसे बेहतरीन ईंटें बनाऊँगा!
+artisan_byzantine.gorest=शायद मैं सपने में दुनिया की सबसे बेहतरीन टाइलें बनाऊँगा!
+
+artisan_byzantine.gosocialise=मैं पूछूँगा कि किसी को कुछ बनवाना है क्या.
+artisan_byzantine.gosocialise=उम्मीद है कि गाँव मेरी टाइलों की क़द्र करता है.
+artisan_byzantine.gosocialise=उम्मीद है कि गाँव मेरी ईंटों की क़द्र करता है.
+
+artisan_byzantine.godrink=बहुत हुआ काम! मुझे थोड़ी मदिरा चाहिए!
+artisan_byzantine.godrink=मुझे प्रेरणा के लिए एक प्याला चाहिए!
+artisan_byzantine.godrink=हर अच्छे कारीगर को दिन के अंत में एक प्याला चाहिए.
+artisan_byzantine.godrink=शिल्प-काम से मदिरा की प्यास लग जाती है.
+
+artisan_byzantine.greeting=इस गाँव में सबसे अच्छी ज़िंदगी मेरी है.
+artisan_byzantine.greeting=नमस्ते $name! क्या तुम्हें कुछ ख़ास रोमन ईंटें चाहिए?
+
+artisan_byzantine.makebrick=किसी को तो ईंटें बनानी हैं.
+artisan_byzantine.makebrick=गाँव को मेरी ज़रूरत है उनकी दीवारों के लिए ईंटें बनाने को.
+artisan_byzantine.makebrick=रोमन ईंटें दुनिया की सबसे सुंदर ईंटों में से हैं!
+artisan_byzantine.makebrick=हम पर्दे के पीछे काम करते हैं और निर्माणकर्ता सारा श्रेय ले जाते हैं.
+artisan_byzantine.makebrick=बिना ईंटों के तो सबसे बेहतरीन निर्माणकर्ता भी कुछ नहीं बना सकते.
+artisan_byzantine.makebrick=मिट्टी से ईंट बनाने का विचार किसके दिमाग़ में आया था?
+
+artisan_byzantine.makebookshelves=किसी को तो किताबें अलमारी पर सजानी हैं.
+artisan_byzantine.makebookshelves=गाँव को मेरी ज़रूरत है उनकी किताबों की अलमारियाँ बनाने को.
+artisan_byzantine.makebookshelves=रोमन किताबें दुनिया में पढ़ने के लिए सबसे बेहतरीन हैं!
+artisan_byzantine.makebookshelves=हम पर्दे के पीछे काम करते हैं और लेखक सारा श्रेय ले जाते हैं.
+artisan_byzantine.makebookshelves=कभी-कभी अलमारी पर सजाने से पहले मैं किताबें देखता हूँ, काश मैं पढ़ पाता.
+artisan_byzantine.makebookshelves=चीज़ें लिख कर रखने का विचार किसके दिमाग़ में आया था?
+
+artisan_byzantine.makebyzantinetiles=किसी को तो छत की टाइलें बनानी हैं.
+artisan_byzantine.makebyzantinetiles=गाँव को मेरी ज़रूरत है उनकी छतें बनाने को.
+artisan_byzantine.makebyzantinetiles=रोमन टाइलें दुनिया की सबसे सुंदर ईंटों में से हैं!
+artisan_byzantine.makebyzantinetiles=हम पर्दे के पीछे काम करते हैं और निर्माणकर्ता सारा श्रेय ले जाते हैं.
+artisan_byzantine.makebyzantinetiles=बिना ईंटों के तो सबसे बेहतरीन निर्माणकर्ता भी कुछ नहीं बना सकते.
+artisan_byzantine.makebyzantinetiles=मिट्टी से छत बनाने का विचार किसके दिमाग़ में आया था?
+
+artisanwife_byzantine.gopray=प्रार्थना रोमन शिल्प का एक अहम हिस्सा है.
+artisanwife_byzantine.gopray=उम्मीद है परमेश्वर मुझे सबसे अच्छे कपड़े बनाने में मदद करें!
+artisanwife_byzantine.gopray=परमेश्वर ने एक वास्तुकार की पत्नी क्यों बनाई?
+
+artisanwife_byzantine.gosocialise=ओह! वो शर्ट तो मैंने बनाई थी!
+artisanwife_byzantine.gosocialise=यहाँ मुझे "वास्तुकार की पत्नी" के नाम से जानते हैं.
+artisanwife_byzantine.gosocialise="वास्तुकार की पत्नी" कहलाते-कहलाते मैं ऊब गई हूँ.
+
+artisanwife_byzantine.makeclothes_byz_silk=मैं गाँव के सबसे बेहतरीन कपड़े बनाती हूँ!
+artisanwife_byzantine.makeclothes_byz_silk=रोमन रेशम दुनिया में सबसे बेहतरीन कपड़ा है!
+artisanwife_byzantine.makeclothes_byz_silk=रेशमी कपड़े आलीशान घर से ज़्यादा अहम हैं.
+artisanwife_byzantine.makeclothes_byz_silk=$name, क्या तुमने पहले कभी रेशम पहना है?
+artisanwife_byzantine.makeclothes_byz_silk=हर किसी को कपड़े चाहिए, ख़ास तौर पर अगर सभ्य कहलाना है.
+artisanwife_byzantine.makeclothes_byz_silk=असली सुंदरता ईंटों में नहीं, कपड़ों में होती है.
+artisanwife_byzantine.makeclothes_byz_silk=इसी वजह से मैं यह बुन रही हूँ, मेरे पति नहीं.
+artisanwife_byzantine.makeclothes_byz_silk=रेशम के कपड़े बुनना सबसे कुलीन औरतों का काम है.
+artisanwife_byzantine.makeclothes_byz_silk=ख़ुशी है कि मुझे एक असली काम मिला है.
+
+artisanwife_byzantine.makeclothes_byz_wool=मैं गाँव के सबसे बेहतरीन ऊनी कपड़े बनाती हूँ!
+artisanwife_byzantine.makeclothes_byz_wool=अच्छे कपड़े आलीशान घर से ज़्यादा अहम हैं.
+artisanwife_byzantine.makeclothes_byz_wool=$name, क्या तुमने पहले कभी ऊन पहना है?
+artisanwife_byzantine.makeclothes_byz_wool=असली सुंदरता ईंटों में नहीं, कपड़ों में होती है.
+artisanwife_byzantine.makeclothes_byz_wool=हर किसी को कपड़े चाहिए, ख़ास तौर पर अगर सभ्य कहलाना है.
+artisanwife_byzantine.makeclothes_byz_wool=इसी वजह से मैं यह बुन रही हूँ, मेरे पति नहीं.
+artisanwife_byzantine.makeclothes_byz_wool=हर औरत ऊन से बुनाई नहीं कर सकती.
+artisanwife_byzantine.makeclothes_byz_wool=ख़ुशी है कि मुझे एक असली काम मिला है.
+
+artisanwife_byzantine.delivergoodshousehold=यहाँ मैं बस यही काम कर सकती हूँ.
+artisanwife_byzantine.gethousethresources=मेरे पति ने आख़िरकार वही सामान पहुँचाया जो मैंने कहा था.
+artisanwife_byzantine.getgoodshousehold=परिवार की देखभाल का समय.
+artisanwife_byzantine.greeting=अगर मैं मर्द होती तो यहाँ कितना कुछ कर सकती थी, काश...
+artisanwife_byzantine.greeting=हमारा काम है अपने मर्दों को सँभालना.
+
+baron_byzantine.greeting=$name, मेरे गाँव में सबसे बेहतरीन सामान बिक्री पर है!
+baron_byzantine.greeting=नमस्ते धनी यात्री!
+baron_byzantine.greeting=क्या तुम किसानों पर नज़र रखने में मदद करना चाहोगे, $name?
+
+baron_byzantine.godrink=बहुत हुआ शासन! मुझे एक प्याला चाहिए.
+baron_byzantine.godrink=मेरा हक़ है सबसे बेहतरीन मदिरा पीने का!
+baron_byzantine.godrink=मुझे देखना चाहिए कि सराय में मुनाफ़ा हो रहा है या नहीं.
+baron_byzantine.godrink=हर शक्तिशाली आदमी को पीना ज़रूरी है वरना तनाव से मर जाएगा!
+
+baron_byzantine.gopray=परमेश्वर ने मुझे बैरन क्यों बनाया?
+baron_byzantine.gopray=प्रार्थना रोमन शासन का एक अहम हिस्सा है.
+baron_byzantine.gopray=वे बैरनों की मुश्किलें समझते हैं.
+baron_byzantine.gopray=मेरे गाँव को परमेश्वर से जवाब चाहिए!
+
+baron_byzantine.gorest=बहुत हुआ किसानों को सँभालना! मुझे थोड़ी नींद चाहिए.
+baron_byzantine.gorest=*जम्हाई* थका होने पर मैं किसानों का नेतृत्व नहीं कर सकता.
+baron_byzantine.gorest=अपने रेशमी कंबल में सोने का समय.
+baron_byzantine.gorest=हर किसी को नींद चाहिए, ख़ास तौर पर जब आप गाँव के मुखिया हो.
+
+baron_byzantine.gosocialise=ये मूर्ख किसान मुझे बस "बैरन" के रूप में क्यों देखते हैं?
+baron_byzantine.gosocialise=हे हे हे, देखें इसने अपना कर चुकाया या नहीं.
+baron_byzantine.gosocialise=ग़रीबों को दीनार कमाने की प्रेरणा देने का समय!
+baron_byzantine.gosocialise=क्या मुझे आम लोगों से बात करनी होगी?
+baron_byzantine.gosocialise=बैरन होने के नाते मुझे अपने लोगों से बात करनी है, चाहे मन हो या न हो.
+
+baron_byzantine.inspectconstruction=मुझे यह सुनिश्चित करना है कि किसानों ने कुछ बिगाड़ा न हो.
+baron_byzantine.inspectconstruction=यह इमारत मेरे गाँव में मुनाफ़ा लाएगी.
+baron_byzantine.inspectconstruction=सुंदरता यही है कि अपने गाँव को धनी होते देखें.
+baron_byzantine.inspectconstruction=पता है रोम एक दिन में नहीं बना था, पर मेरा वास्तुकार इतना सुस्त क्यों है?
+baron_byzantine.inspectconstruction=मेरा काम है यह सुनिश्चित करना कि इमारतें सही बनें.
+baron_byzantine.inspectconstruction=मेरे वास्तुकार आमतौर पर अच्छा काम करते हैं, फिर भी मुझे हमेशा उन पर नज़र रखनी पड़ती है.
+
+boy_byzantine.becomeadult=मज़बूत मर्द बनने का समय!
+boy_byzantine.becomeadult=मैं काम करने लायक़ हो गया हूँ!
+boy_byzantine.becomeadult=अब मुझे काम चाहिए.
+boy_byzantine.becomeadult=मेरे लड़कपन के दिन ख़त्म हुए.
+
+boy_byzantine.goplay=मुझे किसी से लड़ना है!
+boy_byzantine.goplay=मुझे "बर्बर से लड़ो" खेलना है!
+boy_byzantine.goplay=मैं सबको दिखाऊँगा कि मैं बड़ा और मज़बूत हूँ!
+boy_byzantine.goplay="सिपाही" खेलने का समय.
+
+boy_byzantine.gopray=मुझे परमेश्वर के बारे में जानना है!
+boy_byzantine.gopray=क्या परमेश्वर मुझे बड़ों के बारे में बता सकते हैं?
+boy_byzantine.gopray=मैं प्रार्थना कैसे करूँ?
+boy_byzantine.gopray=मुझे प्रार्थना नहीं करनी! मुझे खेलना है!
+
+boy_byzantine.childobservesmithing=जब मैं बड़ा हो जाऊँगा तो मैं भी लोहार बनूँगा. या सिपाही. या सेनापति!
+
+centurio_byzantine.godrink=हर शक्तिशाली आदमी को पीना ज़रूरी है वरना तनाव से मर जाएगा!
+centurio_byzantine.godrink=एक सिपाही के नाते मुझे मदिरा चाहिए, सेंचुरियन के नाते और भी ज़्यादा.
+centurio_byzantine.godrink=मुझे आराम और सुकून चाहिए, वरना बर्बरों के आने पर मैं बेकार हो जाऊँगा.
+
+centurio_byzantine.gopray=परमेश्वर ने मुझे Strategos क्यों बनाया?
+centurio_byzantine.gopray=प्रार्थना रोमन युद्ध का एक अहम हिस्सा है.
+centurio_byzantine.gopray=वे Strategos की मुश्किलें समझते हैं.
+centurio_byzantine.gopray=मेरी सेना को परमेश्वर से जवाब चाहिए!
+
+centurio_byzantine.gorest=बहुत हुआ सिपाहियों को सँभालना! मुझे थोड़ी नींद चाहिए.
+centurio_byzantine.gorest=अपना कवच उतारकर सोने का समय.
+centurio_byzantine.gorest=*जम्हाई* थका होने पर मैं सिपाहियों का नेतृत्व नहीं कर सकता.
+centurio_byzantine.gorest=हर किसी को नींद चाहिए, ख़ास तौर पर जब आप गाँव के मुखिया हो.
+
+centurio_byzantine.gosocialise=सिपाहियों का हौसला बढ़ाने का समय!
+centurio_byzantine.gosocialise=वफ़ादारी पाने का अच्छा तरीक़ा है अपने लोगों से सलाह लेना.
+centurio_byzantine.gosocialise=मुझे सेना के लिए और भर्तियाँ चाहिए!
+centurio_byzantine.gosocialise=मेरे मातहतों को मेरी रक्षात्मक योजनाएँ जाननी चाहिए.
+centurio_byzantine.gosocialise=मेरे मातहतों को मेरी आक्रामक योजनाएँ जाननी चाहिए.
+centurio_byzantine.gosocialise=लोगों को बर्बर हमले का ख़तरा समझना चाहिए!
+centurio_byzantine.gosocialise=मुझे सबको याद दिलाना है कि हम किसी भी समय युद्ध के लिए तैयार रहें!
+
+centurio_byzantine.huntmonster=सेंचुरियन होने पर भी मैं सिपाही के काम में जंग नहीं खा सकता.
+centurio_byzantine.huntmonster=मेरे मातहत कहाँ हैं? यह काम तो उन्हें करना चाहिए था.
+centurio_byzantine.huntmonster=मैं रोमन साम्राज्य का Strategos हूँ और तुम सोचते हो मुझसे लड़ सकते हो? हा!
+
+centurio_byzantine.inspectconstruction=सुंदरता यही है कि अपने गाँव को मज़बूत होते देखें.
+
+farmiller_wife_byzantine.delivergoodshousehold=यहाँ मैं बस यही काम कर सकती हूँ.
+farmiller_wife_byzantine.gethousethresources=मेरे पति ने आख़िरकार वही सामान पहुँचाया जो मैंने कहा था.
+farmiller_wife_byzantine.getgoodshousehold=परिवार की देखभाल का समय.
+farmiller_wife_byzantine.greeting=अगर मैं मर्द होती तो यहाँ कितना कुछ कर सकती थी, काश...
+farmiller_wife_byzantine.greeting=हमारा काम है अपने मर्दों को सँभालना.
+
+girl_byzantine.childobserveproducefood=अच्छा है कि मर्द खाना नहीं पकाते, वे सब कुछ जला डालते.
+
+keeperbirch_byzantine.greeting=यहाँ कितना सूना है, कभी कुछ नहीं होता...
+keeperbirch_byzantine.greeting=इन इलाक़ों पर नज़र रखना मेरा काम है.
+keeperbirch_byzantine.greeting=अभिवादन यात्री, मैं सोच रहा हूँ तुम इस दूर-दराज़ की जगह कैसे आ पहुँचे.
+keeperbirch_byzantine.greeting=किसी ने कैसे सोचा कि यहाँ किसी को तैनात किया जाए...
+
+keeperoak_byzantine.greeting=यहाँ के लोग, जो अपने आप को नोरमन कहते हैं, मुझे हमारे शानदार साम्राज्य की याद दिलाते हैं.
+keeperoak_byzantine.greeting=यहाँ कितना सूना है, कभी कुछ नहीं होता...
+keeperoak_byzantine.greeting=इन इलाक़ों पर नज़र रखना मेरा काम है.
+keeperoak_byzantine.greeting=अभिवादन यात्री, मैं सोच रहा हूँ तुम इस दूर-दराज़ की जगह कैसे आ पहुँचे.
+keeperoak_byzantine.greeting=किसी ने कैसे सोचा कि यहाँ किसी को तैनात किया जाए...
+
+keeperpine_byzantine.greeting=यह ठंड भयंकर है. कोई हैरत नहीं कि यहाँ कोई नहीं है.
+keeperpine_byzantine.greeting=यहाँ कितना सूना है, कभी कुछ नहीं होता...
+keeperpine_byzantine.greeting=इन इलाक़ों पर नज़र रखना मेरा काम है.
+keeperpine_byzantine.greeting=अभिवादन यात्री, मैं सोच रहा हूँ तुम इस दूर-दराज़ की जगह कैसे आ पहुँचे.
+keeperpine_byzantine.greeting=किसी ने कैसे सोचा कि यहाँ किसी को तैनात किया जाए...
+
+keepertropical_byzantine.greeting=यहाँ कितना सूना है, कभी कुछ नहीं होता...
+keepertropical_byzantine.greeting=इन इलाक़ों पर नज़र रखना मेरा काम है.
+keepertropical_byzantine.greeting=यहाँ बहुत गरमी है. मुझे समझ नहीं आता कि वे भारतीय इन इलाक़ों में कैसे रहते हैं.
+keepertropical_byzantine.greeting=क्या तुमने वो अजीब माया लोग देखे हैं? उनकी इमारतें ऐसी लगती हैं जैसे किसी भी पल गिर जाएँगी.
+keepertropical_byzantine.greeting=अभिवादन यात्री, मैं सोच रहा हूँ तुम इस दूर-दराज़ की जगह कैसे आ पहुँचे.
+keepertropical_byzantine.greeting=किसी ने कैसे सोचा कि यहाँ किसी को तैनात किया जाए...
+
+lumberman_byzantine.bringbackresourceshome=उम्मीद है यह गाँव के फलने-फूलने के लिए काफ़ी होगा!
+lumberman_byzantine.bringbackresourceshome=मैं बहुत कामयाब लकड़हारा हूँ, मेरी थैली लट्ठों से भरी है!
+lumberman_byzantine.bringbackresourceshome=मैं बहुत सारे पेड़ ढो रहा हूँ पर किसी कारण से वे भारी नहीं हैं.
+lumberman_byzantine.bringbackresourceshome=अच्छा काम हुआ.
+lumberman_byzantine.bringbackresourceshome=इतनी सारी लकड़ी देखकर मेरी पत्नी ज़रूर गर्व करेगी.
+
+lumberman_byzantine.choptrees=यहाँ की हर इमारत को लकड़ी चाहिए, और उसे लाना मेरा काम है!
+lumberman_byzantine.choptrees=एक और पेड़ गिरा, गाँव के लिए और लकड़ी!
+lumberman_byzantine.choptrees=एक और पेड़ धराशायी, गाँव के लिए और लकड़ी!
+lumberman_byzantine.choptrees=$name, क्या तुमने कभी पेड़ काटा है?
+lumberman_byzantine.choptrees=आ जा पेड़, मेरी कुल्हाड़ी तुझे बुला रही है!
+lumberman_byzantine.choptrees=मर पेड़ मर! हाहाहा! मर! मर! मर! हा- ओह, सलाम $name! कुछ... अजीब... नहीं हो रहा यहाँ.
+lumberman_byzantine.choptrees=मैं तुझे मारना नहीं चाहता, पर मजबूरी है... अलविदा पेड़!
+lumberman_byzantine.choptrees=क्या तुमने कभी सोचा कि यहाँ काटे गए पेड़ हवा में क्यों तैरते हैं, $name? बहुत अजीब है. चाहे जो करूँ, वे हमेशा तैरते रहते हैं और मुझे पेड़ को टुकड़े-टुकड़े करके ऊपर की तरफ़ तोड़ना पड़ता है, ऐसा परेशानी का काम है.
+
+lumberman_byzantine.gathergoods=अरे $name! यह मत ले जाना!
+lumberman_byzantine.gathergoods=इस बार पेड़ अच्छे उगे, इतने सारे लट्ठे और पौधे.
+lumberman_byzantine.gathergoods=उम्मीद है गाँव को ये सारे लट्ठे चाहिए.
+lumberman_byzantine.gathergoods=वह एक बड़ा पेड़ था! अब गाँव इसके लट्ठे इस्तेमाल कर सकता है.
+lumberman_byzantine.gathergoods=देखो पेड़ काटने से मुझे कितने नए लट्ठे और पौधे मिले!
+lumberman_byzantine.gathergoods=वहाँ अच्छा पौधा है.
+
+lumberman_byzantine.plantsaplings=ये पौधे इतने छोटे हैं, कभी-कभी विश्वास नहीं होता कि ये इतने बड़े हो जाएँगे.
+lumberman_byzantine.plantsaplings=तुम कितने प्यारे हो छोटे पौधे, कभी-कभी भूल जाता हूँ कि बड़े होने पर मैं तुम्हें काट डालूँगा.
+lumberman_byzantine.plantsaplings=$name, क्या तुम पौधा लगाना चाहोगे?
+lumberman_byzantine.plantsaplings=यहाँ पेड़ इतनी जल्दी बढ़ते हैं, कुछ ही दिनों में यह छोटा पौधा पूरा पेड़ बन जाता है.
+lumberman_byzantine.plantsaplings=लगाना सबसे आसान काम है, बस ज़मीन पर रखना है.
+lumberman_byzantine.plantsaplings=जल्द ही यह एक बड़ा, भव्य पेड़ बनेगा! और मैं इसे काट डालूँगा.
+
+merchant_art.greeting=दुनिया में कोई शहर कॉन्स्टैन्टिनोपल की सुंदरता और शक्ति की बराबरी नहीं कर सकता.
+merchant_art.greeting=हम ही असली अंतिम रोमन हैं!
+
+miner_byzantine.mining=मेरा काम है चट्टानें तोड़ना और उन्हें गलाने ले जाना, बस इतना ही.
+miner_byzantine.mining=रोज़ इस गैंती से बाँह दुखती है.
+miner_byzantine.mining=एक पत्थर, दो पत्थर, तीन पत्थर, चार पत्थर, कभी ख़त्म नहीं होता. बस वही चीज़ बार-बार.
+miner_byzantine.mining=एक पत्थर, दो पत्थर, तीन-रुको, क्या वो सोना है? सच में? मुझे सोना मिल गया! सोना! सोना! मैं अमीर हूँ! हाहा-ओह, वो तो बस ख़राब रोशनी में चमकता लोहा था. वापस लोहा और कोयला खोदने...
+miner_byzantine.mining=अस्सी पत्थर, इक्यासी पत्थर, बयासी पत्थर, तिरासी पत्थर...
+miner_byzantine.mining=अरे! तुम इतने सारे पत्थर कैसे ढोते हो और इतनी जल्दी खोदते हो? मुझे जो दिन भर में होता है, वो तुम घंटों में कर लेते हो.
+miner_byzantine.mining=*खाँसी* *खाँसी*, मुझे कोयले के साथ काम करना सख़्त नापसंद है.
+miner_byzantine.mining=इस काम में ताक़त और सहन-शक्ति चाहिए. पर यहाँ किसी का ध्यान नहीं जाता...
+miner_byzantine.mining=मुझे गर्व है कि मैं शानदार साम्राज्य के लिए काम करने वाला एक रोमन नागरिक हूँ, इस कठिन काम में भी.
+
+metropolit_byzantine.makebooks=मेरी किताबें सबसे बेहतरीन पांडुलिपियों में से हैं.
+
+metropolit_byzantine.gopray=परमेश्वर ने मुझे अपने सबसे प्यारे सेवकों में से क्यों बनाया?
+metropolit_byzantine.gopray=पैट्रियार्क के नाते मुझे प्रार्थना का नेतृत्व करना है.
+metropolit_byzantine.gopray=मैं उनकी मुश्किलें समझता हूँ.
+metropolit_byzantine.gopray=वे पैट्रियार्क की मुश्किलें समझते हैं.
+metropolit_byzantine.gopray=मेरे गाँव को परमेश्वर से जवाब चाहिए!
+
+metropolit_byzantine.gorest=हर किसी को नींद चाहिए, ख़ास तौर पर जब आप गाँव के मुखिया हो.
+metropolit_byzantine.gorest=*जम्हाई* थका होने पर मैं पादरियों का नेतृत्व नहीं कर सकता.
+
+metropolit_byzantine.inspectconstruction=सुंदरता यही है कि अपने गाँव को परमेश्वर के क़रीब पहुँचते देखें.
+
+pastor_byzantine.makebooks=मेरी किताबें सबसे बेहतरीन पांडुलिपियों में से हैं.
+
+//smith_byzantine.MakeIndianTools=रोमन औज़ार दुनिया में सबसे बेहतरीन हैं.
+
+smith_byzantine.gopray=अच्छे लोहार को कभी-कभी प्रार्थना करनी चाहिए.
+smith_byzantine.gopray=परमेश्वर ने मुझे लोहार क्यों बनाया?
+smith_byzantine.gopray=प्रार्थना रोमन शिल्प का एक अहम हिस्सा है.
+smith_byzantine.gopray=वे लोहारों की मुश्किलें समझते हैं.
+
+smith_byzantine.gorest=कल मैं और सुंदर चीज़ें बनाऊँगा!
+smith_byzantine.gorest=आज के लिए शिल्प-काम ख़त्म.
+smith_byzantine.gorest=शायद मैं सपने में दुनिया के सबसे बेहतरीन औज़ार बनाऊँगा!
+
+smith_byzantine.gosocialise=मैं पूछूँगा कि किसी को कुछ बनवाना है क्या.
+smith_byzantine.gosocialise=उम्मीद है कि गाँव मेरे औज़ारों की क़द्र करता है.
+
+smith_byzantine.godrink=बहुत हुआ काम! मुझे थोड़ी मदिरा चाहिए!
+smith_byzantine.godrink=मुझे प्रेरणा के लिए एक प्याला चाहिए!
+smith_byzantine.godrink=हर अच्छे लोहार को दिन के अंत में एक प्याला चाहिए.
+smith_byzantine.godrink=शिल्प-काम से मदिरा की प्यास लग जाती है.
+
+smith_byzantine.makesteelaxe=कुल्हाड़ी के बिना तुम पेड़ नहीं काट सकते!
+smith_byzantine.makesteelaxe=मैं अद्भुत कुल्हाड़ियाँ बनाता हूँ.
+smith_byzantine.makesteelaxe=रोमन कुल्हाड़ियाँ दुनिया में सबसे बेहतरीन में से हैं!
+smith_byzantine.makesteelaxe=लकड़हारों को अपनी कुल्हाड़ियों के लिए हमारी ज़रूरत है.
+smith_byzantine.makesteelaxe=तुम अपनी कुल्हाड़ियाँ कैसे बनाते हो, $name?
+
+smith_byzantine.makesteelhoe=खेती के औज़ारों के बिना तुम खेती नहीं कर सकते!
+smith_byzantine.makesteelhoe=मैं अद्भुत खेती के औज़ार बनाता हूँ.
+smith_byzantine.makesteelhoe=रोमन खेती के औज़ार दुनिया में सबसे बेहतरीन में से हैं!
+smith_byzantine.makesteelhoe=किसानों को अपने औज़ारों के लिए हमारी ज़रूरत है.
+smith_byzantine.makesteelhoe=तुम अपने खेती के औज़ार कैसे बनाते हो, $name?
+
+smith_byzantine.makesteelpickaxe=गैंती के बिना तुम खनन नहीं कर सकते!
+smith_byzantine.makesteelpickaxe=मैं मज़बूत गैंतियाँ बनाता हूँ.
+smith_byzantine.makesteelpickaxe=रोमन गैंतियाँ दुनिया में सबसे बेहतरीन में से हैं!
+smith_byzantine.makesteelpickaxe=खनिकों को अपनी गैंतियों के लिए हमारी ज़रूरत है.
+smith_byzantine.makesteelpickaxe=तुम अपनी गैंतियाँ कैसे बनाते हो, $name?
+
+smith_byzantine.makesteelshovel=फावड़े के बिना तुम न निर्माण कर सकते हो न खुदाई!
+smith_byzantine.makesteelshovel=मैं टिकाऊ फावड़े बनाता हूँ.
+smith_byzantine.makesteelshovel=रोमन फावड़े दुनिया में सबसे बेहतरीन में से हैं!
+smith_byzantine.makesteelshovel=वास्तुकारों को अपने फावड़ों के लिए हमारी ज़रूरत है.
+smith_byzantine.makesteelshovel=तुम अपने फावड़े कैसे बनाते हो, $name?
+
+villager.greeting=नमस्ते, $name!
+villager.greeting=सुंदर दिन है, है ना?
+villager.greeting=जल्द ही बारिश होगी.
+villager.greeting=दुनिया में कोई शहर कॉन्स्टैन्टिनोपल की बराबरी नहीं कर सकता.
+villager.greeting=हम ग्रीक नहीं हैं, हम रोमन हैं.
+villager.greeting=हम ही असली अंतिम रोमन हैं.
+villager.greeting=यहाँ रहते हुए हमारी सभ्यता की महिमा में डूब जाओ.
+villager.greeting=गाँव में स्वागत है, $name!
+villager.greeting=देखो! वो $name है!
+villager.greeting=हम ही असली अंतिम रोमन हैं. हमारी सभ्यता के प्रकाश में नहाओ.
+
+villager.becomeadult=आख़िरकार, मैं रोमन नागरिक बन गया!
+
+villager.huntmonster=मुझे इस बर्बर को मारना है!
+
+villager.goplay=मुझे लगता है मैं बाहर खेलने जाऊँगा.
+villager.goplay=अब मैं खेलने जाऊँगा.
+villager.goplay=$name! क्या मेरे साथ खेलोगे?
+villager.goplay=मुझे दौड़ना है!
+
+villager.calltoarms=रोमन साम्राज्य पर हमला हुआ है! हथियार उठाओ!
+villager.calltoarms=बर्बर आ गए हैं! हर क़ीमत पर अपने गाँव की रक्षा करो!
+villager.hitbyplayer=अरे! ध्यान से!
+
+villager.childeatgrapes=क़सम से ये अंगूर अपने आप गिर गए थे!
+
+villager.childobservevines=बड़े लोग इन स्वादिष्ट अंगूरों को बेकार करना बंद करें, उनसे वो बेस्वाद मदिरा बनाकर!
+villager.childobserveconstruction=एक दिन मैं कॉन्स्टैन्टिनोपल जाऊँगा और देखूँगा कि असली रोमन इमारतें कैसी होती हैं!
+villager.childobserveproducealcohol=मैंने एक बार मदिरा चखी थी, बहुत बेस्वाद थी.
+
+villager.gorest=अगर मैं नहीं सोऊँगा तो हादसे हो सकते हैं.
+villager.gorest=मैं थका हूँ. घर जाकर सोऊँगा.
+villager.gorest=मुझे लगता है अब मैं सोने जाऊँगा.
+
+villager.makebread=रोटी की महक अभी से अच्छी आ रही है...
+
+villager.gopray=मेरा मार्गदर्शन परम पिता करते हैं.
+villager.gopray=हे प्रभु, स्वर्ग-वासी, और दयालु.
+villager.gopray=पुरुष पूजा करते हैं, पादरी मंत्र गाते हैं!
+villager.gopray=पवित्र कुँवारी अप्सरा की जय!
+villager.gopray=हे पवित्र मरियम, महान विजयिनी सेनापति!
+villager.gopray=तुम जो मुझे बुराई से बचाते हो, मैं तुम्हारा शुक्रिया अदा करता हूँ...
+villager.gopray=लोग तुम्हारे लिए प्रार्थना करेंगे, अनंत युगों तक, आमीन.
+
+villager.godrink=ताज़ी रोमन मदिरा लाने का समय!
+villager.godrink=मुझे एक प्याला चाहिए.
+villager.godrink=मदिरा मेरी सारी मुश्किलें धो डालेगी.
+villager.godrink=क्या तुम जानते हो रोमन मदिरा दुनिया में सबसे बेहतरीन है?
+villager.godrink=बहुत समय हो गया मैंने मदिरा नहीं पी.
+
+wife_byzantine.delivergoodshousehold=यहाँ मैं बस यही काम कर सकती हूँ.
+wife_byzantine.gethousethresources=मेरे पति ने आख़िरकार वही सामान पहुँचाया जो मैंने कहा था.
+wife_byzantine.cooking=खाना बनाना सच में मज़ेदार है.
+wife_byzantine.getgoodshousehold=परिवार की देखभाल का समय.
+wife_byzantine.greeting=अगर मैं मर्द होती तो यहाँ कितना कुछ कर सकती थी, काश...
+wife_byzantine.greeting=हमारा काम है अपने मर्दों को सँभालना.
+
+villager.givespeech=रोमन साम्राज्य महान है, और हमारा गाँव सबसे महान है.
+villager.givespeech=हमारे गाँव को अपने नेतृत्व का शुक्रिया अदा करना चाहिए हर महानता के लिए.
+villager.givespeech=हम रोमन के पास सबसे अच्छे नेता और सबसे अच्छे लोग हैं.
+
+villager.listentospeech=वह सही कह रहा है!
+villager.listentospeech=हमारी जय हो!
+villager.listentospeech=हम किसी को भी हरा सकते हैं!
+villager.listentospeech=परमेश्वर और हमारे ईश्वरीय नेता की जय हो!
+
+special_byzantine.greeting=तुम्हारी सेवा का फल मिलेगा, $name.
+special_byzantine.calltoarms=अपनी क़िस्मत मत आज़माओ, बच्चे.
+special_byzantine.gopray=मेरे सामने झुको...
+
+oldshepherd_byzantine.greeting=मेरी आस्था ने मुझे टिकाए रखा…
+oldshepherd_byzantine.greeting=मेरा सपना पूरा करने में मदद करो, $name, और तुम्हें फल मिलेगा…
+oldshepherd_byzantine.calltoarms=बोस्कोक्रेटर के लिए!
+oldshepherd_byzantine=पवित्र बोस्कोक्रेटर, कृपया मुझे और मेरी भेड़ों को आशीर्वाद दें.
+
+merchant_armour.greeting=सिर्फ़ बेहतरीन कवच और हथियार!
+merchant_armour.keepstall=स्वागत है, स्वागत है! तुम्हारे लिए सबसे बेहतरीन तलवारें लाया हूँ!
+
+merchant_dyes.greeting=मैं हर दिन रंगों में आता हूँ! रुको, मैं भारतीय नहीं हूँ.
+merchant_dyes.keepstall=आओ और देखो! दुनिया भर से रंग!
+
+merchant_food.greeting=कैसा रहेगा एक स्वादिष्ट सूव्लाकी, $name?
+merchant_food.keepstall=तुम जो भी खाना चाहो, सब हाज़िर!
+
+merchant_materials.greeting=आओ और सबसे बेहतरीन निर्माण-सामग्री ख़रीदो! मेरी पीठ तुम्हारा शुक्रिया अदा करेगी.
+merchant_materials.keepstall=रेत, पत्थर और ईंटें! डायोराइट और क्वार्ट्ज़!
+
+merchant_relics.greeting=मैं क़ीमती शिल्प और पवित्र वस्तुएँ बेचता हूँ, $name.
+merchant_relics.keepstall=आओ, और रोमन शिल्पकारी का शिखर देखो.
+
+merchant_textiles.greeting=सच में, $name? यह खाल?
+merchant_textiles.keepstall=फ़ैशनेबल क़ालीन और कपड़े, बिल्कुल कॉन्स्टैन्टिनोपल जैसे!
+
+loneabbot_byzantine.greeting=स्वागत है, $name. यहाँ सफ़र की थकान मिटा सकते हो, यहाँ सुरक्षित हो.
+lonemonk_byzantine.greeting=मैं तुम्हें कुछ नहीं दे सकता, $name.
+
+loneabbot_byzantine.gosocialise=अपने अध्ययन साझा करने की उत्सुकता है.
+
+lonemonk_byzantine.gosocialise=अपने अध्ययन साझा करने की उत्सुकता है.
+lonemonk_byzantine.plantseeds=परमेश्वर इन बीजों को आशीर्वाद दें.
+lonemonk_byzantine.collectcrop=ये फ़सलें ख़ुद परमेश्वर का उपहार हैं.
+lonemonk_byzantine.makebread=पुत्र के महान बलिदान का स्मरण इस रोटी से होगा.
+
+villager.plantseeds=मुझे लग रहा है इस साल भरपूर फ़सल होगी.
+villager.collectcrop=मुझे पता था! भरपूर फ़सल!
+
+villager.gostudy=कृपया, मेरा ध्यान मत भटकाओ, $name.
+
+villager.gotreerelax=यह छायादार जगह बिल्कुल सही है…
+villager.gotreerelax=मैं इस पेड़ के नीचे पूरा दिन रह सकता हूँ…
+
+villager.relight=परमेश्वर का प्रेम ही मेरी एकमात्र चाह है!
+villager.golookout=आज एक जहाज़ आएगा. मुझे पता है.
+villager.golookout=उबाऊ काम है, पर कम से कम पैसे तो मिलते हैं.
+villager.sellercoming=मैं तुरंत आ रहा हूँ!
+villager.tradecomplete=बहुत-बहुत धन्यवाद, तुम्हारे लिए अच्छा व्यापार हो!
+

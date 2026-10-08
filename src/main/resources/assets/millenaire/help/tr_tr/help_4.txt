@@ -1,0 +1,10 @@
+version:3.4
+<darkblue>Köyün gelişmesi
+
+Tüm köyler, merkezî bir bina (kale, saray, manastır vb. çeşitli yapılar; genellikle "belediye" olarak anılır) çevresinde birkaç ev ya da başka yapıyla küçük bir şekilde başlar. Köylülerin temel amacı, yeni binalar seçip mevcut binalarda iyileştirmeler yaparak köylerini genişletmektir. Bu nedenle kaynaklara ihtiyaç duyarlar; bir kısmını kendileri üretebilir (oduncular ağaç keser, madenciler taş çıkarır vb.) ancak diğerleri için oyuncuya bağlıdırlar. Planlanan inşaat için duydukları malzeme ihtiyaçları ana binada görüntülenir. Önce bu kaynakları satarak yardımcı olabilirsiniz.
+
+Köy nüfusu da zamanla artar; geceleri, evli köylülerin çocukları olabilir. Büyüdüklerinde, varsa yeni evlere taşınır ve yetişkin olurlar.
+
+Bir köyün gelişimi genel olarak iki şekilde durur: ya köy inşa edilebilir tüm yapıları tamamlamıştır ya da yer kalmamıştır. İkinci durumda, hangi alanların inşa edilemez olduğunu görmek için köy haritasına bakabilirsiniz. Bazen, örneğin bir gölü doldurarak bu alanları inşa edilebilir hale getirmek mümkündür.
+
+Bazen bir köyün, sizin kendiniz üretemeyeceğiniz bir blok türüne ihtiyacı olur; Norman ve Japon ahşap karkasları gibi. Köyün bir atölye inşa etmesini ve oraya bir çocuğun zanaatkâr olarak yerleşmesini beklemeniz gerekir.

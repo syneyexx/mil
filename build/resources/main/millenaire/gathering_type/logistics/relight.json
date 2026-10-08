@@ -1,0 +1,31 @@
+{
+  "handler": "smelting",
+  "priority": 100,
+  "scanRadius": 32,
+  "batchRadius": 8,
+  "maxActionsPerTask": 3,
+  "actionCooldown": 100,
+  "stuckTimeout": 4000,
+  "walkSpeed": 0.6,
+  "townhallLimit": {
+    "minecraft:charcoal": 10
+  },
+  "handlerParams": {
+    "inputs": [
+      {
+        "item": "#minecraft:logs",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "minecraft:charcoal",
+        "count": 1
+      }
+    ],
+    "minimumToCook": 15
+  },
+  "heldItems": [
+    "minecraft:spruce_log"
+  ]
+}

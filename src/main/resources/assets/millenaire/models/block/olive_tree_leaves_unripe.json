@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/leaves",
+  "textures": {
+    "all": "millenaire:block/olive_tree_leaves_unripe"
+  }
+}

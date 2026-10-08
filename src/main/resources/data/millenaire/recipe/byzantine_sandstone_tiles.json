@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "group": "byzantine_sandstone_tiles",
+  "key": {
+    "#": {
+      "item": "millenaire:byzantine_tiles"
+    },
+    "S": {
+      "item": "minecraft:sandstone"
+    }
+  },
+  "pattern": [
+    "###",
+    "SSS"
+  ],
+  "result": {
+    "count": 6,
+    "id": "millenaire:byzantine_sandstone_tiles"
+  }
+}

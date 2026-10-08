@@ -1,0 +1,10 @@
+version:3.4
+<darkblue>A falu fejlődése
+
+Minden falu kicsiként indul egy központi épület körül (ennek típusa változó: erőd, palota, kolostor stb. – általában „városházának” nevezik), néhány házzal vagy más épülettel. A falubeliek fő célja a falu bővítése: új építendő épületeket választanak és a meglévő épületek továbbfejlesztését tervezik. Ehhez nyersanyagokra van szükségük – egyeseket maguk is termelnek (a favágók fát hordanak, a bányászok követ stb.), másokért azonban a játékosra szorulnak. A tervezett építkezéshez szükséges anyagokat a központi épületben láthatod. Segíthetsz nekik azzal, hogy ezeket az anyagokat adod el először.
+
+A falu lakossága idővel szintén nő – éjjel a házas falubelieknek gyermekei születhetnek. Felnőve ezek a gyermekek üres házakba költöznek, ha rendelkezésre áll ilyen, és felnőttekké válnak.
+
+A falu fejlődése általában kétféleképp ér véget: vagy mert a falu az összes felépíthető épületet befejezte, vagy mert nincs több helye. Az utóbbi esetben a falu térképét megnézve láthatod, mely területek nem beépíthetők. Olykor lehetséges azokat beépíthetővé tenni, például egy tavat feltöltve.
+
+Olykor egy falunak olyan blokktípusra van szüksége, amelyet te magad nem tudsz előállítani, például normann vagy japán gerendaváz blokkokra. Meg kell várnod, amíg a falu felépít egy műhelyt, és egy gyermek beköltözik oda mesteremberként.

@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/template_glass_pane_post",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "pane": "millenaire:block/paper_wall",
+    "edge": "millenaire:block/paper_wall_side"
+  }
+}

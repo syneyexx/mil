@@ -1,0 +1,13 @@
+{
+  "display": {
+    "icon": { "item": "millenaire:denier_or" },
+    "title": { "translate": "advancement.millenaire.firstcontact" },
+    "description": { "translate": "advancement.millenaire.firstcontact.desc" },
+    "background": "millenaire:textures/block/mudbrick.png"
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

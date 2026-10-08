@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "down": "millenaire:block/stone",
+    "east": "millenaire:block/japanese_tiles_half_front",
+    "north": "millenaire:block/japanese_tiles_half_side",
+    "particle": "millenaire:block/japanese_tiles_top",
+    "south": "millenaire:block/japanese_tiles_half_side",
+    "up": "millenaire:block/japanese_tiles_top",
+    "west": "millenaire:block/japanese_tiles_half_front"
+  }
+}

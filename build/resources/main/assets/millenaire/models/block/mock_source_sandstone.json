@@ -1,0 +1,7 @@
+{
+  "parent": "millenaire:block/mock_source_base",
+  "textures": {
+    "sourceblock": "minecraft:block/sandstone"
+  },
+  "render_type": "minecraft:cutout"
+}

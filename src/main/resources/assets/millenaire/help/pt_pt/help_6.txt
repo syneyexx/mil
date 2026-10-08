@@ -1,0 +1,14 @@
+version:3.4
+<darkblue>Invocar aldeias
+
+Pode invocar um tipo de aldeia à sua escolha no local que pretender com uma Varinha de Invocação, um objecto que pode comprar em qualquer aldeia desde que tenha reputação suficientemente elevada. Para utilizar a varinha, coloque um bloco de ouro no local onde pretende invocar uma aldeia e clique com o botão direito sobre o bloco com a varinha. O ecrã seguinte permite-lhe escolher o tipo de aldeia pretendido.
+
+<darkblue>Destruição de uma aldeia ou edifício isolado
+
+Os habitantes de uma aldeia ou edifício ressurgem todas as noites, mesmo que destrua todos os edifícios da aldeia. Para o impedir (caso pretenda, por exemplo, ocupar os edifícios), deverá utilizar a <darkblue>Varinha da Negação<black>: encontrá-la-á nas arcas do edifício principal assim que todos os habitantes estiverem mortos. Tenha em atenção que a destruição de uma aldeia é irreversível.
+
+<darkblue>Aldeias controladas pelo jogador
+
+É possível criar uma aldeia da qual será o líder, podendo escolher os locais dos edifícios. Para tal, terá de ser reconhecido como líder na cultura da aldeia, ou ter concluído a Missão da Criação (consulte a secção de missões), ou ainda ter elevado a sua reputação a "líder natural" numa aldeia e falar com o respectivo líder. Surgirá então a opção de criar aldeias controladas pelo jogador na interface da Varinha de Invocação.
+
+Nas aldeias controladas pelo jogador, pode ordenar a construção de um novo edifício utilizando a varinha no local pretendido. Abrir-se-á uma interface que lhe permite escolher o edifício desejado. Pode também autorizar ou interromper as melhorias aos edifícios existentes através dos painéis "projectos". Comerciar recursos com os aldeãos é dispensável nestas aldeias — basta colocar os artigos nas arcas.

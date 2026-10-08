@@ -1,0 +1,13 @@
+version:3.4
+<darkblue>De Normandiërs
+
+De allereerste cultuur die in Millénaire werd geïntroduceerd, de Normandiërs hebben het grootste aantal dorpstypen – landbouw-, militaire, religieuze en industriegerichte nederzettingen, evenals gros bourgs (grote steden) met drie gehuchten eromheen. De Normandiërs spreken in het spel Frans, maar hun dialoog wordt vertaald naarmate de speler hun taal "leert" door met hen te spreken.
+
+<darkblue>Unieke voorwerpen en blokken
+
+De Normandiërs produceren veel unieke voorwerpen:
+-Normandische gereedschappen, die effectiever zijn dan die van diamant (gemaakt in een smederij door een smid).
+-Normandisch zwaard en harnas, gemaakt in een wapenkamer en eveneens beter dan hun diamanten tegenhangers.
+-Boudin, tripes, calvados en cider, voedsel dat de gezondheid van de speler onmiddellijk herstelt.
+-Vakwerkblokken, een bouwblok met twee varianten dat veel wordt gebruikt voor de bouw van geavanceerde Normandische gebouwen, alleen geproduceerd door een charpentier (timmerman).
+-Normandische wandtapijten, gemaakt door de vrouwe van een kasteel uit wol (twee witte, één grijze, één lichtgrijze, één zwarte, één bruine) en die fragmenten van het Tapijt van Bayeux weergeven.

@@ -1,0 +1,14 @@
+{
+  "parent": "millenaire:block/mock_free_stone",
+  "overrides": [
+    { "predicate": { "custom_model_data": 1 }, "model": "millenaire:block/mock_free_stone" },
+    { "predicate": { "custom_model_data": 2 }, "model": "millenaire:block/mock_free_sand" },
+    { "predicate": { "custom_model_data": 3 }, "model": "millenaire:block/mock_free_gravel" },
+    { "predicate": { "custom_model_data": 4 }, "model": "millenaire:block/mock_free_sandstone" },
+    { "predicate": { "custom_model_data": 5 }, "model": "millenaire:block/mock_free_wool" },
+    { "predicate": { "custom_model_data": 6 }, "model": "millenaire:block/mock_free_cobblestone" },
+    { "predicate": { "custom_model_data": 7 }, "model": "millenaire:block/mock_free_stone_brick" },
+    { "predicate": { "custom_model_data": 8 }, "model": "millenaire:block/mock_free_painted_brick" },
+    { "predicate": { "custom_model_data": 9 }, "model": "millenaire:block/mock_free_grass_block" }
+  ]
+}

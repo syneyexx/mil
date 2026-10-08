@@ -1,0 +1,93 @@
+female.becomeadult=मैंने एक राजकुमार से ब्याहने का सपना देखा था..
+
+female.gorest=अब मैं आराम करने जाऊँगी.
+female.gorest=मैं थक गई हूँ.
+female.gorest=मैं सुबह से काम कर रही हूँ.
+
+armysmith.makeweapons=हथियार बनाना औज़ार बनाने से कहीं ज़्यादा प्रतिष्ठित काम है!
+
+lumberman.bringbackresourceshome=इतनी सारी लकड़ी घर ले जाना मुश्किल होगा.
+lumberman.choptrees=लगता है मेरी ज़िंदगी इन्हीं पेड़ों को काटने में बीतेगी.
+lumberman.gathergoods=अब मैं सारी लकड़ी इकट्ठा करूँगा.
+lumberman.plantsaplings=जितने ज़्यादा पेड़ मैं लगाऊँगा, आगे ज़िंदगी उतनी ही आसान होगी.
+
+pandit.gopray.chosen=अगर मैं मंदिर की देखभाल नहीं करूँगा तो कौन करेगा?
+pandit.greeting=दीर्घायु हो.
+
+peasant.cookbrick=देखो ये ईंटें आग में कितनी अच्छी पकती हैं.
+
+peasant.drybrick=एक घर बनाने के लिए कितनी ईंटें चाहिए?
+
+peasant.gatherbrick=धूप तेज़ है, आज ये जल्दी सूख रही हैं.
+
+peasant.getresourcesforbuild=देखें, एक टन ईंट, दो टन पत्थर...
+
+peasant.slaughterchicken=अब और शाकाहारी करी नहीं खा सकता!
+peasant.slaughterchicken=मुझे मुर्ग़ियों से चिढ़ है. ये शोर मचाती हैं और खाने के अलावा किसी काम की नहीं हैं.
+
+peasant.construction=हमारी वास्तुकला की दुनिया भर में कीर्ति है.
+peasant.construction=इसके बाद, मैं लाल किला बनाऊँगा.
+
+peasantwife.delivergoodshousehold=मैं अकेले इतना खाना कैसे ले जाऊँगी?
+peasantwife.getgoodshousehold=इस परिवार के लिए तुम कितना भी लाओ, कभी पूरा नहीं पड़ता!
+peasantwife.gethousethresources=सब कुछ हमेशा ज़मींदार के घर ही पहुँच जाता है.
+peasantwife.makerasgulla=बच्चों को रसगुल्ले बहुत पसंद हैं.
+
+sculptor.scult=मूर्तिकला गड्ढे और उभार की कला है.
+smith.maketools=हर कोई मेरे औज़ार इस्तेमाल करता है, फिर भी हर कोई मुझे नीचा देखता है.
+
+male.becomeadult=जब मैं छोटा था, मैं एक महान योद्धा बनना चाहता था...
+
+male.gorest=अब मैं आराम करने जाऊँगा.
+male.gorest=मैं थक गया हूँ.
+male.gorest=मैं सुबह से काम कर रहा हूँ.
+
+merchant_adivasi.keepstall=सब कुछ मेरे परिवार ने गहरे जंगल में उगाया है.
+merchant_adivasi.greeting=मैं अभी-अभी जंगल से आया हूँ.
+
+merchant_oriental.keepstall=फ़ारस की समृद्धि देखो!
+merchant_oriental.greeting=तुम पर सलामती हो, भाई!
+
+merchant_villagewoman.keepstall=भूखे यात्रियों के लिए घर का बना खाना!
+merchant_villagewoman.greeting=अकेली औरत के लिए यात्रा कठिन होती है.
+
+villager.becomeadult=बहुत खेल लिया, अब काम का समय.
+
+villager.goplay=मुझे मिट्टी में खेलना अच्छा लगता है.
+
+villager.childobserveagriculture=हर दिन फ़सलें बोना बहुत उबाऊ लगता है. मुझे रोमांच की ज़िंदगी चाहिए!
+villager.childobserveconstruction=निर्माण मेरे लिए बहुत मेहनत वाला काम लगता है.
+villager.childobservesmithing=कितनी मज़बूत भुजाएँ!
+villager.childobserveproducefood=मेरी माँ सबसे अच्छे रसगुल्ले बनाती हैं.
+
+villager.childeatsugarcane=माँ कहती हैं इससे दाँत ख़राब होते हैं, पर ये कितना मीठा है!
+
+villager.harvestrice=इस अद्भुत बरसात के मौसम के कारण इस बार भरपूर फ़सल हुई है.
+
+villager.harvestturmeric=इस हल्दी की कटाई से मेरे हाथ पीले हो रहे हैं.
+
+villager.plantrice=अगर ख़ूब बारिश हो तो इस साल फ़सल अच्छी होगी.
+
+villager.plantturmeric=आख़िर सबको हल्दी चाहिए ही.
+
+villager.calltoarms=शत्रुओं की हार हो!
+villager.calltoarms=विजय हमारी होगी.
+villager.calltoarms=सब अपने हथियार उठाओ!
+villager.hitbyplayer=अरे! ध्यान से!
+
+villager.gopray.chosen=फिर मंदिर जाने का समय.
+villager.gopray=हे भगवान, तुम ही हमारा एकमात्र सहारा हो.
+villager.gopray=हे भगवान, इस बार फ़सल अच्छी हो.
+
+villager.greeting=आज बहुत गरमी है.
+villager.greeting=घर में सब कुशल हैं?
+villager.greeting=क्या हाल-चाल है?
+villager.greeting=क्या नया है, $name-जी!?
+villager.greeting=क्या तुम समंदर पार से आए हो?
+villager.greeting=नमस्ते, $name-जी!
+villager.greeting=यहाँ बारिश क्यों नहीं हो रही?
+
+villager.inspectconstruction=हमारे कारीगरों को ऐसी सुंदर रचनाएँ बनाते देखकर बड़ा आनंद आता है.
+female.sellercoming=मैं रास्ते में हूँ!
+villager.sellercoming=मैं रास्ते में हूँ!
+villager.tradecomplete=सौदा पक्का, फिर आना.

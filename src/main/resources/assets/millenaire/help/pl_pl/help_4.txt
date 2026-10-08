@@ -1,0 +1,10 @@
+version:3.4
+<darkblue>Rozbudowa wioski
+
+Wszystkie wioski zaczynają niewielkie, wokół centralnego budynku (o różnym charakterze: twierdza, pałac, klasztor itd. — często określanego mianem „ratusza”), z kilkoma domami lub innymi budowlami. Głównym celem mieszkańców jest rozbudowa wioski poprzez wznoszenie nowych budynków oraz ulepszanie już istniejących. W tym celu potrzebują surowców — część potrafią pozyskać samodzielnie (drwale zbierają drewno, górnicy kamień itd.), lecz w pozostałych przypadkach są zależni od gracza. Lista potrzebnych materiałów na planowane budowy wyświetlana jest w głównym budynku. Można pomóc, sprzedając im te surowce w pierwszej kolejności.
+
+Populacja wioski również stopniowo rośnie — w nocy małżeństwa mogą doczekać się potomstwa. Po dorośnięciu dzieci wprowadzają się do nowych domów, jeżeli takie są dostępne, i stają się dorosłymi.
+
+Rozbudowa wioski zazwyczaj zatrzymuje się z dwóch powodów: albo wioska ukończyła wszystkie możliwe do wzniesienia budynki, albo brak jej miejsca. W tym drugim przypadku można zajrzeć na mapę wioski, aby zobaczyć obszary uniemożliwiające budowę. Czasem da się je przygotować pod zabudowę, na przykład zasypując jezioro.
+
+Niekiedy wioska potrzebuje rodzaju bloku, którego gracz sam nie potrafi wytworzyć, takiego jak ryglowe ściany normańskie czy japońskie. Trzeba wówczas poczekać, aż wioska wzniesie warsztat i osiedli się tam dziecko jako rzemieślnik.

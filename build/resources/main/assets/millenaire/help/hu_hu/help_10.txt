@@ -1,0 +1,18 @@
+version:4.8.0
+<darkblue>A maják
+
+A Yucatán-félszigetről származó maják kőből épült, arannyal díszített építészetükkel tűnnek ki, és mezőgazdasági, vallási vagy katonai falvakban élnek. Majául beszélnek, de a párbeszédeik fordítása megjelenik, ahogy a játékos „megtanulja” a nyelvüket a velük folytatott interakciók révén.
+
+<darkblue>Egyedi tárgyak és blokkok
+
+-Kukoricát termesztenek. A játékos megkérheti a törzsfőt, hogy tanítsa meg neki, hogyan termessze ezt a gabonát.
+-Kukoricából és csirkéből wah-ot és masát készítenek – tápláló tortillákat.
+-Kakaót termesztenek, és abból cacauhaát készítenek, egy felfrissítő csokoládéitalt.
+-Az obszidián-mesterember obszidiánból fegyvereket és szerszámokat állít elő, amelyek törékenyek, de könnyen megbűvölhetők.
+-A mesteremberek a játékos által szállított aranyrudakból díszítőblokkokat készítenek.
+-Maja istenségeket ábrázoló domborműveket is faragnak.
+
+<darkblue>Egyedi receptek
+
+-Három kukorica egy sorban egy wah-ot ad (egyfajta tortillát).
+-Két kukorica egy sorban, középen egy nyers csirkével, egy masát ad (csirkés tortillát).

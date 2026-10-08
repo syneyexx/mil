@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "group": "millenairepathslab",
+  "key": {
+    "#": {
+      "item": "millenaire:path_snow"
+    }
+  },
+  "pattern": [
+    "###"
+  ],
+  "result": {
+    "count": 6,
+    "id": "millenaire:path_snow_slab"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "parent": "millenaire:mp_weapon",
+  "display": {
+    "icon": { "item": "minecraft:golden_sword" },
+    "title": { "translate": "advancement.millenaire.mp_hiredgoon" },
+    "description": { "translate": "advancement.millenaire.mp_hiredgoon.desc" }
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "parent": "millenaire:explorer",
+  "display": {
+    "icon": { "item": "minecraft:map" },
+    "title": { "translate": "advancement.millenaire.marcopolo" },
+    "description": { "translate": "advancement.millenaire.marcopolo.desc" }
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

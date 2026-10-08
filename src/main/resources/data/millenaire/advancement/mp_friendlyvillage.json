@@ -1,0 +1,14 @@
+{
+  "parent": "millenaire:mp_neighbourtrade",
+  "display": {
+    "icon": { "item": "minecraft:cake" },
+    "title": { "translate": "advancement.millenaire.mp_friendlyvillage" },
+    "description": { "translate": "advancement.millenaire.mp_friendlyvillage.desc" },
+    "frame": "goal"
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "parent": "millenaire:block/mock_facing_marker_furnace",
+  "overrides": [
+    { "predicate": { "custom_model_data": 1 }, "model": "millenaire:block/mock_facing_marker_furnace" },
+    { "predicate": { "custom_model_data": 2 }, "model": "millenaire:block/mock_facing_marker_sign_pos" }
+  ]
+}

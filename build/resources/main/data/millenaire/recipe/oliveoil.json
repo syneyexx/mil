@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "olives",
+  "key": {
+    "#": {
+      "item": "millenaire:olives"
+    }
+  },
+  "pattern": [
+    "##",
+    "##"
+  ],
+  "result": {
+    "count": 1,
+    "id": "millenaire:oliveoil"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "parent": "millenaire:block/mil_pane_side",
+  "textures": {
+    "edge": "millenaire:block/rosette_uppercorner",
+    "pane": "millenaire:block/rosette_uppercorner"
+  }
+}

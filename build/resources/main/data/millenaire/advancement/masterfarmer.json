@@ -1,0 +1,13 @@
+{
+  "parent": "millenaire:cheers",
+  "display": {
+    "icon": { "item": "minecraft:wheat_seeds" },
+    "title": { "translate": "advancement.millenaire.masterfarmer" },
+    "description": { "translate": "advancement.millenaire.masterfarmer.desc" }
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

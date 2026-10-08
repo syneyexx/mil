@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_bearmeat_raw": {
+      "conditions": {
+        "items": [
+          {
+            "items": "millenaire:bearmeat_raw"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "millenaire:bearmeat_cooked_from_smoking"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_bearmeat_raw"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "millenaire:bearmeat_cooked_from_smoking"
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:smoking",
+  "category": "food",
+  "cookingtime": 100,
+  "experience": 1.0,
+  "ingredient": {
+    "item": "millenaire:wolfmeat_raw"
+  },
+  "result": {
+    "count": 1,
+    "id": "millenaire:wolfmeat_cooked"
+  }
+}

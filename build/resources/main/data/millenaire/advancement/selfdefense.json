@@ -1,0 +1,13 @@
+{
+  "parent": "millenaire:firstcontact",
+  "display": {
+    "icon": { "item": "minecraft:iron_sword" },
+    "title": { "translate": "advancement.millenaire.selfdefense" },
+    "description": { "translate": "advancement.millenaire.selfdefense.desc" }
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

@@ -1,0 +1,358 @@
+newchat;key:rain,tag:notraining,weigth:10
+v1;0;Yağmur yağacağını hissediyorum.
+v2;30;Normandiya'da hep yağmur yağardı...
+
+newchat;key:beautifulvillage,weigth:10
+v1;0;Köyümüz çok güzel, sence de öyle değil mi?
+v2;30;Muhteşem! Üstelik bunun için sıkı çalışıyoruz!
+
+newchat;key:sunset,weigth:10
+v1;0;Güneş nereden doğuyor, neydi? Hep unutuyorum.
+v2;30;Kuzeyden, başka neresi olacak?
+
+newchat;key:harvest,weigth:10
+v1;0;Sence bu yıl hasat iyi olacak mı?
+v2;30;Bu havalarla kim bilir.
+v1;60;Burada mevsimlerin bir mantığı yok.
+
+newchat;key:indianfood,weigth:5
+v1;0;Şu Hinduları duydun mu?
+v2;30;Çok tuhaf olduklarını söylüyorlar.
+v1;60;Hatta yemekleri yakıyormuş!
+v2;100;Calva gibi mi?
+v1;120;Hayır, daha beter!
+
+newchat;key:byzantines,v1:adult,v2:adult,weigth:5
+v1;0;Şu Bizanslılar sinirimi bozuyor!
+v2;30;Ne kadar burunları havada gördün mü?
+v1;60;Hepsi de Romalı olduklarını iddia ettikleri için.
+v2;100;Ne komik. Yozlaşmış Romalılar, o zaman.
+v1;130;Onlara bir akın düzenlemeliyiz!
+v2;160;Sonuçta biz Vikingiz!
+
+newchat;key:storm,weigth:10
+v1;0;Dün korkunç bir fırtına vardı.
+v2;30;Aynen, çatının uçacağını sandım.
+v1;60;Hepsini sağlamlaştırmalıyız.
+
+newchat;key:visitors,weigth:10
+v1;0;Burada eksik olan şey ziyaretçiler.
+v2;30;Bir $name var ya...
+v1;60;Ama o biraz tuhaf, değil mi?
+v2;100;Doğru, ne yapacağını asla bilemiyoruz.
+
+newchat;key:christmas,weigth:10
+v1;0;Noel ne zaman geliyordu?
+v2;30;Tam bilmiyorum... Burada mevsimler değişmiyor.
+v1;80;Ne tuhaf bir dünya.
+v2;110;Bazen neredeyse Normandiya'ya benziyor...
+v2;140;Sonra her şeyin farklı olduğunu görüyoruz.
+
+newchat;key:william,v2:adult,weigth:10
+v1;0;Dük William'ı hiç gördün mü?
+v2;30;Hayır, asla. Şimdi nerede olduğunu kim bilir?
+v1;60;Burada olsaydı, bu yeni dünyayı çoktan fethetmiş olurduk!
+v2;100;Yaşasın Dük William!
+
+newchat;key:floatingearth,v2:adult,weigth:10
+v1;0;Fark ettin mi, burada altını kazdığımızda toprak havada duruyor?
+v2;40;Evet, ne olmuş?
+v1;60;Normandiya'da düşerdi...
+v2;90;Normandiya'da Tanrı düşmesini istedi. Burada havada durmasını istiyor.
+v2;150;Niçin Tanrı'yı eleştiriyorsun?
+
+newchat;key:likingrain,tag:raining,weigth:10
+v1;0;Yağmuru severim.
+v2;30;Bir Normandiyalı için iyi şey!
+
+newchat;key:boudintripes,weigth:10
+v1;0;Sen hangisini tercih edersin, kan sosisi mi yoksa işkembe mi?
+v2;40;Kan sosisi. İşkembe çok ağır geliyor!
+v1;80;Çok ağır mı? Sen kendine Normandiyalı mı diyorsun?
+
+newchat;key:horses,v1:child,v2:adult,weigth:10
+v1;0;Bu ülkede hayvan eksik.
+v2;30;İnekler, koyunlar ve domuzlar var.
+v2;60;Daha ne lazım?
+v1;60;Atlar? Ve midilliler!
+v2;90;Yani şimdi de midilli mi istiyorsun?
+
+newchat;key:tripes,v1:adult,v2:adult,v1:male,v2:female
+v1;0;İşkembe, işte bu erkek yemeği.
+v2;30;Kadınlar tarafından hazırlanan...
+v1;60;Erkekler tarafından kesilen ineklerle!
+v2;100;Ve kadınlar tarafından beslenen...
+
+newchat;key:countingcows,weigth:10
+v1;0;Burada yapacak pek bir şey yok.
+v2;30;İyi işte, sakin.
+v1;60;Ve sıkıcı...
+v2;75;Neden inekleri saymıyorsun?
+v1;110;Dün saydım. Tavukları da.
+
+newchat;key:paris,v1:adult,v2:adult,weigth:2
+v1;0;Ne ücra bir yer. Bir gün başka bir şey görmek isterdim...
+v2;30;Diğer köylerin hepsi aynı.
+v1;60;Köy değil! Bir kasaba. Hatta bir şehir!
+v2;90;Mesela Rouen mi? Delirmişsin, oraya günler sürer.
+v1;120;Rouen... ya da belki... Neden Paris olmasın?
+v1;150;Düşünebiliyor musun, orada 25.000 kişi yaşadığını söylüyorlar!
+v2;180;Çıldırmışsın. Aynı yerde 25.000 kişi? Onları nereye koyarlardı ki?
+
+newchat;key:calva,v1:adult,v2:adult,v1:male,v2:male,weigth:10
+v1;0;Bu havada bir calva şart!
+v2;30;Her havada!
+v1;50;Normandiya'ya ve onun calva havalarına!
+v2;70;Şerefe!
+
+newchat;key:boyvillagechief,v1:child,v1:male,v2:adult,weigth:5
+v1;0;Büyüyünce köyün başı olacağım!
+v2;30;Oraya gelmeden önce çok çorba içmen gerekecek.
+v1;60;Ve seni cezalandıracağım!
+v2;70;Tamam. Şimdilik işe git yoksa bir tokat yersin.
+
+newchat;key:kids1,v1:child,v2:child,weigth:10
+v1;0;Benim babam seninkinden çok daha güçlü.
+v2;30;Saçmalama. Benim babam köyün en güçlüsü.
+v1;60;Hayal kurmaya devam et. Babam seninkini iki dakikada yener.
+v2;70;Dünya da yuvarlak, öyle mi?
+
+newchat;key:kids2,v1:child,v1:male,v2:child,v2:female,weigth:10
+v1;0;Kızlar işe yaramaz.
+
+newchat;key:kids3,v2:child,v2:male,v1:child,v1:female,weigth:10
+v1;0;Erkek olabilirsin ama istediğim zaman seni ağlatabilirim.
+v2;30;Doğru değil! Doğru değil!
+
+newchat;key:enderman,v1:adult,v2:child,weigth:10
+v1;0;Uslu dur, yoksa Enderman bu gece seni alıp götürecek!
+v2;40;Pöh, bu saçmalıklara inanacak yaşı geçtim.
+
+newchat;key:badflirt,v1:adult,v2:adult,v1:nospouse,v2:nospouse,v1:male,v2:female,notrel:sibling,v1:notvtype:monk-priest-abbot,weigth:20
+v1;0;Söyle bakalım güzelim, bu akşam ne yapıyorsun?
+v2;40;$targetfirstname, sana zaten hayır dedim!
+v1;60;Ne karakter!
+v2;80;Ne aptallık!
+
+newchat;key:badflirt2,v1:vtype:guard-lumberman,v2:adult,v1:hasspouse,v2:female,notrel:sibling,notrel:parent,notrel:child,weigth:20
+v2;0;$targetfirstname, ne güzel kasların var!
+v1;30;Sus, ahmak! Karım duyarsa...
+v2;60;Sonra ne olur, yakışıklım?
+v1;90;Ne kadar kıskanç olduğunu biliyorsun!
+v2;120;Ve? Ondan mı korkuyorsun?
+v1;140;Korkmak? Ondan? Şaka mı yapıyorsun!
+v2;160;Ha!
+
+newchat;key:frerejacques,v1:child,v2:child,weigth:10
+v1;0;Jacques Kardeş, Jacques Kardeş
+v2;30;Uyuyor musun, uyuyor musun?
+v1;60;Sabah çanlarını çal! Sabah çanlarını çal!
+v2;100;Ding, deng, dong. Ding, deng, dong!
+
+newchat;key:alouette,v1:child,v2:child,weigth:10
+v1;0;Küçük tarla kuşu, sevimli küçük tarla kuşu,
+v2;0;Küçük tarla kuşu, sevimli küçük tarla kuşu,
+v1;30;Küçük kuş, tüylerini yolacağım.
+v2;30;Küçük kuş, tüylerini yolacağım.
+v1;60;Başının tüylerini yolacağım.
+v2;60;Başının tüylerini yolacağım.
+v1;90;Başının!
+v2;90;Başının!
+v1;120;Zavallı tarla kuşu yine de...
+v2;160;Neden? Çok eğlenceli!
+
+newchat;key:loupyesttu,v1:child,v2:child,weigth:10
+v1;0;Ormanda yürüyelim,
+v2;0;Ormanda yürüyelim,
+v1;30;Kurt yokken.
+v2;30;Kurt yokken.
+v1;60;Eğer kurt orada olsaydı
+v2;60;Eğer kurt orada olsaydı
+v1;90;Bizi yerdi,
+v2;90;Bizi yerdi,
+v1;120;Ama orada olmadığı için,
+v2;120;Ama orada olmadığı için,
+v1;150;Bizi yemeyecek.
+v2;150;Bizi yemeyecek...
+v2;180;Şey, emin misin?
+v1;200;Korkak!
+
+newchat;key:dagobert,v1:child,v2:child,weigth:10
+v1;0;İyi Kral Dagobert
+v1;30;Pantolonunu ters giymişti.
+v1;60;Büyük Aziz Eloy
+v1;90;Ona dedi ki: Ey kralım!
+v1;120;Majesteleri
+v1;150;Kötü pantolonlu.
+v2;180;Kötü pantolonlu? Ne demek bu?
+v1;220;Pantolonu yok demek!
+v2;250;Saçmalık, o kral!
+v1;280;Kralın pantolonu yok işte!
+v2;310;Senin bile var, ahmak!
+
+newchat;key:confession,v1:vtype:abbot-priest,v2:male,v2:notvtype:abbot-priest,weigth:10
+v1;0;Oğlum, en son uzun zaman önce günah çıkarmıştın.
+v2;40;Ama Peder, günah işlemedim!
+v1;70;Bu düşmüş dünyada herkes günah işler.
+v2;110;Siz bile mi, Peder?
+v1;130;Yeter küstahlık! Ceza olarak on Pater Noster duası okuyacaksın!
+
+newchat;key:confession2,v1:vtype:abbot-monk-priest,v2:female,v2:adult,weigth:10
+v1;0;Kızım, en son uzun zaman önce günah çıkarmıştın.
+v2;30;Doğrudur Peder, ve günah işledim!
+v1;60;Eğer bedensel bir günahsa, başka yerde konuşacağız.
+v2;100;Teşekkürler, Peder.
+v1;120;Bu arada, on Pater Noster. Her zaman işe yarar!
+
+newchat;key:carpenter,v1:vtype:carpenter,weigth:10
+v1;0;Becerilerimi yine geliştirdim.
+v1;30;Şimdi çatkıları birleştirmeden önce, şununla başlıyorum...
+v2;70;Büyüleyici.
+v1;90;Gerçekten öyle mi düşünüyorsun?
+v2;110;Hayır.
+
+newchat;key:cattlefarmer,v1:vtype:cattlefarmermale-cattlefarmerfemale,v2:notvtype:cattlefarmermale-cattlefarmerfemale,weigth:10
+v1;0;İşkembe hazırlamayı çok severim. Önce ineği kanatırsın...
+v1;40;Sonra bağırsakları çıkarırsın...
+v2;60;Kes şunu, midemi bulandırıyorsun!
+v1;80;Ama işkembeyi seviyorsun!
+v2;110;Ve nasıl yapıldıklarını bilmek istemiyorum.
+
+newchat;key:farmer,v1:vtype:farmer,v2:notvtype:farmer,weigth:10
+v1;0;Şüphesiz, çiftçilik en önemli iştir.
+v1;40;Ben olmasam, ekmek olmaz!
+v2;60;Ben yine de işkembeyi tercih ederim.
+
+newchat;key:guildmaster,v1:vtype:guildmaster,weigth:10
+v1;0;Gençken çok umut vadeden bir çıraktım.
+v1;40;Guillaume Vif-Argent'ın kendisi benimle ilgileniyordu!
+v1;80;Ve şimdi burada sıkışıp kaldım.
+v1;110;Aptallarla uğraşıyorum.
+v2;130;Ne, nasıl?
+v1;150;*iç çekiş*
+
+newchat;key:knight,v1:vtype:knight,weigth:10
+v1;0;Kaleme bak! Gerçek bir kale!
+v2;30;Çok güçlüsünüz, efendim!
+v1;60;Dük William döndüğünde, beni mutlaka Kont yapacak!
+v2;100;Yaşasın Kont $targetfirstname!
+v1;130;Yaşasın ben!
+
+newchat;key:lady,v1:vtype:lady,v2:notvtype:knight,weigth:10
+v1;0;Güzelliğim bu topraklarda efsanedir.
+v2;30;Muhteşemsiniz, hanımefendim!
+v1;60;Yine de değersiz, küçük bir şövalyeyle evlendim...
+v2;100;Ama Lordluğunuz bir gün mutlaka Kont olacak!
+v1;130;Bu ahmak mı? Niye Papa olmasın, hazır başlamışken?
+v2;160;Niye olmasın, hanımefendim! Şey... demek istediğim...
+
+newchat;key:lumberman,v1:vtype:lumberman,weigth:10
+v1;0;Elmalar, elmalar, elmalar!
+v1;30;Elmalar, elmalar... elmalar!
+v2;60;Senin durumunda elma değil, elma şarabı şarabı şarabı değil mi?
+
+newchat;key:merchant,v1:vtype:merchant,weigth:10
+v1;0;Ne sefil bir köy.
+v2;30;Hey yabancı, diline dikkat et!
+v1;70;Ve ne kadar sevimli insanlar!
+
+newchat;key:miner,v1:vtype:merchant,weigth:10
+v1;0;Küçük bir şarkı yazdım, dinlemek ister misin?
+v2;40;Hadi bakalım!
+v1;50;Heigh-ho, heigh-ho, heigh-ho, heigh-ho...
+v2;70;Umut verici bir başlangıç...
+v1;90;İşten eve gidiyorum!
+v2;110;Ve benim çok işim var.
+
+newchat;key:monk,v1:vtype:monk,v2:child,weigth:10
+v2;0;Jacques Kardeş, Jacques Kardeş!
+v1;30;Çok komik, çocuğum.
+v2;60;Uyuyor musun, uyuyor musun?
+v1;90;Yeter, yeter, şarkıyı biliyorum.
+
+newchat;key:pigherd,v1:vtype:pigherd-pigherdf,v2:notvtype:pigherd-pigherdf,weigth:10
+v1;0;Domuzda her şey iyidir!
+v2;30;Yine de keserken çok ses çıkarıyorlar.
+v1;70;Domuz ne kadar çok bağırırsa, et o kadar lezzetli olur!
+
+newchat;key:priest,v1:vtype:priest,weigth:10
+v1;0;Köylülerin manevi sağlığıyla ilgileniyorum.
+v2;30;Ve yapılacak çok iş var!
+
+newchat;key:priest2,v1:vtype:priest,weigth:10
+v1;0;Köyümüz Tanrı'dan korkar.
+v2;30;Temsilcisi Peder $targetlastname$ da cabası.
+
+newchat;key:seneschal,v1:vtype:seneschal,weigth:10
+v1;0;Kral Dük William'ın sarayında çok değer görüyorum.
+v2;40;Kral Dük mü?
+v1;60;Majesteleri Fatih William, Normandiya Dükü ve İngiltere Kralı, cahil!
+v2;100;İngiltere neresi?
+v1;120;Denizin diğer tarafında. Ne cahillik!
+v2;140;Hangi denizin, efendim?
+v1;160;Ne küstahlık! Yeter!
+
+newchat;key:shepherd,v1:vtype:shepherd-shepherdf,v2:notvtype:shepherd-shepherdf,weigth:10
+v1;0;Çobanlık asil bir meslektir.
+v2;30;Asil mi? Çoban mı?
+v1;50;İyi Haberi duymak için Tanrı tarafından seçilmedik mi?
+v2;90;Ah evet. Yeni doğmuş kuzularla ilgilenirken - Aralık'ta.
+v1;130;Ne yani? Belki Beytüllahim'de mevsim yoktur. Burası gibi!
+
+newchat;key:smith,v1:vtype:smith,weigth:10
+v1;0;Normanların gerçek gücü silahlarında ve aletlerinde yatar.
+v2;40;Yani demircilerinde mi?
+v1;60;Aynen!
+
+newchat;key:wife,v1:vtype:wife,v2:male,v2:adult,weigth:10
+v1;0;Neden hep kadınlar inşa eder?
+v2;40;Eğer rahatsız oluyorsan, bir sonrakini ben hallederim.
+v1;80;Sahi mi! Çok tatlısın! O zaman perdeler için unutma...
+v2;120;Aslına bakarsan hayır, sana bırakacağım sanırım.
+
+newchat;key:alchemyworkshop,villager:alchemistapprentice,v1:notvtype:alchemistapprentice-guildmaster,v2:notvtype:alchemistapprentice-guildmaster,v1:adult,v2:adult,weigth:10
+v1;0;Dün simyacının atölyesinin önünden geçtim.
+v1;40;Çürük yumurta kokusu vardı!
+v2;80;Filozof taşı yaratmaya çalıştığını söylüyorlar!
+v1;120;Ölüleri diriltmek istediğini duydum.
+v2;160;Ben de ceset parçalarından canavar yaratacağını duydum!
+v1;200;Ne korkunç!
+v2;220;Oysa çok tatlı bir çocuktu...
+
+newchat;key:archives,building:archives,weigth:10
+v1;0;Yeni arşivleri ziyaret ettin mi?
+v1;30;Herkesin ne yaptığını görebiliyorsun!
+v2;60;Ah, sahi mi... ve, şey...
+v1;90;Evet, panelini gördüm.
+v1;120;Kendinden utanmalısın.
+
+newchat;key:bakery,building:bakery,weigth:10
+v1;0;Fırından gelen taze ekmek kokusunu çok severim.
+v2;40;Şimdi sadece kruvasan yapmayı bilen birine ihtiyacımız var.
+
+newchat;key:church,building:church,weigth:10
+v1;0;Kilisemiz gerçekten muhteşem!
+v2;30;Dindar bir köy olduğumuzu gösterir.
+v1;60;Ve yandaki köyünkinden daha büyük!
+
+newchat;key:inn,building:inn,v1:notvtype:merchant,v2:notvtype:merchant,weigth:10
+v1;0;Artık bir hanımız olduğuna göre, ticaret yapabiliriz!
+v2;40;Bir başka deyişle, geçen tüccarlar kaynaklarımıza el atacak.
+v1;80;Her zaman alaycı olmuşsundur.
+
+newchat;key:market,building:market,v1:notvtype:merchant,v2:notvtype:merchant,weigth:10
+v1;0;Pazarı çok severim! Ne kadar güzel mallar!
+v2;40;O olduğundan beri daha az izole hissediyoruz.
+v2;80;Ama daha zengin değiliz...
+
+newchat;key:tavern,building:tavern,v1:adult,v2:adult,weigth:10
+v1;0;Meyhane kesinlikle köyde inşa ettiğimiz en iyi şey.
+v2;40;Burada kimse buna karşı çıkmaz!
+
+newchat;key:fort,building:tavern,v1:adult,v2:adult,weigth:10
+v1;0;Hahaha! Durdurulamayız. Etkileyici gemilerimiz ve onurlu şövalyelerimiz dünyanın baş belası!
+v2;40;Ve düşmanlarımız kim? Bir avuç Romalı düzenbaz ve Maya taş sevdalısı mı?
+v1;80;Para kavramı bile olmayan kar aptallarını da unutma!
+v2;120;Hahaha! Norman hayatı dünyanın en iyisidir! Harika elma şarabı, en iyi aletler. Ah, bu bizim altın çağımız.
+v1;160;Ve onu paylaşıyoruz!
+v2;200;Hahaha!

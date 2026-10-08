@@ -1,0 +1,13 @@
+{
+  "parent": "millenaire:thequest",
+  "display": {
+    "icon": { "item": "minecraft:book" },
+    "title": { "translate": "advancement.millenaire.maitreapenser" },
+    "description": { "translate": "advancement.millenaire.maitreapenser.desc" }
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

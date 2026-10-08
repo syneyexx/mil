@@ -1,0 +1,34 @@
+version:3.4
+<darkblue>Ofte stillede spørgsmål
+
+<darkblue>Landsbyboerne taler et andet sprog end mit. Er det normalt?
+
+Millénaire-landsbyboerne taler alle deres "eget" sprog, såsom hindi for inderne eller fransk for normannerne. Hvis du spiller på et andet sprog, vil du "lære" sproget ved at interagere med dem (handel, opgaver ...). Efterhånden som du "lærer" deres sprog, vil Millénaire tilbyde oversættelser, først af bygningernes navne, derefter af landsbyboernes typer, og endelig af landsbyboernes dialog.
+
+<darkblue>Min normanniske landsby har brug for bindingsværk, og jeg kan ikke fremstille det, hvad gør jeg?
+
+Bindingsværk fremstilles af en tømrer ud fra træ. Vent, indtil din landsby opfører et "tømrerhus", og et par bosætter sig der. Tålmodighed!
+
+<darkblue>Min japanske landsby har brug for stråtag, og jeg kan ikke fremstille det, hvad gør jeg?
+
+Japanerne producerer stråtag af hvede. Hvis de ikke høster nok selv, så sælg dem noget for at fremskynde produktionen.
+
+<darkblue>Jeg byggede mit hus tæt på landsbyen, og landsbyboerne ødelagde det, da de byggede noget andet, er det normalt?
+
+Ja. Landsbyens territorium tilhører dem, tjek kortet for at se dens grænser. Hvis du vil bygge i landsbyen, så køb en grund af høvdingen.
+
+<darkblue>Nogle landsbyboere er døde, vil de blive genoplivet?
+
+Ja, landsbyboerne genoplives hver nat, kort efter solnedgang. Undgå blot at sove med det samme.
+
+<darkblue>Mine landsbyboere får ikke børn, eller deres børn vokser ikke op, hvad sker der?
+
+Nye børn kan komme til verden, når et par er hjemme om natten. På samme måde vokser de op om natten, når de er hjemme. Nogle fødevarer (drikkevarer, slik) øger chancen for, at babyer fødes, og andre (brød, korn) børnenes vækstrate.
+
+<darkblue>En bygning i landsbyen er blevet beskadiget, vil de reparere den?
+
+Nej, landsbyboerne reparerer ikke bygninger (selvom yderligere opgraderinger nogle gange kan erstatte de manglende blokke), primært af præstationshensyn. Du må selv reparere den.
+
+<darkblue>Min landsby mangler plads, kan jeg hjælpe?
+
+Ja, ved at kigge på landsbykortet for at se de områder, hvor de ikke kan bygge. At dække en sø, en flod eller en kløft med et lag jord er nok til at gøre området brugbart for landsbyboerne.

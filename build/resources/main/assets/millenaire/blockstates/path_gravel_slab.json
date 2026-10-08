@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "millenaire:block/path_gravel_slab"
+    },
+    "type=double": {
+      "model": "millenaire:block/path_gravel"
+    },
+    "type=top": {
+      "model": "millenaire:block/path_gravel_slab_top"
+    }
+  }
+}

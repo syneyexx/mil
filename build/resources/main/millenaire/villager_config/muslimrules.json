@@ -1,0 +1,16 @@
+{
+  "food_growth_overrides": {
+    "minecraft:cooked_porkchop": 0,
+    "millenaire:tripes": 0,
+    "millenaire:boudin": 0
+  },
+  "food_conception_overrides": {
+    "millenaire:inuit_bear_stew": 0,
+    "millenaire:bearmeat_cooked": 0,
+    "millenaire:wolfmeat_cooked": 0,
+    "millenaire:winebasic": 0,
+    "millenaire:cider": 0,
+    "millenaire:calva": 0,
+    "millenaire:winefancy": 0
+  }
+}

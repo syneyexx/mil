@@ -1,0 +1,34 @@
+version:3.4
+<darkblue>Reputatie & dorpshoofd
+
+Elk dorp in Millénaire heeft een mening over jou, in het begin neutraal en veranderend afhankelijk van je daden. Deze reputatie is erg belangrijk: veel beloningen zijn alleen mogelijk met een goede reputatie, en als je reputatie te slecht wordt, kunnen dorpelingen weigeren met je te handelen. Je kunt je reputatie controleren door (<darkblue>rechtsklik<black>) te praten met het dorpshoofd.
+
+De belangrijkste manier om je reputatie te verbeteren is door met het dorp te handelen. Zowel aankopen als verkopen verbeteren je reputatie naar verhouding tot de prijs. Je kunt je reputatie ook verbeteren door queestes voor hen uit te voeren. Omgekeerd zal het aanvallen van een dorp of het mislukken van bepaalde missies je reputatie schaden.
+
+Je hebt ook een <darkblue>reputatie bij elke cultuur<black>. Deze reputatie wordt beïnvloed door al je transacties met dorpen van deze cultuur, en beïnvloedt je handel met alle andere dorpen van dezelfde cultuur. Als je bijvoorbeeld een zeer goede reputatie hebt bij een Normandisch dorp, zullen andere Normandische dorpen je ook (een beetje) meer mogen. Je kunt je reputatie bij elke cultuur controleren in het informatiescherm (standaard de toets "M").
+
+<darkblue>Acties waarvoor een bepaalde reputatie vereist is
+
+<darkblue>Een dorpsperkament kopen
+
+Met een voldoende goede reputatie kun je een dorpsperkament kopen bij het dorpshoofd. Dit perkament bevat alle informatie die door de verschillende panelen van het dorp wordt gegeven.
+
+<darkblue>Een huis kopen
+
+Zodra je een voldoende goede reputatie hebt, kun je een huis kopen (of een stuk grond om op te bouwen) door met het dorpshoofd te praten. Je huis wordt door het dorp gebouwd zodra de lopende bouwwerken zijn voltooid. In tegenstelling tot de rest van het gebied rond het dorp behoort dit gebouw aan jou toe en kun je het naar wens aanpassen.
+
+<darkblue>Leren een gewas te verbouwen
+
+Je kunt leren om de Millénaire-specifieke gewassen te verbouwen die door sommige culturen worden gebruikt. Neem contact op met het dorpshoofd zodra je genoeg reputatie hebt.
+
+<darkblue>Extra voorwerpen kopen
+
+Voor sommige waardevolle voorwerpen is een goede reputatie in het dorp vereist. Als je niet de nodige reputatie hebt om een voorwerp te kopen, wordt dit in het handelsscherm aangegeven.
+
+<darkblue>Extra queestes
+
+Sommige queestes, waaronder de Scheppingsqueeste, kunnen alleen worden gestart met een goede reputatie (zie <darkblue>"queestes"<black>).
+
+<darkblue>Leider worden in een cultuur
+
+Zodra je de maximale reputatie hebt bereikt (<darkblue>"geboren leider"<black>) kun je een dorp bouwen waarin jij de leider bent (zie <darkblue>"een dorp creëren"<black>)

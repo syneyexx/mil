@@ -1,0 +1,18 @@
+version:4.8.0
+<darkblue>Os maias
+
+Vindos do Yucatán, os maias se distinguem por sua arquitetura em pedra com decoração em ouro e vivem em aldeias agrícolas, religiosas e militares. Falam maia, mas seu diálogo será traduzido à medida que o jogador "aprende" a língua deles conversando.
+
+<darkblue>Objetos e blocos exclusivos
+
+-Cultivam milho. O jogador pode pedir ao líder para lhe ensinar a cultivar esse cereal.
+-Preparam mah e masas a partir de milho e frango — tortilhas substanciosas.
+-Cultivam cacau e preparam cacauhaa a partir dele, uma bebida de chocolate revigorante.
+-O artesão da obsidiana produz armas e ferramentas de obsidiana, frágeis mas facilmente encantáveis.
+-Seus artesãos fabricam blocos decorativos a partir de barras de ouro fornecidas pelo jogador.
+-Também esculpem baixos-relevos representando divindades maias.
+
+<darkblue>Receita específica
+
+-Três milhos em linha produzem um wah (uma espécie de tortilha).
+-Dois milhos em linha com um frango cru no meio produzem um masa (tortilha com frango).

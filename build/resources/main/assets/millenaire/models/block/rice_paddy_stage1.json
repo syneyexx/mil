@@ -1,0 +1,64 @@
+{
+  "ambientocclusion": false,
+  "textures": {
+    "mud": "millenaire:block/rice_paddy_mud",
+    "plant": "millenaire:block/crop_rice_stage0",
+    "particle": "millenaire:block/rice_paddy_mud"
+  },
+  "elements": [
+    {
+      "comment": "mud slab",
+      "from": [0, 0, 0],
+      "to": [16, 7, 16],
+      "faces": {
+        "down":  { "texture": "#mud", "cullface": "down" },
+        "up":    { "texture": "#mud" },
+        "north": { "texture": "#mud", "cullface": "north", "uv": [0, 9, 16, 16] },
+        "south": { "texture": "#mud", "cullface": "south", "uv": [0, 9, 16, 16] },
+        "east":  { "texture": "#mud", "cullface": "east",  "uv": [0, 9, 16, 16] },
+        "west":  { "texture": "#mud", "cullface": "west",  "uv": [0, 9, 16, 16] }
+      }
+    },
+    {
+      "comment": "rice plants - crop plane x=4",
+      "from": [4, 6, 0],
+      "to": [4, 20, 16],
+      "shade": false,
+      "faces": {
+        "west": { "uv": [0, 0, 16, 16], "texture": "#plant" },
+        "east": { "uv": [16, 0, 0, 16], "texture": "#plant" }
+      }
+    },
+    {
+      "comment": "rice plants - crop plane x=12",
+      "from": [12, 6, 0],
+      "to": [12, 20, 16],
+      "shade": false,
+      "faces": {
+        "west": { "uv": [0, 0, 16, 16], "texture": "#plant" },
+        "east": { "uv": [16, 0, 0, 16], "texture": "#plant" }
+      }
+    },
+    {
+      "comment": "rice plants - crop plane z=4",
+      "from": [0, 6, 4],
+      "to": [16, 20, 4],
+      "shade": false,
+      "faces": {
+        "north": { "uv": [0, 0, 16, 16], "texture": "#plant" },
+        "south": { "uv": [16, 0, 0, 16], "texture": "#plant" }
+      }
+    },
+    {
+      "comment": "rice plants - crop plane z=12",
+      "from": [0, 6, 12],
+      "to": [16, 20, 12],
+      "shade": false,
+      "faces": {
+        "north": { "uv": [0, 0, 16, 16], "texture": "#plant" },
+        "south": { "uv": [16, 0, 0, 16], "texture": "#plant" }
+      }
+    }
+  ],
+  "render_type": "minecraft:cutout"
+}

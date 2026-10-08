@@ -1,0 +1,141 @@
+newchat;key:sun,tag:notraining,weigth:10
+v1;0;Çok sıcak!
+v2;30;Sıcak beni deli ediyor.
+v1;70;Ne zaman yağmur yağacak?
+
+newchat;key:monsoon,tag:notraining,weigth:10
+v1;0;Yağmur yağmıyor.
+v2;30;Merak etme. Yağacak.
+v1;60;Her yıl aynı şeyi söylüyorsun...
+
+newchat;key:rain,tag:raining,weigth:10
+v1;0;Evet! Yağmur yağıyor!
+v2;40;Bu kadar az yağmur hiçbir işe yaramayacak...
+v1;80;Hiç yağmamasından iyidir.
+v1;120;Ama ekinlerimiz nasıl büyüyecek?
+
+newchat;key:sandstone,weigth:10
+v1;0;Köyümüz ilerliyor, değil mi?
+v2;40;Ama yapılacak daha çok şey var.
+v1;80;Gerçekten mi?
+v2;100;Kesinlikle!
+
+newchat;key:lakshmi,v1:adult,v2:adult,weigth:10
+v1;0;Git, puja için bir tabak adak getir.
+v2;40;Hemen getireceğim.
+v1;80;Tanrıları memnun etmeliyiz.
+v1;130;Ancak o zaman yağmur zamanında gelecek.
+
+newchat;key:beef,v2:adult,weigth:10
+v1;0;İnek etinin tadının nasıl olduğunu hiç merak ettin mi?
+v2;60;İnek eti mi? Ama onu yemek dharmamıza aykırı!
+v1;120;Peki ya lezzetliyse...?
+v2;180;Norman barbarı mısın sen?
+
+newchat;key:rice,v1:child,v2:adult,weigth:10
+v1;0;Bir rasgulla istiyorum. Çok açım!
+v2;60;Hayır. Sadece pirinç yemelisin.
+v1;120;Ama bu sabah da yedim!
+v1;180;Dün de, ondan önceki gün de...
+v2;220;Bu akşam da, yarın da, hayatının geri kalanında da yiyeceksin!
+
+newchat;key:indian_lumberman,v1:vtype:indian_lumberman,weigth:10
+v1;0;Bugün bir sürü odun kestim.
+v2;60;Ormanımızı çöle çevireceksin!
+v1;120;Merak etme, burada ağaçlar neredeyse kendiliğinden büyüyor.
+
+newchat;key:indian_raja,v1:vtype:indian_raja,v2:adult,notrel:spouse,weigth:10
+v1;0;Sarayım çok küçük oldu.
+v2;60;Ama Maharaj, ülkedeki en büyük saray!
+v1;120;Ama bana küçük geliyor.
+
+newchat;key:indian_rajputgeneral,v1:vtype:indian_rajputgeneral,weigth:10
+v1;0;Güçlü bir kale, düşmanlarımıza karşı en iyi savunmadır.
+v2;60;Hangi düşmanlar, General?
+v1;100;Normanlar ve diğer barbarlar.
+
+newchat;key:indian_rani,v1:vtype:indian_rani,notrel:spouse,weigth:10
+v1;0;Kocam zengin ve saygındır.
+v2;50;Ah evet! Doğru.
+v1;110;Yine de bana hiçbir şey almıyor.
+v2;160;Neden olmasın? Daha dün size üç sari aldı.
+
+newchat;key:indian_richwoman,v1:vtype:indian_richwoman,v2:female,v2:adult,v2:notvtype:indian_richwoman-indian-rani,weigth:10
+v1;0;Kocam bugün elli tola altın aldı.
+v2;60;Elli tola altın! Benim sadece 10 tolam var...
+v1;120;Umarım yıldızlar senin lehine sıralanır.
+
+newchat;key:indian_sculptor,v1:vtype:indian_sculptor,weigth:10
+v1;0;Heykel yapma konusunda harika bir fırsatım var.
+v2;50;Çünkü çok güzel heykeller yapıyorsun.
+v1;100;Uzun zamandır heykel yapıyorum.
+
+newchat;key:indian_smith,v1:vtype:indian_smith,v2:adult,weigth:10
+v1;0;Daha fazla kazmaya ihtiyacımız var.
+v2;50;Şu anda meşgulüm.
+v1;100;Küreğe de ihtiyacımız var.
+v2;150;Uff! Yapacak ne kadar çok işim var!
+
+newchat;key:indian_soldier,v1:vtype:indian_soldier,v2:adult,v2:female,notrel:spouse,notrel:sibling,notrel:child,notrel:parent,weigth:10
+v1;0;$targetfirstname, sanırım köyümüzün yakınında haydutlar pusu kuruyor!
+v2;50;Merak etme, köyü koruyacağım.
+v1;100;Çok güçlüsün!
+v1;130;Ve yakışıklı da.
+v1;150;Bıyığın olmasaydı...
+v2;200;Bıyığım hakkında tek kelime etme!
+
+newchat;key:indian_villagechief,v1:vtype:indian_villagechief,v2:vtype:indian_peasant-indian_peasantwife,weigth:10
+v1;0;Senapati, iss saal fasal achhi nahi hai./ Efendim, bu yıl hasat iyi değil.
+v2;40;Çünkü tembelsin! Daha çok çalış!
+v1;80;Ama hiç yağmur yağmadı...
+v2;120;Benim suçum değil. Kira paramı istiyorum.
+v1;170;Ama param yok.
+v2;210;O zaman toprağı geri ver.
+v1;260;Ama elimde hiçbir şey kalmaz!
+
+newchat;key:newhouse,villager:indian_merchant,v1:notvtype:indian_merchant,v2:notvtype:indian_merchant,weigth:10
+v1;0;O tüccar kendi evinin yanına yeni bir ev inşa ediyor.
+v2;60;Başka bir ev mi? Ama neden yeni birine ihtiyacı var?
+v1;90;Yeni ev oğlu için.
+v1;140;Oğlu evlendiğinde, baba ve oğul yan yana olacaklar.
+
+newchat;key:gold,v1:vtype:indian_peasantwife,rel:spouse,villager:indian_villagechief,weigth:10
+v1;0;Köy reisi karısına altın bilezikler aldı.
+v1;60;Ama bana hiç mücevher almadın...
+v2;110;Zengin bir adamla evlenmeliydin.
+v1;160;Ama o zaman daha fazla drahoma ödemem gerekirdi.
+v2;200;O zaman benim gibi bir kocan olduğu için kutsanmış hissetmelisin.
+
+newchat;key:alcohol,v1:vtype:indian_peasant-indian_lumberman,v2:vtype:indian_peasant-indian_lumberman,weigth:10
+v1;0;Uzun zamandır içki içmedim.
+v2;50;Köyün dışında banyan ağacının altında oturan ve alkol ile fıstık satan bir adam var.
+v1;110;Gerçekten mi? Köyde alkol satmanın yasak olduğunu sanıyordum!
+v2;160;Kimseye söyleme.
+v1;200;Tamam, bu akşam oraya gidelim.
+
+newchat;key:childoneliner1,v1:child,v2:child,weigth:10
+v1;0;Bana oyuncak getirdin mi?
+
+newchat;key:childoneliner2,v1:child,v2:child,weigth:10
+v1;0;Birçok arkadaşım var.
+
+newchat;key:childoneliner3,v1:child,v2:child,weigth:10
+v1;0;Annem karanlıktan sonra oynamama izin vermiyor.
+
+newchat;key:childrenzombie,v1:child,v2:child,weigth:2
+v1;0;Merhaba!
+v2;50;Onu gördün mü?
+v1;100;Neyi gördüm?
+v2;150;Bir... zombi gördüm!
+v1;200;Gerçekten mi?
+v2;250;Evet! Çok korkutucuydu! Hatta seni yiyeceğini söyledi!
+v1;300;Ahhhhh! Anne! Bir zombi beni yiyecek!
+
+newchat;key:childrencreeper,v1:child,v2:child,weigth:2
+v1;0;Merhaba!
+v2;50;Onu gördün mü?
+v1;100;Neyi gördüm?
+v2;150;Bir... creeper gördüm!
+v1;200;Gerçekten mi?
+v2;250;Evet! Çok korkutucuydu! Oradaki bir ağacı havaya uçurdu!
+v1;300;Ama dur, en sevdiğim ağaç oradaydı... WAAAAAAAA

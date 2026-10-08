@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/template_glass_pane_side",
+  "textures": {
+    "pane": "millenaire:block/mayan_statue",
+    "edge": "millenaire:block/mayan_statue_top"
+  }
+}

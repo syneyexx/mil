@@ -1,0 +1,10 @@
+
+version:3.4
+<darkblue>Queestes
+Queestes zijn aanvullende taken die je voor de dorpelingen kunt uitvoeren. Wanneer een queeste beschikbaar is, wordt deze tussen vierkante haken boven het hoofd van een dorpeling weergegeven, bijvoorbeeld: "<darkblue>[Dorst!]<black>". Klik er met de rechtermuisknop op voor een beschrijving van de taak en de mogelijkheid om hem te accepteren of te weigeren. Queestes worden beloond met geld, reputatie of voorwerpen. Voor sommige queestes is een goede reputatie bij het dorp vereist om beschikbaar te zijn.
+Om te zien welke queestes je hebt geaccepteerd en wat je moet doen, druk je op "M".
+<darkblue>Scheppingsqueeste
+Deze speciale collectie omvat veel missies en heeft twee onafhankelijke hoofdstukken, gericht op de Normandische en Indiase culturen. De eerste missie van elk hoofdstuk wordt je toegewezen door een Indiase of Normandische dorpeling zodra je het reputatieniveau "Vriend van het dorp" hebt bereikt (de queeste start willekeurig, dus het kan enige tijd duren voordat de queeste beschikbaar is).
+Beide queestes vereisen dat je een speciaal los gebouw vindt. Je moet verkennen tot je het vindt; wees voorzichtig, want het is erg zeldzaam. In tegenstelling tot andere losse gebouwen verschijnen deze gebouwen echter wanneer je de toets "V" gebruikt.
+Deze speciale missie is in wezen een reeks talrijke missies verdeeld in twee onafhankelijke hoofdstukken en gericht op de Normandische en Indiase culturen. De eerste missie van elk hoofdstuk wordt beschikbaar gesteld door een Indiase of Normandische dorpeling wanneer hij het reputatieniveau "Vriend van het dorp" bereikt (hij moet mogelijk enige tijd wachten tot de eerste missie beschikbaar wordt, zelfs nadat hij de nodige reputatie heeft bereikt).
+In beide eerste missies moet je een speciaal afgezonderd bouwwerk vinden; je moet de kaart verkennen tot je ze vindt. Merk echter op dat ze uniek zijn en, in tegenstelling tot de gewone losse bouwwerken, zijn vermeld in de lijst van dorpen die toegankelijk is via de toets "V".

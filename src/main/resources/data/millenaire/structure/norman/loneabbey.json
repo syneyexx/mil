@@ -1,0 +1,77 @@
+{
+  "culture": "millenaire:norman",
+  "building_id": "loneabbey",
+  "category": "lone",
+  "native_name": "Abbaye",
+  "converter_skip": true,
+  "max_count": 1,
+  "min_distance": 0.5,
+  "male": "loneabbot",
+  "priority_move_in": 10,
+  "tags": [
+    "cattle",
+    "bakery",
+    "leisure"
+  ],
+  "terrain_policy": "clear_and_flatten",
+  "construction_order": "bottom_up",
+  "icon": "minecraft:book",
+  "building_orientation": 1,
+  "shop": "loneabbey",
+  "starting_sub_buildings": [
+    "loneabbey_a_altar"
+  ],
+  "travel_book_category": "lonebuilding",
+  "variants": [
+    {
+      "variant": "a",
+      "levels": [
+        {
+          "level": 0,
+          "template": "millenaire-custom:exports/loneabbey_a_0",
+          "footprint": {
+            "width": 21,
+            "height": 9,
+            "depth": 25
+          },
+          "ground_level": -1,
+          "priority": 3000,
+          "signs": "3,4,0,1,2,5,6,7,8"
+        },
+        {
+          "level": 1,
+          "template": "millenaire:norman/loneabbey_a_1",
+          "footprint": {
+            "width": 21,
+            "height": 9,
+            "depth": 25
+          },
+          "ground_level": -1,
+          "priority": 100
+        },
+        {
+          "level": 2,
+          "template": "millenaire:norman/loneabbey_a_2",
+          "footprint": {
+            "width": 21,
+            "height": 17,
+            "depth": 25
+          },
+          "ground_level": -1,
+          "priority": 100
+        },
+        {
+          "level": 3,
+          "template": "millenaire-custom:exports/loneabbey_a_3",
+          "footprint": {
+            "width": 21,
+            "height": 21,
+            "depth": 25
+          },
+          "ground_level": -1,
+          "priority": 100
+        }
+      ]
+    }
+  ]
+}

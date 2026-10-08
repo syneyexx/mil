@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "group": "millenairepathslab",
+  "key": {
+    "#": {
+      "item": "millenaire:path_gravel"
+    }
+  },
+  "pattern": [
+    "###"
+  ],
+  "result": {
+    "count": 6,
+    "id": "millenaire:path_gravel_slab"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "parent": "millenaire:block/mock_soil_wheat",
+  "overrides": [
+    { "predicate": { "custom_model_data": 1 }, "model": "millenaire:block/mock_soil_wheat" },
+    { "predicate": { "custom_model_data": 2 }, "model": "millenaire:block/mock_soil_rice" },
+    { "predicate": { "custom_model_data": 3 }, "model": "millenaire:block/mock_soil_turmeric" },
+    { "predicate": { "custom_model_data": 4 }, "model": "millenaire:block/mock_soil_sugarcane" },
+    { "predicate": { "custom_model_data": 5 }, "model": "millenaire:block/mock_soil_potato" },
+    { "predicate": { "custom_model_data": 6 }, "model": "millenaire:block/mock_soil_netherwart" },
+    { "predicate": { "custom_model_data": 7 }, "model": "millenaire:block/mock_soil_vine" },
+    { "predicate": { "custom_model_data": 8 }, "model": "millenaire:block/mock_soil_maize" },
+    { "predicate": { "custom_model_data": 9 }, "model": "millenaire:block/mock_soil_cacao" },
+    { "predicate": { "custom_model_data": 10 }, "model": "millenaire:block/mock_soil_carrot" },
+    { "predicate": { "custom_model_data": 11 }, "model": "millenaire:block/mock_soil_flower" },
+    { "predicate": { "custom_model_data": 12 }, "model": "millenaire:block/mock_soil_cotton" }
+  ]
+}

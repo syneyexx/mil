@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "millenaire:block/japanese_tiles_slab"
+    },
+    "type=double": {
+      "model": "millenaire:block/japanese_tiles"
+    },
+    "type=top": {
+      "model": "millenaire:block/japanese_tiles_slab_top"
+    }
+  }
+}

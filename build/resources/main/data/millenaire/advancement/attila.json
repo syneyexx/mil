@@ -1,0 +1,13 @@
+{
+  "parent": "millenaire:darkside",
+  "display": {
+    "icon": { "item": "millenaire:norman_sword" },
+    "title": { "translate": "advancement.millenaire.attila" },
+    "description": { "translate": "advancement.millenaire.attila.desc" }
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

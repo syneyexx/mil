@@ -1,0 +1,61 @@
+
+boy.greeting=anaanaga miqsurunnaqtunga
+boy.greeting=pinnguarumajunga
+boy.greeting=qanuippit.
+
+chef.greeting=niqłiuqtunga. inuuhiqatsiaq!
+chef.greeting=nirinnaqsijuq.
+
+farmer.greeting=nunanniapaa, itjuujaq!
+
+fisherman.greeting=ukiukkut iqalliariaksaq quviagijara.
+
+girl.greeting=mumirunnaqtunga
+girl.greeting=qanuippit.
+girl.greeting=ullagunnaqtunga.
+
+hunter.greeting=qimuksiqpakpit?
+hunter.greeting=ukiakkut angunasukłuni quviagijara.
+
+husband.greeting=iqqanaijariariaqaliqtunga.
+
+lumberman.greeting=napaaktuk aglinigaktuk sayakturuk, tanakuuruk.
+
+oldlady.greeting=amaamak irinaliut iqsijuq iglu imakkuutuq
+oldlady.greeting=angu isivrivriuqpuq mamivuq!
+oldlady.greeting=irinaliut qitirut tamanna!?
+
+shaman.greeting=tuurngaq tutsiaqatigiinniq.
+shaman.greeting=uqariaqaqtunga tuurngaq.
+
+sodder.greeting=qaijariaqaqtunga miqqapik
+
+villager.greeting=ainngai, $name!
+villager.greeting=aqsarniit takuminaqtut.
+villager.greeting=ilatit qanuippat?
+villager.greeting=katigatkit quvianaq.
+villager.greeting=nani nunaqaqqpit?
+villager.greeting=niriqqauvit?
+villager.greeting=sinittiaqqaugaluaqpit?
+villager.greeting=takunasaaqpagit.
+villager.greeting=tunngasugit
+villager.greeting=ullaakuut.
+
+wife.greeting=kaayuk sinaiyaurug, masu aniruk!
+wife.greeting=silasiqanuippa?
+
+villager.sellercoming=Qailiqtunga!
+villager.tradecomplete=Taimakalauq, tavvauvutit.
+
+art_merchant.greeting=Aucune ville dans le monde n'est comparable à Constantinople.
+art_merchant.greeting=Les gens ici sont des barbares.
+
+oriental_merchant.greeting=Ce pays est riche, mais fallait il vraiment qu'il soit si froid?
+oriental_merchant.greeting=Etes vous allez à Cordoue? Ca, c'est une ville civilisée.
+
+plant_merchant.greeting=Some people say I'm a dreamer, but I'm not the only one...
+
+viking_merchant.greeting=Aujourd'hui je vient commercer. Demain...
+viking_merchant.greeting=Cette terre appartient aux vikings. L'Angleterre aussi. La Sicile aussi. Vive nous!
+
+weapon_merchant.greeting=Vous voulez vraiment savoir comment j'ai survécu toutes ces années voyageant seul avec des marchandises précieuses?

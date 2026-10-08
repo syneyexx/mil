@@ -1,0 +1,28 @@
+version:3.4
+<darkblue>Kamp og plyndringstokt
+
+Millénaire er ikke alltid en fredelig modifikasjon: du kan kjempe mot landsbyboere, landsbyer kan utføre plyndringstokt mot hverandre, monstre kan angripe landsbyer, og noen enkeltbygninger er bebodd av banditter. Uansett omstendigheter, endres ikke visse prinsipper: <darkblue>landsbyboere er bare sårbare for direkte angrep (nærkamp, piler og eliksirer)<black>. De påvirkes ikke av ild, fallskade eller kaktus. Denne begrensningen er ment å hindre spilleren i å drepe dem uten at de er klar over at spilleren angriper dem.
+
+Landsbyboere varierer i styrke, og utstyret de bruker kan gjøre dem mye farligere.
+
+<darkblue>Gjenfødsel av landsbyboere
+
+Når en landsbyboer er drept, er han midlertidig død. Døde landsbyboere blir gjenfødt i hjemmene sine (men de mister utstyret sitt). Tross alt kan jo spilleren også gjenfødes ...
+
+<darkblue>Angrep fra spillere
+
+Du kan alltid angripe en landsbyboer, men andre menn i landsbyen vil da hjelpe til med å kjempe mot deg. Skulle du klare å drepe alle landsbyboerne i en landsby eller enkeltbygning, vil landsbyens skattkammer åpnes, og du kan stjele innholdet.
+
+<darkblue>Banditter
+
+Enkelte beboere av enkeltbygninger vil angripe deg uten forvarsel hvis du nærmer deg. Omdømmet ditt hos kulturen deres vil ikke synke om du dreper dem. Som andre landsbyboere gjenfødes de om natten — se under "<darkblue>ødelegge en landsby<black>" for å se hvordan du kan forhindre dette.
+
+<darkblue>Plyndringstokt mellom landsbyer
+
+Millénaire-landsbyer har positive eller negative forhold til nærliggende landsbyer. Disse forholdene endres tilfeldig og kan påvirkes av at spilleren snakker med høvdingene i en av landsbyene. Hvis forholdene er svært dårlige og en av landsbyene har nok krigere, kan den lansere et plyndringstokt mot andre landsbyer. Du vil bli varslet med en melding. Under et plyndringstokt vil krigerne som angriper landsbyen forsøke å drepe mennene i landsbyen de angriper. Hvis de lykkes, vil de ta noen av ressursene som krigsbytte. Du kan hjelpe den ene eller den andre siden under et plyndringstokt.
+
+Det kan være nyttig å oppmuntre en landsby du liker til å angripe naboene sine for å øke ressursene dens. Mer kynisk kan det å oppmuntre til plyndringstokt også gjøre at du selv kan forsyne deg med noe av byttet når forsvarerne er døde.
+
+<darkblue>Leie en landsbyboer
+
+Det er mulig å leie enkelte landsbyboere som soldater og tømmerhoggere til å hjelpe deg i kamp. De vil følge deg og kjempe mot fiendene dine sammen med deg.

@@ -1,0 +1,6 @@
+{
+  "parent": "millenaire:block/mock_facing_marker_sign_base",
+  "textures": {
+    "icon": "minecraft:item/oak_sign"
+  }
+}

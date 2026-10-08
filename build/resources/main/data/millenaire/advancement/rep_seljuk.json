@@ -1,0 +1,13 @@
+{
+  "parent": "millenaire:friendindeed",
+  "display": {
+    "icon": { "item": "minecraft:red_carpet" },
+    "title": { "translate": "advancement.millenaire.rep_seljuk" },
+    "description": { "translate": "advancement.millenaire.rep_seljuk.desc" }
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

@@ -1,0 +1,28 @@
+version:3.4
+<darkblue>Harc és portyák
+
+A Millénaire nem mindig békés mod: harcolhatsz a falubeliekkel, a falvak portyákat indíthatnak egymás ellen, szörnyek támadhatják a falvakat, és néhány magányos épületet banditák laknak. A körülményektől függetlenül bizonyos elvek nem változnak: <darkblue>a falubeliek csak közvetlen támadásra sebezhetők (közelharc, nyilak és bájitalok)<black>. Nem hat rájuk a tűz, a zuhanás vagy a kaktusz. Ezt a korlátozást szándékosan vezettük be, hogy a játékos ne tudja megölni őket úgy, hogy közben ne tudnák, hogy ő a támadó.
+
+A falubeliek ereje eltérő, és a felszerelésük, amelyet viselnek, sokkal veszélyesebbé teheti őket.
+
+<darkblue>A falubeliek újraéledése
+
+Miután megölik, a falubeli csak átmenetileg halott. A halott falubeliek éjjel újraélednek otthonukban (de elveszítik a felszerelésüket). Végül is a játékos is újraéled…
+
+<darkblue>Játékos általi támadás
+
+Bármikor megtámadhatsz egy falubelit, de a falu többi férfi lakója ekkor a segítségére siet, és ellened harcol. Ha sikerül egy falu vagy magányos épület összes falubelijét megölnöd, a falu kincsesládája kinyílik, és ellophatod a tartalmát.
+
+<darkblue>Banditák
+
+Egyes magányos épületek lakói figyelmeztetés nélkül megtámadnak, ha közelítesz. A kultúrájukkal szembeni hírneved nem romlik, ha megölöd őket. A többi falubelihez hasonlóan ők is éjjel újraélednek – nézd meg a „<darkblue>falu lerombolása<black>” részt, hogy hogyan akadályozhatod ezt meg.
+
+<darkblue>Portyák falvak között
+
+A Millénaire falvai pozitív vagy negatív viszonyban állnak a közeli falvakkal. Ezek a viszonyok véletlenszerűen változnak, és a játékos befolyásolhatja őket az érintett falvak elöljáróival folytatott beszélgetésekkel. Ha a viszony nagyon rossz, és az egyik falunak elég katonája van, portyát indíthat a másik falu ellen. Erről üzenettel értesülsz. A portya során a támadó falu harcosai a megtámadott falu férfilakóinak megölésére törekszenek. Ha sikerül nekik, zsákmányként elviszik a nyersanyagok egy részét. A portya során bármelyik oldalon segíthetsz.
+
+Hasznos lehet egy kedvenc faludat arra biztatni, hogy támadja meg a szomszédait, így növelve annak nyersanyagkészletét. Cinikusabban a portyák ösztönzése lehetőséget ad arra is, hogy a védők halála után magad pakold el a zsákmány egy részét.
+
+<darkblue>Falubeli felfogadása
+
+Lehetséges egyes falubeliek, például katonák vagy favágók felfogadása, hogy harcokban segítsenek. Követnek, és veled együtt harcolnak az ellenségeid ellen.

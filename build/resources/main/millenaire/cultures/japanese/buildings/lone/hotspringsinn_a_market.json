@@ -1,0 +1,38 @@
+{
+  "culture": "millenaire:japanese",
+  "building_id": "hotspringsinn_a_market",
+  "category": "lone",
+  "is_sub_building": true,
+  "parent_building": {
+    "id": "hotspringsinn",
+    "variant": "a",
+    "level": 0
+  },
+  "native_name": "Onsenmachi",
+  "max_count": 0,
+  "tags": [
+    "market"
+  ],
+  "icon": "millenaire:purse",
+  "variants": [
+    {
+      "variant": "a",
+      "building_orientation": 2,
+      "ground_level": -3,
+      "tags": [
+        "market"
+      ],
+      "levels": [
+        {
+          "level": 0,
+          "footprint": {
+            "width": 65,
+            "height": 14,
+            "depth": 84
+          },
+          "priority": 50
+        }
+      ]
+    }
+  ]
+}

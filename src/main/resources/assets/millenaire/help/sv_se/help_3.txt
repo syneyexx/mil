@@ -1,0 +1,34 @@
+version:3.4
+<darkblue>Rykte och byhövding
+
+Varje by i Millénaire har en åsikt om dig, neutral från början och föränderlig beroende på dina handlingar. Detta rykte är mycket viktigt: många belöningar är endast möjliga med ett gott rykte, och om ditt rykte blir för dåligt kan byinvånarna vägra att handla med dig. Du kan kontrollera ditt rykte genom att tala (<darkblue>högerklicka<black>) med byhövdingen.
+
+Det främsta sättet att förbättra ditt rykte är att handla med byn. Både inköp och försäljningar förbättrar ditt rykte i förhållande till priset. Du kan också förbättra ditt rykte genom att utföra uppdrag åt dem. Omvänt skadar det ditt rykte att anfalla en by eller misslyckas med vissa uppdrag.
+
+Du har också ett <darkblue>rykte hos varje kultur<black>. Detta rykte påverkas av alla dina affärer med byar av denna kultur och påverkar din handel med alla andra byar av samma kultur. Om du till exempel har ett mycket gott rykte i en normandisk by kommer även andra normandiska byar att tycka (lite) bättre om dig. Du kan kontrollera ditt rykte hos varje kultur i informationsskärmen ("M"-tangenten som standard).
+
+<darkblue>Handlingar som kräver ett visst rykte
+
+<darkblue>Köpa en byrulle
+
+Med tillräckligt gott rykte kan du köpa en byrulle av byhövdingen. Denna rulle innehåller all information som byns olika paneler ger.
+
+<darkblue>Köpa ett hem
+
+När du har tillräckligt gott rykte kan du köpa ett hus (eller en tomt att bygga på) genom att tala med byhövdingen. Ditt hem byggs av byn när det pågående bygget är klart. Till skillnad från resten av området runt byn tillhör denna byggnad dig, och du kan anpassa den efter eget tycke.
+
+<darkblue>Lära dig odla en gröda
+
+Du kan lära dig odla de Millénaire-specifika grödor som vissa av kulturerna använder. Kontakta byhövdingen när du har tillräckligt rykte.
+
+<darkblue>Köpa ytterligare föremål
+
+Vissa värdefulla föremål kräver ett gott rykte i byn. Om du inte har det rykte som krävs för att köpa ett föremål kommer detta att anges i handelsskärmen.
+
+<darkblue>Ytterligare uppdrag
+
+Vissa uppdrag, däribland skapelseuppdraget, kan endast inledas med ett gott rykte (se <darkblue>"uppdrag"<black>).
+
+<darkblue>Bli ledare i en kultur
+
+När du har nått det högsta ryktet (<darkblue>"naturlig ledare"<black>) kan du bygga en by där du är ledaren (se <darkblue>"skapa en by"<black>)

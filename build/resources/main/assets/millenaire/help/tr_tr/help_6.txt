@@ -1,0 +1,14 @@
+version:3.4
+<darkblue>Köy kurmak
+
+Yeterince yüksek bir itibara sahip olduğunuzda herhangi bir köyde satın alabileceğiniz bir Çağırma Asası ile, seçtiğiniz türde bir köyü seçtiğiniz yere kurabilirsiniz. Asayı kullanmak için, köyü kurmak istediğiniz yere bir altın bloğu yerleştirin ve asayla bloğa sağ tıklayın. Açılan ekran, istenen köy türünü seçmenize olanak tanır.
+
+<darkblue>Bir köyü ya da tek yapıyı yok etmek
+
+Bir köy ya da yapının sakinleri, köydeki tüm binaları yok etseniz bile her gece yeniden doğar. Bunu önlemek için (örneğin binaları kendiniz işgal etmek istiyorsanız), <darkblue>Yokediş Asası'nı<black> kullanmanız gerekir: tüm sakinler öldüğünde ana binanın sandıklarında bulacaksınız. Bir köyün yok edilmesinin geri alınamaz olduğunu lütfen unutmayın.
+
+<darkblue>Oyuncu yönetimindeki köyler
+
+Önderi olduğunuz, binaların yerlerini sizin seçebileceğiniz bir köy kurmak mümkündür. Bunu yapmak için köyün kültüründe önder olarak tanınmanız veya Yaratılış Görevini tamamlamış olmanız (bkz. görevler bölümü), ya da bir köyde itibarınızı "doğal önder" seviyesine yükseltip o köyün önderiyle konuşmanız gerekir. Ardından Çağırma Asası arayüzünde oyuncu yönetimindeki köyler oluşturma seçeneğini göreceksiniz.
+
+Oyuncu yönetimindeki köylerde, asayı istediğiniz konumda kullanarak yeni bir binanın inşasını emredebilirsiniz. İstediğiniz binayı seçmek için bir arayüz açılır. Ayrıca "projeler" tabelaları üzerinden mevcut binaların iyileştirilmesine izin verebilir ya da bunu durdurabilirsiniz. Bu köylerde köylülerle kaynak ticareti yapmak gereksizdir; eşyaları doğrudan sandıklara koymanız yeterlidir.

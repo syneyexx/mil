@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "millenaire:block/soil_grape"
+  },
+  "render_type": "minecraft:cutout"
+}

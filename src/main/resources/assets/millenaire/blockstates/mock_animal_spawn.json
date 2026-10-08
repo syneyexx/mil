@@ -1,0 +1,11 @@
+{
+  "variants": {
+    "animal=cow": { "model": "millenaire:block/mock_animal_spawn_cow" },
+    "animal=pig": { "model": "millenaire:block/mock_animal_spawn_pig" },
+    "animal=sheep": { "model": "millenaire:block/mock_animal_spawn_sheep" },
+    "animal=chicken": { "model": "millenaire:block/mock_animal_spawn_chicken" },
+    "animal=squid": { "model": "millenaire:block/mock_animal_spawn_squid" },
+    "animal=wolf": { "model": "millenaire:block/mock_animal_spawn_wolf" },
+    "animal=polar_bear": { "model": "millenaire:block/mock_animal_spawn_polar_bear" }
+  }
+}

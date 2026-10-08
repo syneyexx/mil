@@ -1,0 +1,84 @@
+//villager.CookBrick=यह मज़बूत पत्थर है.
+//villager.DryBrick=हमें अपने घर बनाने के लिए पत्थर चाहिए.
+//villager.GatherBrick=मैं बहुत ज़्यादा पत्थर ढो रहा हूँ.
+
+female.becomeadult=मुझे एक पति चाहिए.
+male.becomeadult=मैं शिकारी बनना चाहता हूँ.
+
+mayan_shaman.gopray.chosen=प्रार्थना तुम्हारी रक्षा करती है.
+mayan_shaman.greeting=आत्माएँ तुम्हारी रक्षा करें.
+
+villager.becomeadult=ला ला ला ला. /
+
+villager.bringbackresourceshome=मेरे पास ढोने को बहुत लकड़ी है.
+
+villager.choptrees=पेड़ काटने का समय.
+
+villager.constructionstepbystep=मुझे एक मज़बूत साथी चाहिए.
+villager.constructionstepbystep=काम, काम, काम.
+
+villager.delivergoodshousehold=ढोने को बहुत खाना है.
+
+villager.gathergoods=मैं लकड़ी घर ले जाऊँगा.
+
+villager.getgoodshousehold=मुझे ये चीज़ें घर ले जानी हैं.
+
+villager.gethouseresources=साफ़ घर अच्छा घर होता है.
+
+villager.getresourcesforbuild=बहुत ज़्यादा पत्थर है.
+
+villager.goplay=मैं घास में खेलूँगा.
+
+villager.childobserveagriculture=पता है क्या होगा अगर मक्के के दाने बहुत तेज़ गरम कर दिए जाएँ?
+villager.childobserveconstruction=हम पत्थर के अलावा किसी और चीज़ से क्यों नहीं बना सकते, सोचता हूँ?
+villager.childobservesmithing=यहाँ सब औज़ारों के लिए ओब्सीडियन का इस्तेमाल करते हैं, पर इससे मज़बूत कुछ ज़रूर होगा!
+villager.childobserveproducefood=बड़ों को सारी कोको क्यों मिलती है? यह न्याय नहीं है!
+
+villager.childeatcacaobeans=अकेले काकाओ की फलियाँ थोड़ी कड़वी हैं. सोचता हूँ दूध में भिगोने से क्या बेहतर लगेगा?
+
+
+villager.harvestmaize=अच्छी बारिश, अच्छी फ़सल.
+
+villager.harvestturmeric=यह मसाले की फ़सल खाने को ताक़त देती है.
+
+villager.maketools=मेरा सामान ख़रीदो.
+
+villager.makeweapons=यहाँ के हथियार मज़बूत हैं.
+
+villager.plantmaize=बारिश हमें भरपूर फ़सल भेजती है.
+
+villager.plantsaplings=मैंने ये सारे पेड़ लगाए हैं.
+
+villager.plantturmeric=मसाला खाने का स्वाद बनाता है.
+
+villager.scultmayan=एक दिन मैं चित्र बनाना चाहता हूँ.
+
+villager.slaughterchicken=मुर्ग़ियाँ हमें माँस देती हैं.
+
+villager.calltoarms=दुश्मन को मार डालो!
+villager.calltoarms=हथियार उठाओ!
+villager.calltoarms=आज का दिन मेरा है!
+villager.hitbyplayer=अरे! मुझे मत मारो!
+
+villager.gopray.chosen=मैं प्रार्थना बोलता हूँ.
+villager.gopray=आत्माएँ हमारी मदद करें.
+villager.gopray=आत्माएँ हमें भरपूर फ़सल दें.
+
+villager.gorest=नींद हावी हो रही है.
+villager.gorest=मुझे अब सोना है.
+villager.gorest=*जम्हाई लेता है*
+
+villager.greeting=क्या नया है?
+villager.greeting=आत्माएँ तुम्हारे साथ कैसा व्यवहार करती हैं?
+villager.greeting=तुम्हारा परिवार कैसा है?
+villager.greeting=नमस्ते, $name-जे!
+villager.greeting=आत्माएँ हमें बारिश भेजें.
+villager.greeting=तुम्हारी ज़मीन कहाँ है?
+villager.greeting=आज आसमान गरम है.
+
+villager.makerasgulla=मेरा छोटा बच्चा बीमार है.
+villager.construction=एकता से काम करो, ताक़त से काम करो.
+villager.construction=काम, काम, काम.
+villager.sellercoming=मैं जल्दी आता हूँ!
+villager.tradecomplete=देवगण तुम्हें फल दें, फिर आना.
+

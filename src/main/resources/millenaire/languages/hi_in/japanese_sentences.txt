@@ -1,0 +1,66 @@
+female.becomeadult=मैं किसी दिन माँ बनना चाहती हूँ.
+
+male.becomeadult=मैं एक योद्धा बनना चाहता हूँ.
+
+villager.becomeadult=बड़ा होने का समय आ गया.
+
+villager.bringbackresourceshome=काम, काम, काम...
+
+villager.choptrees=मैं कुछ पेड़ काटने जा रहा हूँ.
+
+villager.constructionstepbystep=मेरे पिता ने मुझे निर्माण करना सिखाया था.
+villager.constructionstepbystep=उम्मीद है कामी को मेरा निर्माण पसंद आएगा.
+
+villager.delivergoodshousehold=मैं बाज़ार से भोजन ले आया.
+
+villager.gathergoods=मुझे कुछ सामग्री चाहिए.
+
+villager.getgoodshousehold=ये चीज़ें घर में चाहिए.
+
+villager.gethouseresources=मुझे घर से कुछ लाना है.
+
+villager.getresourcesforbuild=मुझे और सामग्री चाहिए.
+
+villager.goplay=मैं खेलना चाहता हूँ.
+
+villager.childobserveagriculture=माँ कहती है चावल उगाना महत्वपूर्ण है, पर मुझे तो बहुत उबाऊ लगता है...
+villager.childobserveconstruction=शायद जब मैं बड़ा होऊँगा तो पगोडा बनाऊँगा. सोने के!
+villager.childobservesmithing=हमारे हथियार और कवच सबसे शानदार दिखते हैं!
+villager.childobserveproducefood=यहाँ हर चीज़ चावल से क्यों बनती है? मैं चावल से ऊब गया हूँ!
+villager.childobserveproducealcohol=पिछली बार साके पीकर मैं बीमार पड़ गया था.
+
+villager.childeatapple=यह दुनिया जादुई है! हर पेड़ पर सेब उगते हैं!
+
+villager.maketools=मैंने वर्षों से बेहतरीन औज़ार बनाए हैं.
+
+villager.makeweapons=बेहतरीन हथियारों के रहस्य मेरे गुरु ने मुझे सौंपे थे.
+
+villager.plantsaplings=मैं ये पौधे लगाऊँगा.
+
+villager.slaughterchicken=तुम किसी के लिए एक अच्छा भोजन बनोगे.
+
+villager.calltoarms=उन्हें वह दिन याद रहेगा जब उन्होंने हम पर हमला किया!
+villager.calltoarms=अपने हथियार उठाओ!
+villager.calltoarms=गाँव की रक्षा करो!
+villager.hitbyplayer=अरे! ध्यान से!
+
+villager.gopray.chosen=अपने मन को शांत करो.
+villager.gopray=कामी हमें बुराई से बचाएँ.
+villager.gopray=मैं देवी उगा-नो-मिन्ताम से अच्छी फ़सल की प्रार्थना करूँगा.
+
+villager.gorest=आह, मेरे सोने का समय.
+villager.gorest=मुझे आराम चाहिए.
+villager.gorest=मैं बहुत थक गया हूँ.
+
+villager.greeting=कैसे हो?
+villager.greeting=तुमसे मिलकर ख़ुशी हुई.
+villager.greeting=क्या नया है?
+villager.greeting=शुभ दिन, $name-सान!
+villager.greeting=कैसे हो, $name-सान?
+villager.greeting=अरे.
+villager.greeting=स्वागत है.
+villager.construction=मेरे पिता ने मुझे निर्माण की कला सिखाई थी.
+villager.construction=उम्मीद है कामी मेरे काम पर कृपा करेंगे.
+villager.sellercoming=मैं अभी आता हूँ!
+villager.tradecomplete=बहुत धन्यवाद, कृपया फिर आना.
+

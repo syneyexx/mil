@@ -1,0 +1,18 @@
+version:3.4
+<darkblue>Ajuda do Millénaire
+
+Esta ajuda descreve as funcionalidades principais do Millénaire. Para mais informações, consulte o wiki ou coloque as suas questões no fórum minecraftforum.net.
+
+Utilize os ícones de cada lado deste ecrã para aceder aos diferentes capítulos da ajuda.
+
+<darkblue>Generalidades sobre aldeias e edifícios isolados
+
+O Millénaire adiciona <darkblue>aldeias<black> de diferentes culturas ao Minecraft. Essas aldeias são geradas aleatoriamente em diferentes biomas. Apresentam estilos distintos e oferecem produtos distintos, mas todas têm um chefe, constroem novos edifícios, comerciam consigo e apreciam-no, ou não, em função das suas acções (consulte a secção "reputação").
+
+Cada aldeia é construída em torno de um edifício central (que pode ser um forte, um mosteiro, um palácio...). Nesse edifício encontrará vários painéis com informações sobre a aldeia. <darkblue>Clique com o botão direito<black> num painel para apresentar mais informações.
+
+Os <darkblue>edifícios isolados<black>, por seu turno, não se expandem. Podem estar vazios (apenas com objectos para encontrar nas arcas), ocupados por aldeãos pacíficos que comerciam consigo, ou ocupados por aldeãos hostis que o atacarão.
+
+Premir a tecla "V" (por omissão) apresenta uma lista das aldeias próximas. Os edifícios isolados não são listados; deverá memorizar a sua localização.
+
+Por omissão, a distância mínima entre duas aldeias é de dois quilómetros. As pequenas aldeias criadas em torno de certas aldeias constituem uma excepção a esta regra.

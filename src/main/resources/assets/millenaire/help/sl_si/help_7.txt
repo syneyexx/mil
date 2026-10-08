@@ -1,0 +1,10 @@
+
+version:3.4
+<darkblue>Naloge
+Naloge so dodatna opravila, ki jih lahko opravljate za vaščane. Ko je naloga na voljo, bo nad glavo vaščana prikazana v oglatih oklepajih, na primer: »<darkblue>[Žejen!]<black>«. Z desnim klikom nanj dobite opis naloge in možnost, da jo sprejmete ali zavrnete. Naloge bodo nagrajene z denarjem, ugledom ali predmeti. Nekatere naloge zahtevajo dober ugled v vasi, da so na voljo.
+Za ogled sprejetih nalog in opravil, ki jih morate izpolniti, pritisnite »M«.
+<darkblue>Naloga ustvarjanja
+Ta posebna zbirka vključuje veliko nalog in ima dva neodvisna poglavja, ki se osredotočata na normansko in indijsko kulturo. Prvo nalogo vsakega poglavja vam bo dodelil indijski ali normanski vaščan, ko boste dosegli stopnjo ugleda »Prijatelj vasi« (naloga se začne naključno, zato lahko traja nekaj časa, preden je naloga na voljo).
+Obe nalogi zahtevata, da najdete posebno samotno zgradbo. Raziskovati morate, dokler je ne najdete; bodite previdni, saj je zelo redka. Za razliko od drugih samotnih zgradb se te zgradbe prikažejo, ko uporabite tipko »V«.
+Ta posebna naloga je v bistvu niz številnih nalog, razdeljenih v dve neodvisni poglavji in osredotočenih na normansko in hindujsko kulturo. Začetno nalogo vsakega poglavja bo na voljo dal hindujski ali normanski vaščan, ko doseže ugled »prijatelj vasi« (morda bo moral še nekaj časa počakati, da bo začetna naloga na voljo, tudi ko bo dosegel potreben ugled).
+V obeh začetnih nalogah boste morali najti posebno samotno zgradbo; raziskovati morate zemljevid, dokler je ne najdete. Vendar upoštevajte, da so edinstvene in se za razliko od običajnih samotnih zgradb pojavljajo na seznamu vasi, do katerih lahko dostopate s tipko »V«.

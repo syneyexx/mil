@@ -1,0 +1,14 @@
+version:3.4
+<darkblue>Dorpen oproepen
+
+Je kunt een dorpstype naar keuze op een locatie naar keuze oproepen met een Staf van Oproeping, een voorwerp dat je in elk dorp kunt kopen zodra je een voldoende hoge reputatie hebt. Om de staf te gebruiken, plaats je een goudblok op de plek waar je een dorp wilt oproepen en klik je met de rechtermuisknop op het blok met de staf. Op het daaropvolgende scherm kun je het gewenste dorpstype kiezen.
+
+<darkblue>Vernietiging van een dorp of los gebouw
+
+De bewoners van een dorp of gebouw respawnen elke nacht, zelfs als je alle gebouwen in het dorp vernietigt. Om dit te voorkomen (als je bijvoorbeeld zelf de gebouwen wilt bezetten), moet je de <darkblue>Staf van ontkenning<black> gebruiken: je vindt hem in de kisten van het hoofdgebouw zodra alle bewoners dood zijn. Let op: de vernietiging van een dorp is onomkeerbaar.
+
+<darkblue>Door de speler bestuurde dorpen
+
+Het is mogelijk om een dorp te creëren met jou als leider, waarin je de locaties van de gebouwen kunt kiezen. Daarvoor moet je ofwel erkend zijn als leider in de cultuur van het dorp, ofwel de Scheppingsqueeste hebben voltooid (zie de paragraaf queestes), ofwel je reputatie hebben verhoogd tot "geboren leider" in een dorp en met de leider ervan praten. Je ziet dan een optie om door de speler bestuurde dorpen te creëren in de interface van de Staf van Oproeping.
+
+In door de speler bestuurde dorpen kun je de bouw van een nieuw gebouw bestellen door de staf op de gewenste locatie te gebruiken. Een interface gaat open zodat je het gewenste gebouw kunt kiezen. Je kunt ook verbeteringen aan bestaande gebouwen toestaan of stopzetten via de "projecten"-panelen. Het verhandelen van grondstoffen met de dorpelingen is in deze dorpen niet nodig – plaats gewoon voorwerpen in de kisten.

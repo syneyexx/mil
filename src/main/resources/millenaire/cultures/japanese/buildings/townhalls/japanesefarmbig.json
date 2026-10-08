@@ -1,0 +1,154 @@
+{
+  "culture": "millenaire:japanese",
+  "building_id": "japanesefarmbig",
+  "category": "townhalls",
+  "is_town_hall": true,
+  "native_name": "Shuudannoujou",
+  "shop": "japanesetownhall",
+  "max_count": 0,
+  "male": [
+    "farmerchief"
+  ],
+  "female": [
+    "farmwife"
+  ],
+  "tags": [
+    "oven",
+    "paddy",
+    "nopaths",
+    "wheat",
+    "leisure"
+  ],
+  "icon": "minecraft:wheat",
+  "area_to_clear": 3,
+  "variants": [
+    {
+      "variant": "a",
+      "building_orientation": 0,
+      "ground_level": -2,
+      "levels": [
+        {
+          "level": 0,
+          "footprint": {
+            "width": 42,
+            "height": 11,
+            "depth": 30
+          },
+          "priority": 600,
+          "signs": "3,0,1,2,5,7,8,6,4",
+          "tags": [
+            "oven",
+            "paddy",
+            "nopaths",
+            "wheat"
+          ],
+          "infoSoils": [
+            {
+              "crop": "rice"
+            },
+            {
+              "crop": "wheat"
+            }
+          ]
+        },
+        {
+          "level": 1,
+          "footprint": {
+            "width": 42,
+            "height": 11,
+            "depth": 30
+          },
+          "priority": 600,
+          "rebuild_path": true,
+          "tags": [
+            "oven",
+            "paddy",
+            "nopaths",
+            "wheat",
+            "leisure"
+          ]
+        },
+        {
+          "level": 2,
+          "footprint": {
+            "width": 42,
+            "height": 11,
+            "depth": 30
+          },
+          "priority": 580,
+          "tags": [
+            "oven",
+            "paddy",
+            "nopaths",
+            "wheat",
+            "leisure"
+          ]
+        },
+        {
+          "level": 3,
+          "footprint": {
+            "width": 42,
+            "height": 11,
+            "depth": 30
+          },
+          "priority": 560,
+          "tags": [
+            "oven",
+            "paddy",
+            "nopaths",
+            "wheat",
+            "leisure"
+          ]
+        },
+        {
+          "level": 4,
+          "footprint": {
+            "width": 42,
+            "height": 11,
+            "depth": 30
+          },
+          "priority": 540,
+          "tags": [
+            "oven",
+            "paddy",
+            "nopaths",
+            "wheat",
+            "leisure"
+          ]
+        },
+        {
+          "level": 5,
+          "footprint": {
+            "width": 42,
+            "height": 11,
+            "depth": 30
+          },
+          "priority": 520,
+          "tags": [
+            "oven",
+            "paddy",
+            "nopaths",
+            "wheat",
+            "leisure"
+          ]
+        },
+        {
+          "level": 6,
+          "footprint": {
+            "width": 42,
+            "height": 11,
+            "depth": 30
+          },
+          "priority": 500,
+          "tags": [
+            "oven",
+            "paddy",
+            "nopaths",
+            "wheat",
+            "leisure"
+          ]
+        }
+      ]
+    }
+  ]
+}

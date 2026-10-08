@@ -1,0 +1,18 @@
+version:3.4
+<darkblue>Millénaire súgó
+
+Ez a súgó a Millénaire legfontosabb funkcióit ismerteti. További részletekért nézd meg a wikit, vagy tedd fel kérdéseidet a minecraftforum.net fórumon.
+
+A képernyő két oldalán található ikonok segítségével érhetők el a súgó különböző fejezetei.
+
+<darkblue>Általánosságok a falvakról és a magányos épületekről
+
+A Millénaire különböző kultúrákból származó <darkblue>falvakat<black> ad hozzá a Minecrafthoz. Ezek a falvak véletlenszerűen jönnek létre különböző biomokban. Eltérő stílusúak, és nem ugyanazokat a termékeket kínálják, de mindegyiknek van elöljárója, mindegyik új épületeket emel, kereskedik veled, és a tetteid alapján kedvel vagy nem kedvel (lásd a „hírnév” fejezetet).
+
+Minden falu egy központi épület köré épül (ez lehet erőd, kolostor, palota stb.). Ebben az épületben több táblát is találsz, amelyek a faluról tájékoztatnak. <darkblue>Jobbklikk<black> egy táblára további információkért.
+
+A <darkblue>magányos épületek<black> ezzel szemben nem terjeszkednek. Lehetnek üresek (csak a ládákban található tárgyakkal), lakhatják őket békés falubeliek, akikkel kereskedhetsz, vagy ellenséges lakók, akik megtámadnak.
+
+A „V” billentyű (alapértelmezett) megnyomása megjeleníti a közeli falvak listáját. A magányos épületek nem szerepelnek a listán, ezek pozícióját meg kell jegyezned.
+
+Alapértelmezetten két falu közötti legkisebb távolság két kilométer. Az egyes falvak köré épülő tanyák kivételt képeznek e szabály alól.

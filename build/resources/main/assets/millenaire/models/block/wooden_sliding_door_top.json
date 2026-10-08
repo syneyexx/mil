@@ -1,0 +1,7 @@
+{
+    "parent": "millenaire:block/sliding_door_top",
+    "textures": {
+        "top": "millenaire:block/wooden_sliding_door_upper",
+        "edge": "millenaire:block/wooden_sliding_door_edge"
+    }
+}

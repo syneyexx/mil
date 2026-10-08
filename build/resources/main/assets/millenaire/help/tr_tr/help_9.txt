@@ -1,0 +1,16 @@
+version:3.4
+<darkblue>Hindular
+
+Kuzey Hindistan'dan gelirler ve üç tür köyde yaşarlar: askerî yerleşimler bir kale etrafında, tarımsal yerleşimler bir muhtar evinin etrafında, saray tipi yerleşimler ise iki ilişkili mezraya sahip bir kraliyet sarayı etrafında kurulur. Hintçe konuşurlar, ancak oyuncu onlarla konuşarak dillerini "öğrendikçe" diyalogları tercüme edilir.
+
+<darkblue>Eşsiz nesneler ve bloklar
+
+-Hindular pirinç ve zerdeçal yetiştirir. Oyuncu, köy başından bu bitkileri nasıl yetiştireceğini öğretmesini isteyebilir.
+-Çamur tuğlaları ve pişmiş tuğlalar; ıslak tuğlaların güneşte kurutulmasıyla üretilir. Islak tuğlalar bir tuğla kalıbıyla (köyden satın alınır) yapılır.
+-Hindu kabartmaları; tanrıları temsil eder ve bir heykeltıraş tarafından yapılır.
+-Lezzetli rasgulla; şeker kamışıyla yapılan bir tatlıdır.
+
+<darkblue>Özel tarifler (şekilsiz)
+
+-Bir pirinç ve bir zerdeçal, bir vejetaryen köri verir.
+-Bir pirinç, bir zerdeçal ve bir çiğ tavuk, bir murgh köri verir.

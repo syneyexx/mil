@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/outer_stairs",
+  "textures": {
+    "bottom": "millenaire:block/ochre_sandstone_carved",
+    "side": "millenaire:block/ochre_sandstone_carved",
+    "top": "millenaire:block/ochre_sandstone_carved"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "parent": "millenaire:scipio",
+  "display": {
+    "icon": { "item": "minecraft:shield" },
+    "title": { "translate": "advancement.millenaire.viking" },
+    "description": { "translate": "advancement.millenaire.viking.desc" }
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

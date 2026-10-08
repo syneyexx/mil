@@ -1,0 +1,28 @@
+version:3.4
+<darkblue>Kamp og raids
+
+Millénaire er ikke altid et fredeligt mod: du kan kæmpe mod landsbyboere, landsbyer kan udføre raids mod hinanden, monstre kan angribe landsbyer, og nogle isolerede bygninger er beboet af banditter. Uanset omstændighederne er der visse principper, der ikke ændrer sig: <darkblue>landsbyboere er kun sårbare over for direkte angreb (nærkamp, pile og eliksirer)<black>. De påvirkes ikke af ild, faldskade eller kaktusser. Denne begrænsning skal forhindre spilleren i at dræbe dem, uden at de er klar over, at spilleren angriber dem.
+
+Landsbyboere varierer i styrke, og det udstyr, de bærer, kan gøre dem langt farligere.
+
+<darkblue>Genfødsel af landsbyboere
+
+Når en landsbyboer er dræbt, er han kun midlertidigt død. Døde landsbyboere genoplives i deres hjem (men de mister deres udstyr). Spilleren genoplives jo også...
+
+<darkblue>Angreb fra spilleren
+
+Du kan altid angribe en landsbyboer, men andre mænd fra landsbyen vil så hjælpe med at bekæmpe dig. Hvis du formår at dræbe alle landsbyboere i en landsby eller en isoleret bygning, vil landsbyens skatkammer åbnes, og du kan stjæle indholdet.
+
+<darkblue>Banditter
+
+Visse beboere af isolerede bygninger vil angribe dig uden varsel, hvis du nærmer dig. Dit omdømme i deres kultur vil ikke falde, hvis du dræber dem. Som andre landsbyboere genoplives de om natten – se under "<darkblue>ødelæggelse af en landsby<black>" for at se, hvordan du kan forhindre det.
+
+<darkblue>Raids mellem landsbyer
+
+Millénaire-landsbyer har positive eller negative relationer med nærliggende landsbyer. Disse relationer ændrer sig tilfældigt og kan påvirkes af spilleren ved at tale med en af landsbyernes høvdinge. Hvis deres relationer er meget dårlige, og en af landsbyerne har nok krigere, kan den iværksætte et raid mod andre landsbyer. Du vil blive underrettet med en besked. Under et raid vil krigerne, der angriber landsbyen, forsøge at dræbe mændene i den angrebne landsby. Lykkes det dem, tager de en del af ressourcerne som bytte. Du kan hjælpe den ene eller den anden side under et raid.
+
+Det kan være nyttigt at opmuntre en landsby, du holder af, til at angribe sine naboer for at øge dens ressourcer. Mere kynisk kan opmuntring af raids også give dig mulighed for selv at tage en del af byttet, når forsvarerne er døde.
+
+<darkblue>Hyre en landsbyboer
+
+Det er muligt at hyre visse landsbyboere såsom soldater og skovhuggere til at hjælpe dig i kamp. De vil følge dig og kæmpe mod dine fjender sammen med dig.

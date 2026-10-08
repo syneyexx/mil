@@ -1,0 +1,13 @@
+{
+  "parent": "millenaire:marcopolo",
+  "display": {
+    "icon": { "item": "minecraft:filled_map" },
+    "title": { "translate": "advancement.millenaire.magellan" },
+    "description": { "translate": "advancement.millenaire.magellan.desc" }
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

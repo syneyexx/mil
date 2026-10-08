@@ -1,0 +1,19 @@
+version:3.4
+<darkblue>Ticaret
+
+Köylülerle en sık yapacağınız alışveriş ticarettir; onlara birçok mal satabilir ve karşılığında Millénaire'e özgü bloklar ve nesneler dahil ürünler satın alabilirsiniz. Bir köyle ticaret yapmak için ana binaya (ya da başka bir dükkâna) gidin ve başının üstünde "Oyuncuya satıyor" yazan bir köylünün yanınıza gelmesini bekleyin. Ardından ticaret ekranını açmak için ona <darkblue>sağ tıklayın<black>.
+
+Millénaire köylüleri size yalnızca stoklarında bulunan eşyaları satabilir; siz de onlara yalnızca köyün ihtiyaç duyduğu eşyaları (köye göre değişir) satabilirsiniz.
+
+Köylerle tüm ticaret "denar" üzerinden yapılır; denar, ortaçağ Fransa'sının para birimidir. Üç tür denar vardır: standart denar, 64 denar değerinde gümüş denar (deniers d'argent) ve 64 gümüş denar değerinde altın denar (deniers en or).
+
+<darkgreen>İpucu: Köy haritasında (köyün merkez binasındaki ilgili tabelaya sağ tıklayarak elde edilir), imlecinizi binaların üzerine getirdiğinizde dükkânlar listelenir.
+
+temel denar (bakır denar)
+"gümüş denar"
+64 denar değerinde,
+"altın denar"
+64 gümüş denar değerinde.
+
+<darkgreen>İpucu:
+Köy haritasında (köyün merkez binasındaki ilgili tabelaya sağ tıklayarak elde edilir), imlecinizi binaların üzerine getirdiğinizde dükkânlar listelenir.

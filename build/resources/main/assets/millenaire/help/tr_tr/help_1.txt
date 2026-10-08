@@ -1,0 +1,18 @@
+version:3.4
+<darkblue>Millénaire Yardımı
+
+Bu yardım, Millénaire'in temel özelliklerini açıklar. Daha fazla bilgi için wikiye bakın ya da minecraftforum.net forumunda sorularınızı sorun.
+
+Farklı yardım bölümlerine erişmek için bu ekranın iki yanındaki simgeleri kullanın.
+
+<darkblue>Köyler ve tek yapılar hakkında genel bilgiler
+
+Millénaire, Minecraft'a farklı kültürlere ait <darkblue>köyler<black> ekler. Bu köyler, farklı biyomlarda rastgele oluşturulur. Birbirinden ayrı tarzları ve farklı ürünleri vardır, ancak hepsinin bir başı olur, yeni binalar inşa ederler, sizinle ticaret yaparlar ve davranışlarınıza göre sizi sever ya da sevmezler ("itibar" bölümüne bakın).
+
+Her köy merkezî bir bina çevresinde inşa edilir (bu bina bir kale, manastır, saray vb. olabilir). Bu binada köy hakkında sizi bilgilendiren çeşitli tabelalar bulunur. Daha fazla bilgi görmek için bir tabelaya <darkblue>sağ tıklayın<black>.
+
+<darkblue>Tek yapılar<black> ise genişlemez. Boş olabilirler (sadece sandıklarda bulunacak nesnelerle), sizinle ticaret yapabilen barışçıl köylüler tarafından doldurulmuş olabilirler ya da size saldıracak düşman köylülere ev sahipliği yapabilirler.
+
+"V" tuşuna (varsayılan) basmak yakındaki köylerin listesini gösterir. Tek yapılar listelenmez; konumlarını hatırlamanız gerekir.
+
+Varsayılan olarak iki köy arasındaki asgari mesafe iki kilometredir. Bazı köylerin etrafında oluşturulan mezralar bu kuralın istisnasıdır.

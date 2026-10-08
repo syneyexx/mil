@@ -1,0 +1,13 @@
+{
+  "parent": "millenaire:firstcontact",
+  "display": {
+    "icon": { "item": "millenaire:denier" },
+    "title": { "translate": "advancement.millenaire.friendindeed" },
+    "description": { "translate": "advancement.millenaire.friendindeed.desc" }
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

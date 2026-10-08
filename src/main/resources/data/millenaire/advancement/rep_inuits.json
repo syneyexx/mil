@@ -1,0 +1,13 @@
+{
+  "parent": "millenaire:friendindeed",
+  "display": {
+    "icon": { "item": "minecraft:packed_ice" },
+    "title": { "translate": "advancement.millenaire.rep_inuits" },
+    "description": { "translate": "advancement.millenaire.rep_inuits.desc" }
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

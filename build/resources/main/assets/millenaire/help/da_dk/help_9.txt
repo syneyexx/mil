@@ -1,0 +1,16 @@
+version:3.4
+<darkblue>Inderne
+
+De stammer fra det nordlige Indien og bor i tre typer landsbyer: militære bosættelser baseret omkring et fort, landbrugsbosættelser omkring en høvdings hus, og palatiale bosættelser domineret af et kongepalads med to tilknyttede småbyer. De taler hindi, men deres dialog vil blive oversat, efterhånden som spilleren "lærer" deres sprog ved at tale med dem.
+
+<darkblue>Unikke genstande og blokke
+
+-Inderne dyrker ris og gurkemeje. Spilleren kan bede høvdingen om at lære ham at dyrke disse planter.
+-Lermursten og brændte mursten, fremstillet ved at lade våde mursten tørre i solen. Våde mursten laves med en murstensform (købes i en landsby).
+-Indiske basrelieffer, der forestiller guddomme og fremstilles af en billedhugger.
+-Lækre rasgullas, slik fremstillet af sukkerrør.
+
+<darkblue>Særlige opskrifter (formløse)
+
+-En ris og gurkemeje giver en vegetarisk karry.
+-En ris, en gurkemeje og en rå kylling giver en murgh-karry.

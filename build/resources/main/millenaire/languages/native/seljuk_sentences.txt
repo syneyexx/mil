@@ -1,0 +1,139 @@
+//villager.BeSeller=Coming, coming!
+//villager.DeliverResourcesShop=
+
+turk_boy.greeting=Büyüyünce çok güçlü olacağım!
+
+villager.bringbackresourceshome=Sonunda rahatlama vakti.
+villager.collectcrop=Hasat vakti.
+villager.plantseeds=Şimdi bu tohumları ekeceğim.
+
+turk_soldier.greeting=Ben buranın muhafızıyım,bir şey olursa bana söyle.
+
+guildmaster.greeting=Her türlü güzel üründen satarım.
+
+turk_soldier.greeting=$name, zamanında Sultanımızın şövalyesiydim.
+turk_soldier.greeting=Sadece Allah'tan korkarım.
+turk_soldier.greeting=Anadolu artık bizim yurdumuzdur.
+turk_soldier.patrol=Kanuna hizmet ederim.
+turk_soldier.patrol=Güçsüzün kılıcıyım.
+
+turk_richwoman.Bu çok zor bir iş. / This is a very hard job.
+turk_richwoman.greeting=Sarayima hoş geldiniz.
+turk_richwoman.greeting=Eski evim bu kadar güzel değildi.
+
+turk_lumberman.bringbackresourceshome=Bu odunlar çok işe yarayacak.
+turk_lumberman.choptrees=Allahım bana güç ver.
+turk_lumberman.gathergoods=Bu fidan işime yarayabilir.
+turk_lumberman.plantsaplings=Bu fidanı ekmeliyim.
+
+turk_miner.cooking=Pişirme vakti.
+turk_miner.mining=Demirci bunları sevecek.
+turk_miner.mining=Herkes madenci olamaz.
+
+orderguard.patrol=Sadece Allah'tan korkarım!
+orderguard.calltoarms=Burayı terket!
+orderguard.patrol=Buraları korumak bizim işimiz
+orderguard.calltoarms=Toplanın kardeşler!
+orderguard.greetings=İyi günler dilerim.
+orderguard.greetings=Seni gördüğüme sevindim.
+
+merchant.keepstall=Her türlü lüks şeyi satarım!
+merchant.greeting=Anadolu çok verimli!
+merchant.greeting=Gel ve ürünlerime bak.
+
+merchant.keepstall=Birinin ihtiyacı olabilecek her türlü bitki bende var.
+merchant.greeting=Bitkileri seven herkesi severim.
+
+turk_imam.gopray.chosen=Allah her yaptığımızı görür.
+turk_imam.greeting=Allah yardımcın olsun.
+
+turk_armourysmith.makeseljuktools=Kendimizi korumak için bunlara ihtiyacımız var.
+turk_armourysmith.makeseljukweapons=Allah'ın izniyliyle bu zırh askerlerimizi koruyacak.
+
+
+villager.becomeadult=Devletime hizmet etme vakti !
+
+villager.goplay=Oyun oynamayı severim.
+
+
+villager.brewpotions=Simyacı olmayı seviyorum.
+
+villager.calltoarms=Silahlanın! Allah bizimle beraber!
+villager.calltoarms=Silahlanın askerler silahlanın!
+villager.calltoarms=Ya Allah!
+villager.calltoarms=Allah'ım bize güç ver!
+villager.hitbyplayer=Hey! Dikkat et!
+
+villager.childeatapple=Neden bütün elmalar kırmızı?
+
+villager.childobserveagriculture=Çiftçiler bizim devletimiz için önemlidir!
+villager.childobserveconstruction=Erkekler neden kadınlara yardım etmiyor?
+villager.childobserveproducefood=Karnım çok acıktı!
+villager.childobservesmithing=O demir çok sıcak olmalı!
+
+villager.godrinkayran=Lütfen bana bir içecek verir misin?
+villager.godrinkayran=Ayran buralardaki en güzel içecek.
+
+villager.gopray.chosen=İbadet etme vakti.
+villager.gopray=Allahım bana yardım et
+
+villager.gorest=Yoruldum.
+villager.gorest=Uyumayı hak ettim.
+villager.gorest=Bugün güzel bir gündü.
+villager.gorest=Uyumam gerekiyor.
+
+villager.greeting=Anadoluya hoş geldin!
+villager.greeting=Hayırlı günler dilerim.
+villager.greeting=Selamünaleyküm, $name!
+villager.greeting= Seni tekrar görmek güzel
+villager.greeting= Seni daha önce gördüm mü?
+
+villager.makewallcarpetlarge=Bunlar duvara çok yakışacak!
+villager.makewallcarpetsmall=Bunlar duvara çok yakışacak!
+villager.makewallcarpetmedium=Bunlar duvara çok yakışacak!
+
+villager.inspectconstruction=İnsanlarımız her zaman çalışkandır!
+
+villager.makeglassbottles=Bu şişe çok işimize yarayacak.
+
+
+turk_merchant_weapon.keepstall=Her türlü silahı satarım.
+turk_merchant_weapon.greeting=Buraların en iyi tüccarının dükkanına hoş geldin.
+
+turk_peasantwife.delivergoodshousehold=Aileme yardım etmek benim de görevim.
+
+turk_peasantwife.gethousethresources=Kocam eve malzemelerle dönüyor.
+turk_peasantwife.getresourcesforbuild=Bir şeyler inşa etmek için malzeme alma vakti.
+
+turk_cook.makelokum=Lokumlarımız çok lezzetlidir.
+turk_cook.makepidebeef=Pidelerimiz çok lezzetlidir.
+turk_cook.makepidemutton=Pidelerimiz çok lezzetlidir.
+
+turk_cowfarmer.makeyogurt=Yemekle beraber çok güzel olur.
+
+turk_cook.makeayran=Erkeklerimizi serin tutmak için ayran yapmalıyım.
+
+villager.construction=Allahım bana yardım et.
+villager.construction=Kadınlar da bu devlet için önemli!
+villager.construction=Erkekler ve kadınlar birbirlerine yardım etmeli.
+
+turk_peasantwife.getgoodshousehold=Niye her şeye beni yolluyorlar?
+
+turk_merchant_wool.keepstall=Bütün yünler burada!
+turk_merchant_wool.greeting=Anadolunun hayvanlar için harika!
+
+ghaznavid_merchant.keepstall=Gel ve benimle ticaret yap
+ghaznavid_merchant.keepstall=Benimle ticaret yaparsan pişman olmazsın.
+ghaznavid_merchant.greeting=Çok uzak diyarlardan Müslüman kardeşlerimle ticarete geldim.
+ghaznavid_merchant.greeting=Hepimiz kardeşiz.
+
+villager.sellercoming=Hemen geliyorum!
+villager.tradecomplete=Bereketini gör, yine bekleriz.
+
+
+
+
+
+
+
+

@@ -1,0 +1,6 @@
+{
+  "parent": "millenaire:block/mock_decor_wall_base",
+  "textures": {
+    "icon": "millenaire:item/wall_mayan_statue"
+  }
+}

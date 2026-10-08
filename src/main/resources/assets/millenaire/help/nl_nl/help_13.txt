@@ -1,0 +1,34 @@
+version:3.4
+<darkblue>Veelgestelde vragen
+
+<darkblue>De dorpelingen spreken in een andere taal dan de mijne. Is dat normaal?
+
+Millénaire-dorpelingen spreken allemaal in "hun" taal, zoals Hindi voor de Indiërs of Frans voor de Normandiërs. Als je in een andere taal speelt, "leer" je de taal door met hen te interageren (handel, queestes...). Naarmate je hun taal "leert", biedt Millénaire vertalingen aan, eerst van de namen van gebouwen, dan van de types dorpelingen, en ten slotte van de dialogen van de dorpelingen.
+
+<darkblue>Mijn Normandische dorp heeft vakwerken nodig en ik kan ze niet maken, wat kan ik doen?
+
+Vakwerken worden gemaakt door een timmerman van hout. Wacht tot je dorp een "timmermanshuis" bouwt en er een stel zich vestigt. Geduld!
+
+<darkblue>Mijn Japanse dorp heeft riet nodig en ik kan het niet maken, wat kan ik doen?
+
+De Japanners maken riet van tarwe. Als ze zelf niet genoeg oogsten, verkoop er dan wat aan hen om de productie te versnellen.
+
+<darkblue>Ik heb mijn huis dicht bij het dorp gebouwd en de dorpelingen hebben het vernietigd toen ze iets anders aan het bouwen waren, is dat normaal?
+
+Ja. Het grondgebied van het dorp behoort hun toe, bekijk de kaart om de grenzen te zien. Als je in het dorp wilt bouwen, koop dan een stuk grond van het dorpshoofd.
+
+<darkblue>Sommige dorpelingen zijn dood, zullen ze respawnen?
+
+Ja, de dorpelingen respawnen elke nacht, kort na zonsondergang. Vermijd alleen meteen te gaan slapen.
+
+<darkblue>Mijn dorpelingen krijgen geen kinderen of hun kinderen groeien niet op, wat is er aan de hand?
+
+Nieuwe kinderen kunnen verschijnen wanneer een stel 's nachts thuis is. Op dezelfde manier groeien ze 's nachts op wanneer ze thuis zijn. Sommige voedingsmiddelen (drankjes, snoep) verhogen de kans dat er baby's worden geboren en andere (brood, granen) de groeisnelheid van kinderen.
+
+<darkblue>Een gebouw in het dorp is beschadigd, zullen ze het repareren?
+
+Nee, de dorpelingen repareren geen gebouwen (al kunnen latere verbeteringen soms de ontbrekende blokken vervangen), voornamelijk om prestatieredenen. Je zult het zelf moeten repareren.
+
+<darkblue>Mijn dorp heeft te weinig ruimte, kan ik helpen?
+
+Ja, door naar de dorpskaart te kijken om de gebieden te zien waar ze niet kunnen bouwen. Een meer, rivier of ravijn bedekken met een laag aarde is voldoende om het gebied bruikbaar te maken voor de dorpelingen.

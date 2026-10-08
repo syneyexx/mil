@@ -1,0 +1,7 @@
+{
+    "parent": "millenaire:block/sliding_door_top_open",
+    "textures": {
+        "top": "millenaire:block/japanese_sliding_door_upper",
+        "edge": "millenaire:block/japanese_sliding_door_edge"
+    }
+}

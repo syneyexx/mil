@@ -1,0 +1,14 @@
+version:4.8.0
+<darkblue>De Japanners
+
+Ze wonen in religieuze, militaire, handels- of keizerlijke dorpen, en onderscheiden zich door hun elegante architectuur. Ze spreken Japans, maar hun dialoog wordt vertaald naarmate de speler hun taal "leert" door met hen te spreken.
+
+<darkblue>Unieke voorwerpen en blokken
+
+-Ze verbouwen rijst. De speler kan het dorpshoofd vragen hem te leren hoe hij dit graangewas kan verbouwen.
+-Ze koken heerlijke udon-noedels van tarwe en kip.
+-In handelsdorpen produceren de brouwers sake van rijst.
+-Net als de Normandiërs produceren ze vakwerkgebouwen.
+-Ze gebruiken veel rietblokken die van tarwe worden gemaakt.
+-Ze produceren elegante rijstpapieren wanden voor hun geavanceerde gebouwen.
+-Hun metaalsmeden smeden geduchte tachi-zwaarden en yumi-langbogen, evenals drie zeer effectieve soorten harnas.

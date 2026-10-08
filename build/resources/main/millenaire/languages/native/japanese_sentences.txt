@@ -1,0 +1,64 @@
+female.becomeadult=Watashi wa ituka hahaoya ni naritai desu.
+
+male.becomeadult=Watashi wa sensi ni naritai desu.
+
+villager.becomeadult=Seityou suru jikan.
+
+villager.bringbackresourceshome=Cho cho cho...
+
+villager.choptrees=Watashi wa nanbonka no ki wo bassai suru tsumori da.
+
+villager.construction=Watashi no chichi wa kentiku no houhou ni tuite watashi ni oshieta.
+villager.construction=Watashi wa kami ga watashi no kenchiku wo kiniiru koto wo negatte imasu.
+
+villager.delivergoodshousehold=Watashi wa mise kara syokuryou wo eta.
+
+villager.gathergoods=Watashi wa ikutuka no souchi ga hituyou da.
+
+villager.getgoodshousehold=Watashi wa ie ni korera no mono ga hituyou desu.
+
+villager.gethouseresources=Watashi wa ie kara nanika totte konakereba ikenai.
+
+villager.getresourcesforbuild=Watashi wa motto takusan no zairyou ga hituyou desu.
+
+villager.goplay=watashi wa asobitai desu.
+
+villager.childobserveagriculture=Watashinohaha wa,-mai sakumotsu o saibai suru koto wa jūyōdesuga, sore wa watashi no tame ni totemo taikutsuda to iimasu...
+villager.childobserveconstruction=Tabun watashi ga ōkiku naru to, watashi wa tō o taterudeshou. Kin kara!
+villager.childobservesmithing=Watashitachi no buki ya yoroi wa mottomo utsukushī monodesu!
+villager.childobserveproducefood=Naze koko ni subete ga kome de tsukura renakereba naranai nodesu ka? Watashi wa kome ni tsukarete iru!
+villager.childobserveproducealcohol=Zenkai watashi wa sake o tameshite mimashita.
+
+villager.childeatapple=Kono sekai wa mahōdesu! Ringo wa subete no ki ni sodatsu!
+
+villager.maketools=Watashi wa naganen no aida saikoukyu no dougu wo koumyou ni tukutte iru.
+
+villager.makeweapons=Saikoukyu no buki no himitu wa sisyou kara watashi ni uketugareta.
+
+villager.plantsaplings=Watashi wa korera no naegi wo ueru tumori desu.
+
+villager.slaughterchicken=Anata wa dareka no tame ni subarashii shokuji wo tukuru darou.
+
+villager.calltoarms=Karera wa watashitachi wo kougeki suru hi wo koukai suru darou!
+villager.calltoarms=Kuki wo mote!
+villager.calltoarms=Mura wo mamore!
+villager.hitbyplayer=Ki wo tsukete kudasai!
+
+villager.gopray.chosen=Kokoro wo otitukasete kudasai.
+villager.gopray=Kami wa watashitachi wo aku kara osukui ni naru.
+villager.gopray=Watashi wa housaku no tame ni megami Uga-no-Mintama ni inori masu.
+
+villager.gorest=A-, mou neru jikan da
+villager.gorest=Watashi niwa kyu-kei ga hituyou desu.
+villager.gorest=Watashi wa totemo tukarete imasu.
+
+villager.greeting=Gokigenyou.
+villager.greeting=Hajimemashite
+villager.greeting=Kawatta koto aru?
+villager.greeting=Konnichiwa, $name-san!
+villager.greeting=Ogenki desuka, $name-san
+villager.greeting=Oi.
+
+villager.sellercoming=Sugu mairimasu!
+villager.tradecomplete=Maido arigatō gozaimashita, mata dōzo.
+villager.greeting=Yokoso.

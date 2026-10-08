@@ -1,0 +1,14 @@
+version:4.8.0
+<darkblue>Japonlar
+
+Dinî, askerî, ticarî ya da imparatorluk köylerinde yaşarlar ve zarif mimarileriyle dikkat çekerler. Japonca konuşurlar, ancak oyuncu onlarla konuşarak dillerini "öğrendikçe" diyalogları tercüme edilir.
+
+<darkblue>Eşsiz nesneler ve bloklar
+
+-Pirinç yetiştirirler. Oyuncu, köy başından bu tahılı nasıl yetiştireceğini öğretmesini isteyebilir.
+-Buğday ve tavuktan lezzetli udon erişteleri pişirirler.
+-Ticaret köylerinde, sake üreticileri pirinçten sake üretir.
+-Normanlar gibi ahşap karkaslı binalar üretirler.
+-Buğdaydan üretilen birçok saz blokları kullanırlar.
+-Gelişmiş binaları için zarif pirinç kâğıdı duvarlar üretirler.
+-Demir ustaları, çok etkili üç tür zırhın yanı sıra heybetli tachi kılıçları ve yumi yaylarını döver.

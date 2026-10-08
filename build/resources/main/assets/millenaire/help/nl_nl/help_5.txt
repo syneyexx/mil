@@ -1,0 +1,28 @@
+version:3.4
+<darkblue>Gevechten en plundertochten
+
+Millénaire is niet altijd een vreedzame mod: je kunt dorpelingen bestrijden, dorpen kunnen plundertochten tegen elkaar uitvoeren, monsters kunnen dorpen aanvallen, en sommige losse gebouwen zijn bezet door bandieten. Wat de omstandigheden ook zijn, bepaalde principes veranderen niet: <darkblue>dorpelingen zijn alleen kwetsbaar voor directe aanvallen (van dichtbij, pijlen en drankjes)<black>. Ze zijn niet vatbaar voor vuur, valschade of cactussen. Deze beperking is bedoeld om te voorkomen dat de speler hen doodt zonder dat ze beseffen dat de speler hen aanvalt.
+
+Dorpelingen verschillen in kracht, en de uitrusting die ze dragen kan hen veel gevaarlijker maken.
+
+<darkblue>Respawnen van dorpelingen
+
+Eenmaal gedood is een dorpeling tijdelijk dood. Dode dorpelingen respawnen in hun huizen (maar ze verliezen hun uitrusting). De speler kan tenslotte ook respawnen...
+
+<darkblue>Aanvallen door spelers
+
+Je kunt altijd een dorpeling aanvallen, maar andere mannen van het dorp zullen dan meehelpen om jou te bestrijden. Als je erin slaagt alle dorpelingen van een dorp of los gebouw te doden, gaan de dorpskoffers open en kun je de inhoud stelen.
+
+<darkblue>Bandieten
+
+Sommige bewoners van losse gebouwen vallen je zonder waarschuwing aan als je hen nadert. Je reputatie bij hun cultuur daalt niet als je hen doodt. Net als andere dorpelingen respawnen ze 's nachts – zie onder "<darkblue>een dorp vernietigen<black>" hoe je dit kunt voorkomen.
+
+<darkblue>Plundertochten tussen dorpen
+
+Millénaire-dorpen hebben positieve of negatieve betrekkingen met nabijgelegen dorpen. Deze betrekkingen veranderen willekeurig en kunnen worden beïnvloed doordat de speler met de dorpshoofden van een van de dorpen praat. Als hun betrekkingen erg slecht zijn en een van de dorpen voldoende strijders heeft, kan het een plundertocht tegen andere dorpen uitvoeren. Je wordt hiervan op de hoogte gebracht door een bericht. Tijdens een plundertocht zullen de aanvallende strijders proberen de mannen van het dorp dat ze aanvallen te doden. Als ze daarin slagen, nemen ze een deel van de grondstoffen als buit mee. Je kunt tijdens een plundertocht de ene of de andere kant helpen.
+
+Het kan nuttig zijn om een dorp dat je mag aan te moedigen om zijn buren aan te vallen om zijn grondstoffen te vergroten. Meer cynisch kan het aanmoedigen van plundertochten je ook in staat stellen jezelf te bedienen van een deel van de buit zodra de verdedigers dood zijn.
+
+<darkblue>Een dorpeling inhuren
+
+Het is mogelijk om sommige dorpelingen zoals soldaten en houthakkers in te huren om je te helpen in gevechten. Ze volgen je en bestrijden je vijanden samen met jou.

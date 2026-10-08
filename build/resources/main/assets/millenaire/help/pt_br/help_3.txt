@@ -1,0 +1,34 @@
+version:3.4
+<darkblue>Reputação e líder da aldeia
+
+Cada aldeia no Millénaire tem uma opinião sobre você, neutra no início e que muda conforme suas ações. Essa reputação é muito importante: muitas recompensas só são possíveis com uma boa reputação, e se sua reputação ficar muito ruim, os aldeãos podem se recusar a comerciar com você. Você pode verificar sua reputação conversando (<darkblue>clique com o botão direito<black>) com o líder da aldeia.
+
+A principal forma de melhorar sua reputação é comerciando com a aldeia. Tanto compras quanto vendas melhoram sua reputação proporcionalmente ao preço. Você também pode melhorar sua reputação cumprindo missões para eles. Por outro lado, atacar uma aldeia ou falhar em certas missões prejudica sua reputação.
+
+Você também tem uma <darkblue>reputação com cada cultura<black>. Essa reputação é afetada por todas as suas interações com aldeias dessa cultura, e influencia seu comércio com todas as outras aldeias da mesma cultura. Por exemplo, se você tem uma reputação muito boa com uma aldeia normanda, outras aldeias normandas também gostarão (um pouco mais) de você. Você pode verificar sua reputação com cada cultura na tela de informações (tecla "M" por padrão).
+
+<darkblue>Ações que exigem certa reputação
+
+<darkblue>Comprar um pergaminho da aldeia
+
+Com reputação suficiente você pode comprar um pergaminho da aldeia com o líder. Esse pergaminho contém todas as informações apresentadas pelos diferentes painéis da aldeia.
+
+<darkblue>Comprar uma casa
+
+Quando tiver reputação suficiente, você pode comprar uma casa (ou um terreno para construir) conversando com o líder da aldeia. Sua casa será construída pela aldeia após o término da construção em andamento. Diferentemente do restante da área ao redor da aldeia, esse edifício pertence a você e pode ser personalizado à vontade.
+
+<darkblue>Aprender a plantar uma cultura
+
+Você pode aprender a plantar as culturas específicas do Millénaire usadas por algumas das culturas do jogo. Procure o líder da aldeia quando tiver reputação suficiente.
+
+<darkblue>Comprar itens adicionais
+
+Alguns itens valiosos exigem uma boa reputação na aldeia. Se você não tiver a reputação necessária para comprar um item, isso será indicado na tela de comércio.
+
+<darkblue>Missões adicionais
+
+Algumas missões, incluindo a Missão de Criação, só podem ser iniciadas com uma boa reputação (veja <darkblue>"missões"<black>).
+
+<darkblue>Tornar-se líder em uma cultura
+
+Quando você atingir a reputação máxima (<darkblue>"líder natural"<black>), poderá construir uma aldeia em que será o líder (veja <darkblue>"criando uma aldeia"<black>)

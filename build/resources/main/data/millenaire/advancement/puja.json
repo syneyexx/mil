@@ -1,0 +1,13 @@
+{
+  "parent": "millenaire:wq_indian",
+  "display": {
+    "icon": { "item": "minecraft:blaze_powder" },
+    "title": { "translate": "advancement.millenaire.puja" },
+    "description": { "translate": "advancement.millenaire.puja.desc" }
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

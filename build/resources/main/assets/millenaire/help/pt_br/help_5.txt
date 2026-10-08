@@ -1,0 +1,28 @@
+version:3.4
+<darkblue>Combate e ataques
+
+O Millénaire nem sempre é um mod pacífico: você pode lutar com aldeãos, aldeias podem realizar ataques umas contra as outras, monstros podem atacar aldeias e alguns edifícios isolados são ocupados por bandidos. Sejam quais forem as circunstâncias, certos princípios não mudam: <darkblue>os aldeãos só são vulneráveis a ataques diretos (corpo a corpo, flechas e poções)<black>. Eles não são afetados por fogo, dano de queda ou cactos. Essa restrição existe para impedir que o jogador os mate sem que eles percebam que estão sendo atacados.
+
+Os aldeãos variam em força, e o equipamento que usam pode torná-los muito mais perigosos.
+
+<darkblue>Ressurgimento dos aldeãos
+
+Uma vez morto, um aldeão fica temporariamente morto. Aldeãos mortos ressurgem em suas casas (mas perdem o equipamento). Afinal, o jogador também pode ressurgir...
+
+<darkblue>Ataques de jogadores
+
+Você sempre pode atacar um aldeão, mas outros homens da aldeia virão ajudar a lutar contra você. Se conseguir matar todos os aldeãos de uma aldeia ou edifício isolado, os cofres da aldeia se abrirão e você poderá roubar o conteúdo.
+
+<darkblue>Bandidos
+
+Alguns habitantes de edifícios isolados atacam você sem aviso se você se aproximar. Sua reputação com a cultura deles não cai se você matá-los. Como outros aldeãos, eles ressurgem à noite — veja "<darkblue>destruir uma aldeia<black>" para saber como impedir isso.
+
+<darkblue>Ataques entre aldeias
+
+As aldeias do Millénaire têm relações positivas ou negativas com aldeias vizinhas. Essas relações mudam aleatoriamente e podem ser influenciadas pelo jogador conversando com os líderes de qualquer uma das aldeias. Se as relações estiverem muito ruins e uma das aldeias tiver guerreiros suficientes, ela pode lançar um ataque contra outras aldeias. Você será notificado por uma mensagem. Durante um ataque, os guerreiros invasores tentarão matar os homens da aldeia atacada. Se conseguirem, levarão parte dos recursos como espólio. Você pode ajudar um lado ou o outro durante um ataque.
+
+Pode ser útil incentivar uma aldeia da qual você gosta a atacar suas vizinhas para aumentar seus recursos. De forma mais cínica, incentivar ataques também pode permitir que você se sirva de parte do espólio depois que os defensores estiverem mortos.
+
+<darkblue>Contratar um aldeão
+
+É possível contratar alguns aldeãos, como soldados e lenhadores, para ajudar você em batalhas. Eles vão segui-lo e lutar contra seus inimigos ao seu lado.

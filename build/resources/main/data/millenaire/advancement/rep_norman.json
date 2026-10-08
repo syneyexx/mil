@@ -1,0 +1,13 @@
+{
+  "parent": "millenaire:friendindeed",
+  "display": {
+    "icon": { "item": "millenaire:cider" },
+    "title": { "translate": "advancement.millenaire.rep_norman" },
+    "description": { "translate": "advancement.millenaire.rep_norman.desc" }
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

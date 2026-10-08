@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/template_glass_pane_post",
+  "render_type": "minecraft:translucent",
+  "textures": {
+    "pane": "millenaire:block/wooden_bars_rosette_bottomright",
+    "edge": "millenaire:block/empty"
+  }
+}

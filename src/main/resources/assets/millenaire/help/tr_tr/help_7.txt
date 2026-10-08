@@ -1,0 +1,12 @@
+version:3.4
+<darkblue>Görevler
+
+Görevler, köylüler için yerine getirebileceğiniz ek işlerdir. Bir görev mevcut olduğunda, bir köylünün başının üstünde köşeli parantezler içinde görüntülenir; örneğin: "<darkblue>[Susadım!]<black>". Görevin açıklamasını görmek ve kabul ya da reddetme seçeneği için ona sağ tıklayın. Görevler para, itibar ya da nesnelerle ödüllendirilir. Bazı görevlerin açılabilmesi için köyde iyi bir itibara sahip olmanız gerekir.
+
+Kabul ettiğiniz görevleri ve neler yapmanız gerektiğini öğrenmek için "M" tuşuna basın.
+
+<darkblue>Yaratılış Görevi
+
+Bu özel görev koleksiyonu birçok görev içerir ve Norman ile Hindu kültürlerine odaklanan iki bağımsız bölümden oluşur. Her bölümün ilk görevi, "Köyün dostu" itibar seviyesine ulaştığınızda bir Hindu ya da Norman köylüsü tarafından size atanır (görev rastgele başlar, bu yüzden görev mevcut olana dek biraz zaman geçmesi gerekebilir).
+
+Her iki görev de özel bir tek yapı bulmanızı gerektirir. Onu bulana kadar keşfetmeniz gerekir; çok nadir olduğu için dikkatli olun. Ancak diğer tek yapıların aksine, bu yapılar "V" tuşuna bastığınızda görünür.

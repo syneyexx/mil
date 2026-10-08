@@ -1,0 +1,16 @@
+version:3.4
+<darkblue>Indierna
+
+De kommer från norra Indien och bor i tre typer av byar: militära bosättningar runt ett fort, jordbruksbyar runt en byäldstes hus, och palatsbyar som domineras av ett kungligt palats med två tillhörande småbyar. De talar hindi, men deras dialog översätts efterhand som spelaren "lär sig" att tala deras språk med dem.
+
+<darkblue>Unika föremål och block
+
+-Indierna odlar ris och gurkmeja. Spelaren kan be byhövdingen att lära ut hur dessa grödor odlas.
+-Lertegel och bränt tegel, framställda genom att låta våta tegelstenar torka i solen. Våta tegelstenar tillverkas med en tegelform (köpt i en by).
+-Indiska basreliefer som föreställer gudar och som skapas av en bildhuggare.
+-Läckra rasgulla, godsaker gjorda av sockerrör.
+
+<darkblue>Särskilda recept (formlösa)
+
+-Ett ris och en gurkmeja ger en vegetarisk curry.
+-Ett ris, en gurkmeja och en rå kyckling ger en murgh curry.

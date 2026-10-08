@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_olives": {
+      "conditions": {
+        "items": [
+          {
+            "items": "millenaire:olives"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "millenaire:oliveoil"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_olives"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "millenaire:oliveoil"
+    ]
+  }
+}

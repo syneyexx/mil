@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "millenaire:block/red_sandstone_carved_slab"
+    },
+    "type=double": {
+      "model": "millenaire:block/red_sandstone_carved"
+    },
+    "type=top": {
+      "model": "millenaire:block/red_sandstone_carved_slab_top"
+    }
+  }
+}

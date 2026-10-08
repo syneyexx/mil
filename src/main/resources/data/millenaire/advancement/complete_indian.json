@@ -1,0 +1,14 @@
+{
+  "parent": "millenaire:leader_indian",
+  "display": {
+    "icon": { "item": "millenaire:painted_brick_orange" },
+    "title": { "translate": "advancement.millenaire.complete_indian" },
+    "description": { "translate": "advancement.millenaire.complete_indian.desc" },
+    "frame": "goal"
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

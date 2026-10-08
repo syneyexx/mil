@@ -1,0 +1,15 @@
+{
+  "parent": "millenaire:block/mock_decor_tapestry",
+  "overrides": [
+    { "predicate": { "custom_model_data": 1 }, "model": "millenaire:block/mock_decor_tapestry" },
+    { "predicate": { "custom_model_data": 2 }, "model": "millenaire:block/mock_decor_indian_statue" },
+    { "predicate": { "custom_model_data": 3 }, "model": "millenaire:block/mock_decor_mayan_statue" },
+    { "predicate": { "custom_model_data": 4 }, "model": "millenaire:block/mock_decor_byzantine_icon_small" },
+    { "predicate": { "custom_model_data": 5 }, "model": "millenaire:block/mock_decor_byzantine_icon_medium" },
+    { "predicate": { "custom_model_data": 6 }, "model": "millenaire:block/mock_decor_byzantine_icon_large" },
+    { "predicate": { "custom_model_data": 7 }, "model": "millenaire:block/mock_decor_hide_hanging" },
+    { "predicate": { "custom_model_data": 8 }, "model": "millenaire:block/mock_decor_wall_carpet_small" },
+    { "predicate": { "custom_model_data": 9 }, "model": "millenaire:block/mock_decor_wall_carpet_medium" },
+    { "predicate": { "custom_model_data": 10 }, "model": "millenaire:block/mock_decor_wall_carpet_large" }
+  ]
+}

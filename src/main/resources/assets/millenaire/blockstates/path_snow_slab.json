@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "millenaire:block/path_snow_slab"
+    },
+    "type=double": {
+      "model": "millenaire:block/path_snow"
+    },
+    "type=top": {
+      "model": "millenaire:block/path_snow_slab_top"
+    }
+  }
+}

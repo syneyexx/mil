@@ -1,0 +1,10 @@
+
+version:3.4
+<darkblue>Oppdrag
+Oppdrag er tilleggsoppgaver du kan utføre for landsbyboerne. Når et oppdrag er tilgjengelig, vil det vises over hodet til en landsbyboer i hakeparenteser, for eksempel: "<darkblue>[Tørst!]<black>." Høyreklikk på ham for en beskrivelse av oppgaven og muligheten til å akseptere eller avslå. Oppdrag belønnes med penger, omdømme eller gjenstander. Noen oppdrag krever at du har et godt omdømme hos landsbyen for å være tilgjengelige.
+For å se hvilke oppdrag du har akseptert og hva du må gjøre, trykk på "M".
+<darkblue>Skaperoppdraget
+Denne spesielle samlingen inneholder mange oppdrag og har to uavhengige kapitler, sentrert om den normanniske og den indiske kulturen. Det første oppdraget i hvert kapittel blir tildelt deg av en indisk eller normannisk landsbyboer når du har nådd omdømmenivået "landsbyens venn" (oppdraget starter tilfeldig, så det kan ta litt tid før oppdraget er tilgjengelig).
+Begge oppdragene krever at du finner en spesiell enkeltbygning. Du må utforske til du finner den; vær oppmerksom på at den er svært sjelden. I motsetning til andre enkeltbygninger vises imidlertid disse bygningene når du bruker "V"-tasten.
+Dette spesielle oppdraget er i bunn og grunn et sett med en rekke oppdrag delt inn i to uavhengige kapitler og sentrert om den normanniske og den hinduistiske kulturen. Det innledende oppdraget i hvert kapittel blir tilgjengelig hos en hinduistisk eller normannisk landsbyboer når du oppnår omdømmet "landsbyens venn" (du må kanskje vente en stund før det innledende oppdraget blir tilgjengelig, selv etter at du har oppnådd det nødvendige omdømmet).
+I begge innledende oppdrag må du finne en spesiell enkeltbygning; du bør utforske kartet til du finner dem. Merk imidlertid at de er unike, og i motsetning til vanlige enkeltbygninger er de oppført i listen over landsbyer som er tilgjengelig via "V"-tasten.

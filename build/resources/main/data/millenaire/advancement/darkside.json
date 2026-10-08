@@ -1,0 +1,13 @@
+{
+  "parent": "millenaire:selfdefense",
+  "display": {
+    "icon": { "item": "minecraft:diamond_sword" },
+    "title": { "translate": "advancement.millenaire.darkside" },
+    "description": { "translate": "advancement.millenaire.darkside.desc" }
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

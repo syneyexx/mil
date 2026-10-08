@@ -1,0 +1,530 @@
+architect_byzantine.construction=$name! Romalıların en iyi mimarlar olduğunu biliyor muydun?
+architect_byzantine.construction=$name! Güzel bir yapı inşa edişimi izle.
+architect_byzantine.construction=Bu bina muhteşem olacak!
+architect_byzantine.construction=Henüz bitmedi ama işimdeki güzelliği şimdiden görüyorum.
+architect_byzantine.construction=Çok özenli yapılar inşa ediyorum. İnşaat gerçekten sanatın en güzel biçimidir.
+architect_byzantine.construction=Roma bir günde inşa edilmedi, blok blok inşa edildi.
+architect_byzantine.construction=Mimarimiz dünyadaki diğer tüm binalardan üstündür.
+architect_byzantine.construction=Roma usulü inşa etmek en iyi inşa biçimidir.
+architect_byzantine.construction=Tarzımı beğendiniz mi?
+architect_byzantine.construction=Hatırlayabildiğimden çok daha uzun süredir inşaat yapıyorum. İnşaat hayatım oldu.
+
+architect_byzantine.getresourcesforbuild=Köy bu blokları nereden buluyor?
+architect_byzantine.getresourcesforbuild=En iyi yapıları inşa etmek için bloklara ihtiyacım var!
+architect_byzantine.getresourcesforbuild=Her inşaat bloklarla başlar.
+architect_byzantine.getresourcesforbuild=Blokları kendim dikkatle seçmeliyim.
+architect_byzantine.getresourcesforbuild=İnşa ederken bu kadar çok bloğu nasıl taşıyorsunuz $name?
+architect_byzantine.getresourcesforbuild=İnşaatın en kötü kısmı blokları temin etmek.
+
+architect_byzantine.godrink=İnşaat yetti! Şaraba ihtiyacım var!
+architect_byzantine.godrink=Bana ilham verecek bir içkiye ihtiyacım var!
+architect_byzantine.godrink=Her iyi mimar günün sonunda bir içkiye ihtiyaç duyar.
+architect_byzantine.godrink=İnşaat beni şarap için susatıyor.
+
+architect_byzantine.gopray=Umarım Tanrı, bir sonraki binam için bana ilham verir!
+architect_byzantine.gopray=Tanrı neden beni mimar yaptı?
+architect_byzantine.gopray=Dua, Roma yapım sanatının önemli bir parçasıdır.
+architect_byzantine.gopray=O, mimarların sorunlarını anlar.
+
+architect_byzantine.gorest=Uyumazsam bir şeyleri inşa ederken batırabilirim.
+architect_byzantine.gorest=Yorgunken inşa edemem.
+architect_byzantine.gorest=Karanlıkta inşa etmek zor.
+architect_byzantine.gorest=Bugünlük inşaat yapmayı bitirdim.
+architect_byzantine.gorest=Belki dünyanın en iyi binalarını inşa etmenin rüyasını görürüm!
+
+architect_byzantine.gosocialise=Bu köyde kimse inşa etmenin zorluklarını anlamıyor.
+architect_byzantine.gosocialise=Her mimarın başkalarından ilhama ihtiyacı vardır.
+architect_byzantine.gosocialise=Mimarların gelişmek için geri bildirime ihtiyacı vardır.
+architect_byzantine.gosocialise=Köy binalarım hakkında ne düşünüyor?
+
+//armysmith_byzantine.MakeIndianTools=Roman tools are the best in world.
+armysmith_byzantine.makebyzantinemace=Silahlarımı kullanan kimseye saldırmayın.
+armysmith_byzantine.makebyzantinemace=Bu topuz barbarları uzaklara fırlatacak!
+armysmith_byzantine.makebyzantinemace=Topuz yapmak, onu kullanmaktan daha zordur.
+armysmith_byzantine.makebyzantinemace=Ordunun topuzlara ihtiyacı var.
+
+armysmith_byzantine.gopray=İyi bir demircinin arada bir dua etmesi gerekir.
+armysmith_byzantine.gopray=Tanrı neden beni demirci yaptı?
+armysmith_byzantine.gopray=Dua, Roma zanaatkârlığının önemli bir parçasıdır.
+armysmith_byzantine.gopray=O, demircilerin sorunlarını anlar.
+
+armysmith_byzantine.gorest=Yarın daha çok güzel şey yapacağım!
+armysmith_byzantine.gorest=Bugünlük zanaat yapmayı bitirdim.
+armysmith_byzantine.gorest=Belki dünyanın en iyi silahlarını yapmanın rüyasını görürüm!
+armysmith_byzantine.gorest=Belki dünyanın en iyi zırhını yapmanın rüyasını görürüm!
+armysmith_byzantine.gorest=Belki dünyanın en iyi aletlerini yapmanın rüyasını görürüm!
+
+armysmith_byzantine.gosocialise=Birinin bir şey yapmamı isteyip istemediğini sormaya gideceğim.
+armysmith_byzantine.gosocialise=Umarım köy aletlerimi takdir eder.
+
+armysmith_byzantine.godrink=Zanaat yetti! Şaraba ihtiyacım var!
+armysmith_byzantine.godrink=Bana ilham verecek bir içkiye ihtiyacım var!
+armysmith_byzantine.godrink=Her iyi demirci günün sonunda bir içkiye ihtiyaç duyar.
+armysmith_byzantine.godrink=Zanaat beni şarap için susatıyor.
+
+armysmith_byzantine.makearrow=$name, maceralarınızda çok ok kullanır mısınız?
+armysmith_byzantine.makearrow=Her yayın güzel bir oka ihtiyacı vardır.
+armysmith_byzantine.makearrow=Yaptığım her ok İmparatorluğun bir düşmanını yaralayacak.
+armysmith_byzantine.makearrow=Roma ordusunun bizi yabancılardan korumak için oklara ihtiyacı var.
+
+armysmith_byzantine.makebow=Roma ordusunun yaylara ihtiyacı var.
+armysmith_byzantine.makebow=Hey! Yaylarımı beğeniyor musunuz $name?
+armysmith_byzantine.makebow=Her iyi yay en iyi ağaçtan yapılır.
+armysmith_byzantine.makebow=Bu yay birçok barbarı yenecek. Gerçekten usta bir yay yapımcısıyım.
+
+armysmith_byzantine.makebyzantineboots=Roma ordusunun çizmelere ihtiyacı var!
+armysmith_byzantine.makebyzantineboots=Romalılar dünyanın en iyi çizmelerini yapar.
+armysmith_byzantine.makebyzantineboots=Birinin askerlerin çizmelerini yapması gerek...
+armysmith_byzantine.makebyzantineboots=En iyi çizmeleri biz yapıyoruz.
+armysmith_byzantine.makebyzantineboots=Hey! Çizmelerimi beğeniyor musunuz $name?
+armysmith_byzantine.makebyzantineboots=Kendimi fazlasıyla yüceltilmiş bir ayakkabı yapımcısı gibi hissediyorum.
+armysmith_byzantine.makebyzantineboots=Tüm zırh yapımı önemlidir! Ayaklarınıza giydiğiniz çizmeler bile!
+
+armysmith_byzantine.makebyzantinechest=Roma ordusunun göğüs zırhlarına ihtiyacı var!
+armysmith_byzantine.makebyzantinechest=Romalılar dünyanın en iyi göğüs zırhlarını yapar.
+armysmith_byzantine.makebyzantinechest=Hey! Zırhımı beğeniyor musunuz $name?
+armysmith_byzantine.makebyzantinechest=En iyi zırhı biz yapıyoruz.
+armysmith_byzantine.makebyzantinechest=Bu, sizin alabileceğinizden daha çok darbeye dayanabilmeli.
+armysmith_byzantine.makebyzantinechest=Kendimi fazlasıyla yüceltilmiş bir gömlek yapımcısı gibi hissediyorum.
+
+armysmith_byzantine.makebyzantinehelmet=Roma ordusunun miğferlere ihtiyacı var!
+armysmith_byzantine.makebyzantinehelmet=Birinin askerlerin miğferlerini yapması gerek...
+armysmith_byzantine.makebyzantinehelmet=Romalılar dünyanın en iyi çizmelerini yapar.
+armysmith_byzantine.makebyzantinehelmet=Hey! Miğferlerimi beğeniyor musunuz $name?
+armysmith_byzantine.makebyzantinehelmet=En iyi miğferleri biz yapıyoruz.
+armysmith_byzantine.makebyzantinehelmet=Kendimi fazlasıyla yüceltilmiş bir şapka yapımcısı gibi hissediyorum.
+
+armysmith_byzantine.makebyzantinelegs=Roma ordusunun pantolonlara ihtiyacı var!
+armysmith_byzantine.makebyzantinelegs=Birinin askerlerin pantolonlarını yapması gerek...
+armysmith_byzantine.makebyzantinelegs=Romalılar dünyanın en iyi pantolonlarını yapar.
+armysmith_byzantine.makebyzantinelegs=Hey! Pantolonlarımı beğeniyor musunuz $name?
+armysmith_byzantine.makebyzantinelegs=En iyi pantolonları biz yapıyoruz.
+armysmith_byzantine.makebyzantinelegs=Kendimi fazlasıyla yüceltilmiş bir pantolon yapımcısı gibi hissediyorum.
+
+armysmith_byzantine.makesteelaxe=Balta olmadan ağaç kesemezsiniz!
+armysmith_byzantine.makesteelaxe=Muhteşem baltalar yapıyorum.
+armysmith_byzantine.makesteelaxe=Roma baltaları dünyanın en iyileri arasındadır!
+armysmith_byzantine.makesteelaxe=Oduncuların baltalarını yapmamız için bize ihtiyaçları var.
+armysmith_byzantine.makesteelaxe=Baltalarınızı nasıl yapıyorsunuz $name?
+
+armysmith_byzantine.makesteelhoe=Tarım aletleri olmadan tarım yapamazsınız!
+armysmith_byzantine.makesteelhoe=Muhteşem tarım aletleri yapıyorum.
+armysmith_byzantine.makesteelhoe=Roma tarım aletleri dünyanın en iyileri arasındadır!
+armysmith_byzantine.makesteelhoe=Çiftçilerin aletlerini yapmamız için bize ihtiyaçları var.
+armysmith_byzantine.makesteelhoe=Tarım aletlerinizi nasıl yapıyorsunuz $name?
+
+armysmith_byzantine.makesteelpickaxe=Kazma olmadan madencilik yapamazsınız!
+armysmith_byzantine.makesteelpickaxe=Sağlam kazmalar yapıyorum.
+armysmith_byzantine.makesteelpickaxe=Roma kazmaları dünyanın en iyileri arasındadır!
+armysmith_byzantine.makesteelpickaxe=Madencilerin kazmalarını yapmamız için bize ihtiyaçları var.
+armysmith_byzantine.makesteelpickaxe=Kazmalarınızı nasıl yapıyorsunuz $name?
+
+armysmith_byzantine.makesteelshovel=Kürek olmadan inşa edemez ya da kazamazsınız!
+armysmith_byzantine.makesteelshovel=Sağlam kürekler yapıyorum.
+armysmith_byzantine.makesteelshovel=Roma kürekleri dünyanın en iyileri arasındadır!
+armysmith_byzantine.makesteelshovel=Mimarların küreklerini yapmamız için bize ihtiyaçları var.
+armysmith_byzantine.makesteelshovel=Küreklerinizi nasıl yapıyorsunuz $name?
+
+//artisan_byzantine.makePainting=Roman art is the most advanced in the world.
+
+artisan_byzantine.gopray=İyi bir zanaatkârın arada bir dua etmesi gerekir.
+artisan_byzantine.gopray=Tanrı neden beni zanaatkâr yaptı?
+artisan_byzantine.gopray=Dua, Roma zanaatkârlığının önemli bir parçasıdır.
+artisan_byzantine.gopray=O, zanaatkârların sorunlarını anlar.
+
+artisan_byzantine.gorest=Yarın daha çok güzel şey yapacağım!
+artisan_byzantine.gorest=Bugünlük zanaat yapmayı bitirdim.
+artisan_byzantine.gorest=Belki dünyanın en iyi tuğlalarını yapmanın rüyasını görürüm!
+artisan_byzantine.gorest=Belki dünyanın en iyi karolarını yapmanın rüyasını görürüm!
+
+artisan_byzantine.gosocialise=Birinin bir şey yapmamı isteyip istemediğini sormaya gideceğim.
+artisan_byzantine.gosocialise=Umarım köy karolarımı takdir eder.
+artisan_byzantine.gosocialise=Umarım köy tuğlalarımı takdir eder.
+
+artisan_byzantine.godrink=Zanaat yetti! Şaraba ihtiyacım var!
+artisan_byzantine.godrink=Bana ilham verecek bir içkiye ihtiyacım var!
+artisan_byzantine.godrink=Her iyi zanaatkâr günün sonunda bir içkiye ihtiyaç duyar.
+artisan_byzantine.godrink=Zanaat beni şarap için susatıyor.
+
+artisan_byzantine.greeting=Bu köydeki herkesten daha iyi yaşıyorum.
+artisan_byzantine.greeting=Merhaba $name! Özel Roma bloklarına ihtiyacınız var mı?
+
+artisan_byzantine.makebrick=Birinin tuğlaları yapması gerek.
+artisan_byzantine.makebrick=Köyün, duvarları için tuğla yapmam için bana ihtiyacı var.
+artisan_byzantine.makebrick=Roma tuğlaları dünyanın en güzel bloklarından bazılarıdır!
+artisan_byzantine.makebrick=İnşaatçılar tüm övgüyü alırken biz perde arkasında çalışıyoruz.
+artisan_byzantine.makebrick=En iyi inşaatçılar bile bloksuz inşa edemez.
+artisan_byzantine.makebrick=Kili tuğlaya çevirmeyi kim akıl etmiş?
+
+artisan_byzantine.makebookshelves=Birinin kitapları raflara koyması gerek.
+artisan_byzantine.makebookshelves=Köyün kitap raflarını yapmam için bana ihtiyacı var.
+artisan_byzantine.makebookshelves=Roma kitapları dünyanın en iyi okumalarından bazılarıdır!
+artisan_byzantine.makebookshelves=Yazarlar tüm övgüyü alırken biz perde arkasında çalışıyoruz.
+artisan_byzantine.makebookshelves=Bazen kitapları rafa koymadan önce inceliyorum, keşke okuyabilseydim.
+artisan_byzantine.makebookshelves=Bir şeyleri yazmayı kim akıl etmiş?
+
+artisan_byzantine.makebyzantinetiles=Birinin çatı kiremitlerini yapması gerek.
+artisan_byzantine.makebyzantinetiles=Köyün çatılarını yapmam için bana ihtiyacı var.
+artisan_byzantine.makebyzantinetiles=Roma kiremitleri dünyanın en güzel bloklarından bazılarıdır!
+artisan_byzantine.makebyzantinetiles=İnşaatçılar tüm övgüyü alırken biz perde arkasında çalışıyoruz.
+artisan_byzantine.makebyzantinetiles=En iyi inşaatçılar bile bloksuz inşa edemez.
+artisan_byzantine.makebyzantinetiles=Kili çatıya çevirmeyi kim akıl etmiş?
+
+artisanwife_byzantine.gopray=Dua, Roma zanaatkârlığının önemli bir parçasıdır.
+artisanwife_byzantine.gopray=Umarım Tanrı bana en güzel kıyafetleri yapmamda yardım eder!
+artisanwife_byzantine.gopray=Tanrı neden bir mimarın karısını yaratmış?
+
+artisanwife_byzantine.gosocialise=Ah! O adamın gömleğini ben yaptım!
+artisanwife_byzantine.gosocialise=Burada mimarın karısı olarak tanınıyorum.
+artisanwife_byzantine.gosocialise="Mimarın karısı" olarak tanınmaktan bıktım.
+
+artisanwife_byzantine.makeclothes_byz_silk=Köydeki en güzel kıyafetlerden bazılarını ben yapıyorum!
+artisanwife_byzantine.makeclothes_byz_silk=Roma ipeği dünyanın en iyi kumaşıdır!
+artisanwife_byzantine.makeclothes_byz_silk=İpek kıyafet, gösterişli bir evden daha önemlidir.
+artisanwife_byzantine.makeclothes_byz_silk=$name, daha önce hiç ipek giydiniz mi?
+artisanwife_byzantine.makeclothes_byz_silk=Herkesin kıyafete ihtiyacı vardır, özellikle medeni olmak istiyorsanız.
+artisanwife_byzantine.makeclothes_byz_silk=Gerçek güzellik bloklarda değildir, güzellik kıyafetlerdedir.
+artisanwife_byzantine.makeclothes_byz_silk=Bunu örenin kocam değil de ben olmamın bir sebebi var.
+artisanwife_byzantine.makeclothes_byz_silk=İpekten kıyafet dokumak yalnızca en soylu kadınlar içindir.
+artisanwife_byzantine.makeclothes_byz_silk=Sadece gerçek bir iş yapmak zorunda olduğum için memnunum.
+
+artisanwife_byzantine.makeclothes_byz_wool=Köydeki en güzel yünlü kıyafetlerden bazılarını ben yapıyorum!
+artisanwife_byzantine.makeclothes_byz_wool=Güzel kıyafet, gösterişli bir evden daha önemlidir.
+artisanwife_byzantine.makeclothes_byz_wool=$name, daha önce hiç yün giydiniz mi?
+artisanwife_byzantine.makeclothes_byz_wool=Gerçek güzellik bloklarda değildir, güzellik kıyafetlerdedir.
+artisanwife_byzantine.makeclothes_byz_wool=Herkesin kıyafete ihtiyacı vardır, özellikle medeni olmak istiyorsanız.
+artisanwife_byzantine.makeclothes_byz_wool=Bunu örenin kocam değil de ben olmamın bir sebebi var.
+artisanwife_byzantine.makeclothes_byz_wool=Her kadın yünle dokuma yapamaz.
+artisanwife_byzantine.makeclothes_byz_wool=Sadece gerçek bir iş yapmak zorunda olduğum için memnunum.
+
+artisanwife_byzantine.delivergoodshousehold=Burada yapabileceğim tek şeyler bunlar.
+artisanwife_byzantine.gethousethresources=Kocam sonunda söylediğim gibi kaynaklarını teslim etti.
+artisanwife_byzantine.getgoodshousehold=Aileme bakma zamanı.
+artisanwife_byzantine.greeting=Erkek olsaydım burada çok daha fazlasını yapabilirdim, keşke...
+artisanwife_byzantine.greeting=Görevimiz erkeklerimizi kontrol etmektir.
+
+baron_byzantine.greeting=$name, köyümün satışta en iyi malları var!
+baron_byzantine.greeting=Merhaba zengin yolcu!
+baron_byzantine.greeting=Köylüleri izlemeye yardım etmek ister misiniz $name?
+
+baron_byzantine.godrink=Yönetmek yetti! Bir içkiye ihtiyacım var.
+baron_byzantine.godrink=En iyi şarabı içmeyi hak ediyorum!
+baron_byzantine.godrink=Hanın kâr edip etmediğini kontrol etmeliyim.
+baron_byzantine.godrink=Her güçlü kişinin içmeye ihtiyacı vardır yoksa stresten ölür!
+
+baron_byzantine.gopray=Tanrı neden beni baron yaptı?
+baron_byzantine.gopray=Dua, Roma yönetiminin önemli bir parçasıdır.
+baron_byzantine.gopray=O, baronların sorunlarını anlar.
+baron_byzantine.gopray=Köyümün Tanrı'dan cevaplara ihtiyacı var!
+
+baron_byzantine.gorest=Köylüleri yönetmek yetti! Biraz uykuya ihtiyacım var.
+baron_byzantine.gorest=*Esneme* Yorgunken köylülere önderlik edemem.
+baron_byzantine.gorest=İpeksi battaniyemde uyuma zamanı.
+baron_byzantine.gorest=Herkesin uykuya ihtiyacı vardır, özellikle bir köyün lideriyseniz.
+
+baron_byzantine.gosocialise=Neden o aptal köylüler beni sadece "Baron" olarak görüyor?
+baron_byzantine.gosocialise=He he he, bakalım vergisini ödemiş mi.
+baron_byzantine.gosocialise=Yoksulları dinar kazanmak için ilhamlandırma zamanı!
+baron_byzantine.gosocialise=Avam halkla konuşmak zorunda mıyım?
+baron_byzantine.gosocialise=Baron olarak, istemesem bile halkımla konuşmak zorundayım.
+
+baron_byzantine.inspectconstruction=Köylülerin bir şeyleri batırmadığından emin olmalıyım.
+baron_byzantine.inspectconstruction=Bu bina köyüme kazanç getirecek.
+baron_byzantine.inspectconstruction=Güzellik, köyünüzün gittikçe zenginleşmesini izlemektir.
+baron_byzantine.inspectconstruction=Roma'nın bir günde kurulmadığını biliyorum ama mimarım neden bu kadar yavaş?
+baron_byzantine.inspectconstruction=Binaların düzgün yapıldığından emin olmak benim işim.
+baron_byzantine.inspectconstruction=Mimarlarım genellikle iyi iş çıkarır ama her zaman onları kontrol etmem gerek.
+
+boy_byzantine.becomeadult=Güçlü bir adam olma zamanı!
+boy_byzantine.becomeadult=Çalışacak yaşa geldim!
+boy_byzantine.becomeadult=Şimdi bir işe ihtiyacım var.
+boy_byzantine.becomeadult=Çocukluk günlerim sona erdi.
+
+boy_byzantine.goplay=Biriyle dövüşmek istiyorum!
+boy_byzantine.goplay="Barbarı Yen" oyununu oynamak istiyorum!
+boy_byzantine.goplay=Herkese büyük ve güçlü olduğumu göstereceğim!
+boy_byzantine.goplay="Asker" oynama zamanı.
+
+boy_byzantine.gopray=Tanrı hakkında bir şeyler öğrenmek istiyorum!
+boy_byzantine.gopray=Tanrı bana yetişkinlerden bahsedebilir mi?
+boy_byzantine.gopray=Nasıl dua ederim?
+boy_byzantine.gopray=Dua etmek istemiyorum! Onun yerine oynamak istiyorum!
+
+boy_byzantine.childobservesmithing=Büyüdüğümde ben de demirci olmak istiyorum. Ya da asker. Ya da general!
+
+centurio_byzantine.godrink=Her güçlü kişinin içmeye ihtiyacı vardır yoksa stresten ölür!
+centurio_byzantine.godrink=Bir asker olarak şaraba ihtiyacım var, bir Strategos olarak ise daha da fazlasına.
+centurio_byzantine.godrink=Rahatlamam, gevşemem gerek, yoksa barbarlar geldiğinde işe yaramaz olurum.
+
+centurio_byzantine.gopray=Tanrı neden beni Strategos yaptı?
+centurio_byzantine.gopray=Dua, Roma savaş sanatının önemli bir parçasıdır.
+centurio_byzantine.gopray=O, Strategos'ların sorunlarını anlar.
+centurio_byzantine.gopray=Ordumun Tanrı'dan cevaplara ihtiyacı var!
+
+centurio_byzantine.gorest=Askerleri yönetmek yetti! Biraz uykuya ihtiyacım var.
+centurio_byzantine.gorest=Zırhımı çıkarıp uyuma zamanı.
+centurio_byzantine.gorest=*Esneme* Yorgunken askerlere önderlik edemem.
+centurio_byzantine.gorest=Herkesin uykuya ihtiyacı vardır, özellikle bir köyün lideriyseniz.
+
+centurio_byzantine.gosocialise=Askerlerin moralini yükseltme zamanı!
+centurio_byzantine.gosocialise=Sadakat kazanmanın iyi bir yolu, halkınıza danışmaktır.
+centurio_byzantine.gosocialise=Ordu için daha çok asker lazım!
+centurio_byzantine.gosocialise=Astlarımın savunma planlarımı bilmesi gerek.
+centurio_byzantine.gosocialise=Astlarımın saldırı planlarımı bilmesi gerek.
+centurio_byzantine.gosocialise=Halkın bir barbar saldırısının tehdidini anlaması gerek!
+centurio_byzantine.gosocialise=Herkese her an dövüşmeye hazır olmamız gerektiğini hatırlatmalıyım!
+
+centurio_byzantine.huntmonster=Bir Strategos olsam bile bir asker olarak paslanmamalıyım.
+centurio_byzantine.huntmonster=Astlarım nerede? Bunu onların yapması gerek.
+centurio_byzantine.huntmonster=Ben Roma İmparatorluğu'nun bir Strategos'uyum ve benimle dövüşebileceğinizi mi sanıyorsunuz? Ha!
+
+centurio_byzantine.inspectconstruction=Güzellik, köyünüzün güçlendiğini izlemektir.
+
+farmiller_wife_byzantine.delivergoodshousehold=Burada yapabileceğim tek şeyler bunlar.
+farmiller_wife_byzantine.gethousethresources=Kocam sonunda söylediğim gibi kaynaklarını teslim etti.
+farmiller_wife_byzantine.getgoodshousehold=Aileme bakma zamanı.
+farmiller_wife_byzantine.greeting=Erkek olsaydım burada çok daha fazlasını yapabilirdim, keşke...
+farmiller_wife_byzantine.greeting=Görevimiz erkeklerimizi kontrol etmektir.
+
+girl_byzantine.childobserveproducefood=İyi ki erkekler yemek yapmıyor, her şeyi yakarlardı.
+
+keeperbirch_byzantine.greeting=Burası çok sıkıcı, hiçbir şey olmuyor...
+keeperbirch_byzantine.greeting=Bu bölgeleri gözetlemek benim işim.
+keeperbirch_byzantine.greeting=Selamlar yolcu, bu uzak yere nasıl düştüğünü merak ediyorum.
+keeperbirch_byzantine.greeting=Buraya birinin yerleştirilmesi gerektiğini kim düşünebilir ki...
+
+keeperoak_byzantine.greeting=Buradaki bu insanlar, kendilerine Norman diyenler, bana şanlı imparatorluğumuzu hatırlatıyor.
+keeperoak_byzantine.greeting=Burası çok sıkıcı, hiçbir şey olmuyor...
+keeperoak_byzantine.greeting=Bu bölgeleri gözetlemek benim işim.
+keeperoak_byzantine.greeting=Selamlar yolcu, bu uzak yere nasıl düştüğünü merak ediyorum.
+keeperoak_byzantine.greeting=Buraya birinin yerleştirilmesi gerektiğini kim düşünebilir ki...
+
+keeperpine_byzantine.greeting=Bu soğuk berbat. Etrafta kimsenin olmaması şaşırtıcı değil.
+keeperpine_byzantine.greeting=Burası çok sıkıcı, hiçbir şey olmuyor...
+keeperpine_byzantine.greeting=Bu bölgeleri gözetlemek benim işim.
+keeperpine_byzantine.greeting=Selamlar yolcu, bu uzak yere nasıl düştüğünü merak ediyorum.
+keeperpine_byzantine.greeting=Buraya birinin yerleştirilmesi gerektiğini kim düşünebilir ki...
+
+keepertropical_byzantine.greeting=Burası çok sıkıcı, hiçbir şey olmuyor...
+keepertropical_byzantine.greeting=Bu bölgeleri gözetlemek benim işim.
+keepertropical_byzantine.greeting=Burası çok sıcak. Bu Hinduların neden bu topraklarda yaşadığını anlayamıyorum.
+keepertropical_byzantine.greeting=O garip Mayaları gördünüz mü hiç? Binaları her an çökecekmiş gibi görünüyor.
+keepertropical_byzantine.greeting=Selamlar yolcu, bu uzak yere nasıl düştüğünü merak ediyorum.
+keepertropical_byzantine.greeting=Buraya birinin yerleştirilmesi gerektiğini kim düşünebilir ki...
+
+lumberman_byzantine.bringbackresourceshome=Umarım bu, köyün gelişmesine yetecektir!
+lumberman_byzantine.bringbackresourceshome=Çok başarılı bir oduncuyum, envanterim kütüklerle dolu!
+lumberman_byzantine.bringbackresourceshome=Bir sürü ağaç taşıyorum ama nedense ağır gelmiyorlar.
+lumberman_byzantine.bringbackresourceshome=Bu iyi yapılmış bir işti.
+lumberman_byzantine.bringbackresourceshome=Karım getirdiğim onca odundan gurur duyuyor olmalı.
+
+lumberman_byzantine.choptrees=Buradaki her yapı için odun gerekiyor ve onu temin etmek benim işim!
+lumberman_byzantine.choptrees=Bir ağaç daha devrildi, köy için daha çok odun!
+lumberman_byzantine.choptrees=Bir ağaç daha düştü, köy için daha çok odun!
+lumberman_byzantine.choptrees=$name, daha önce hiç ağaç kestiniz mi?
+lumberman_byzantine.choptrees=Ağaca koş, Choppa!
+lumberman_byzantine.choptrees=Geber ağaç geber! HAHAHA! Geber! Geber! Geber! Ha- A, merhaba $name! Burada... garip... hiçbir şey olmuyor.
+lumberman_byzantine.choptrees=Seni öldürmek istemiyorum ama mecburum... Elveda ağaç!
+lumberman_byzantine.choptrees=Burada kesilen ağaçların neden havada durduğunu hiç merak ettiniz mi, $name? Çok garip. Ne yaparsam yapayım, hep havada duruyorlar ve ağacı parça parça yukarı doğru kırmam gerekiyor, gerçekten can sıkıcı.
+
+lumberman_byzantine.gathergoods=Hey $name! Onu alma!
+lumberman_byzantine.gathergoods=Ağaçlar bu sefer iyi büyüdü, bir sürü kütük ve fidan oldu.
+lumberman_byzantine.gathergoods=Umarım köyün bütün bu kütüklere ihtiyacı vardır.
+lumberman_byzantine.gathergoods=Bu büyük bir ağaçtı! Şimdi köy onun kütüklerini kullanabilir.
+lumberman_byzantine.gathergoods=Ağaçları keserek elde ettiğim tüm bu yeni kütüklere ve fidanlara bak!
+lumberman_byzantine.gathergoods=Şurada güzel bir fidan var.
+
+lumberman_byzantine.plantsaplings=Bu fidanlar o kadar küçük ki bazen onların bu kadar büyüyeceğine inanamıyorum.
+lumberman_byzantine.plantsaplings=Çok tatlısın küçük fidan, büyüdüğünde seni keseceğimi neredeyse unutturuyorsun bana.
+lumberman_byzantine.plantsaplings=$name, bir fidan dikmek ister misiniz?
+lumberman_byzantine.plantsaplings=Buradaki ağaçlar çok hızlı büyüyor, birkaç gün içinde bu küçük fidandan koca bir ağaç oluyorlar.
+lumberman_byzantine.plantsaplings=Dikmek en kolay iş, tek yapmam gereken onları yere yerleştirmek.
+lumberman_byzantine.plantsaplings=Yakında bu büyük, görkemli bir ağaç olacak! Ve ben onu keseceğim.
+
+merchant_art.greeting=Dünyada hiçbir şehir Konstantinopolis'in güzelliği ve kudretiyle kıyaslanamaz.
+merchant_art.greeting=Biz son gerçek Romalılarız!
+
+miner_byzantine.mining=İşim taşları kırmak ve bu taşları eritilmek üzere götürmek, hepsi bu.
+miner_byzantine.mining=Bu kazmayı her gün kullanmaktan kolum acıyor.
+miner_byzantine.mining=Bir blok, iki blok, üç blok, dört blok, hiç bitmiyor. Sadece aynı şey defalarca.
+miner_byzantine.mining=Bir blok, iki blok, üç-dur, o altın mı? Öyle mi? ALTIN BULDUM! ALTIN! ALTIN! Zenginim! HAHA-ah, sadece kötü bir ışıkta yansıyan demirmiş. Demir ve kömür çıkarmaya geri dönüyoruz...
+miner_byzantine.mining=Seksen blok, seksen bir blok, sekiz iki blok, seksen üç blok...
+miner_byzantine.mining=Hey! Nasıl bu kadar çok bloğu taşıyıp bu kadar hızlı madencilik yapabiliyorsun? Senin bir günde yaptığını ben saatlerce yapıyorum.
+miner_byzantine.mining=*Öksürük* *Öksürük*, kömürle çalışmaktan nefret ediyorum.
+miner_byzantine.mining=Bu işte güç ve dayanıklılık gerekir. Ama burada kimse fark etmiyor...
+miner_byzantine.mining=Bu zorlu işte bile şanlı İmparatorluk için çalışan bir Roma vatandaşı olmaktan gurur duyuyorum.
+
+metropolit_byzantine.makebooks=Kitaplarım oradaki en iyi el yazmalarından bazılarıdır.
+
+metropolit_byzantine.gopray=Tanrı neden beni en değerli hizmetkârlarından biri yaptı?
+metropolit_byzantine.gopray=Patrik olarak duayı yönetmeliyim.
+metropolit_byzantine.gopray=Onun sorunlarını anlıyorum.
+metropolit_byzantine.gopray=O, patriklerin sorunlarını anlar.
+metropolit_byzantine.gopray=Köyümün Tanrı'dan cevaplara ihtiyacı var!
+
+metropolit_byzantine.gorest=Herkesin uykuya ihtiyacı vardır, özellikle bir köyün lideriyseniz.
+metropolit_byzantine.gorest=*Esneme* Yorgun olduğumda rahiplere önderlik edemem.
+
+metropolit_byzantine.inspectconstruction=Güzellik, köyünüzün Tanrı'ya yaklaştığını izlemektir.
+
+pastor_byzantine.makebooks=Kitaplarım oradaki en iyi el yazmalarından bazılarıdır.
+
+//smith_byzantine.MakeIndianTools=Roman tools are the best in world.
+
+smith_byzantine.gopray=İyi bir demircinin arada bir dua etmesi gerekir.
+smith_byzantine.gopray=Tanrı neden beni demirci yaptı?
+smith_byzantine.gopray=Dua, Roma zanaatkârlığının önemli bir parçasıdır.
+smith_byzantine.gopray=O, demircilerin sorunlarını anlar.
+
+smith_byzantine.gorest=Yarın daha çok güzel şey yapacağım!
+smith_byzantine.gorest=Bugünlük zanaat yapmayı bitirdim.
+smith_byzantine.gorest=Belki dünyanın en iyi aletlerini yapmanın rüyasını görürüm!
+
+smith_byzantine.gosocialise=Birinin bir şey yapmamı isteyip istemediğini sormaya gideceğim.
+smith_byzantine.gosocialise=Umarım köy aletlerimi takdir eder.
+
+smith_byzantine.godrink=Zanaat yetti! Şaraba ihtiyacım var!
+smith_byzantine.godrink=Bana ilham verecek bir içkiye ihtiyacım var!
+smith_byzantine.godrink=Her iyi demirci günün sonunda bir içkiye ihtiyaç duyar.
+smith_byzantine.godrink=Zanaat beni şarap için susatıyor.
+
+smith_byzantine.makesteelaxe=Balta olmadan ağaç kesemezsiniz!
+smith_byzantine.makesteelaxe=Muhteşem baltalar yapıyorum.
+smith_byzantine.makesteelaxe=Roma baltaları dünyanın en iyileri arasındadır!
+smith_byzantine.makesteelaxe=Oduncuların baltalarını yapmamız için bize ihtiyaçları var.
+smith_byzantine.makesteelaxe=Baltalarınızı nasıl yapıyorsunuz $name?
+
+smith_byzantine.makesteelhoe=Tarım aletleri olmadan tarım yapamazsınız!
+smith_byzantine.makesteelhoe=Muhteşem tarım aletleri yapıyorum.
+smith_byzantine.makesteelhoe=Roma tarım aletleri dünyanın en iyileri arasındadır!
+smith_byzantine.makesteelhoe=Çiftçilerin aletlerini yapmamız için bize ihtiyaçları var.
+smith_byzantine.makesteelhoe=Tarım aletlerinizi nasıl yapıyorsunuz $name?
+
+smith_byzantine.makesteelpickaxe=Kazma olmadan madencilik yapamazsınız!
+smith_byzantine.makesteelpickaxe=Sağlam kazmalar yapıyorum.
+smith_byzantine.makesteelpickaxe=Roma kazmaları dünyanın en iyileri arasındadır!
+smith_byzantine.makesteelpickaxe=Madencilerin kazmalarını yapmamız için bize ihtiyaçları var.
+smith_byzantine.makesteelpickaxe=Kazmalarınızı nasıl yapıyorsunuz $name?
+
+smith_byzantine.makesteelshovel=Kürek olmadan inşa edemez ya da kazamazsınız!
+smith_byzantine.makesteelshovel=Sağlam kürekler yapıyorum.
+smith_byzantine.makesteelshovel=Roma kürekleri dünyanın en iyileri arasındadır!
+smith_byzantine.makesteelshovel=Mimarların küreklerini yapmamız için bize ihtiyaçları var.
+smith_byzantine.makesteelshovel=Küreklerinizi nasıl yapıyorsunuz $name?
+
+villager.greeting=Merhaba, $name!
+villager.greeting=Güzel bir gün, değil mi?
+villager.greeting=Yakında yağmur yağacak.
+villager.greeting=Dünyada hiçbir şehir Konstantinopolis ile kıyaslanamaz.
+villager.greeting=Biz Yunan değiliz, Romalıyız.
+villager.greeting=Biz son gerçek Romalılarız.
+villager.greeting=Burada kaldığınız süre boyunca medeniyetimizin ihtişamında yıkanın.
+villager.greeting=Köye hoş geldin, $name!
+villager.greeting=Bakın! İşte $name!
+villager.greeting=Biz son gerçek Romalılarız. Medeniyetimizin ışığında yıkanın.
+
+villager.becomeadult=Sonunda bir Roma vatandaşı oldum!
+
+villager.huntmonster=Bu barbarı öldürmem gerek!
+
+villager.goplay=Sanırım dışarıda oynamaya gideceğim.
+villager.goplay=Şimdi oynamaya gideceğim.
+villager.goplay=$name! Benimle oynamak ister misiniz?
+villager.goplay=Koşmak istiyorum!
+
+villager.calltoarms=Roma İmparatorluğu saldırı altında! Silah başına!
+villager.calltoarms=Barbarlar burada! Köyümüzü ne pahasına olursa olsun savunun!
+villager.hitbyplayer=Hey! Dikkat edin!
+
+villager.childeatgrapes=Yemin ederim bu üzümler kendiliğinden düştü!
+
+villager.childobservevines=Yetişkinler o iğrenç şarabı yapmak için lezzetli üzümleri ziyan etmeyi bırakmalı!
+villager.childobserveconstruction=Bir gün Konstantinopolis'i ziyaret edip gerçek Roma binalarının nasıl göründüğünü göreceğim!
+villager.childobserveproducealcohol=Bir kere şarap denedim, iğrenç.
+
+villager.gorest=Uyumazsam kazalar olabilir.
+villager.gorest=Yorgunum. Uyumak için eve dönüyorum.
+villager.gorest=Sanırım uyumaya gidiyorum.
+
+villager.makebread=Ekmek şimdiden güzel kokuyor...
+
+villager.gopray=Kutsal Baba'nın rehberliğindeyim.
+villager.gopray=Ey gökten doğmuş, merhametli Tanrım.
+villager.gopray=Erkekler ibadet eder, ruhbanlar şarkı söyler!
+villager.gopray=Selam olsun bakire periye!
+villager.gopray=Ey kutsal Meryem, Büyük muzaffer komutan!
+villager.gopray=Beni kötülükten kurtarana şükranlarımı sunarım...
+villager.gopray=Halk, sonsuza dek, sizin için dua edecek, amin.
+
+villager.godrink=Taze Roma şarabı içme vakti!
+villager.godrink=Bir içkiye ihtiyacım var.
+villager.godrink=Şarap dertlerimi yıkayıp götürecek.
+villager.godrink=Roma şarabının dünyanın en iyisi olduğunu biliyor muydunuz?
+villager.godrink=Bir şey içmeyeli uzun zaman oldu.
+
+wife_byzantine.delivergoodshousehold=Burada yapabileceğim tek şeyler bunlar.
+wife_byzantine.gethousethresources=Kocam sonunda söylediğim gibi kaynaklarını teslim etti.
+wife_byzantine.cooking=Yemek pişirmek gerçekten eğlenceli.
+wife_byzantine.getgoodshousehold=Aileme bakma zamanı.
+wife_byzantine.greeting=Erkek olsaydım burada çok daha fazlasını yapabilirdim, keşke...
+wife_byzantine.greeting=Görevimiz erkeklerimizi kontrol etmektir.
+
+villager.givespeech=Roma İmparatorluğu muhteşem ve köyümüz en muhteşemidir.
+villager.givespeech=Köyümüz, tüm bu büyüklüğü için liderliğine teşekkür etmeli.
+villager.givespeech=Biz Romalılar en iyi liderlere ve en iyi halka sahibiz.
+
+villager.listentospeech=Haklı!
+villager.listentospeech=Şanımız bize!
+villager.listentospeech=Herkesi yenebiliriz!
+villager.listentospeech=Tanrı'ya ve Tanrı'nın bize gönderdiği liderimize şükürler olsun!
+
+special_byzantine.greeting=Hizmetiniz ödüllendirilecek, $name.
+special_byzantine.calltoarms=Şansını zorlama, evladım.
+special_byzantine.gopray=Önümde eğil...
+
+oldshepherd_byzantine.greeting=İnançlarım beni ayakta tuttu...
+oldshepherd_byzantine.greeting=Hayalimi gerçekleştirmeme yardım et, $name, ödüllendirileceksin…
+oldshepherd_byzantine.calltoarms=Boskokrator için!
+oldshepherd_byzantine=Kutsal Boskokrator, lütfen beni ve koyunlarımı kutsa.
+
+merchant_armour.greeting=Sadece en iyi zırhlar ve silahlar!
+merchant_armour.keepstall=Hoşgeldiniz, hoşgeldiniz! Size bulabileceğiniz en iyi kılıçları getiriyorum!
+
+merchant_dyes.greeting=Her gün renklerle geliyorum! Dur, ben Hintli değilim.
+merchant_dyes.keepstall=Gelin ve görün! Dünyanın dört bir yanından boyalar!
+
+merchant_food.greeting=Nefis bir souvlaki'ye ne dersiniz, $name?
+merchant_food.keepstall=Yemek isteyebileceğiniz tüm yiyecekler!
+
+merchant_materials.greeting=Gelin en iyi inşaat malzemelerini satın alın! Ben ve sırtım size teşekkür edecek.
+merchant_materials.keepstall=Kum, Taş ve Tuğla! Diyorit ve Kuvars!
+
+merchant_relics.greeting=Değerli el işleri ve kutsal mallar satıyorum, $name.
+merchant_relics.keepstall=Gelin ve Roma zanaatkârlığının zirvesini görün.
+
+merchant_textiles.greeting=Cidden mi, $name? Bu deri mi?
+merchant_textiles.keepstall=Tıpkı Konstantinopolis'tekiler gibi şık halılar ve giysiler!
+
+loneabbot_byzantine.greeting=Hoşgeldin, $name. Yolculuğundan dinlenebilirsin, burada güvendesin.
+lonemonk_byzantine.greeting=Sana sunabileceğim hiçbir şey yok, $name.
+
+loneabbot_byzantine.gosocialise=Çalışmalarımı paylaşmak için sabırsızlanıyorum.
+
+lonemonk_byzantine.gosocialise=Çalışmalarımı paylaşmak için sabırsızlanıyorum.
+lonemonk_byzantine.plantseeds=Tanrı bu tohumları kutsasın.
+lonemonk_byzantine.collectcrop=Bu ürünler bizzat Tanrı'dan bir armağandır.
+lonemonk_byzantine.makebread=Oğul'un büyük fedakârlığı bu ekmekle başlayacak.
+
+villager.plantseeds=Hissediyorum, bu yıl bol bir hasatımız olacak.
+villager.collectcrop=Biliyordum! Bol bir hasat!
+
+villager.gostudy=Lütfen, dikkatimi dağıtmayın, $name.
+
+villager.gotreerelax=Bu gölgeli yer tam kusursuz...
+villager.gotreerelax=Bütün gün bu ağacın altında kalabilirim…
+
+villager.relight=Tanrı'nın sevgisi tek arzumdur!
+villager.golookout=Bugün bir gemi gelecek. Biliyorum.
+villager.golookout=Sıkıcı bir iş, ama en azından maaş alıyorum.
+villager.sellercoming=Derhal geliyorum!
+villager.tradecomplete=Pek çok teşekkür, hayırlı işler!

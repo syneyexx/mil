@@ -1,0 +1,13 @@
+{
+  "parent": "millenaire:firstcontact",
+  "display": {
+    "icon": { "item": "minecraft:writable_book" },
+    "title": { "translate": "advancement.millenaire.thequest" },
+    "description": { "translate": "advancement.millenaire.thequest.desc" }
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

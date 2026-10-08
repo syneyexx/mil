@@ -1,0 +1,332 @@
+newchat;key:stone,weigth:10;
+v1;0;Taş, var olan en iyi malzemedir.
+v2;30;Pişirildiğinde daha da iyi! Yaşasın taş!
+v1;60;Onu kazmalıyız! İşe!
+
+newchat;key:pyramid,building:mayanpyramid,weigth:7;
+v1;0;Piramidimiz en güzel ve en iyi inşa edilmiştir.
+v2;30;Doğru. Diğer köyleri ziyaret ettim. Onlarınkiler çok güzel ama bizimkisi kadar zarif değil!
+v1;60;Mimarimiz benzersiz ve özgündür.
+v2;90;Çok fazla övünme. O kendini beğenmiş Bizanslılar gibi olmamızı istemem.
+v1;120;Ah evet, şey... Onlardan nefret ediyorum. Bu kadar kibirli olunabilir mi!
+
+newchat;key:player,weigth:10;
+v1;0;Burada çok fazla ziyaretçi almıyoruz.
+v2;30;Evet, sadece $name ve diğer kayıp insanlar var...
+v1;60;$name demişken, onu giderek daha tuhaf ve yorgun bulmuyor musun?
+v2;90;Doğru. Biraz dinlenmesi gerek.
+
+newchat;key:miner,weigth:9;
+v1;0;Daha fazla madenci almalıyız.
+v2;30;Evet! Kayalar ve mineraller var olan en iyi malzemelerdir.
+v1;60;Katılıyorum... ama köyde yeterli sayıda değiliz, sayımız artmalı.
+v2;90;Ve çocukları çalıştıramayız. Çok küçükler.
+
+newchat;key:woman,weigth:6,v1:adult,v2:adult,v1:female;
+v1;0;Evi temizleme vakti.
+v2;30;Ama bunu dün yaptın!
+v1;60;Yine de, burada başka bir şey yapmama izin yok.
+v2;90;Hep şikayet ediyorsun!
+v1;120;Şikayet ettiğim için bana sitem etmek yerine, neden şikayet ettiğimi anlamaya çalış!
+
+newchat;key:friend,v1:vtype:mayan_miner,v2:adult,weigth:10;
+v1;0;Ah, sevgili dostum $targetfirstname! Nasılsın?
+v2;30;Merhaba $targetfirstname! Elimden geleni yapıyorum, işler kötü.
+v1;60;Hindulara taş satmayı bıraktın mı?
+v2;90;Evet. Şimdi bağımsız Japon madencileri hizmetlerini sundu, artık bana ihtiyaçları yok.
+v1;120;Sadece onlara başka bir şey teklif etmen yeter.
+v2;150;Bir fikrin var mı?
+
+newchat;key:monster,weigth:5;
+v1;0;Şu an dışarıda bir sürü canavar var.
+v2;30;Eminim muhafızlar onlarla savaşabilir.
+v1;60;Beni endişelendiren şey, o yeşil patlayıcı yaratıklardan bir sürünün saldırması.
+v2;90;Endişelenme. Onlara karşı yemlerimiz var.
+v1;120;Tamam, en kötü ihtimalle $name var. İyi savaşıyor ve bizi savunabilir.
+v2;150;Ben de şüphe etmiyorum. O kadar da kötü değil.
+
+newchat;key:normands,weigth:6;
+v1;0;Normanların ten rengini gördün mü? Hepsi çok soluk!
+v2;30;Ah evet! Daha önce hiç böyle bir renk görmemiştim. Tuhaf.
+v1;60;Belki lanetlenmişlerdir...
+v2;90;Saçmalama. Herkes gibi insanlar.
+v1;120;Onları böyle değiştiren şüphesiz alkol. Eminim her zaman böyle değillerdi.
+v2;150;Muhtemelen yanılıyorsun.
+
+newchat;key:alchimist,weigth:4;
+v1;0;Ormanı keşfederken, komik bir simyacı gördüm.
+v2;30;Sen de mi onu gördün? Saçma derecede tuhaf.
+v1;60;Hem de nasıl. Tuhaf malzeme listesi vardı. "Soluk iskelet kafatası" veya "ruh kumu" nedir biliyor musun?
+v2;90;Hayır. Ama pek güven verici değil.
+v1;120;Evet! Filozof Taşı yapmaya çalıştığını düşünüyoruz.
+v2;150;Cesur $targetfirstname, eğer söylentilere inanırsan, Dünya'nın yuvarlak olduğuna da inanma riskin var.
+v1;180;Muhtemelen haklısın.
+
+newchat;key:dragonegg,v1:adult,v2:adult,weigth:5;
+v1;0;Çölde tuhaf bir siyah yumurta gördüm.
+v2;30;Sahi mi? Nasıl görünüyordu?
+v1;60;Mor benekli, büyüktü. Çok büyük.
+v2;90;Yine Norman alkolü mü içtin yoksa şaka mı yapıyorsun?
+v1;120;Ama... bu doğru! Yemin ederim!
+v2;150;Haha! Beni böyle kandırabileceğini düşünüyorsan, yanılıyorsun!
+
+newchat;key:wither,weigth:3;
+v1;0;Ormanda tuhaf bir siyah yaratık gördüm.
+v2;30;Gerçekten mi? Anlat bana, meraklandım!
+v1;60;Şey, siyah iskelet benzeri bir yaratıktı, kollarının ucunda iki kafa ve boynunda bir tane vardı, ve buz gibi soğuk bir bakışı vardı...
+v2;90;Tüylerim diken diken oldu.
+v1;120;Endermenler ona saldırıyordu.
+v2;150;Endermenler mi? Onlar yok, rüya görmüş olmalısın.
+
+newchat;key:bakery,notbuilding:mayanbakery,weigth:7;
+v1;0;Bir fırın inşa etmeliyiz. Bizi işe sokar.
+v2;30;Bu doğru. Ev yapımı ekmekle yetinemeyiz.
+v1;60;Hadi şefe gidip konuşalım.
+
+newchat;key:bestdad,v1:child,v2:child,weigth:8;
+v1;0;Babam en iyisi çünkü oduncu!
+v2;30;Pöh! Odun işe yaramaz! Benimki daha iyi çünkü madenci!
+v1;60;Odun olmadan, baban hiçbir işe yaramaz.
+v2;90;Öyle mi!? Kavga mı arıyorsun?!
+v1;120;Dur, taş işe yaramaz, kabul et.
+v2;150;Taş olmadan, baban yıldızların altında uyurdu!
+
+newchat;key:becomeadult,v1:child,v2:child,weigth:9;
+v1;0;Yetişkin olmaktan korkuyorum.
+v2;30;Neden?
+v1;60;Çünkü... çok fazla iş var ve artık oynayamıyoruz...
+v2;90;Göreceksin, harika!
+v1;120;Hayır... istemiyorum istemiyorum istemiyorum!
+
+newchat;key:rebellion,v1:child,v2:child,rel:sibling,weigth:6;
+v1;0;Annem ve babam haksız! Her zaman odamızı temizlemek zorundayız!
+v2;30;Evet! İsyan etmeli ve daha iyi muamele istemeliyiz!
+v1;60;Savaşalım! Anneye odaklan!
+
+newchat;key:japanese,v1:adult,weigth:8;
+v1;0;Hey, $targetfirstname, şuna bak.
+v2;30;Komik kılıç! Ve komik bir yay! Bunları nereden aldın?
+v1;60;Bir Yumi Yayı ve bir Tachi. Japon Demirhanesinden.
+v2;90;Çok güzel ve etkili. Pahalı mıydı?
+v1;120;Hem de nasıl! Sadece yay için iki gümüş sikke harcadım!
+v2;150;Vay! Onları almadan önce çok biriktirmiş olmalısın.
+
+newchat;key:exchange,v1:adult,v2:adult,v1:male,v2:male,weigth:9;
+v1;0;Merhaba Bay $targetlastname. Pazarımız hâlâ ayakta mı?
+v2;30;Evet, evet. Söylediğim gibi, her şey hazır.
+v1;60;Hep dakik! Sizinle iş yapmak güzel.
+v2;90;Ki'imak óolal haah tin. Le túun... 32 chuun che' tumen 8 máaskab. ¡Péeka'an! q/ Tüm zevk bana ait. Yani... 8 demir külçeye karşılık 32 kütük. İşte!
+v1;120;Çok teşekkür ederim Bayım. İyi günler.
+v2;150;Size de Bay $targetlastname!
+
+newchat;key:embauchement,v1:adult,v2:vtype:mayan_warrior,weigth:7;
+v1;0;Beni korumak için seni günde 48 sikkeye işe alıyorum.
+v2;30;Hmmm. Beni ne kadar süreyle işe alacağına bağlı, $targetfirstname.
+v1;60;Altı gün. Köpeklerim bana yeterli koruma sağlamak için yeterli değil.
+v2;90;Tamam, bir gümüş sikke. Daha azı olmaz.
+v1;120;Bu soygun!
+v2;150;Hiç de değil, $targetfirstname. Bu işte hayatımı riske atıyorum.
+
+newchat;key:cereal,v2:vtype:mayan_farmer,weigth:9;
+v1;0;Biraz pirinç yetiştirmeyi deneyeceğim.
+v2;30;Pirinç mi? Nedir o?
+v1;60;Hindulardan satın aldığım bir bitki. Lezzetli olduğunu söylüyorlar!
+v2;90;Tadabilir miyim?
+v1;120;Ne yazık ki hayır. Her taneyi ekmem gerek.
+v2;150;İşe yaramaz.
+
+newchat;key:zombiepigmen,weigth:6;
+v1;0;Son fırtınayı gördün mü?
+v2;30;Hem de nasıl! Ekinlerimiz suyun tadını çıkardı ama korkunçtu.
+v1;60;Şey, ben kırlardaydım ve yanımda bir domuz vardı.
+v2;90;Ve?
+v1;120;Yıldırım düştü ve... arka ayakları üzerinde dikildi...
+v2;150;Sahi mi?! Nasıl görünüyordu?
+v1;180;Üzerinde yeşil bir küf vardı... ya da onun gibi bir şey. Ve altın bir kılıcı vardı.
+v2;210;Saldırdın mı yoksa kaçtın mı?
+v1;240;Silahsızdım. Ama bana saldırmak istemedi. Bana baktı, kafasını çevirdi ve ne olduğunu pek bilmeden uzaklaştı.
+v2;270;Ateş kullanmalıydın. Ya köye saldırırsa?
+v1;300;Ateşe karşı dayanıklıydı, yıldırım ona bir kez daha çarptı ve hiçbir şey hissetmedi.
+
+newchat;key:recolt,weigth:10;
+v1;0;Bu yıl hasat bol.
+v2;30;Evet, şikayet etmek aptallık olur.
+v1;60;Kesinlikle!
+
+newchat;key:village,weigth:8;
+v1;0;Köyümüzün güzel göründüğünü düşünüyorum.
+v2;30;Ben de. Çok sanatsal.
+v1;60;Hepsi taş sayesinde ve mimari ustalığımız sayesinde.
+
+newchat;key:peasantdialog,v1:vtype:mayan_peasant,v2:vtype:mayan_peasant,weigth:10;
+v1;0;Hasat edilecek çok mısır var, ama çok az zaman...
+v2;30;Evet, keşke hasattan bir pay alsaydık.
+
+newchat;key:playerorigins,weigth:10;
+v1;0;$name oldukça tuhaf bir kişi.
+v2;30;Normanlardan bile daha tuhaf.
+v1;60;Peki nereden geldi?
+v2;90;Emin değilim, herhangi bir kültürden değil gibi.
+
+newchat;key:byzantins,weigth:9;
+v1;0;O Bizanslılara gerçekten dayanamıyorum, bu topraklara sahip olduklarını sanıyorlar!
+v2;30;Ve binalarını gördün mü?
+v1;60;Evet, gördüm. Çok tuhaf.
+v2;90;Tuğla mı? Ne anlamı var ki?
+v1;120;Hatta o cam denilen şeyi de Normanlar gibi kullanıyorlar.
+v2;150;Doğru, ama Hindulardan daha ileri görünüyorlar. Onların pencerelerinde hiçbir şey yok.
+
+newchat;key:dialogchildmother,v1:child,v2:adult,v2:female,rel:parent,weigth:10;
+v1;0;Anne! Köyün dışında oynamaya gidebilir miyim?
+v2;30;Hayır çocuğum, incinmeni istemem.
+v1;60;Neden incineceğim? Dışarısı tehlikeli değil.
+v2;90;Dinle, dışarıda tehlikeli yaratıklar var...
+v1;120;N-Ne tür yaratıklar anne?
+v2;150;Korkunç şeyler... Creeper'lar gibi.
+v1;180;C-c-creeper'lar mı?
+v2;210;Evet çocuğum, seni eve kadar takip eder ve hiç beklemediğin anda patlatırlar.
+
+newchat;key:tobewarrior,v1:vtype:mayan_warrior,v2:notvtype:mayan_warrior,weigth:9;
+v1;0;Savaşçı olmak hayatımın en iyi kararıydı.
+v2;30;Nasıl yani?
+v1;60;Çünkü dışarı çıkıp düşmanlarla savaşabiliyorum, mısır hasat etmekten çok daha eğlenceli.
+v2;90;Ama benim hayatım çok daha güvenli.
+v1;120;Doğru, ama ben her zaman heyecan istemişimdir.
+
+newchat;key:likemydad,v1:male,v2:child,v1:child,weigth:8;
+v1;0;Büyüyünce babam gibi olmak istiyorum!
+v2;30;Bir korkak mı?
+v1;60;Ne? Hayır, o bir korkak değil.
+
+newchat;key:palace,v1:vtype:mayan_king-mayan_leader-mayan_chieftain,v2:adult,weigth:9;
+v1;0;Muhteşem sarayımda yaşamak gerçekten harika.
+v2;30;Ve çok muhteşem bir saray, liderim!
+
+newchat;key:become,v1:adult,v2:child,v2:male,rel:child,weigth:9;
+v1;0;Büyüdüğünde ne olmak istiyorsun?
+v2;30;Bilmem, belki bir savaşçı, belki bir madenci... belki çiftçi...
+v1;60;Bir gün karar vermen gerekecek.
+
+newchat;key:wah,weigth:9;
+v1;0;Wah yemeyi çok severim.
+v2;30;Ben de! Şimdiye kadar düşünülmüş en iyi şey.
+
+newchat;key:rain,v1:female,v2:female,v1:hasspouse,v2:hasspouse,weigth:9;
+v1;0;Mısır için yağmura ihtiyacımız var.
+v2;30;Keşke yağmur yağsa.
+v1;60;Belki dua edersek, Ruhlar bize bu yıl mükemmel bir hasat için uygun bir yağmur verir.
+v2;90;Tamam, çok meşgul olmadığımız zaman gidelim.
+
+newchat;key:zombie,v2:vtype:warrior,v2:vtype:mayan_warrior,weigth:8;
+v1;0;Bir zombi sürüsü saldırırsa ne yapacağız?
+v2;30;Merak etme, bu topraklardaki en iyi eğitimli savaşçıyım.
+
+newchat;key:rich,v1:female,v2:vtype:mayan_peasantwife,v1:vtype:mayan_peasantwife,weigth:8;
+v1;0;Zengin kadınların hayatı kolay, hiçbir iş yapmıyorlar.
+v2;30;Keşke ben de öyle muamele görsem.
+v1;60;Daha çok parası olan biriyle evlenmeliydim biliyordum.
+
+newchat;key:rule,v1:male,v2:male,v1:notvtype:mayan_king-mayan_leader-mayan_chieftain,v2:notvtype:mayan_king-mayan_leader-mayan_chieftain,weigth:9;
+v1;0;Umarım bir gün bu köyü yönetirim.
+v2;30;Hayal kurmaya devam et, çünkü ben senden önce zirveye çıkacağım.
+v1;60;Göreceğiz... göreceğiz.
+
+newchat;key:indians,weigth:8;
+v1;0;Hindular Normanlardan çok daha barışçıl görünüyor, değil mi?
+v2;30;Evet, belki onlarla ittifak yapmaya çalışmalıyız.
+v1;60;Hmm... evet, o zaman belki birlikte Normanlara, hatta Bizanslılara saldırabiliriz.
+
+newchat;key:gravity,weigth:7;
+v1;0;Bu topraklarda günler çok daha kısa.
+v2;30;Evet, ve zaman zaman zemin havada duruyor gibi.
+v1;60;Çakıl... ve kum hariç.
+v2;90;Neden acaba.
+
+newchat;key:obsidian,v1:vtype:mayan_obsidiancrafter,weigth:8;
+v1;0;Obsidyen aletler ve silahlar en zarif olanlardır.
+v2;30;Çok lüks ama yine de herkesin sahip olabileceği şeyler.
+v1;60;Topuz, düşmanını parçalamak için harikadır.
+v2;90;Gerçekten mi? Birinin kullanıldığını görmeyi çok isterdim.
+
+newchat;key:mayanarchitecture,weigth:7;
+v1;0;Maya Mimarisi bu topraklardaki en güçlü olanıdır.
+v2;30;Bu güzellikleri inşa ettiğimiz tüm taşlar sayesinde.
+v1;60;Acaba daha kaç tane taş ev yapacağız?
+v2;90;Chéen k'iin a'al, amikoo./ Sadece zaman gösterir, dostum.
+
+newchat;key:cacaoyer,weigth:7;
+v1;0;Burada çok az kakao ağacı var, bu yer sağlıksız.
+v2;40;Biraz dikelim.
+v1;80;Sen söyle! Kakao çekirdekleri son derece pahalı!
+v2;120;Ek Chuah bize yardım edecek.
+
+newchat;key:chickenegg,weigth:5;
+v1;0;Kurban edecek yeterli tavuğumuz yok.
+v2;40;Sanırım $name$ yakınlarda. Ondan yumurta alalım.
+v1;90;Haklısın, hadi öyle yapalım.
+
+newchat;key:ahmunghanan,weigth:6;
+v1;0;Ah Mun ve Ghanan sayesinde hasadımız iyi. Onlara hamdolsun!
+v2;30;Dua sırasında onlara teşekkür edelim.
+v1;80;Onlara ne sunabiliriz?
+v2;120;Aptal olma! Kanımızı, tabii ki!
+
+newchat;key:badweather,weigth:8;
+v1;0;Chac kızgın. Hava kötü.
+v2;40;Yeterince dua etmiyoruz.
+
+newchat;key:monotheisme,weigth:4;
+v1;0;Sahi mi? $name tek tanrılı mı?
+V2;35;Dinimizi ciddiye almıyor gibi görünüyor...
+v1;75;Hadi ama, Tanrılarımıza inanmayacak kadar aptal değil.
+
+newchat;key:mayangods,v1:adult,v2:adult,weigth:8;
+v1;0;Bu tuhaf topraklarda inanç tek silahımız.
+v2;40;Durumumuza göre, tanrılarımızı gücendirenleri cezalandırmalıyız.
+v1;80;Kesinlikle onları gücendirmemeliyiz.
+
+newchat;key:poktapok,weigth:7;
+v1;0;Pok-ta-Pok'u severim!
+v2;40;Ben de! Burada birkaç eğlenceli aktivitemizden biri olduğunu söylemeliyim.
+v1;80;Doğru. Sıkıcı... ve son topumu kaybettim!
+
+newchat;key:year,weigth:5;
+v1;0;Bir yılın tam olarak 365.2420 gün olduğunu herkesten önce biz biliyorduk.
+v2;40;Her alanda iyiyiz: matematik, sanat, coğrafya...
+
+newchat;key:puja,weigth:6;
+v1;0;Dua etmeye gittin mi?
+v2;35;Tabii ki! Gerçek bir Maya bunu yapmalı!
+v1;80;Haha! Tabii ki! Ne aptal bir soru sordum.
+
+newchat;key:endofworld,weigth:3;
+v1;0;Şamanlarımız ve astrologlarımız bir şey görüyor.
+v2;40;Sahi mi? Ne?
+v1;80;2012 yılında önemli bir olay görüyorlar.
+v2;120;Çok ileri görüş planlıyor olabilirler mi?
+
+newchat;key:xaire,weigth:3;
+v1;0;Xaire, $targetfirstname!
+v2;30;"Xaire? ""xaire"" da ne demek?"
+v1;70;Bir Bizanslı beni böyle selamladı.
+v2;110;Hadi ama. Sen Mayasın. Kendi dilimizde selamlaşalım.
+v1;150;Gerçek bir Maya her alanda bilgi sahibi olmalıdır.
+v2;200;Birkaç dil bilmenin iyi olduğunu kabul ediyorum, ama köyde böyle konuşmayacaksın!
+
+newchat;key:bloodbis,v1:adult,v2:adult,weigth:2;
+v1;0;Bir sonraki duada kendimize işkence yapalım.
+v2;40;Ben zaten yaptım. Sen yapmadın mı?
+v1;80;B-B-Ben kanımı saklamayı tercih ederim
+v2;120;Ve işte yine yapıyorsun! Ne zaman kararlı görünsen, fikrini değiştiriyorsun!
+v1;160;İstemiyorum!
+v2;200;Tanrılarımızı onurlandırmayı reddediyor musun?!
+
+newchat;key:cacao,weigth:6;
+v1;0;Kakao sağlıklı ve lezzetlidir...
+v2;40;Sağlıklı, şüphesiz! Ama lezzetli, kesinlikle hayır! Wah çok daha iyi.
+v1;80;Kakao tanrıların favori yiyeceğidir. Sana sundukları şeyi ye.
+
+newchat;key:reborn,weigth:7;
+v1;0;Ne harika bir kelebek. Belki bu, dört yıl önce kurban edilen arkadaşımızdır?
+v2;40;Bence o bir sinek kuşu olurdu!
+v1;80;Bunu bilemeyeceğiz.

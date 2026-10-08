@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "down": "millenaire:block/painted_brick_brown",
+    "east": "millenaire:block/decorated_brick_brown",
+    "north": "millenaire:block/decorated_brick_brown",
+    "particle": "millenaire:block/decorated_brick_brown",
+    "south": "millenaire:block/decorated_brick_brown",
+    "up": "millenaire:block/painted_brick_brown",
+    "west": "millenaire:block/decorated_brick_brown"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "parent": "millenaire:block/mock_animal_spawn_cow",
+  "overrides": [
+    { "predicate": { "custom_model_data": 1 }, "model": "millenaire:block/mock_animal_spawn_cow" },
+    { "predicate": { "custom_model_data": 2 }, "model": "millenaire:block/mock_animal_spawn_pig" },
+    { "predicate": { "custom_model_data": 3 }, "model": "millenaire:block/mock_animal_spawn_sheep" },
+    { "predicate": { "custom_model_data": 4 }, "model": "millenaire:block/mock_animal_spawn_chicken" },
+    { "predicate": { "custom_model_data": 5 }, "model": "millenaire:block/mock_animal_spawn_squid" },
+    { "predicate": { "custom_model_data": 6 }, "model": "millenaire:block/mock_animal_spawn_wolf" },
+    { "predicate": { "custom_model_data": 7 }, "model": "millenaire:block/mock_animal_spawn_polar_bear" }
+  ]
+}

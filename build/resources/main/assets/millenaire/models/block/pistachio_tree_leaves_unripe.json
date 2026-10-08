@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/leaves",
+  "textures": {
+    "all": "millenaire:block/pistachio_tree_leaves_unripe"
+  }
+}

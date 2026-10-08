@@ -1,0 +1,14 @@
+{
+  "parent": "millenaire:maitreapenser",
+  "display": {
+    "icon": { "item": "minecraft:tnt" },
+    "title": { "translate": "advancement.millenaire.wq_norman" },
+    "description": { "translate": "advancement.millenaire.wq_norman.desc" },
+    "frame": "goal"
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

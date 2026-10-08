@@ -1,0 +1,175 @@
+newchat;key:nights,tag:notraining,v1:adult,v2:adult,weigth:10
+v1;0;Geceleri hep değişik şeyler görüyorum.
+v2;30;Gündüzün şerri gecenin hayrından iyidir demişler.
+v1;60;Haklısın $targetfirstname.
+
+newchat;key:fatherandson,rel:child,v1:child,v2:vtype:turk_miner,weigth:10
+v1;0;Baba bana kazdığın en güzel cevheri söyler misin?
+v2;30;Bir düşüneyim.. Sanırım bir elmastı.
+v1;60;Tekrar bulursan bana da bir tane verir misin baba?
+v1;90;Bulursam neden olmasın! $targetfirstname.
+
+newchat;key:iamam1,tag:notraining,v1:vtype:turk_imam,weigth:10
+v1;0;Allah yaptığımız her şeyi görür, $targetfirstname.
+v2;30;Öyledir hocam.
+
+newchat;key:kids1,tag:notraining,v1:child,weigth:10
+v1;0; Babam sürekli suçsuz hayvanları kesiyor!
+v2;30; Fakat o et bize lazım olmasa baban bunu yapmaz.
+
+newchat;key:talk1,v1:adult,v2:vtype:turk_localmerchant,weigth:10
+v1;0;Peki $targetfirstname, işler nasıl?
+v2;30;Her şey aynı, değişen bir şey yok.
+v1;60;Peki gezilerin hoşuna gidiyor mu?
+v2;90;Evet fakat ayaklarım da ağrıyor.
+v1;120;Sen de haklısın $targetfirstname.
+v2;150;Haklıyım tabii ya!
+
+newchat;key:talk2,v1:adult,v2:adult,weigth:10
+v1;0;Allah çalışan kullarını sever.
+v2;30;Bu yüzden çalışmaktan çok memnunum!
+
+newchat;key:talk3,v2:adult,v1:vtype:turk_fisherman,rel:spouse,weigth:10
+v1;0;Balıkçılık sabır işidir bilir misin karıcığım?
+v2;30;Sadece balık tutma konusunda sabırlısın zaten!
+
+newchat;key:whoisthis,v2:adult,v1:adult,weigth:10
+v1;0;Bu da kim böyle?
+v2;30;Adını bilmiyorum fakat bu diyarlara yabancı birisi.
+v1;60;İçinde kötülük olmayan herkes bu diyarlara hoş gelmiştir.
+v2;90;Doğru söylüyorsun.
+
+newchat;key:kitchentalk,v2:adult,v1:adult,building:kitchen,weigth:10
+v1;0;Ayran kadar güzel bir içecek gördün mü kardeşim?
+v2;30;Hayır daha görmedim.
+v2;60;Nereden aldın? Ben de istiyorum.
+v1;90;Yakında onu satan bir mutfak var.
+v2;120;Tamam, çok sağ ol.
+v2;150;Başka ne satıyorlar biliyor musun?
+v1;180;Balıktan pideye kadar her şeyi düşünebilirsin.
+v2;210;Hemen gitmeliyim.
+
+newchat;key:religion,v2:adult,v1:adult,building:mosque,weigth:10
+v1;0;Namaz kılma vakti.
+v2;30;Hadi o zaman vakit geçirmeyelim.
+
+newchat;key:religion2,v2:adult,v1:adult,notbuilding:mosque,weigth:10
+v1;0;Namaz kılma vakti.
+v2;30;Hadi o zaman vakit geçirmeyelim.
+v1;60;Güzel bir camimiz olsa ne güzel olurdu, değil mi $targetfirstname?
+v2;90;Aynen öyle kardeşim.
+
+newchat;key:ayran,v2:adult,v1:adult,building:kitchen,weigth:10
+v1;0;Biraz ayran içmeliyim.
+v2;30;İnşallah bugün han fazla dolu değildir.
+v1;60;Evet inşallah, dün gibi olmasın.
+v2;90;Aynen, ve ayran içersem yorgunluğum da geçer.
+v1;120;Doğru söylüyorsun.
+
+newchat;key:buyingwallcarpet,v2:vtype:turk_weaver,v1:adult,building:weaver,weigth:10
+v1;0;Merhaba. Bir halı almak istiyorum.
+v2;30;Tabii. Nasıl bir şey olsun?
+v1;60;Bilmiyorum. Bugün eşimin doğum günü olduğu için bir hediye almak istedim. Siz ne tavsiye edersiniz?
+v2;90;Kırmızı halıya ne dersiniz?
+v1;120;Tamam, harika bir fikir.
+v2;150;Kaç tane istersiniz?
+v1;180;Bir olsun. İyi bir paketleme yapabilir misiniz?
+v2;210;Tabii efendim. Kendiniz mi vereceksiniz, biz mi götürelim?
+v1;240;Kendim vereceğim. Teşekkür ederim.
+
+newchat;key:couple1,v2:adult,v1:adult,rel:spouse,weigth:10
+v1;0;Hayırlı günler.
+v1;30;İyi uyudun mu?
+v2;60;Evet, iyiydi.
+v1;90;Kahvaltıda ne yemek istersin?
+v2;120;Bilmiyorum, ya sen?
+v1;150;Ben de bilmiyorum.
+
+newchat;key:talk4,v2:adult,v1:adult,weigth:10
+v1;0;Bugün günün nasıldı?
+v2;30;Oldukça yoğundu.
+v2;60;Bu yüzden yorgunum.
+v1;90;Bir ayran ister misin?
+v2;120;Güzel olur, evet.
+
+newchat;key:talk5,v2:adult,v1:adult,notrel:spouse,weigth:10
+v1;0;Merhaba $targetfirstname.
+v1;30;Bugün nasılsın?
+v2;60;Teşekkür ederim, iyiyim.
+v1;90;Ailen nasıl, onlar da iyi mi?
+v2;120;Teşekkürler, onlar da iyi.
+v1;150;Hava oldukça sıcak, değil mi?
+v2;180;Evet, gerçekten çok sıcak.
+v1;210;Aileye selam söyle.
+v2;240;Sağ ol, sen de aileye selam söyle.
+v1;270;Hoşça kal.
+
+newchat;key:talk6,v2:adult,v1:adult,notrel:spouse,weigth:10
+v1;0;Ne zaman taşındın?
+v2;30;Geçen hafta sonu sadece.
+v1;60;Evin satıldığını bile bilmiyordum.
+v2;90;Bu evi çok seviyorum, o yüzden taşınmak zorunda kaldım.
+v1;120;Anlıyorum, çünkü ev olağanüstü.
+v2;150;Sen kaç yıldır evinde yaşıyorsun?
+v1;180;Uzun zamandır burada yaşıyorum.
+v2;210;Umarım daha bir süre komşu kalırız.
+v1;240;Ben de.
+
+newchat;key:talk7,v2:adult,v1:adult,notrel:spouse,weigth:10
+v1;0;Dün neden burada değildin?
+v2;30;Pek iyi hissetmiyordum.
+v1;60;Neyin vardı?
+v2;90;Midem rahatsızdı.
+v1;120;Şimdi daha iyi misin?
+v2;150;Henüz pek iyi hissetmiyorum.
+v1;180;Daha iyi hissetmen için bir şey ister misin?
+v2;210;Hayır, teşekkürler. İlaç aldım zaten.
+v1;240;Umarım iyileşirsin.
+v2;270;Teşekkür ederim.
+
+newchat;key:talk8,v2:female,v1:female,notrel:spouse,weigth:6
+v1;0;Haberi duydun mu?
+v2;30;Hiçbir şey duymadım.
+v1;60;Komşumun bebeği geçen hafta doğdu.
+v2;90;Bana kimse söylemedi.
+v1;120;Duyduğunu sanıyordum.
+v2;150;Bana gerçekten hiçbir şey söylenmedi.
+v1;180;Maşallah, çok şirin bir bebek.
+v2;210;Vay, ne heyecan verici.
+v1;240;Biliyorum, gerçekten gidip onu ve bebeği görmelisin.
+v2;270;Elbette gideceğim.
+v1;300;Sadece sana ne olduğunu bildirmek istedim.
+v2;330;Bunu takdir ediyorum.
+
+newchat;key:talk9,v2:female,v1:male,notrel:spouse,weigth:6
+v1;0;Benimle bir tarlaya gitmek ister misin?
+v1;30;Ne zaman gitmek istersin?
+v1;60;Önümüzdeki cumaya ne dersin?
+v1;90;Üzgünüm, yapamam. Bir arkadaşımla yemek yiyorum.
+v1;120;Sonraki salıya ne dersin?
+v1;150;Salı günleri camide derse gidiyorum.
+v1;180;Oh, belki başka zaman?
+v1;210;Tabii, sana söylerim.
+
+newchat;key:newhamam,v2:adult,v1:adult,building:hamambath,weigth:10
+v1;0;Merhaba $targetfirstname.
+v2;30;Selam!
+v1;60;Yeni hamamı gördün mü?
+v2;90;Hayır, görmedim.
+v1;120;Hızlıca ziyaret etmeliyiz!
+v2;150;Tamam, bu güzel haber.
+v1;180;Evet evet, biliyorsun, temiz olmak dindendir.
+v2;210;Tamam o zaman, bir bakalım.
+v2;240;Bir saat sonra mı?
+v1;270;Hayır, hemen gidelim.
+v2;300;Pekala, neden bu acele dostum?
+v2;330;Nereye gitmemiz gerekiyor?
+v1;360;Aslında biraz bekleyebiliriz.
+v2;390;Seninle hep aynı şey $targetfirstname.
+
+newchat;key:newmosque,v2:adult,v1:adult,building:smallmosque,weigth:10
+v1;0;Bu cami kadar güzel bir bina gördün mü kardeşim?
+v2;30;Hayır daha görmedim.
+v2;60;Ne zaman yapıldı? Çok güzelmiş.
+v1;90;Uzun zaman oldu.
+v2;120;Allah Allah.

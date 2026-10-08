@@ -1,0 +1,48 @@
+{
+  "handler": "harvesting",
+  "priority": 40,
+  "scanRadius": 32,
+  "batchRadius": 8,
+  "maxActionsPerTask": 16,
+  "actionCooldown": 10,
+  "stuckTimeout": 4000,
+  "arrivalRange": 8,
+  "walkSpeed": 0.6,
+  "villageLimit": {
+    "minecraft:carrot": 512
+  },
+  "minimumHour": -1,
+  "maximumHour": 12500,
+  "reoccurDelay": -1,
+  "handlerParams": {
+    "targetBlock": "minecraft:carrots",
+    "targetState": {
+      "age": 7
+    },
+    "soilSubtype": "carrot",
+    "harvestItems": [
+      {
+        "item": "minecraft:carrot",
+        "chance": 100
+      },
+      {
+        "item": "minecraft:carrot",
+        "chance": 75
+      },
+      {
+        "item": "minecraft:carrot",
+        "chance": 50
+      },
+      {
+        "item": "minecraft:carrot",
+        "chance": 25
+      }
+    ],
+    "irrigationBonusCrop": "minecraft:carrot"
+  },
+  "sentenceKey": "collectcrop",
+  "labelKey": "collectcrop",
+  "heldItems": [
+    "minecraft:carrot"
+  ]
+}

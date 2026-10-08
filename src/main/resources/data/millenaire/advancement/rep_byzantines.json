@@ -1,0 +1,13 @@
+{
+  "parent": "millenaire:friendindeed",
+  "display": {
+    "icon": { "item": "minecraft:golden_apple" },
+    "title": { "translate": "advancement.millenaire.rep_byzantines" },
+    "description": { "translate": "advancement.millenaire.rep_byzantines.desc" }
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

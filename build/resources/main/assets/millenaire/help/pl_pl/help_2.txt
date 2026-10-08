@@ -1,0 +1,14 @@
+
+version:3.4
+<darkblue>Handel
+Najczęstszą formą wymiany z mieszkańcami wioski będzie handel — można sprzedawać im wiele dóbr, a w zamian kupować produkty, w tym bloki i przedmioty charakterystyczne dla Millénaire. Aby rozpocząć handel z wioską, należy udać się do głównego budynku (lub innego sklepu) i poczekać, aż któryś z mieszkańców podejdzie z napisem „Sprzedaje graczowi” nad głową. Następnie wystarczy <darkblue>kliknąć go prawym przyciskiem myszy<black>, by otworzyć ekran handlu.
+Mieszkańcy Millénaire mogą sprzedawać wyłącznie te przedmioty, które aktualnie mają w magazynie, a gracz może odsprzedać im tylko to, czego wioska potrzebuje (zależnie od wioski).
+Cały handel odbywa się w „denarach”, średniowiecznej francuskiej walucie. Wyróżnia się trzy rodzaje denarów: zwykłe denary, denary srebrne (deniers d'argent), warte 64 denary, oraz denary złote (deniers en or), warte 64 denary srebrne.
+<darkgreen>Wskazówka: Na mapie wioski (otwieranej kliknięciem prawym przyciskiem myszy na odpowiedniej tablicy w głównym budynku) sklepy są wyróżniane po najechaniu kursorem na budynki.
+zwykłe denary (denary miedziane)
+„deniers argent” (denary srebrne)
+warte 64 denary,
+„deniers or” (denary złote)
+warte 64 denary srebrne
+<darkgreen> Wskazówka:
+Na mapie wioski (otwieranej kliknięciem prawym przyciskiem myszy na odpowiedniej tablicy w głównym budynku) sklepy są wyróżniane po najechaniu kursorem na budynki.

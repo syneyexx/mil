@@ -1,0 +1,34 @@
+version:3.4
+<darkblue>Reputacja i naczelnik wioski
+
+Każda wioska w Millénaire ma określoną opinię o graczu — na początku neutralną, zmieniającą się w zależności od działań gracza. Reputacja ma duże znaczenie: wiele nagród dostępnych jest dopiero przy dobrej reputacji, a jeśli stanie się zbyt zła, mieszkańcy mogą odmówić handlu. Aktualną reputację można sprawdzić rozmawiając (<darkblue>kliknięcie prawym przyciskiem myszy<black>) z naczelnikiem wioski.
+
+Najprostszym sposobem na poprawę reputacji jest handel z wioską. Zarówno zakupy, jak i sprzedaż poprawiają reputację proporcjonalnie do ceny. Reputację można także podnieść wykonując misje zlecane przez mieszkańców. Z kolei atakowanie wioski lub niepowodzenie w określonych misjach pogarsza reputację.
+
+Gracz posiada również <darkblue>reputację u każdej kultury<black>. Reputacja ta zmienia się na skutek wszystkich kontaktów z wioskami danej kultury i wpływa na handel ze wszystkimi pozostałymi wioskami tej samej kultury. Na przykład, jeżeli reputacja w jednej z normańskich wiosek jest bardzo dobra, inne wioski normańskie będą również nieco bardziej przychylne. Reputację u każdej kultury można sprawdzić na ekranie informacyjnym (klawisz „M” domyślnie).
+
+<darkblue>Działania wymagające określonej reputacji
+
+<darkblue>Zakup pergaminu wioski
+
+Przy odpowiednio wysokiej reputacji można odkupić od naczelnika wioski pergamin wioski. Zwój ten zawiera wszystkie informacje wyświetlane przez poszczególne tablice w wiosce.
+
+<darkblue>Zakup domu
+
+Po osiągnięciu odpowiednio dobrej reputacji można kupić dom (lub działkę pod zabudowę), rozmawiając z naczelnikiem wioski. Dom zostanie wzniesiony przez mieszkańców po zakończeniu trwającej budowy. W odróżnieniu od pozostałych budowli w okolicy wioski, ten budynek należy do gracza i może być przez niego dowolnie modyfikowany.
+
+<darkblue>Nauka uprawy roślin
+
+Można nauczyć się uprawiać rośliny charakterystyczne dla Millénaire, używane przez niektóre kultury. W tym celu należy zwrócić się do naczelnika wioski po osiągnięciu wystarczającej reputacji.
+
+<darkblue>Zakup dodatkowych przedmiotów
+
+Niektóre cenne przedmioty wymagają dobrej reputacji w wiosce. Jeżeli reputacja jest niewystarczająca, informacja o tym pojawi się na ekranie handlu.
+
+<darkblue>Dodatkowe misje
+
+Niektóre misje, w tym Wyprawa Stworzenia, mogą zostać podjęte dopiero przy dobrej reputacji (zob. <darkblue>„misje”<black>).
+
+<darkblue>Zostanie przywódcą kultury
+
+Po osiągnięciu maksymalnej reputacji (<darkblue>„prawdziwy przywódca”<black>) można założyć wioskę, w której gracz będzie pełnił rolę przywódcy (zob. <darkblue>„tworzenie wioski”<black>).

@@ -1,0 +1,7 @@
+{
+  "parent": "millenaire:block/mock_free_base",
+  "textures": {
+    "freeblock": "minecraft:block/cobblestone"
+  },
+  "render_type": "minecraft:cutout"
+}

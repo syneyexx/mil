@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "down": "millenaire:block/gray_tiles_0",
+    "east": "millenaire:block/gray_tiles_90p",
+    "north": "millenaire:block/gray_tiles_180",
+    "particle": "millenaire:block/gray_tiles_0",
+    "south": "millenaire:block/gray_tiles_0",
+    "up": "millenaire:block/gray_tiles_0",
+    "west": "millenaire:block/gray_tiles_90n"
+  }
+}

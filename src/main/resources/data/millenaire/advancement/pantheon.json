@@ -1,0 +1,14 @@
+{
+  "parent": "millenaire:magellan",
+  "display": {
+    "icon": { "item": "minecraft:enchanted_book" },
+    "title": { "translate": "advancement.millenaire.pantheon" },
+    "description": { "translate": "advancement.millenaire.pantheon.desc" },
+    "frame": "challenge"
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "parent": "millenaire:block/mock_banner_wall_village",
+  "overrides": [
+    { "predicate": { "custom_model_data": 1 }, "model": "millenaire:block/mock_banner_wall_village" },
+    { "predicate": { "custom_model_data": 2 }, "model": "millenaire:block/mock_banner_wall_culture" }
+  ]
+}

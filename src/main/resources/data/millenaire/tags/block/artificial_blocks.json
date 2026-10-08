@@ -1,0 +1,33 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:cobblestone",
+    "minecraft:bricks",
+    "minecraft:stone_bricks",
+    "minecraft:mossy_stone_bricks",
+    "minecraft:cracked_stone_bricks",
+    "minecraft:glass",
+    "minecraft:glass_pane",
+    "minecraft:iron_block",
+    "minecraft:gold_block",
+    "minecraft:diamond_block",
+    "minecraft:emerald_block",
+    "minecraft:sponge",
+    "minecraft:wet_sponge",
+    "minecraft:ice",
+    "minecraft:packed_ice",
+    "minecraft:blue_ice",
+    "minecraft:obsidian",
+    "minecraft:redstone_wire",
+    "minecraft:repeater",
+    "minecraft:comparator",
+    "minecraft:redstone_lamp",
+    "minecraft:piston",
+    "minecraft:sticky_piston",
+    "#minecraft:planks",
+    "#minecraft:wool",
+    "#minecraft:anvil",
+    "#minecraft:crops",
+    "#minecraft:stairs"
+  ]
+}

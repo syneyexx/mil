@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "stage=0": { "model": "millenaire:block/olive_tree_sapling" },
+    "stage=1": { "model": "millenaire:block/olive_tree_sapling" }
+  }
+}

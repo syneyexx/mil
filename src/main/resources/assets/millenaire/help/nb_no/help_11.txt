@@ -1,0 +1,14 @@
+version:4.8.0
+<darkblue>Japanerne
+
+De bor i religiøse, militære, handels- eller keiserlige landsbyer, og kjennetegnes av sin elegante arkitektur. De snakker japansk, men dialogene deres vil bli oversatt etter hvert som spilleren "lærer" språket deres ved å snakke med dem.
+
+<darkblue>Unike gjenstander og blokker
+
+-De dyrker ris. Spilleren kan be høvdingen om å lære ham å dyrke denne kornsorten.
+-De lager deilige udon-nudler av hvete og kylling.
+-I handelslandsbyer produserer bryggerne sake av ris.
+-Som normannerne produserer de bygninger med bindingsverk.
+-De bruker mye stråblokker laget av hvete.
+-De produserer elegante rispapirvegger til sine avanserte bygninger.
+-Metallsmedene deres smir formidable tachi-sverd og yumi-langbuer, samt tre typer svært effektiv rustning.

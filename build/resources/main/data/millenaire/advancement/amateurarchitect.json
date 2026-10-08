@@ -1,0 +1,13 @@
+{
+  "parent": "millenaire:summoningwand",
+  "display": {
+    "icon": { "item": "minecraft:bricks" },
+    "title": { "translate": "advancement.millenaire.amateurarchitect" },
+    "description": { "translate": "advancement.millenaire.amateurarchitect.desc" }
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

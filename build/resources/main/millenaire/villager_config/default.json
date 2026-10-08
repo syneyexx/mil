@@ -1,0 +1,56 @@
+{
+  "_comment": "Configuration des aliments de croissance et conception (iso-legacy default.txt)",
+
+  "food_growth": {
+    "_comment": "Valeur = growth bonus (growth += value + random(value)). Trié par valeur descendante. Egg est aussi dans cette liste (iso-legacy) en plus du cas spécial dans le code.",
+    "minecraft:egg": 1,
+    "millenaire:tripes": 6,
+    "millenaire:souvlaki": 6,
+    "millenaire:wah": 5,
+    "millenaire:udon": 5,
+    "millenaire:ikayaki": 5,
+    "millenaire:chickencurry": 5,
+    "minecraft:cooked_beef": 4,
+    "minecraft:cooked_porkchop": 4,
+    "millenaire:boudin": 4,
+    "millenaire:inuit_meaty_stew": 4,
+    "millenaire:vegcurry": 3,
+    "millenaire:masa": 3,
+    "minecraft:cooked_chicken": 3,
+    "minecraft:cooked_cod": 3,
+    "minecraft:cooked_mutton": 3,
+    "millenaire:seafood_cooked": 3,
+    "minecraft:cooked_rabbit": 3,
+    "millenaire:inuit_potato_stew": 3,
+    "millenaire:pide": 6,
+    "minecraft:bread": 2,
+    "minecraft:baked_potato": 2,
+    "millenaire:yogurt": 2,
+    "millenaire:rice": 1,
+    "millenaire:pistachios": 1,
+    "minecraft:carrot": 1
+  },
+
+  "food_conception": {
+    "_comment": "Valeur = bonus chance de conception sur 10 (base=2/10). Un seul par nuit.",
+    "millenaire:winefancy": 4,
+    "minecraft:cake": 4,
+    "millenaire:calva": 4,
+    "millenaire:lokum": 4,
+    "millenaire:sake": 3,
+    "millenaire:cacauhaa": 3,
+    "millenaire:helva": 3,
+    "millenaire:winebasic": 2,
+    "millenaire:ayran": 2,
+    "millenaire:cider": 2,
+    "millenaire:rasgulla": 2,
+    "millenaire:feta": 2,
+    "minecraft:cookie": 1,
+    "millenaire:bearmeat_cooked": 4,
+    "millenaire:wolfmeat_cooked": 2,
+    "millenaire:inuit_bear_stew": 4,
+    "millenaire:olive_oil": 2
+  },
+
+  "build_village_paths": true
+}

@@ -1,0 +1,16 @@
+version:3.4
+<darkblue>Os indianos
+
+Oriundos do norte da Índia, vivem em três tipos de aldeias: as povoações militares são organizadas em torno de um forte, as agrícolas em torno da casa de um chefe, e as palacianas são dominadas por um palácio real com duas pequenas aldeias associadas. Falam hindi, mas o seu diálogo será traduzido à medida que o jogador "aprenda" a falar a sua língua com eles.
+
+<darkblue>Objectos e blocos únicos
+
+-Os indianos cultivam arroz e curcuma. O jogador pode pedir ao chefe que lhe ensine a cultivar estas plantas.
+-Tijolos de adobe e tijolos cozidos, produzidos deixando os tijolos húmidos a secar ao sol. Os tijolos húmidos fabricam-se com um molde de tijolos (comprado numa aldeia).
+-Baixos-relevos indianos, representando divindades e criados por um escultor.
+-Deliciosos rasgulla, doces feitos com cana-de-açúcar.
+
+<darkblue>Receitas específicas (sem forma)
+
+-Um arroz e uma curcuma produzem um caril vegetariano.
+-Um arroz, uma curcuma e um frango cru produzem um caril murgh.

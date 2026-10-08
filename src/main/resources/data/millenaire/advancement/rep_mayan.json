@@ -1,0 +1,13 @@
+{
+  "parent": "millenaire:friendindeed",
+  "display": {
+    "icon": { "item": "millenaire:wah" },
+    "title": { "translate": "advancement.millenaire.rep_mayan" },
+    "description": { "translate": "advancement.millenaire.rep_mayan.desc" }
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

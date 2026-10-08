@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:smelting",
+  "category": "blocks",
+  "cookingtime": 200,
+  "experience": 1.0,
+  "ingredient": {
+    "item": "millenaire:mud_brick"
+  },
+  "result": {
+    "count": 1,
+    "id": "millenaire:painted_brick_white"
+  }
+}

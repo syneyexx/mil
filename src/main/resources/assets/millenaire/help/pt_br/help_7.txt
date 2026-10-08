@@ -1,0 +1,10 @@
+
+version:3.4
+<darkblue>Missões
+Missões são tarefas adicionais que você pode realizar para os aldeãos. Quando uma missão está disponível, ela aparece sobre a cabeça de um aldeão entre colchetes, por exemplo: "<darkblue>[Com sede!]<black>". Clique com o botão direito para ver a descrição da tarefa e poder aceitar ou recusar. As missões serão recompensadas com dinheiro, reputação ou objetos. Algumas missões exigem que você tenha uma boa reputação com a aldeia para ficarem disponíveis.
+Para descobrir quais missões aceitou e o que precisa fazer, pressione "M".
+<darkblue>Missão de Criação
+Esta coleção especial inclui várias missões e tem dois capítulos independentes, focados nas culturas normanda e indiana. A primeira missão de cada capítulo será atribuída a você por um aldeão indiano ou normando assim que você atingir o nível de reputação "Amigo da aldeia" (a missão começa aleatoriamente, então pode levar algum tempo até ficar disponível).
+Ambas as missões exigem que você encontre um edifício isolado especial. Você deve explorar até encontrá-lo; tenha cuidado, pois ele é muito raro. Diferentemente de outros edifícios isolados, no entanto, esses edifícios aparecem quando você usa a tecla "V".
+Esta missão especial é, em essência, um conjunto de várias missões dividido em dois capítulos independentes centrados nas culturas normanda e hindu. A missão inicial de cada capítulo é disponibilizada por um aldeão hindu ou normando quando você atinge a reputação de "amigo da aldeia" (pode ser necessário esperar algum tempo até que a missão inicial fique disponível, mesmo após atingir a reputação necessária).
+Em ambas as missões iniciais você precisará encontrar uma construção isolada especial; você deve explorar o mapa até encontrá-las. Note, porém, que elas são únicas e, diferentemente das construções isoladas comuns, são listadas na lista de aldeias acessível pela tecla "V".

@@ -1,0 +1,14 @@
+
+version:3.4
+<darkblue>Kereskedelem
+A falubeliekkel folytatott leggyakoribb cseréd a kereskedelem lesz – sok árut eladhatsz nekik, cserébe pedig terméket vásárolhatsz tőlük, beleértve a Millénaire-re jellemző blokkokat és tárgyakat. Ha egy faluval szeretnél kereskedni, menj a központi épületbe (vagy más bolthoz), és várd meg, amíg egy falubeli odajön hozzád, és a feje fölött az „Eladás a játékosnak” felirat jelenik meg. Ekkor <darkblue>jobbklikk<black> rá a kereskedelmi képernyő megnyitásához.
+A Millénaire falubeliei csak olyan tárgyakat adhatnak el neked, amelyek raktáron vannak, és csak olyat vásárolhatsz tőlük, amire a falunak szüksége van (falvanként eltérő).
+Minden kereskedelem „dénárban” folyik, ami egy középkori francia pénznem. Háromféle dénár létezik: az alapdénár, az ezüstdénár, amely 64 dénárt ér, és az aranydénár, amely 64 ezüstdénárt ér.
+<darkgreen>Tipp: A falu térképén (a falu központi épületében lévő megfelelő táblára jobbklikkelve nyitható meg) a boltok feltüntetésre kerülnek, ha a kurzort az épületek fölé viszed.
+alapdénár (rézdénár)
+„ezüstdénár”
+64 dénárt ér,
+„aranydénár”
+64 ezüstdénárt ér
+<darkgreen> Tipp:
+A falu térképén (a falu központi épületében lévő megfelelő táblára jobbklikkelve nyitható meg) a boltok feltüntetésre kerülnek, ha a kurzort az épületek fölé viszed.

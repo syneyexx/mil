@@ -1,0 +1,34 @@
+version:3.4
+<darkblue>Vanliga frågor
+
+<darkblue>Byinvånarna talar ett annat språk än mitt. Är detta normalt?
+
+Alla Millénaires byinvånare talar "sitt" språk, såsom hindi för indierna eller franska för normanderna. Om du spelar på ett annat språk "lär du dig" språket genom att interagera med dem (handel, uppdrag ...). När du "lär dig" deras språk tillhandahåller Millénaire översättningar, först av byggnadernas namn, sedan av byinvånartyperna, och slutligen av byinvånarnas dialoger.
+
+<darkblue>Min normandiska by behöver korsvirke och jag kan inte tillverka det, vad kan jag göra?
+
+Korsvirke tillverkas av en snickare av trä. Vänta tills din by bygger ett "snickarhus" och ett par flyttar in. Tålamod!
+
+<darkblue>Min japanska by behöver halmtak och jag kan inte tillverka det, vad kan jag göra?
+
+Japanerna framställer halmtak av vete. Om de inte skördar tillräckligt själva, sälj något till dem för att skynda på produktionen.
+
+<darkblue>Jag byggde mitt hus nära byn och byinvånarna förstörde det när de byggde något annat, är detta normalt?
+
+Ja. Byns territorium tillhör dem, kolla på kartan för att se dess gränser. Om du vill bygga i byn, köp en tomt av byhövdingen.
+
+<darkblue>Vissa byinvånare är döda, kommer de att återuppstå?
+
+Ja, byinvånarna återuppstår varje natt, strax efter solnedgången. Undvik bara att sova på en gång.
+
+<darkblue>Mina byinvånare får inga barn eller deras barn växer inte upp, vad händer?
+
+Nya barn kan komma till när ett par är hemma under natten. På samma sätt växer de upp om natten när de är hemma. Vissa livsmedel (drycker, sötsaker) ökar chansen att barn föds, och andra (bröd, sädesslag) ökar barnens uppväxttakt.
+
+<darkblue>En byggnad i byn har skadats, kommer de att laga den?
+
+Nej, byinvånarna reparerar inte byggnader (även om vissa senare uppgraderingar ibland kan ersätta de saknade blocken), huvudsakligen av prestandaskäl. Du måste reparera den själv.
+
+<darkblue>Min by har ont om plats, kan jag hjälpa till?
+
+Ja, genom att titta på bykartan för att se de områden där de inte kan bygga. Att täcka en sjö, en flod eller en ravin med ett lager jord räcker för att göra området användbart för byinvånarna.

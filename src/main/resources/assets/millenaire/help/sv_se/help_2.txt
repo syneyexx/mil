@@ -1,0 +1,14 @@
+
+version:3.4
+<darkblue>Handel
+Dina vanligaste utbyten med byinvånarna kommer att vara handel — du kan sälja många varor till dem och i gengäld köpa produkter, däribland block och föremål som är specifika för Millénaire. För att handla med en by, gå till huvudbyggnaden (eller en annan butik) och vänta tills en byinvånare kommer fram med "Säljer till spelaren" ovanför huvudet. <darkblue>Högerklicka<black> sedan på honom för att öppna handelsskärmen.
+Millénaires byinvånare kan bara sälja sådana föremål som de har i lager till dig, och du kan bara sälja föremål till dem som byn behöver (varierar från by till by).
+All handel med byn sker i "denarer", en medeltida fransk valuta. Det finns tre slags denarer: vanliga denarer, silverdenarer (deniers d'argent) som är värda 64 denarer, och gulddenarer (deniers en or) som är värda 64 silverdenarer.
+<darkgreen>Tips: På bykartan (som du får genom att högerklicka på motsvarande panel i byns centrala byggnad) listas butikerna när du för muspekaren över byggnaderna.
+vanliga denarer (kopparddenarer)
+"deniers argent" (silverdenarer)
+värda 64 denarer,
+"deniers or" (gulddenarer)
+värda 64 silverdenarer
+<darkgreen> Tips:
+På bykartan (som du får genom att högerklicka på motsvarande panel i byns centrala byggnad) listas butikerna när du för muspekaren över byggnaderna.

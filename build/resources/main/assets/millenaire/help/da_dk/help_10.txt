@@ -1,0 +1,18 @@
+version:4.8.0
+<darkblue>Mayaerne
+
+Fra Yucatán adskiller mayaerne sig ved deres stenarkitektur med gulddekoration og bor i landbrugs-, religiøse og militære landsbyer. De taler maya, men deres dialog vil blive oversat, efterhånden som spilleren "lærer" deres sprog ved at tale med dem.
+
+<darkblue>Unikke genstande og blokke
+
+-De dyrker majs. Spilleren kan bede høvdingen om at lære ham at dyrke denne korntype.
+-De tilbereder wah og masas af majs og kylling – mættende tortillas.
+-De dyrker kakao og laver cacauhaa af det, en livgivende chokoladedrik.
+-Obsidianhåndværkeren fremstiller våben og værktøj af obsidian, som er skrøbelige, men nemt forhekses.
+-Deres håndværkere laver dekorative blokke af guldbarrer leveret af spilleren.
+-De skærer også basrelieffer, der forestiller mayaguddomme.
+
+<darkblue>Særlig opskrift
+
+-Tre majs på en linje giver en wah (en slags tortilla).
+-To majs på en linje med en rå kylling i midten giver en masa (tortilla med kylling).

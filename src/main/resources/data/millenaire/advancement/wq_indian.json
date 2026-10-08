@@ -1,0 +1,14 @@
+{
+  "parent": "millenaire:maitreapenser",
+  "display": {
+    "icon": { "item": "minecraft:enchanting_table" },
+    "title": { "translate": "advancement.millenaire.wq_indian" },
+    "description": { "translate": "advancement.millenaire.wq_indian.desc" },
+    "frame": "goal"
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

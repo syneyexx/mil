@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "type=furnace,facing=north,guess=false": { "model": "millenaire:block/mock_facing_marker_furnace" },
+    "type=furnace,facing=south,guess=false": { "model": "millenaire:block/mock_facing_marker_furnace", "y": 180 },
+    "type=furnace,facing=west,guess=false": { "model": "millenaire:block/mock_facing_marker_furnace", "y": 270 },
+    "type=furnace,facing=east,guess=false": { "model": "millenaire:block/mock_facing_marker_furnace", "y": 90 },
+    "type=furnace,facing=north,guess=true": { "model": "millenaire:block/mock_facing_marker_furnace" },
+    "type=furnace,facing=south,guess=true": { "model": "millenaire:block/mock_facing_marker_furnace", "y": 180 },
+    "type=furnace,facing=west,guess=true": { "model": "millenaire:block/mock_facing_marker_furnace", "y": 270 },
+    "type=furnace,facing=east,guess=true": { "model": "millenaire:block/mock_facing_marker_furnace", "y": 90 },
+    "type=sign_pos,facing=north,guess=false": { "model": "millenaire:block/mock_facing_marker_sign_pos" },
+    "type=sign_pos,facing=south,guess=false": { "model": "millenaire:block/mock_facing_marker_sign_pos", "y": 180 },
+    "type=sign_pos,facing=west,guess=false": { "model": "millenaire:block/mock_facing_marker_sign_pos", "y": 270 },
+    "type=sign_pos,facing=east,guess=false": { "model": "millenaire:block/mock_facing_marker_sign_pos", "y": 90 },
+    "type=sign_pos,facing=north,guess=true": { "model": "millenaire:block/mock_facing_marker_sign_pos" },
+    "type=sign_pos,facing=south,guess=true": { "model": "millenaire:block/mock_facing_marker_sign_pos", "y": 180 },
+    "type=sign_pos,facing=west,guess=true": { "model": "millenaire:block/mock_facing_marker_sign_pos", "y": 270 },
+    "type=sign_pos,facing=east,guess=true": { "model": "millenaire:block/mock_facing_marker_sign_pos", "y": 90 }
+  }
+}

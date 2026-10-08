@@ -1,0 +1,28 @@
+version:3.4
+<darkblue>Boj in napadi
+
+Millénaire ni vedno miroljuben mod: lahko se borite z vaščani, vasi lahko izvajajo napade druga na drugo, pošasti lahko napadajo vasi, nekatere samotne zgradbe pa zasedajo razbojniki. Ne glede na okoliščine se določena načela ne spreminjajo: <darkblue>vaščani so ranljivi le na neposredne napade (rokoboj, puščice in napoji)<black>. Ognja, padcev ali kaktusov ne občutijo. Ta omejitev je namenjena temu, da igralcu prepreči, da bi jih ubil, ne da bi se zavedali, da jih napada.
+
+Vaščani se razlikujejo po moči, oprema, ki jo nosijo, pa jih lahko naredi precej bolj nevarne.
+
+<darkblue>Ponovno rojstvo vaščanov
+
+Ko je ubit, je vaščan začasno mrtev. Mrtvi vaščani se ponovno rodijo v svojih domovih (vendar bodo izgubili svojo opremo). Konec koncev se tudi igralec lahko ponovno rodi ...
+
+<darkblue>Napad igralcev
+
+Vaščana lahko vedno napadete, vendar bodo drugi možje iz vasi pomagali pri boju proti vam. Če vam uspe ubiti vse vaščane vasi ali samotne zgradbe, se vaška blagajna odpre in lahko ukradete njeno vsebino.
+
+<darkblue>Razbojniki
+
+Nekateri prebivalci samotnih zgradb vas bodo napadli brez opozorila, če se približate. Vaš ugled pri njihovi kulturi se ne bo zmanjšal, če jih ubijete. Tako kot drugi vaščani se ponoči ponovno rodijo – poglejte pod »<darkblue>uničenje vasi<black>«, da vidite, kako to preprečiti.
+
+<darkblue>Napadi med vasmi
+
+Vasi Millénaire imajo pozitivne ali negativne odnose z bližnjimi vasmi. Ti odnosi se naključno spreminjajo, nanje pa lahko vpliva igralec, ki se pogovarja s starešinami katere koli vasi. Če so njihovi odnosi zelo slabi in ima ena od vasi dovolj bojevnikov, lahko sproži napad na druge vasi. O tem vas bo obvestilo sporočilo. Med napadom bodo bojevniki, ki napadajo mesto, poskušali ubiti može vasi, ki jo napadajo. Če jim uspe, bodo odnesli nekaj virov kot plen. Med napadom lahko pomagate eni ali drugi strani.
+
+Lahko je koristno spodbuditi vas, ki vam je všeč, da napade svoje sosede in tako poveča svoje vire. Bolj cinično lahko spodbujanje napadov omogoči tudi, da si po smrti branilcev sami vzamete del plena.
+
+<darkblue>Najem vaščana
+
+Nekatere vaščane, kot so vojaki in drvarji, je mogoče najeti, da vam pomagajo v bitkah. Sledili vam bodo in se skupaj z vami borili proti vašim sovražnikom.

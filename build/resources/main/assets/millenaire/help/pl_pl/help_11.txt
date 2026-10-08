@@ -1,0 +1,14 @@
+version:4.8.0
+<darkblue>Japończycy
+
+Zamieszkują wioski religijne, militarne, handlowe lub cesarskie, a wyróżnia ich elegancka architektura. Mówią po japońsku, lecz ich wypowiedzi są stopniowo tłumaczone w miarę „uczenia się” ich języka przez gracza w trakcie rozmów.
+
+<darkblue>Wyjątkowe przedmioty i bloki
+
+-Uprawiają ryż. Gracz może poprosić wodza o nauczenie go uprawy tego zboża.
+-Z pszenicy i kurczaka przyrządzają pyszny makaron udon.
+-W wioskach handlowych warzelnicy produkują sake z ryżu.
+-Podobnie jak Normanowie, wznoszą budowle z muru pruskiego.
+-Powszechnie używają bloków strzechy wytwarzanych z pszenicy.
+-Wytwarzają eleganckie ściany z papieru ryżowego do swoich zaawansowanych budowli.
+-Ich metalurdzy kują groźne miecze tachi oraz długie łuki yumi, a także trzy rodzaje bardzo skutecznych zbroi.

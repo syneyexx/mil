@@ -1,0 +1,34 @@
+version:3.4
+<darkblue>Najczęściej zadawane pytania
+
+<darkblue>Mieszkańcy mówią w innym języku niż mój. Czy to normalne?
+
+Mieszkańcy Millénaire posługują się wszyscy „swoim” językiem, na przykład hindi w przypadku Hindusów lub francuskim w przypadku Normanów. Jeżeli gra toczy się w innym języku, gracz stopniowo „uczy się” ich mowy poprzez kontakty z nimi (handel, misje itd.). W miarę „uczenia się” ich języka Millénaire dostarcza tłumaczeń: najpierw nazw budynków, później typów mieszkańców, a wreszcie samych dialogów.
+
+<darkblue>Moja wioska normańska potrzebuje muru pruskiego, którego nie potrafię wytworzyć — co robić?
+
+Mur pruski wytwarzany jest z drewna przez cieślę. Należy poczekać, aż wioska wzniesie „dom cieśli” i osiedli się w nim para mieszkańców. Cierpliwości!
+
+<darkblue>Moja wioska japońska potrzebuje strzechy, której nie potrafię wytworzyć — co robić?
+
+Japończycy wytwarzają strzechę z pszenicy. Jeżeli sami nie zbierają jej dość, można sprzedać im trochę, aby przyspieszyć produkcję.
+
+<darkblue>Zbudowałem dom blisko wioski, a mieszkańcy zburzyli go, wznosząc coś innego — czy to normalne?
+
+Tak. Terytorium wioski należy do mieszkańców; jego granice widać na mapie. Aby budować na terenie wioski, należy odkupić działkę od naczelnika.
+
+<darkblue>Niektórzy mieszkańcy zginęli — czy się odrodzą?
+
+Tak, mieszkańcy odradzają się co noc, krótko po zachodzie słońca. Wystarczy nie kłaść się od razu spać.
+
+<darkblue>Moi mieszkańcy nie mają dzieci lub ich dzieci nie dorastają — co się dzieje?
+
+Nowe dzieci mogą pojawić się, gdy para przebywa w domu w nocy. Podobnie dorastają w nocy, jeśli są w domu. Niektóre potrawy (napoje, słodycze) zwiększają szansę na narodziny dzieci, inne (chleb, zboża) — tempo ich dorastania.
+
+<darkblue>Jeden z budynków w wiosce został uszkodzony — czy zostanie naprawiony?
+
+Nie, mieszkańcy nie naprawiają budynków (choć kolejne ulepszenia potrafią czasem zastąpić brakujące bloki) — głównie ze względów wydajnościowych. Naprawy trzeba dokonać samodzielnie.
+
+<darkblue>Mojej wiosce brakuje miejsca — czy mogę pomóc?
+
+Tak, można zajrzeć na mapę wioski, aby zobaczyć obszary, na których nie można budować. Wystarczy przykryć jezioro, rzekę lub kanion warstwą ziemi, by obszar nadawał się do zabudowy.

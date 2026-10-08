@@ -1,0 +1,27 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="All Rights Reserved"
+
+[[mixins]]
+config="millenaire.mixins.json"
+
+[[mods]]
+modId="millenaire"
+version="9.0.2"
+displayName="Millénaire"
+authors="Kinniken, Contributors"
+description='''Millénaire adds NPC villages to Minecraft with unique cultures, progressive building construction, trading, reputation, and quests.'''
+
+[[dependencies.millenaire]]
+    modId="neoforge"
+    type="required"
+    versionRange="[21.1,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="minecraft"
+    type="required"
+    versionRange="[1.21.1,1.21.2)"
+    ordering="NONE"
+    side="BOTH"

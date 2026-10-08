@@ -1,0 +1,34 @@
+version:3.4
+<darkblue>Sıkça Sorulan Sorular
+
+<darkblue>Köylüler benim konuştuğumdan farklı bir dilde konuşuyor. Bu normal mi?
+
+Millénaire köylülerinin hepsi "kendi" dillerinde konuşur; örneğin Hindular Hintçe, Normanlar Fransızca konuşur. Farklı bir dilde oynuyorsanız, onlarla etkileşim kurarak (ticaret, görevler vb.) dili "öğreneceksiniz". Dillerini "öğrendikçe", Millénaire önce bina adlarının, sonra köylü türlerinin ve nihayet köylü diyaloglarının çevirilerini sağlar.
+
+<darkblue>Norman köyüm ahşap karkasa ihtiyaç duyuyor ve ben yapamıyorum, ne yapabilirim?
+
+Ahşap karkaslar bir marangoz tarafından ağaçtan yapılır. Köyünüzün bir "marangoz evi" inşa etmesini ve bir çiftin oraya yerleşmesini bekleyin. Sabır!
+
+<darkblue>Japon köyüm saza ihtiyaç duyuyor ve ben yapamıyorum, ne yapabilirim?
+
+Japonlar sazı buğdaydan üretir. Kendileri yeterince hasat edemiyorlarsa, üretimi hızlandırmak için onlara biraz buğday satın.
+
+<darkblue>Evimi köyün yakınına inşa ettim ve köylüler başka bir şey inşa ederken onu yıktı, bu normal mi?
+
+Evet. Köyün toprağı onlara aittir; sınırlarını görmek için haritaya bakın. Köyde inşaat yapmak istiyorsanız, köy başından bir arsa satın alın.
+
+<darkblue>Bazı köylüler öldü, yeniden doğacaklar mı?
+
+Evet, köylüler her gece gün batımından kısa süre sonra yeniden doğar. Hemen uyumaktan kaçının yeter.
+
+<darkblue>Köylülerimin çocuğu olmuyor ya da çocukları büyümüyor, ne oluyor?
+
+Yeni çocuklar, bir çift gece evdeyken ortaya çıkabilir. Aynı şekilde, gece evdeyken büyürler. Bazı yiyecekler (içecekler, tatlılar) bebek doğma şansını, diğerleri (ekmek, tahıllar) çocukların büyüme hızını artırır.
+
+<darkblue>Köydeki bir bina hasar gördü, onu tamir edecekler mi?
+
+Hayır, köylüler binaları tamir etmez (ancak bazen daha sonraki yükseltmeler eksik blokları değiştirebilir); bu, esas olarak performans nedeniyle yapılmıştır. Onu kendiniz tamir etmeniz gerekecek.
+
+<darkblue>Köyümün yeri yetmiyor, yardım edebilir miyim?
+
+Evet, inşaat yapamadıkları alanları görmek için köy haritasına bakarak. Bir göl, nehir ya da yarığı bir kat toprakla kaplamak, alanın köylüler tarafından kullanılabilir hale gelmesi için yeterlidir.

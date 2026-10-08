@@ -1,0 +1,13 @@
+version:3.4
+<darkblue>Normanderna
+
+Den allra första kulturen som introducerades i Millénaire, normanderna har det största antalet bytyper — bondebyar, militära, religiösa och industriella bosättningar, samt gros bourgs (stora städer) som har tre småbyar runt sig. Normanderna talar franska i spelet, men deras dialog översätts efterhand som spelaren "lär sig" att tala deras språk med dem.
+
+<darkblue>Unika föremål och block
+
+Normanderna framställer många unika föremål:
+-Normandiska verktyg, som är effektivare än diamantverktyg (tillverkas i en smedja av en smed).
+-Normandiska svärd och rustningar, tillverkade i en arsenal och även de bättre än sina motsvarigheter i diamant.
+-Boudin, tripes, calvados och cider, livsmedel som omedelbart återställer spelarens hälsa.
+-Korsvirke, ett byggblock med två varianter som används i stor utsträckning för avancerade normandiska byggnader, framställs endast av en charpentier (snickare).
+-Normandiska tapeter, gjorda av slottsfrun av ull (två vita, en grå, en ljusgrå, en svart, en brun) och föreställande utdrag ur Bayeuxtapeten.

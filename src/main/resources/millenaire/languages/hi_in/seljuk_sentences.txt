@@ -1,0 +1,134 @@
+turk_boy.greeting=जब मैं बड़ा हो जाऊँगा तो बहुत मज़बूत हो जाऊँगा!
+
+villager.bringbackresourceshome=आख़िरकार आराम का समय आ गया.
+villager.collectcrop=फ़सल काटने का समय.
+villager.plantseeds=मैं अब ये बीज बोऊँगा.
+
+turk_soldier.greeting=मैं इस जगह का पहरेदार हूँ. कुछ हो तो मुझे बताना.
+
+guildmaster.greeting=मैं हर तरह के कारीगर बेचता हूँ.
+
+turk_soldier.greeting=मैं कभी हमारे सुल्तान का सिपाही था, $name.
+turk_soldier.greeting=मैं केवल अल्लाह से डरता हूँ.
+turk_soldier.greeting=अब अनातोलिया हमारा घर है.
+turk_soldier.patrol=मैं क़ानून की सेवा करता हूँ.
+turk_soldier.patrol=मैं कमज़ोरों की तलवार हूँ.
+
+turk_richwoman.greeting=मेरे महल में स्वागत है.
+turk_richwoman.greeting=मेरा पुराना घर इतना अच्छा नहीं था.
+
+turk_lumberman.bringbackresourceshome=ये लकड़ियाँ काम आएँगी.
+turk_lumberman.choptrees=मुझे ताक़त दो अल्लाह.
+turk_lumberman.gathergoods=यह पौधा मेरे काम आ सकता है.
+turk_lumberman.plantsaplings=मुझे यह पौधा लगाना चाहिए.
+
+turk_miner.cooking=खाना पकाने का समय.
+turk_miner.mining=लोहार को ये पसंद आएँगे.
+turk_miner.mining=हर कोई खनिक नहीं बन सकता.
+
+orderguard.patrol=मैं केवल अल्लाह से डरता हूँ!
+orderguard.calltoarms=यह जगह छोड़ दो!
+orderguard.patrol=इन जगहों की रक्षा हमारा कर्तव्य है.
+orderguard.calltoarms=इकट्ठे हो जाओ भाइयों!
+orderguard.greetings=तुम्हारा दिन शुभ हो.
+orderguard.greetings=तुमसे मिलकर ख़ुशी हुई.
+
+merchant.keepstall=मैं हर तरह की विलासिताएँ बेचता हूँ!
+merchant.greeting=अनातोलिया कितना समृद्ध है!
+merchant.greeting=आओ और मेरा सामान देखो.
+
+merchant.keepstall=मेरे पास हर तरह की जड़ी-बूटियाँ हैं जो किसी को भी चाहिए हों.
+merchant.greeting=जो भी जड़ी-बूटियाँ पसंद करता है, मुझे वो पसंद है.
+
+turk_imam.gopray.chosen=अल्लाह हमारा हर काम देखते हैं.
+turk_imam.greeting=अल्लाह तुम्हारी मदद करें.
+
+turk_armourysmith.makeseljuktools=अपनी रक्षा के लिए हमें ये चाहिए.
+turk_armourysmith.makeseljukweapons=अल्लाह की मर्ज़ी से यह कवच हमारे सिपाहियों की रक्षा करेगा.
+
+
+villager.becomeadult=अब अपने देश की सेवा करने का समय!
+
+villager.goplay=मुझे खेलना अच्छा लगता है.
+
+
+villager.brewpotions=मुझे रसायनशास्त्री होना अच्छा लगता है.
+
+villager.calltoarms=हथियार उठाओ! अल्लाह हमारे साथ हैं!
+villager.calltoarms=हथियार उठाओ, सिपाहियों, हथियार उठाओ!
+villager.calltoarms=या अल्लाह!
+villager.calltoarms=अल्लाह हमें ताक़त दें!
+villager.hitbyplayer=अरे! ध्यान से!
+
+villager.childeatapple=सारे सेब लाल क्यों होते हैं?
+
+villager.childobserveagriculture=हमारे देश के लिए किसान बहुत अहम हैं!
+villager.childobserveconstruction=मर्द औरतों की मदद क्यों नहीं करते?
+villager.childobserveproducefood=मुझे बहुत भूख लगी है!
+villager.childobservesmithing=यह लोहा कितना गरम होगा!
+
+villager.godrinkayran=क्या मुझे एक प्याला दे सकते हो?
+villager.godrinkayran=यहाँ अयरान सबसे अच्छा पेय है.
+
+villager.gopray.chosen=नमाज़ का समय हो गया
+villager.gopray=अल्लाह मेरी मदद करें.
+
+villager.gorest=मैं थक गया हूँ.
+villager.gorest=मेरा हक़ है सोने का.
+villager.gorest=आज का दिन अच्छा था.
+villager.gorest=मुझे सोना है.
+
+villager.greeting=अनातोलिया में स्वागत है!
+villager.greeting=तुम्हारा दिन शुभ हो.
+villager.greeting=तुम पर सलामती हो, $name!
+villager.greeting=तुम्हें फिर देखकर अच्छा लगा.
+villager.greeting=क्या मैंने तुम्हें पहले देखा है?
+
+villager.makewallcarpetlarge=ये दीवारों पर बहुत अच्छे दिखेंगे!
+villager.makewallcarpetsmall=ये दीवारों पर बहुत अच्छे दिखेंगे!
+villager.makewallcarpetmedium=ये दीवारों पर बहुत अच्छे दिखेंगे!
+
+villager.inspectconstruction=हमारे लोग हमेशा मेहनती होते हैं!
+
+villager.makeglassbottles=यह बोतल हमारे बहुत काम आएगी.
+
+
+turk_merchant_weapon.keepstall=मैं हर तरह के हथियार बेचता हूँ.
+turk_merchant_weapon.greeting=यहाँ के सबसे बेहतरीन व्यापारी की दुकान में स्वागत है.
+
+turk_peasantwife.delivergoodshousehold= अपने परिवार की मदद करना भी मेरा फ़र्ज़ है.
+
+turk_peasantwife.gethousethresources=मेरा शौहर सामान लेकर घर लौट रहा है.
+turk_peasantwife.getresourcesforbuild=निर्माण के लिए सामग्री लाने का समय!
+
+turk_cook.makelokum=हमारी लोकुम बहुत स्वादिष्ट होती हैं.
+turk_cook.makepidebeef=हमारी पीडे बहुत स्वादिष्ट होती है.
+turk_cook.makepidemutton=हमारी पीडे बहुत स्वादिष्ट होती है.
+
+turk_cowfarmer.makeyogurt=यह खाने के साथ बहुत अच्छा लगेगा.
+
+turk_cook.makeayran=हमारे मर्दों को तरोताज़ा रखने के लिए मुझे अयरान बनाना चाहिए.
+
+villager.construction=मेरी मदद करो, अल्लाह.
+villager.construction=इस देश के लिए औरतें भी अहम हैं!
+villager.construction=मर्दों और औरतों को एक-दूसरे की मदद करनी चाहिए.
+
+turk_peasantwife.getgoodshousehold=हर काम के लिए मुझे ही क्यों भेजते हैं?
+
+turk_merchant_wool.keepstall=सारे ऊन यहाँ हैं!
+turk_merchant_wool.greeting=अनातोलिया जानवरों के लिए बहुत अच्छा है!
+
+ghaznavid_merchant.keepstall=आओ और मुझसे व्यापार करो.
+ghaznavid_merchant.keepstall=अगर मुझसे व्यापार करोगे तो पछताओगे नहीं.
+ghaznavid_merchant.greeting=मैं बहुत दूर देशों से अपने मुसलमान भाइयों से व्यापार करने आया हूँ.
+ghaznavid_merchant.greeting=हम सब भाई हैं.#
+
+
+
+
+
+
+
+
+villager.sellercoming=मैं अभी आ रहा हूँ!
+villager.tradecomplete=तुम्हारी ख़ुशहाली हो, हम फिर तुम्हारा इंतज़ार करेंगे.
