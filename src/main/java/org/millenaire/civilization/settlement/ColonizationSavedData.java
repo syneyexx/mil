@@ -163,8 +163,12 @@ public class ColonizationSavedData extends SavedData {
          if (!op.isTerminal()) {
             return false;
          }
-         // Never prune recoverable refunds or pending founder cleanup.
-         if (!op.refundOutstanding().isEmpty() || op.hasPendingFounderWork()) {
+         // Never prune recoverable refunds, unresolved stack evidence, or pending founder cleanup.
+         if (!op.refundOutstanding().isEmpty()
+            || op.decodeUnresolved()
+            || !op.unresolvedReservedStacks().isEmpty()
+            || !op.unresolvedRefundOutstanding().isEmpty()
+            || op.hasPendingFounderWork()) {
             return false;
          }
          return this.operations.size() > RETENTION / 2;

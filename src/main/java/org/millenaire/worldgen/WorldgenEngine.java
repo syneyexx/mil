@@ -7,6 +7,7 @@ import java.util.List;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import org.millenaire.civilization.settlement.ColonizationMaterializationGate;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.worldgen.activate.SettlementActivator;
 import org.millenaire.worldgen.content.WorldgenContentSnapshot;
@@ -195,6 +196,9 @@ public final class WorldgenEngine {
       if (level == null || plan == null || plan.status().isTerminalFailure() || plan.activated()) {
          return;
       }
+      if (!ColonizationMaterializationGate.allowPhysicalMutation(level, plan)) {
+         return;
+      }
       MaterializationTickBudget.ensureTick(level.getGameTime());
       if (plan.status() == SettlementPlanStatus.PLANNED || plan.buildings().isEmpty()) {
          SettlementLayoutPlanner.ensureLayout(level, plan);
@@ -231,6 +235,12 @@ public final class WorldgenEngine {
       if (plan.isChunkFullyMaterialized(packed)) {
          store.resumeQueue().remove(plan.planId(), packed);
          maybeQueueActivation(level, plan);
+         return;
+      }
+      // Shared colonization payment gate — callers must not interpret escrow themselves.
+      if (!ColonizationMaterializationGate.allowPhysicalMutation(level, plan)) {
+         plan.progressFor(packed).setBlockReason("colonization_unpaid_or_blocked");
+         store.markDirtyPlan();
          return;
       }
       store.resumeQueue().offer(plan.planId(), packed);

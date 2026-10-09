@@ -18,14 +18,12 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.millenaire.block.FirePitBlockEntity;
-import org.millenaire.building.AnywoodHelper;
 import org.millenaire.building.BuildingInstance;
 import org.millenaire.building.BuildingInventory;
 import org.millenaire.building.BuildingPlanSet;
@@ -36,6 +34,7 @@ import org.millenaire.civilization.population.PopulationAggregator;
 import org.millenaire.civilization.population.PopulationSnapshot;
 import org.millenaire.civilization.settlement.ColonizationOperation;
 import org.millenaire.civilization.settlement.ColonizationService;
+import org.millenaire.civilization.settlement.FoundingCostService;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.faction.Faction;
@@ -798,64 +797,8 @@ public final class CivilizationPresentationService {
       if (plan == null) {
          return false;
       }
-      Map<ResourceLocation, Integer> costs = computeFoundingCosts(plan);
-      Map<ResourceLocation, Integer> already = countItemStacks(op.reservedStacks());
-      for (Entry<ResourceLocation, Integer> e : costs.entrySet()) {
-         int have = already.getOrDefault(e.getKey(), 0);
-         if (AnywoodHelper.isAnywood(e.getKey())) {
-            have = countAnywood(op.reservedStacks());
-         }
-         if (Math.max(0, e.getValue() - have) > 0) {
-            return true;
-         }
-      }
-      return false;
-   }
-
-   private static Map<ResourceLocation, Integer> computeFoundingCosts(SettlementPlan plan) {
-      Map<ResourceLocation, Integer> costs = new LinkedHashMap<>();
-      for (PlannedBuilding building : plan.buildings()) {
-         if (building.planSetId() == null) {
-            continue;
-         }
-         BuildingPlanSet set = ModCultures.getBuildingPlanSet(building.planSetId());
-         if (set == null) {
-            continue;
-         }
-         BuildingPlanSet.LevelDef level0 = set.getLevel(building.variant(), Math.max(0, building.level()));
-         if (level0 == null || level0.requiredResources() == null) {
-            continue;
-         }
-         for (Entry<ResourceLocation, Integer> e : level0.requiredResources().entrySet()) {
-            costs.merge(e.getKey(), e.getValue(), Integer::sum);
-         }
-      }
-      if (costs.isEmpty()) {
-         costs.put(AnywoodHelper.ANYWOOD_LOG, 32);
-         costs.put(BuiltInRegistries.ITEM.getKey(Items.COBBLESTONE), 32);
-      }
-      return costs;
-   }
-
-   private static Map<ResourceLocation, Integer> countItemStacks(List<ItemStack> stacks) {
-      Map<ResourceLocation, Integer> map = new LinkedHashMap<>();
-      for (ItemStack stack : stacks) {
-         if (stack == null || stack.isEmpty()) {
-            continue;
-         }
-         map.merge(BuiltInRegistries.ITEM.getKey(stack.getItem()), stack.getCount(), Integer::sum);
-      }
-      return map;
-   }
-
-   private static int countAnywood(List<ItemStack> stacks) {
-      int n = 0;
-      for (ItemStack stack : stacks) {
-         if (stack != null && !stack.isEmpty() && stack.is(AnywoodHelper.LOGS_TAG)) {
-            n += stack.getCount();
-         }
-      }
-      return n;
+      FoundingCostService.Coverage coverage = FoundingCostService.assessCoverage(plan, op.reservedStacks());
+      return !coverage.fullyCovered();
    }
 
    @Nullable

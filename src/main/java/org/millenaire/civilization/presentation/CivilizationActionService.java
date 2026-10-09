@@ -1,7 +1,6 @@
 package org.millenaire.civilization.presentation;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -17,12 +16,14 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.millenaire.building.AnywoodHelper;
-import org.millenaire.building.BuildingPlanSet;
+import org.millenaire.civilization.settlement.ColonizationMaterializationGate;
 import org.millenaire.civilization.settlement.ColonizationOperation;
 import org.millenaire.civilization.settlement.ColonizationSavedData;
 import org.millenaire.civilization.settlement.ColonizationService;
+import org.millenaire.civilization.settlement.FoundingCostService;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.culture.ModCultures;
+import org.millenaire.building.BuildingPlanSet;
 import org.millenaire.living.LivingVillagesService;
 import org.millenaire.living.needs.VillageNeed;
 import org.millenaire.living.needs.VillageNeedsSnapshot;
@@ -34,7 +35,6 @@ import org.millenaire.village.ControlledQueuedProject;
 import org.millenaire.village.Village;
 import org.millenaire.village.VillageSavedData;
 import org.millenaire.worldgen.WorldgenEngine;
-import org.millenaire.worldgen.plan.PlannedBuilding;
 import org.millenaire.worldgen.plan.SettlementPlan;
 import org.millenaire.worldgen.plan.SettlementPlanSavedData;
 
@@ -286,34 +286,26 @@ public final class CivilizationActionService {
       if (plan == null) {
          return ActionResult.fail("civilization.millenaire.action.error.plan_invalid");
       }
-      Map<ResourceLocation, Integer> costs = computeFoundingCosts(plan);
-      Map<ResourceLocation, Integer> already = countStacks(op.reservedStacks());
-      Map<ResourceLocation, Integer> missing = new LinkedHashMap<>();
-      for (Entry<ResourceLocation, Integer> e : costs.entrySet()) {
-         int have = already.getOrDefault(e.getKey(), 0);
-         // Anywood reserved as concrete logs still count against anywood need.
-         if (AnywoodHelper.isAnywood(e.getKey())) {
-            have = countAnywood(op.reservedStacks());
-         }
-         int need = Math.max(0, e.getValue() - have);
-         if (need > 0) {
-            missing.put(e.getKey(), need);
-         }
+      ColonizationMaterializationGate.bindPlan(plan, op, level);
+      FoundingCostService.Coverage coverage = FoundingCostService.assessCoverage(plan, op.reservedStacks());
+      if (!coverage.ok() && coverage.blockReason() != null) {
+         return ActionResult.fail("civilization.millenaire.action.blocked.cost_content_missing");
       }
-      if (missing.isEmpty()) {
+      if (coverage.fullyCovered()) {
          return ActionResult.fail("civilization.millenaire.action.blocked.materials_complete");
       }
+      Map<ResourceLocation, Integer> missing = coverage.missing();
 
       List<ItemStack> contributed = new ArrayList<>();
       Inventory inv = player.getInventory();
       for (Entry<ResourceLocation, Integer> e : missing.entrySet()) {
          int want = e.getValue();
-         if (AnywoodHelper.isAnywood(e.getKey()) || e.getKey().equals(BuiltInRegistries.ITEM.getKey(Items.OAK_LOG))) {
+         if (AnywoodHelper.isAnywood(e.getKey())) {
             contributed.addAll(removeAnywoodFromPlayer(inv, want));
          } else {
             Item item = BuiltInRegistries.ITEM.get(e.getKey());
             if (item == null || item == Items.AIR) {
-               continue;
+               return ActionResult.fail("civilization.millenaire.action.blocked.cost_content_missing");
             }
             contributed.addAll(removeItemFromPlayer(inv, item, want));
          }
@@ -327,22 +319,18 @@ public final class CivilizationActionService {
             op.reservedStacks().add(stack.copy());
          }
       }
+      // Partial escrow is visible; full coverage is recomputed — never treat non-empty as paid.
       op.setResourcesReserved(true);
       ColonizationSavedData.get(level).put(op);
 
       int total = contributed.stream().mapToInt(ItemStack::getCount).sum();
-      Map<ResourceLocation, Integer> stillMissing = new LinkedHashMap<>();
-      Map<ResourceLocation, Integer> after = countStacks(op.reservedStacks());
-      for (Entry<ResourceLocation, Integer> e : costs.entrySet()) {
-         int have = AnywoodHelper.isAnywood(e.getKey()) ? countAnywood(op.reservedStacks()) : after.getOrDefault(e.getKey(), 0);
-         int need = Math.max(0, e.getValue() - have);
-         if (need > 0) {
-            stillMissing.put(e.getKey(), need);
-         }
-      }
-      String detail = stillMissing.isEmpty()
+      FoundingCostService.Coverage after = FoundingCostService.assessCoverage(plan, op.reservedStacks());
+      String detail = after.fullyCovered()
          ? Component.translatable("civilization.millenaire.action.support_colonization_materials.complete").getString()
-         : Component.translatable("civilization.millenaire.action.support_colonization_materials.remaining", stillMissing.size()).getString();
+         : Component.translatable(
+            "civilization.millenaire.action.support_colonization_materials.remaining",
+            after.missing().size()
+         ).getString();
       return ActionResult.ok(
          "civilization.millenaire.action.support_colonization_materials.ok",
          total + " — " + detail
@@ -389,10 +377,19 @@ public final class CivilizationActionService {
       if (plan == null || plan.status().isTerminalFailure()) {
          return ActionResult.fail("civilization.millenaire.action.error.plan_invalid");
       }
+      ColonizationMaterializationGate.bindPlan(plan, op, level);
+      if (!op.costsConsumed() && !FoundingCostService.isOperationFullyCovered(level, op, plan)) {
+         op.setReason("awaiting_materials");
+         ColonizationSavedData.get(level).put(op);
+         return ActionResult.fail("civilization.millenaire.action.blocked.materials_incomplete");
+      }
       if (!level.hasChunk(plan.center().getX() >> 4, plan.center().getZ() >> 4)) {
          op.setReason("chunk_not_loaded");
          ColonizationSavedData.get(level).put(op);
          return ActionResult.fail("civilization.millenaire.reason.chunk_not_loaded");
+      }
+      if (!ColonizationMaterializationGate.allowPhysicalMutation(level, plan)) {
+         return ActionResult.fail("civilization.millenaire.action.blocked.colonization_gated");
       }
       WorldgenEngine.kickPlanExecution(level, plan);
       ColonizationSavedData.get(level).put(op);
@@ -487,51 +484,6 @@ public final class CivilizationActionService {
       return plan != null && villageId.equals(plan.villageUuid());
    }
 
-   private static Map<ResourceLocation, Integer> computeFoundingCosts(SettlementPlan plan) {
-      Map<ResourceLocation, Integer> costs = new LinkedHashMap<>();
-      for (PlannedBuilding building : plan.buildings()) {
-         if (building.planSetId() == null) {
-            continue;
-         }
-         BuildingPlanSet set = ModCultures.getBuildingPlanSet(building.planSetId());
-         if (set == null) {
-            continue;
-         }
-         BuildingPlanSet.LevelDef level0 = set.getLevel(building.variant(), Math.max(0, building.level()));
-         if (level0 == null || level0.requiredResources() == null) {
-            continue;
-         }
-         for (Entry<ResourceLocation, Integer> e : level0.requiredResources().entrySet()) {
-            costs.merge(e.getKey(), e.getValue(), Integer::sum);
-         }
-      }
-      if (costs.isEmpty()) {
-         costs.put(AnywoodHelper.ANYWOOD_LOG, 32);
-         costs.put(BuiltInRegistries.ITEM.getKey(Items.COBBLESTONE), 32);
-      }
-      return costs;
-   }
-
-   private static Map<ResourceLocation, Integer> countStacks(List<ItemStack> stacks) {
-      Map<ResourceLocation, Integer> map = new LinkedHashMap<>();
-      for (ItemStack stack : stacks) {
-         if (stack == null || stack.isEmpty()) {
-            continue;
-         }
-         map.merge(BuiltInRegistries.ITEM.getKey(stack.getItem()), stack.getCount(), Integer::sum);
-      }
-      return map;
-   }
-
-   private static int countAnywood(List<ItemStack> stacks) {
-      int n = 0;
-      for (ItemStack stack : stacks) {
-         if (stack != null && !stack.isEmpty() && stack.is(AnywoodHelper.LOGS_TAG)) {
-            n += stack.getCount();
-         }
-      }
-      return n;
-   }
 
    private static List<ItemStack> removeItemFromPlayer(Inventory inv, Item item, int amount) {
       List<ItemStack> taken = new ArrayList<>();

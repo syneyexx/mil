@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.Holder;
-import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
@@ -38,12 +37,17 @@ import org.slf4j.Logger;
  * Conserved physical settlement-to-settlement transfer using concrete ItemStacks.
  * Incomplete deliveries keep unique persistent operations — never overwrite another txn's debt.
  * Intra-faction movement is logistics (profile refresh), not diplomatic trade booking.
+ *
+ * <p>Lifecycle: persist op identity → withdraw → deliver → compensate → finalize (book + event).
+ * Finalization-only ops remain recoverable even when pending lists are empty.
+ * Crash boundary: setDirty does not immediately flush; recovery is best-effort idempotent.
  */
 public final class SettlementTradeExecutor {
    private static final Logger LOGGER = LogUtils.getLogger();
    private static final int MAX_TRADE_RECOVERY_OPS = 4;
    private static final int MAX_TRADE_RECOVERY_STACKS = 16;
    private static final int MAX_TRADE_RECOVERY_INSERTS = 24;
+   private static final int MAX_RECOVERY_ATTEMPTS_SOFT = 64;
    private static final String LEGACY_MARKER_PREFIX = "trade-recovery:";
 
    private SettlementTradeExecutor() {
@@ -90,19 +94,24 @@ public final class SettlementTradeExecutor {
          return false;
       }
 
-      long day = level.getGameTime() / 24000L;
-      String successKey = "trade-ok:" + exporter.getId().uuid() + ":" + importer.getId().uuid() + ":" + resourceId.id() + ":" + day;
       CivilizationSavedData civ = CivilizationSavedData.get(level);
-      if (civ.isPublished(successKey, level.getGameTime(), 24000L)) {
+      String daySuccessKey = "trade-ok:"
+         + exporter.getId().uuid()
+         + ":"
+         + importer.getId().uuid()
+         + ":"
+         + resourceId.id()
+         + ":"
+         + (level.getGameTime() / 24000L);
+      if (civ.isPublished(daySuccessKey, level.getGameTime(), 24000L)) {
+         return false;
+      }
+      if (hasOpenTradeLane(civ, exporter.getId().uuid(), importer.getId().uuid(), resourceId.id().toString())) {
+         // Unfinished work on this lane must resume via processOutstanding — never start a second withdrawal.
          return false;
       }
 
-      List<ItemStack> removed = removeExactFromVillage(level, exporter, item, amount);
-      int removedCount = removed.stream().mapToInt(ItemStack::getCount).sum();
-      if (removedCount <= 0) {
-         return false;
-      }
-
+      // Persist operation identity before the first physical mutation so recovery evidence exists.
       SettlementTradeOperation op = new SettlementTradeOperation(
          UUID.randomUUID(),
          exporter.getId().uuid(),
@@ -111,6 +120,18 @@ public final class SettlementTradeExecutor {
          level.getGameTime(),
          sameFaction
       );
+      civ.putTradeOperation(op);
+
+      List<ItemStack> removed = removeExactFromVillage(level, exporter, item, amount);
+      int removedCount = removed.stream().mapToInt(ItemStack::getCount).sum();
+      if (removedCount <= 0) {
+         op.setStatus(SettlementTradeOperation.Status.FAILED);
+         op.setBlockReason(SettlementTradeOperation.BlockReason.SOURCE_MISSING);
+         op.touch(level.getGameTime());
+         civ.putTradeOperation(op);
+         return false;
+      }
+
       op.acceptWithdrawn(removed);
       civ.putTradeOperation(op);
 
@@ -146,11 +167,13 @@ public final class SettlementTradeExecutor {
          // Partial delivery with full compensation of the rest — book only delivered amount.
       }
 
-      return finalizeSuccessfulTransfer(level, civ, op, exporter, importer, item, successKey, sameFaction);
+      op.setStatus(SettlementTradeOperation.Status.DELIVERED);
+      civ.putTradeOperation(op);
+      return finalizeSuccessfulTransfer(level, civ, op, exporter, importer, item);
    }
 
    /**
-    * Bounded recovery of outstanding trade compensation / partial deliveries.
+    * Bounded recovery of outstanding trade compensation / partial deliveries / finalization-only ops.
     * Failed insert attempts consume budget. Does not invent stacks from legacy markers.
     */
    public static void processOutstanding(ServerLevel level, CivilizationSavedData civ) {
@@ -174,11 +197,35 @@ public final class SettlementTradeExecutor {
       int examined = 0;
       int stacksWorked = 0;
       int inserts = 0;
-      Provider registries = level.registryAccess();
 
       for (int i = 0; i < n && examined < MAX_TRADE_RECOVERY_OPS && stacksWorked < MAX_TRADE_RECOVERY_STACKS && inserts < MAX_TRADE_RECOVERY_INSERTS; i++) {
          SettlementTradeOperation op = work.get(Math.floorMod(start + i, n));
          examined++;
+         op.incrementRecoveryAttempts();
+         if (op.recoveryAttempts() > MAX_RECOVERY_ATTEMPTS_SOFT
+            && op.pendingDelivery().isEmpty()
+            && op.pendingCompensation().isEmpty()
+            && !op.needsFinalization()) {
+            op.setStatus(SettlementTradeOperation.Status.RECOVERY_REQUIRED);
+            op.setBlockReason(SettlementTradeOperation.BlockReason.AMBIGUOUS);
+            op.touch(level.getGameTime());
+            civ.putTradeOperation(op);
+            inserts++;
+            continue;
+         }
+         if (op.decodeUnresolved()
+            && op.pendingDelivery().isEmpty()
+            && op.pendingCompensation().isEmpty()
+            && !op.needsFinalization()) {
+            // Keep unresolved evidence; do not invent goods or mark COMPLETE.
+            op.setStatus(SettlementTradeOperation.Status.RECOVERY_REQUIRED);
+            op.setBlockReason(SettlementTradeOperation.BlockReason.DECODE_UNRESOLVED);
+            op.touch(level.getGameTime());
+            civ.putTradeOperation(op);
+            inserts++;
+            continue;
+         }
+
          Village exporter = VillageSavedData.get(level).getVillageManager().getVillage(new VillageId(op.exporterVillageId()));
          Village importer = VillageSavedData.get(level).getVillageManager().getVillage(new VillageId(op.importerVillageId()));
          if (exporter == null) {
@@ -186,13 +233,12 @@ public final class SettlementTradeExecutor {
             op.setBlockReason(SettlementTradeOperation.BlockReason.SOURCE_MISSING);
             op.touch(level.getGameTime());
             civ.putTradeOperation(op);
-            inserts++; // missing lookup still consumes recovery budget
+            inserts++;
             continue;
          }
          if (importer == null && !op.pendingDelivery().isEmpty()) {
             op.setStatus(SettlementTradeOperation.Status.RECOVERY_REQUIRED);
             op.setBlockReason(SettlementTradeOperation.BlockReason.DESTINATION_MISSING);
-            // Move undeliverable goods to compensation toward source when possible.
             op.pendingCompensation().addAll(copyStacks(op.pendingDelivery()));
             op.pendingDelivery().clear();
             op.touch(level.getGameTime());
@@ -201,6 +247,7 @@ public final class SettlementTradeExecutor {
             continue;
          }
 
+         // Delivery phase — never re-withdraw.
          if (!op.pendingDelivery().isEmpty() && importer != null) {
             int before = countStacks(op.pendingDelivery());
             int cursor = Math.min(op.refundCursor(), Math.max(0, op.pendingDelivery().size() - 1));
@@ -218,6 +265,7 @@ public final class SettlementTradeExecutor {
             }
          }
 
+         // Compensation phase — only the real remainder.
          if (!op.pendingCompensation().isEmpty()) {
             int before = countStacks(op.pendingCompensation());
             int cursor = Math.min(op.refundCursor(), Math.max(0, op.pendingCompensation().size() - 1));
@@ -235,22 +283,45 @@ public final class SettlementTradeExecutor {
             }
          }
 
-         if (op.deliveredCount() > 0) {
+         // Finalization-only: pending empty, physical transfer done, booking/event may be missing.
+         if (op.deliveredCount() > 0 && op.pendingDelivery().isEmpty() && op.pendingCompensation().isEmpty()) {
+            op.setStatus(SettlementTradeOperation.Status.DELIVERED);
             Item item = resolveItem(op.resourceId());
-            String successKey = "trade-ok:" + op.exporterVillageId() + ":" + op.importerVillageId() + ":" + op.resourceId() + ":" + (level.getGameTime() / 24000L);
-            finalizeSuccessfulTransfer(level, civ, op, exporter, importer, item, successKey, op.sameFactionLogistics());
-         } else {
+            boolean ok = finalizeSuccessfulTransfer(level, civ, op, exporter, importer, item);
+            if (!ok && op.status() != SettlementTradeOperation.Status.COMPLETE) {
+               // Keep DELIVERED / RECOVERY so a later pass can retry booking — never re-deliver.
+               if (op.status() != SettlementTradeOperation.Status.FAILED) {
+                  op.setStatus(SettlementTradeOperation.Status.DELIVERED);
+               }
+               civ.putTradeOperation(op);
+            }
+         } else if (op.deliveredCount() <= 0 && op.pendingDelivery().isEmpty() && op.pendingCompensation().isEmpty()) {
             op.setStatus(SettlementTradeOperation.Status.FAILED);
             op.setBlockReason(SettlementTradeOperation.BlockReason.NONE);
             op.touch(level.getGameTime());
             civ.putTradeOperation(op);
          }
-         // Keep registries referenced so callers can pass them when persisting stacks later.
-         if (registries == null) {
-            // no-op
-         }
       }
       civ.setTradeRecoveryCursor(start + Math.max(1, examined));
+   }
+
+   private static boolean hasOpenTradeLane(CivilizationSavedData civ, UUID exporter, UUID importer, String resourceId) {
+      for (SettlementTradeOperation op : civ.tradeOperationsView()) {
+         if (!op.holdsEscrowOrEvidence()) {
+            continue;
+         }
+         if (op.status() == SettlementTradeOperation.Status.COMPLETE
+            || op.status() == SettlementTradeOperation.Status.FAILED
+            || op.status() == SettlementTradeOperation.Status.LEGACY_UNRECOVERABLE) {
+            continue;
+         }
+         if (op.exporterVillageId().equals(exporter)
+            && op.importerVillageId().equals(importer)
+            && op.resourceId().equals(resourceId)) {
+            return true;
+         }
+      }
+      return false;
    }
 
    private static void migrateLegacyMarkers(ServerLevel level, CivilizationSavedData civ) {
@@ -262,7 +333,6 @@ public final class SettlementTradeExecutor {
       }
       for (String key : keys) {
          String value = civ.getStateMarker(key);
-         // Never invent stacks from count-only markers; keep an explicit legacy recovery record.
          String[] parts = key.substring(LEGACY_MARKER_PREFIX.length()).split(":", 2);
          if (parts.length < 2) {
             continue;
@@ -296,9 +366,7 @@ public final class SettlementTradeExecutor {
       SettlementTradeOperation op,
       Village exporter,
       Village importer,
-      Item item,
-      String successKey,
-      boolean sameFaction
+      Item item
    ) {
       int booked = op.deliveredCount();
       if (booked <= 0) {
@@ -306,13 +374,25 @@ public final class SettlementTradeExecutor {
          civ.putTradeOperation(op);
          return false;
       }
+      if (!op.pendingDelivery().isEmpty() || !op.pendingCompensation().isEmpty()) {
+         return false;
+      }
+
+      boolean newlyBooked = false;
       if (!op.economyBooked()) {
+         if (exporter == null) {
+            op.setStatus(SettlementTradeOperation.Status.RECOVERY_REQUIRED);
+            op.setBlockReason(SettlementTradeOperation.BlockReason.SOURCE_MISSING);
+            op.touch(level.getGameTime());
+            civ.putTradeOperation(op);
+            return false;
+         }
          Map<Item, Integer> transferred = new LinkedHashMap<>();
          if (item != null) {
             transferred.put(item, booked);
          }
          TradeManager trade = EconomySavedData.get(level).getTradeManager();
-         if (sameFaction) {
+         if (op.sameFactionLogistics()) {
             FactionId fid = exporter.getFactionId();
             Faction faction = fid == null ? null : FactionSavedData.get(level).getFactionManager().getFaction(fid);
             if (faction != null) {
@@ -322,23 +402,70 @@ public final class SettlementTradeExecutor {
             trade.recordSettlementGoodsTransfer(level, exporter, importer, transferred);
          }
          op.setEconomyBooked(true);
+         newlyBooked = true;
       }
-      civ.tryMarkPublished(successKey, level.getGameTime(), 24000L);
-      CivilizationMetrics.TRADE_OPS.incrementAndGet();
+
+      String effectsKey = op.effectsKey();
+      String dayKey = op.daySuccessKey();
+      // Effects dedupe is per operation; day key only blocks a fresh withdrawal lane.
+      if (!civ.isPublished(effectsKey, level.getGameTime(), 24000L * 8L)) {
+         civ.tryMarkPublished(effectsKey, level.getGameTime(), 24000L * 8L);
+         if (newlyBooked) {
+            CivilizationMetrics.TRADE_OPS.incrementAndGet();
+         }
+      }
+      civ.tryMarkPublished(dayKey, level.getGameTime(), 24000L);
+
       if (!op.completionEventPublished()) {
-         LivingEventService.emit(
+         if (importer == null) {
+            op.setStatus(SettlementTradeOperation.Status.DELIVERED);
+            op.setBlockReason(SettlementTradeOperation.BlockReason.DESTINATION_MISSING);
+            op.touch(level.getGameTime());
+            civ.putTradeOperation(op);
+            return false;
+         }
+         var emitted = LivingEventService.emit(
             level,
             LivingEventType.TRADE_COMPLETED,
             LivingEventSource.SYSTEM,
             importer,
             null,
             null,
-            (sameFaction ? "logistics=" : "trade=") + op.resourceId() + " qty=" + booked + " from=" + exporter.getId().uuid(),
+            (op.sameFactionLogistics() ? "logistics=" : "trade=") + op.resourceId() + " qty=" + booked + " from=" + op.exporterVillageId(),
             "public",
-            successKey
+            effectsKey
          );
+         // null: living disabled, journal dedupe (already emitted), or tick budget.
+         // Dedupe / disabled must not block COMPLETE; budget can retry next tick.
+         if (emitted == null) {
+            boolean livingOn = true;
+            try {
+               livingOn = org.millenaire.config.MillenaireServerConfig.SERVER.livingVillagesEnabled.get()
+                  && org.millenaire.config.MillenaireServerConfig.SERVER.npcEventMemoryEnabled.get();
+            } catch (IllegalStateException ignored) {
+            }
+            boolean alreadyChronicled = false;
+            if (livingOn) {
+               try {
+                  for (var recent : LivingEventService.recentPublic(level, importer.getId(), 32)) {
+                     if (effectsKey.equals(recent.dedupeKey())) {
+                        alreadyChronicled = true;
+                        break;
+                     }
+                  }
+               } catch (Exception ignored) {
+               }
+            }
+            if (livingOn && !alreadyChronicled) {
+               op.setStatus(SettlementTradeOperation.Status.DELIVERED);
+               op.touch(level.getGameTime());
+               civ.putTradeOperation(op);
+               return false;
+            }
+         }
          op.setCompletionEventPublished(true);
       }
+
       op.setStatus(SettlementTradeOperation.Status.COMPLETE);
       op.setBlockReason(SettlementTradeOperation.BlockReason.NONE);
       op.touch(level.getGameTime());
@@ -418,7 +545,6 @@ public final class SettlementTradeExecutor {
          } else {
             stacks.set(cursor, remaining);
             cursor = (cursor + 1) % stacks.size();
-            // Destination full for this stack — stop this pass after budgeted attempts.
             if (moved <= 0) {
                break;
             }

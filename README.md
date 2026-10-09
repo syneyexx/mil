@@ -2,7 +2,7 @@
 
 Millénaire is a Minecraft **1.21.1** / **NeoForge** mod that adds living NPC villages with distinct cultures, progressive construction, trading, reputation, quests, Living Villages needs/requests, deterministic worldgen settlements, and optional civilization-scale faction orchestration (economy, diplomacy, war, migration, colonization).
 
-**Local verification** (builds, CI, Minecraft runs, gametests) remains the responsibility of the repository owner. This document does not claim runtime verification.
+**Local verification** (builds, CI, Minecraft runs, gametests) remains the responsibility of the repository owner. This document does not claim runtime verification. For the integrity-persistence milestone, the agent intentionally did not run GameTests, GitHub CI tests, or other automated verification — owner tests locally.
 
 ## Requirements
 
@@ -78,9 +78,11 @@ Server config lives in the NeoForge Millénaire server config (keys under `gener
 - Legacy unfinished `materializedChunks` / schema-v2 mid-progress: **ambiguous** — no destructive terrain/deletion replay; placement may resume
 - Regional roads schema v2: old coarse-only `CONNECTED` routes become `RECOVERY_REQUIRED` and expand to continuous cells without blind overwrite
 - Colonization SavedData schema v3: advance/refund cursors, exclusive founder reservations, founder slots, exact reserved/refund stacks (components via registry encode when available)
+- Settlement plans may persist `colonizationOp` linking a COLONIZATION plan to its parent operation; physical work is gated on full founding-cost coverage
 - Older colonization schema v2 worlds migrate `intendedFounders` into reserved founder slots
+- Civilization SavedData schema v4: trade ops load through `HolderLookup.Provider`; unresolved stack NBT is retained; finalization-only recovery is eligible
 - Request schema v2: optional recovery ledger for incomplete overdelivery pullback
-- Civilization migration recovery consumer drains `needsRecovery` ops on the demographics stage
+- Civilization migration recovery reconciles from physical village records (including persisted `RESERVED`); `needsRecovery` clears only after postconditions
 - Road/bridge placement uses `RoadPlacementGuard` (natural terrain only; village/planned footprints and ordinary building blocks are not free overwrite targets)
 
 ## Known limitations
@@ -89,9 +91,9 @@ Server config lives in the NeoForge Millénaire server config (keys under `gener
 - Regional roads wait on naturally loaded chunks (`WAITING_CHUNKS`); unfinished routes stay `PARTIAL` / `BLOCKED` / `RECOVERY_REQUIRED` rather than claiming completion
 - Bridge placement uses a deterministic stone/plank strategy when templates are absent; depth is capped
 - Autonomous founding stays off by default; when worldgen is disabled it records an explicit block marker instead of leaving silent ops
-- Founding costs use summed building `requiredResources` (BuildingCostCalculator content); if empty, a documented minimum levy of 32 any-log + 32 cobblestone applies. Levy is held until physical materialization begins; incomplete refunds persist as `refundOutstanding`.
+- Founding costs use authoritative `FoundingCostService` (same result for execution, player support, and presentation). Exact item lines stay exact; only Anywood accepts mixed logs. If content defines no costs, a documented minimum levy of 32 any-log + 32 cobblestone applies. Missing required item content blocks founding rather than skipping a line. Levy is held until the first real block mutation; incomplete refunds persist as `refundOutstanding`.
 - Player-placed block provenance is imperfect — road protection is conservative (natural terrain + footprints/structures), not a guarantee every player build is detected.
-- Crash consistency across multiple SavedData + chunk files is best-effort idempotent recovery, not a single atomic transaction
+- Crash consistency across multiple SavedData + chunk files is best-effort idempotent recovery, not a single atomic transaction and not a general exactly-once guarantee
 
 ## Documentation
 
@@ -107,4 +109,11 @@ Server config lives in the NeoForge Millénaire server config (keys under `gener
 ./gradlew build
 ```
 
-Owner-run only for this change set’s verification policy when an agent was instructed not to build.
+Owner-run verification for this integrity milestone (agent did not execute GameTests, CI workflows, or build/smoke checks):
+
+```bash
+./gradlew build
+# optional owner: NeoForge GameTest / dedicated-server smoke as desired
+```
+
+See `docs/INTEGRITY_MILESTONE_PLAN.md` for the executable A/B/C plan and remaining backlog.

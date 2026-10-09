@@ -5,7 +5,9 @@ import javax.annotation.Nullable;
 import net.minecraft.nbt.CompoundTag;
 
 /**
- * Idempotent migration transaction record. Status transitions are one-way toward terminal states.
+ * Idempotent migration transaction record.
+ * Normal transitions are one-way toward terminal states.
+ * Proven physical reconciliation uses {@link #reconcileStatus(Status)} — a separate, limited path.
  */
 public final class MigrationOperation {
    public enum Status {
@@ -27,6 +29,7 @@ public final class MigrationOperation {
    @Nullable
    private UUID destinationBuildingId;
    private boolean needsRecovery;
+   private int recoveryAttempts;
 
    public MigrationOperation(
       UUID operationId,
@@ -89,6 +92,14 @@ public final class MigrationOperation {
       this.needsRecovery = v;
    }
 
+   public int recoveryAttempts() {
+      return this.recoveryAttempts;
+   }
+
+   public void incrementRecoveryAttempts() {
+      this.recoveryAttempts++;
+   }
+
    public boolean isTerminal() {
       return this.status == Status.COMPLETE || this.status == Status.FAILED || this.status == Status.ROLLED_BACK;
    }
@@ -97,6 +108,9 @@ public final class MigrationOperation {
       return !isTerminal() || this.needsRecovery;
    }
 
+   /**
+    * Strict normal transition. Does not allow REMOVED_FROM_ORIGIN → COMPLETE or FAILED → COMPLETE.
+    */
    public boolean trySetStatus(Status next) {
       if (next == null || next == this.status) {
          return false;
@@ -111,6 +125,38 @@ public final class MigrationOperation {
          this.status = next;
       }
       return ok;
+   }
+
+   /**
+    * Limited recovery transition after physical state has been verified.
+    * Allowed: any non-COMPLETE → COMPLETE when destination ownership is proven;
+    * any non-terminal → FAILED when origin-only / unresolvable evidence demands it.
+    * Does not invent villagers or clear needsRecovery by itself.
+    */
+   public boolean reconcileStatus(Status next) {
+      if (next == null || next == this.status) {
+         return next == this.status;
+      }
+      if (next == Status.COMPLETE) {
+         if (this.status == Status.COMPLETE) {
+            return true;
+         }
+         // Proven completion may jump from mid-flight or FAILED+needsRecovery.
+         if (this.status == Status.FAILED && !this.needsRecovery) {
+            return false;
+         }
+         this.status = Status.COMPLETE;
+         this.failureReason = "";
+         return true;
+      }
+      if (next == Status.FAILED || next == Status.ROLLED_BACK) {
+         if (this.status == Status.COMPLETE) {
+            return false;
+         }
+         this.status = next;
+         return true;
+      }
+      return trySetStatus(next);
    }
 
    public void fail(String reason) {
@@ -130,6 +176,7 @@ public final class MigrationOperation {
       tag.putString("status", this.status.name());
       tag.putString("fail", this.failureReason);
       tag.putBoolean("needsRecovery", this.needsRecovery);
+      tag.putInt("recoveryAttempts", this.recoveryAttempts);
       if (this.destinationBuildingId != null) {
          tag.putUUID("destBuilding", this.destinationBuildingId);
       }
@@ -152,6 +199,7 @@ public final class MigrationOperation {
          }
          op.failureReason = tag.getString("fail");
          op.needsRecovery = tag.getBoolean("needsRecovery");
+         op.recoveryAttempts = tag.getInt("recoveryAttempts");
          if (tag.hasUUID("destBuilding")) {
             op.destinationBuildingId = tag.getUUID("destBuilding");
          }

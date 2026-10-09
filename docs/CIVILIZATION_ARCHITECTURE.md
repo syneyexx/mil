@@ -1,6 +1,6 @@
 # Civilization Architecture (Phase 5)
 
-**Status:** IMPLEMENTED_UNVERIFIED (source-level). Builds/tests/Minecraft were not run by the agent.
+**Status:** IMPLEMENTED_UNVERIFIED (source-level). Builds/GameTests/Minecraft were not run by the agent for this integrity milestone (owner-local verification).
 
 ## Authority diagram
 
@@ -28,9 +28,11 @@ Millenaire server tick (overworld)
 | Village residents / homes | `Village` / `VillagerRecord` | `millenaire_villages` |
 | Building inventory | `BuildingInventory` | village buildings |
 | Abstract economy | `TradeManager` | economy SavedData |
-| Physical transfers | `SettlementTradeExecutor` | inventories + success dedupe after commit |
-| Migration | `MigrationTransactionService` → `transferVillagerPermanently` | civilization SD ops + village SD |
-| Colonization | `ColonizationService` + Phase 4 plans | `millenaire_colonization` (schema ≥ 3) + worldgen plans |
+| Physical transfers | `SettlementTradeExecutor` | inventories + op finalization (`trade-fx:` + day lane keys) |
+| Exact stack codec | `ExactStackCodec` | Provider-backed Item codec; unresolved raw NBT retained |
+| Migration | `MigrationTransactionService` → `transferVillagerPermanently` | civilization SD ops + village SD; `reconcileStatus` for proven recovery |
+| Colonization | `ColonizationService` + `FoundingCostService` + Phase 4 plans | `millenaire_colonization` + plan.`colonizationOp` link |
+| Colonization physical gate | `ColonizationMaterializationGate` | shared by chunk/resume/kick/materializer/activator |
 | Founder reservations | `ColonizationSavedData.founderReservations` | exclusive villager→op index |
 | Housing capacity | residential `BuildingPlanSet` occupant lists | derived |
 | Presentation | `CivilizationPresentationService` | derived only (not persisted) |
@@ -52,7 +54,7 @@ Colonization additionally persists `advanceCursor` and `refundCursor` in `Coloni
 5. Single mutation path: `Village.transferVillagerPermanently`.
 6. Exclusive colonization founder reservations block ordinary migration destinations other than the matching colony.
 7. `putMigration` does not duplicate queue entries; retention skips active/recovery ops.
-8. `recoverPending` consumes `needsRecovery` flags on the demographics stage.
+8. `recoverPending` reconciles from physical village records (including persisted `RESERVED` and `FAILED+needsRecovery`). Normal `trySetStatus` stays strict; proven completion uses `reconcileStatus`. `needsRecovery` clears only after postconditions succeed.
 9. Events and metrics publish only on completed migrations.
 
 ## Trade / logistics
@@ -60,11 +62,16 @@ Colonization additionally persists `advanceCursor` and `refundCursor` in `Coloni
 - Importers chosen by **local** Living Villages shortages (faction balances only seed candidates).
 - Exporters chosen by **local** exportable stock (reserve protected) + diplomacy/war filters before ranking.
 - Physical moves use concrete `ItemStack`s (`removeByItemExact` / `addExactStack`); components are preserved.
-- Incomplete delivery keeps a unique `SettlementTradeOperation` with pending delivery/compensation stacks (schema ≥ 3 on `millenaire_civilization`).
+- Incomplete delivery keeps a unique `SettlementTradeOperation` with pending delivery/compensation stacks (`millenaire_civilization` schema ≥ 4).
+- Factory load passes `HolderLookup.Provider` into `SettlementTradeOperation.load` so Item-encoded stacks round-trip with components.
+- Decode failures keep unresolved raw NBT evidence (`decodeUnresolved`); they are not silently dropped on the next save.
+- Legacy id/Count migrates without inventing items from `Count≤0`. Historical `withdrawnStacks` are evidence, not second stock.
+- Finalization-only ops (`DELIVERED`, empty pending, booking/event pending) remain in `needsWork()` recovery.
+- Effects use stable `trade-fx:<operationId>`; day lane keys use the operation's creation day (not recovery day).
 - Legacy count-only `trade-recovery:*` markers are retained as `LEGACY_UNRECOVERABLE` — they are never turned into invented goods.
-- Failed candidates do not burn the day; success dedupe is written **after** conserved commit.
+- Failed candidates do not burn the day; an open lane blocks a second withdrawal until recovery finishes.
 - Same-faction moves are logistics (`civilizationIntraFactionLogistics`), not diplomatic trade records.
-- Outstanding compensation is processed on the economy stage even when new auto-trade proposals are disabled.
+- Outstanding compensation / finalization is processed on the economy stage even when new auto-trade proposals are disabled.
 
 ## Offscreen
 
@@ -74,17 +81,20 @@ Separates last **attempt**, last **success**, and per-faction last economy/offsc
 
 Default **off** (`civilizationAutonomousFoundingEnabled`). Explicit lifecycle on `ColonizationOperation` + `SettlementPlan.FoundingMode.COLONIZATION`:
 
-1. Parent pressure / faction / war / cooldown gates  
-2. Site + `SettlementPlanner.ensureRegionPlan` (culture-compatible, non-lone)  
-3. Immediate `SettlementLayoutPlanner.ensureLayout`  
-4. Exact stack reservation via `BuildingInventory.removeByItemExact` / `removeByTagExact` + `AnywoodHelper.LOGS_TAG` (fallback levy 32 any-log + 32 cobble when content has no costs)  
-5. Exclusive founder slots (`INTENDED` / `RESERVED` / `TEMP_BLOCKED` / `UNSUITABLE` / `MIGRATED`) with replacement of permanently unsuitable candidates  
-6. `WorldgenEngine.kickPlanExecution` queues already-loaded footprint chunks (no new chunk-event required)  
-7. Colony activation skips free occupants and free starting goods; assigns `parentFactionId`  
-8. Founders migrate via `MigrationResult`; `MIGRATED` only when the founder target is met  
-9. `VILLAGE_FOUNDED` emits once after successful founding (only when `LivingEventService.emit` succeeds — budget exhaustion leaves the flag unset for retry)
+1. Parent pressure / faction / war / cooldown gates
+2. Site + `SettlementPlanner.ensureRegionPlan` (culture-compatible, non-lone)
+3. Immediate `SettlementLayoutPlanner.ensureLayout`
+4. Exact stack reservation via authoritative `FoundingCostService` (exact lines first, then Anywood; no double-count; fallback levy 32 any-log + 32 cobble when content has no costs; missing required content blocks)
+5. Plan linked to parent op via persisted `colonizationOp` (culture/faction match alone is insufficient)
+6. Exclusive founder slots (`INTENDED` / `RESERVED` / `TEMP_BLOCKED` / `UNSUITABLE` / `MIGRATED`) with replacement of permanently unsuitable candidates
+7. `WorldgenEngine.kickPlanExecution` queues already-loaded footprint chunks only when the shared payment gate allows
+8. Colony activation skips free occupants and free starting goods; assigns `parentFactionId`
+9. Founders migrate via `MigrationResult`; `MIGRATED` only when the founder target is met
+10. `VILLAGE_FOUNDED` emits once after successful founding (only when `LivingEventService.emit` succeeds — budget exhaustion leaves the flag unset for retry)
 
-**Consumption policy:** reserved stacks are held until physical materialization begins (`costsConsumed`). Full refund applies only when founding fails before that transition. Incomplete refunds persist as `refundOutstanding` and are drained on an independent refund cursor even when new proposals are disabled.
+**Payment gate:** `ColonizationMaterializationGate` is checked at materializer / activator / schedule / kick. Unpaid, FAILED, CANCELLED, missing, or ambiguous ops cannot place blocks or activate. Partial escrow (`resourcesReserved` + non-empty list) is not full payment — coverage is recomputed.
+
+**Consumption policy:** reserved stacks are held until the **first real block mutation** (`costsConsumed` via the gate). Plan status `MATERIALIZING` alone is not consumption proof. Full unused-cost refund applies only when founding fails before that transition. Incomplete refunds persist as `refundOutstanding` (unresolved stack evidence is not pruned) and are drained on an independent refund cursor even when new proposals are disabled.
 
 **Config off (`civilizationAutonomousFoundingEnabled`):** stops new proposals; continues safe advance of already-active ops, migration bookkeeping, and refunds. Does not silently enable autonomous founding from a player button.
 
@@ -125,4 +135,4 @@ Village book Civilization actions are clickable (`VillageBookActionPayload`), sh
 
 ## Crash consistency
 
-Mutations may span civilization SD, village SD, colonization SD, and chunk block data. Operations keep explicit status / recovery flags; there is no cross-file atomic commit. Prefer idempotent steps and bounded recovery.
+Mutations may span civilization SD, village SD, colonization SD, and chunk block data. `setDirty` does not immediately flush to disk. Operations keep explicit status / recovery flags; there is no cross-file atomic commit and no general exactly-once crash guarantee. Prefer idempotent steps, bounded recovery, and hard blocks when evidence is ambiguous (do not invent goods or villagers).

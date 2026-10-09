@@ -15,6 +15,7 @@ import org.millenaire.building.BuildingPlanSet;
 import org.millenaire.building.ClearMargins;
 import org.millenaire.building.PlacementPhase;
 import org.millenaire.building.PlacementStep;
+import org.millenaire.civilization.settlement.ColonizationMaterializationGate;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.world.BuildingPlacer;
@@ -67,6 +68,15 @@ public final class ChunkSettlementMaterializer {
       if (plan.isChunkFullyMaterialized(packed)) {
          SettlementPlanSavedData.get(level).resumeQueue().remove(plan.planId(), packed);
          return PassResult.COMPLETE;
+      }
+
+      // Indispensable check at the real physical mutation entry — all callers share this gate.
+      if (!ColonizationMaterializationGate.allowPhysicalMutation(level, plan)) {
+         ChunkMaterializationProgress blocked = plan.progressFor(packed);
+         blocked.setStatus(ChunkMaterializationProgress.Status.BLOCKED);
+         blocked.setBlockReason("colonization_unpaid_or_blocked");
+         SettlementPlanSavedData.get(level).markDirtyPlan();
+         return PassResult.IDLE;
       }
 
       MaterializationTickBudget.ensureTick(level.getGameTime());
@@ -185,6 +195,11 @@ public final class ChunkSettlementMaterializer {
                   break;
                }
             }
+         }
+
+         if (anyProgress) {
+            // First real block mutation consumes founding escrow (not merely MATERIALIZING status).
+            ColonizationMaterializationGate.notePhysicalMutation(level, plan);
          }
 
          boolean chunkDone = isChunkWorkComplete(plan, chunk, progress);

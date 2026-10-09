@@ -28,17 +28,30 @@
 | C-04 | “Exact” cost reserve used Item+count reconstruction | Confirmed; `removeByItemExact` / `removeByTagExact` + persistent stack encode; incomplete rollback → `refundOutstanding` |
 | C-05 | Civilization facts hard to act on in UI | Confirmed; shared snapshots → village book Civilization section + `NpcActionType` civilization actions |
 
+## Integrity persistence milestone (source changes; owner-local runtime)
+
+| ID | Finding | Resolution (source) |
+|----|---------|---------------------|
+| P-01 | `CivilizationSavedData.factory` dropped Provider → trade stacks vanished | Factory/load passes registries; `ExactStackCodec` + unresolved evidence |
+| P-02 | Finalization-only trades skipped by `needsWork` | `DELIVERED` + empty pending still recoverable; stable `trade-fx` key |
+| P-03 | `recoverPending` ignored `trySetStatus` / cleared `needsRecovery` early | `reconcileStatus` + physical postconditions; RESERVED included |
+| P-04 | Partial/unpaid colonization could materialize | `FoundingCostService` + `ColonizationMaterializationGate` on all physical entries |
+| P-05 | `costsConsumed` on plan MATERIALIZING status | Consumed on first real block mutation via gate |
+
+**Not executed by agent:** `./gradlew build`, GameTests, GitHub CI test workflow, dedicated-server smoke (owner tests locally).
+
 ## Remaining limits (honest)
 
 | ID | Notes |
 |----|-------|
 | L-01 | Offscreen is profile refresh, not full temporal simulation |
 | L-02 | Autonomous founding requires already-loaded destination chunks |
-| L-03 | Cross-SavedData crash consistency is best-effort with recovery flags |
+| L-03 | Cross-SavedData crash consistency is best-effort with recovery flags — not exactly-once |
 | L-04 | Bridge placement is procedural, not template-pack based |
 | L-05 | Runtime performance and gameplay balance unverified |
 | L-06 | Player-block provenance incomplete — road guard is conservative, not omniscient |
 | L-07 | Authorize-colonization never enables the master switch; founding stays default-off |
+| L-08 | Backlog: exporter scan budgets, VillageRequest recovery, book snapshot rate limits, published-key per-entry TTL |
 
 ## Security (static)
 

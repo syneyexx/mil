@@ -60,7 +60,7 @@ public class CivilizationSavedData extends SavedData {
    }
 
    public static Factory<CivilizationSavedData> factory() {
-      return new Factory<>(CivilizationSavedData::new, (tag, registries) -> load(tag), null);
+      return new Factory<>(CivilizationSavedData::new, CivilizationSavedData::load, null);
    }
 
    public static CivilizationSavedData get(ServerLevel level) {
@@ -340,7 +340,8 @@ public class CivilizationSavedData extends SavedData {
             break;
          }
          SettlementTradeOperation existing = this.tradeOps.get(old);
-         if (existing != null && existing.isActive()) {
+         // Never prune unfinished escrow or unresolved decode evidence.
+         if (existing != null && existing.holdsEscrowOrEvidence()) {
             this.tradeOrder.pollFirst();
             this.tradeOrder.addLast(old);
             break;
@@ -462,7 +463,7 @@ public class CivilizationSavedData extends SavedData {
       return root;
    }
 
-   private static CivilizationSavedData load(CompoundTag tag) {
+   private static CivilizationSavedData load(CompoundTag tag, Provider registries) {
       CivilizationSavedData data = new CivilizationSavedData();
       data.schemaVersion = tag.contains("schema") ? tag.getInt("schema") : CivilizationConfig.SCHEMA_VERSION;
       data.membershipCursor = tag.getInt("membershipCursor");
@@ -490,9 +491,9 @@ public class CivilizationSavedData extends SavedData {
       for (String key : econFaction.getAllKeys()) {
          data.factionEconomyGameTime.put(key, econFaction.getLong(key));
       }
-      // Schema bump for multi-cursor + per-faction offscreen clocks + trade ops.
-      if (data.schemaVersion < 3) {
-         data.schemaVersion = 3;
+      // Schema bump: multi-cursor + trade ops with Provider-backed exact stacks (v4).
+      if (data.schemaVersion < CivilizationConfig.SCHEMA_VERSION) {
+         data.schemaVersion = CivilizationConfig.SCHEMA_VERSION;
       }
       CompoundTag published = tag.getCompound("published");
       for (String key : published.getAllKeys()) {
@@ -512,7 +513,7 @@ public class CivilizationSavedData extends SavedData {
       }
       ListTag trades = tag.getList("tradeOps", Tag.TAG_COMPOUND);
       for (int i = 0; i < trades.size(); i++) {
-         SettlementTradeOperation op = SettlementTradeOperation.load(trades.getCompound(i), null);
+         SettlementTradeOperation op = SettlementTradeOperation.load(trades.getCompound(i), registries);
          if (op != null) {
             data.tradeOps.put(op.operationId(), op);
             data.tradeOrder.addLast(op.operationId());
