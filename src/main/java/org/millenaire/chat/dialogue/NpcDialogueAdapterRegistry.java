@@ -107,12 +107,25 @@ public final class NpcDialogueAdapterRegistry {
             return cached;
          }
       }
+      // Prefer the highest-priority adapter that supports the entity. If that category is
+      // disabled, do not silently fall through to a lower generic spoken adapter.
+      NpcDialogueAdapter bestSupport = null;
       for (NpcDialogueAdapter adapter : ADAPTERS) {
-         if (adapter.supports(entity) && categoryToggle(adapter.category())) {
+         if (!adapter.supports(entity)) {
+            continue;
+         }
+         if (bestSupport == null) {
+            bestSupport = adapter;
+         }
+         if (categoryToggle(adapter.category())) {
             if (typeId != null) {
                TYPE_CACHE.put(typeId, adapter);
             }
             return adapter;
+         }
+         // Specialized match exists but toggle is off — stop rather than using generic.
+         if (adapter.category() != NpcDialogueCategory.GENERIC_LIVING) {
+            return null;
          }
       }
       return null;
