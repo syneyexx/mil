@@ -19,6 +19,7 @@ import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.NameLists;
 import org.millenaire.village.VillageManager;
 import org.millenaire.village.VillageSavedData;
+import org.millenaire.world.SiteValidator;
 import org.millenaire.world.StructureAvoidance;
 import org.millenaire.worldgen.WorldgenMetrics;
 import org.millenaire.worldgen.content.VillageTypeWorldgenEntry;
@@ -98,19 +99,14 @@ public final class SettlementPlanner {
       }
 
       int minSpacing = Math.max(cfg.minVillageDistance.getAsInt(), cfg.worldgenMinimumSettlementSpacing.getAsInt());
-      if (store.hasActiveOrPlannedNear(new SettlementPlanSavedData.BlockPosApprox(center.getX(), center.getZ()), minSpacing)) {
-         SettlementPlan empty = rejectedPlan(worldSeed, region, center, SettlementFailureReason.SETTLEMENT_RESERVATION_CONFLICT, "plan_spacing");
-         store.putPlan(empty);
-         return empty;
-      }
+      // Plan-spacing for full villages only. Lone KEY_ONLY placement near villages is handled below
+      // via VillageManager.classifyLBPlacement (legacy VillageSpawnQueue semantics).
+      boolean planTooCloseForVillage = store.hasActiveOrPlannedNear(
+         new SettlementPlanSavedData.BlockPosApprox(center.getX(), center.getZ()), minSpacing
+      );
 
       VillageSavedData villageData = VillageSavedData.get(level);
       VillageManager manager = villageData.getVillageManager();
-      if (manager.isWithinMinDistance(center, minSpacing)) {
-         SettlementPlan empty = rejectedPlan(worldSeed, region, center, SettlementFailureReason.SETTLEMENT_RESERVATION_CONFLICT, "existing_village");
-         store.putPlan(empty);
-         return empty;
-      }
 
       // Neighbor arbitration: if adjacent regions claim overlapping centers, highest priority wins.
       // Priority is immutable hash of candidate identity — not generation order.
@@ -149,15 +145,29 @@ public final class SettlementPlanner {
             villageCandidates.removeIf(e -> !e.hamlets().isEmpty());
          }
       }
+      VillageManager.LBPlacement lonePlacement = VillageManager.LBPlacement.FAR;
       if (tryLone) {
-         loneCandidates.addAll(snap.matchingLoneBuildings(biome::is));
+         lonePlacement = manager.classifyLBPlacement(
+            center,
+            cfg.minLoneBuildingDistance.getAsInt(),
+            cfg.minVillageLoneBuildingDistance.getAsInt(),
+            villageData.getLoneBuildingPositions()
+         );
+         if (lonePlacement != VillageManager.LBPlacement.BLOCKED) {
+            loneCandidates.addAll(snap.matchingLoneBuildings(biome::is));
+            if (lonePlacement == VillageManager.LBPlacement.KEY_ONLY) {
+               // Preserve legacy KEY_ONLY semantics near villages.
+               loneCandidates.removeIf(e -> !e.keyLoneBuilding());
+            }
+         }
       }
 
       // Prefer village over lone when both eligible; type stream is separate from position stream.
       RandomSource typeRng = WorldgenSeeds.stream(worldSeed, WorldgenSeeds.SALT_TYPE, region);
       VillageTypeWorldgenEntry selected = null;
       boolean lone = false;
-      if (!villageCandidates.isEmpty()) {
+      boolean tooCloseForVillage = manager.isWithinMinDistance(center, minSpacing);
+      if (!tooCloseForVillage && !villageCandidates.isEmpty()) {
          selected = snap.pickWeighted(villageCandidates, typeRng);
          lone = false;
       } else if (!loneCandidates.isEmpty()) {
@@ -165,7 +175,16 @@ public final class SettlementPlanner {
          lone = true;
       }
       if (selected == null) {
-         SettlementPlan empty = rejectedPlan(worldSeed, region, center, SettlementFailureReason.NO_COMPATIBLE_BIOME, "no_candidates");
+         SettlementFailureReason reason = lonePlacement == VillageManager.LBPlacement.BLOCKED && villageCandidates.isEmpty()
+            ? SettlementFailureReason.SETTLEMENT_RESERVATION_CONFLICT
+            : SettlementFailureReason.NO_COMPATIBLE_BIOME;
+         SettlementPlan empty = rejectedPlan(worldSeed, region, center, reason, "no_candidates");
+         store.putPlan(empty);
+         return empty;
+      }
+
+      if (manager.overlapsExistingVillage(center, selected.radius())) {
+         SettlementPlan empty = rejectedPlan(worldSeed, region, center, SettlementFailureReason.SETTLEMENT_RESERVATION_CONFLICT, "footprint_overlap");
          store.putPlan(empty);
          return empty;
       }
@@ -201,6 +220,13 @@ public final class SettlementPlanner {
       }
       if (metrics.insufficientBuildable(0.35F)) {
          SettlementPlan empty = rejectedPlan(worldSeed, region, center, SettlementFailureReason.INSUFFICIENT_BUILDABLE_AREA, metrics.toString());
+         store.putPlan(empty);
+         return empty;
+      }
+
+      // Preserve legacy SiteValidator gate used by VillageSpawnQueue.
+      if (!SiteValidator.validate(level, center, selected.radius(), lone)) {
+         SettlementPlan empty = rejectedPlan(worldSeed, region, center, SettlementFailureReason.INVALID_TERRAIN, "site_validator");
          store.putPlan(empty);
          return empty;
       }

@@ -40,6 +40,7 @@ Build / CI / Minecraft runtime / worldgen benchmarks were **not** executed by th
 | WG-08 | 4.7 | Legacy queue gating + manual spawn preserved | IMPLEMENTED_UNVERIFIED | `LegacySpawnBridge`, `Millenaire` chunk/tick |
 | WG-09 | 4.8 | Budgets, no force-load, bounded caches | IMPLEMENTED_UNVERIFIED | config budgets, engine tick budget |
 | WG-10 | 4.9 | Docs + diag command + lang | IMPLEMENTED_UNVERIFIED | `docs/WORLDGEN_*`, `WorldgenDiagCommand`, `en_us.json` |
+| WG-11 | 4.7 | SiteValidator + KEY_ONLY LB + lone registry | IMPLEMENTED_UNVERIFIED | `SettlementPlanner`, `SettlementActivator` |
 
 ---
 

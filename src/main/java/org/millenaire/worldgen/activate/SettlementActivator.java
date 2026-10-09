@@ -150,6 +150,10 @@ public final class SettlementActivator {
 
          manager.addVillage(village);
          FactionLifecycle.onVillageRegistered(level, village);
+         if (plan.loneBuilding()) {
+            String culturePath = plan.cultureId() != null ? plan.cultureId().getPath() : "";
+            savedData.registerLoneBuilding(plan.center(), plan.villageTypeId(), culturePath, null);
+         }
          savedData.setDirty();
 
          if (!plan.loneBuilding() && Boolean.TRUE.equals(org.millenaire.config.MillenaireServerConfig.SERVER.buildPaths.get())) {
