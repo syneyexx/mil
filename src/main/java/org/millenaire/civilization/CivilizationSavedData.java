@@ -291,6 +291,11 @@ public class CivilizationSavedData extends SavedData {
       return operationId == null ? null : this.migrationOps.get(operationId);
    }
 
+   /** Read-only view for recovery consumers. */
+   public java.util.Collection<MigrationOperation> migrationOpsView() {
+      return java.util.Collections.unmodifiableCollection(this.migrationOps.values());
+   }
+
    public void putDevelopmentLabel(UUID villageId, String label) {
       if (villageId != null && label != null) {
          this.settlementDevelopmentLabels.put(villageId, label);

@@ -187,6 +187,44 @@ public final class WorldgenEngine {
       }
    }
 
+   /**
+    * Explicitly drive layout + queue/materialize for already-loaded footprint chunks.
+    * Used by colonization so progress does not wait for a fresh chunk-load event.
+    */
+   public static void kickPlanExecution(ServerLevel level, SettlementPlan plan) {
+      if (level == null || plan == null || plan.status().isTerminalFailure() || plan.activated()) {
+         return;
+      }
+      MaterializationTickBudget.ensureTick(level.getGameTime());
+      if (plan.status() == SettlementPlanStatus.PLANNED || plan.buildings().isEmpty()) {
+         SettlementLayoutPlanner.ensureLayout(level, plan);
+      }
+      SettlementPlanSavedData store = SettlementPlanSavedData.get(level);
+      int queued = 0;
+      for (Long packed : plan.reservedChunks()) {
+         ChunkPos chunk = new ChunkPos(packed);
+         if (!level.hasChunk(chunk.x, chunk.z)) {
+            continue;
+         }
+         if (plan.isChunkFullyMaterialized(packed)) {
+            continue;
+         }
+         scheduleOrMaterialize(level, chunk, plan);
+         queued++;
+         if (!MaterializationTickBudget.hasOps()) {
+            break;
+         }
+      }
+      // Also touch the centre chunk if reserved set is empty after a failed layout.
+      if (queued == 0 && plan.center() != null) {
+         ChunkPos centre = new ChunkPos(plan.center());
+         if (level.hasChunk(centre.x, centre.z) && !plan.isChunkFullyMaterialized(centre.toLong())) {
+            scheduleOrMaterialize(level, centre, plan);
+         }
+      }
+      store.markDirtyPlan();
+   }
+
    private static void scheduleOrMaterialize(ServerLevel level, ChunkPos chunk, SettlementPlan plan) {
       SettlementPlanSavedData store = SettlementPlanSavedData.get(level);
       long packed = chunk.toLong();

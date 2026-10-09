@@ -25,8 +25,14 @@ import org.millenaire.worldgen.materialize.ChunkMaterializationProgress;
 public final class SettlementPlan {
    /** Planner content version (layout identity). Progress schema is tracked separately. */
    public static final int SCHEMA_VERSION = WorldgenSeeds.PLANNER_VERSION;
-   /** Progress persistence schema: chunk work units + legacy materializedChunks migration. */
-   public static final int PROGRESS_SCHEMA_VERSION = 2;
+   /** Progress persistence schema: per-unit cursors (buildings/walls/roads/terrain/bridges). */
+   public static final int PROGRESS_SCHEMA_VERSION = 3;
+
+   public enum FoundingMode {
+      NATURAL,
+      COLONIZATION,
+      MANUAL
+   }
 
    private final UUID planId;
    private final VillageIdHolder villageId;
@@ -57,6 +63,9 @@ public final class SettlementPlan {
    private String failureDetail;
    private boolean activated;
    private boolean inventoriesInitialized;
+   private FoundingMode foundingMode = FoundingMode.NATURAL;
+   @Nullable
+   private String foundingFactionId;
 
    public SettlementPlan(
       UUID planId,
@@ -189,6 +198,27 @@ public final class SettlementPlan {
 
    public String plannedName() {
       return this.plannedName;
+   }
+
+   public FoundingMode foundingMode() {
+      return this.foundingMode == null ? FoundingMode.NATURAL : this.foundingMode;
+   }
+
+   public void setFoundingMode(FoundingMode mode) {
+      this.foundingMode = mode == null ? FoundingMode.NATURAL : mode;
+   }
+
+   public boolean isColonizationFounding() {
+      return foundingMode() == FoundingMode.COLONIZATION;
+   }
+
+   @Nullable
+   public String foundingFactionId() {
+      return this.foundingFactionId;
+   }
+
+   public void setFoundingFactionId(@Nullable String factionId) {
+      this.foundingFactionId = factionId == null || factionId.isBlank() ? null : factionId;
    }
 
    public List<PlannedBuilding> buildings() {
@@ -375,6 +405,10 @@ public final class SettlementPlan {
       tag.putString("failDetail", this.failureDetail);
       tag.putBoolean("activated", this.activated);
       tag.putBoolean("inventories", this.inventoriesInitialized);
+      tag.putString("foundingMode", this.foundingMode.name());
+      if (this.foundingFactionId != null) {
+         tag.putString("foundingFaction", this.foundingFactionId);
+      }
 
       ListTag buildingsTag = new ListTag();
       for (PlannedBuilding b : this.buildings) {
@@ -454,6 +488,16 @@ public final class SettlementPlan {
          plan.failureDetail = tag.getString("failDetail");
          plan.activated = tag.getBoolean("activated");
          plan.inventoriesInitialized = tag.getBoolean("inventories");
+         if (tag.contains("foundingMode")) {
+            try {
+               plan.foundingMode = FoundingMode.valueOf(tag.getString("foundingMode"));
+            } catch (Exception ignored) {
+               plan.foundingMode = FoundingMode.NATURAL;
+            }
+         }
+         if (tag.contains("foundingFaction")) {
+            plan.foundingFactionId = tag.getString("foundingFaction");
+         }
 
          ListTag buildingsTag = tag.getList("buildings", Tag.TAG_COMPOUND);
          for (int i = 0; i < buildingsTag.size(); i++) {
@@ -528,6 +572,24 @@ public final class SettlementPlan {
       }
       if (plan.status == SettlementPlanStatus.FAILED || plan.status == SettlementPlanStatus.INVALID) {
          plan.recoveryNote = "legacy_progress_terminal";
+         return;
+      }
+      // Schema 2→3: per-unit cursors are additive; keep incomplete work, mark ambiguous placement
+      // so DELETION/terrain clear is not replayed on already-touched footprints.
+      if (loadedProgressSchema >= 2) {
+         for (ChunkMaterializationProgress progress : plan.chunkProgress.values()) {
+            if (progress.status() == ChunkMaterializationProgress.Status.IN_PROGRESS
+               || progress.status() == ChunkMaterializationProgress.Status.BLOCKED
+               || progress.status() == ChunkMaterializationProgress.Status.PENDING) {
+               if (!progress.legacyAmbiguous()) {
+                  progress.setLegacyAmbiguous(true);
+                  if (progress.blockReason().isEmpty()) {
+                     progress.setBlockReason("schema2_resume_no_destructive_replay");
+                  }
+               }
+            }
+         }
+         plan.recoveryNote = (plan.recoveryNote.isEmpty() ? "" : plan.recoveryNote + ";") + "progress_schema2_to_3";
          return;
       }
       if (plan.materializedChunks.isEmpty()) {

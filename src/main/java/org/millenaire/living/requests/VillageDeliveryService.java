@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 
 /**
  * Server-only item delivery into authoritative townhall inventory.
- * Order: validate → remove from player → add to village → compensate leftovers → update request.
+ * Exact stacks removed from the player are the only source of destination deposits and refunds.
  * Allowed quantities from need revalidation bound each item (never blind request.remaining()).
  */
 public final class VillageDeliveryService {
@@ -32,8 +32,12 @@ public final class VillageDeliveryService {
    private VillageDeliveryService() {
    }
 
+   /**
+    * Normal caller flow must supply live allowed quantities from {@link VillageRequestService}.
+    * This overload refuses to use {@code request.remaining()} as an authoritative cap.
+    */
    public static DeliveryResult deliver(ServerLevel level, ServerPlayer player, Village village, VillageRequest request) {
-      return deliver(level, player, village, request, request.remaining());
+      return DeliveryResult.fail("living.millenaire.request.error.revalidation_required");
    }
 
    public static DeliveryResult deliver(
@@ -55,8 +59,16 @@ public final class VillageDeliveryService {
       if (request.state() == VillageRequestState.EXPIRED || request.state() == VillageRequestState.CANCELLED) {
          return DeliveryResult.fail("living.millenaire.request.error.bad_state");
       }
+      if (level.getGameTime() > request.expiryGameTime()) {
+         request.forceState(VillageRequestState.EXPIRED, level.getGameTime());
+         VillageRequestSavedData.get(level).setDirty();
+         return DeliveryResult.fail("living.millenaire.request.error.expired");
+      }
       if (!village.getId().uuid().equals(request.villageId())) {
          return DeliveryResult.fail("living.millenaire.request.error.village_mismatch");
+      }
+      if (allowedQuantities == null || allowedQuantities.isEmpty()) {
+         return DeliveryResult.fail("living.millenaire.request.error.no_longer_needed");
       }
 
       BuildingInstance townhall = village.getTownhall();
@@ -75,7 +87,7 @@ public final class VillageDeliveryService {
 
       Map<ResourceLocation, Integer> transferred = new LinkedHashMap<>();
       Inventory playerInv = player.getInventory();
-      Map<ResourceLocation, Integer> caps = allowedQuantities == null ? Map.of() : allowedQuantities;
+      Map<ResourceLocation, Integer> caps = allowedQuantities;
 
       for (Entry<ResourceLocation, Integer> entry : remaining.entrySet()) {
          ResourceLocation itemId = entry.getKey();
@@ -83,26 +95,39 @@ public final class VillageDeliveryService {
          if (want <= 0) {
             continue;
          }
-         TransferDetail detail = transferOneItem(level, playerInv, inv, itemId, want);
+         TransferDetail detail = transferOneItem(level, player, playerInv, inv, itemId, want);
          if (detail.added() > 0) {
             int applied = request.applyDelivery(itemId, detail.added(), level.getGameTime());
             if (applied < detail.added()) {
-               // Over-delivery relative to request accounting — pull excess back from destination first.
                int excess = detail.added() - applied;
-               int pulled = pullExactFromDest(level, inv, detail.concreteStacks(), excess);
-               int still = excess - pulled;
+               List<ItemStack> pulled = pullExactStacksFromDest(level, inv, detail.concreteStacks(), excess);
+               int pulledCount = pulled.stream().mapToInt(ItemStack::getCount).sum();
+               returnStacksToPlayer(level, player, pulled);
+               int still = excess - pulledCount;
                if (still > 0) {
-                  returnExact(level, player, detail.concreteStacks(), still);
+                  // Do not fabricate replacements for goods still stuck in the destination.
+                  LOGGER.warn(
+                     "[Living] Overdelivery recovery incomplete for {} — {} still in destination; recorded as recovery",
+                     itemId,
+                     still
+                  );
+                  request.markRecoveryOutstanding(itemId, still);
                }
             }
             if (applied > 0) {
                transferred.put(itemId, applied);
+            }
+         } else if (detail.messageKey() != null) {
+            // Prefer destination-full feedback when nothing moved for this item.
+            if (transferred.isEmpty() && "living.millenaire.request.error.no_space".equals(detail.messageKey())) {
+               return DeliveryResult.fail(detail.messageKey());
             }
          }
       }
 
       VillageRequestSavedData.get(level).setDirty();
       village.markDirty();
+      inv.invalidateCache();
 
       if (transferred.isEmpty()) {
          return DeliveryResult.fail("living.millenaire.request.error.nothing_delivered");
@@ -112,6 +137,7 @@ public final class VillageDeliveryService {
 
    private static TransferDetail transferOneItem(
       ServerLevel level,
+      ServerPlayer player,
       Inventory playerInv,
       BuildingInventory dest,
       ResourceLocation itemId,
@@ -121,7 +147,7 @@ public final class VillageDeliveryService {
          return TransferDetail.empty();
       }
       if (AnywoodHelper.isAnywood(itemId)) {
-         return transferAnywood(level, playerInv, dest, want);
+         return transferAnywood(level, player, playerInv, dest, want);
       }
       Item item = ItemHelper.resolve(itemId);
       if (item == null) {
@@ -137,18 +163,37 @@ public final class VillageDeliveryService {
       if (removed <= 0) {
          return TransferDetail.empty();
       }
-      int added = dest.add(level, item, removed);
-      if (added < removed) {
-         returnExactStacks(playerInv, item, removed - added, level, null);
+      List<ItemStack> accepted = new ArrayList<>();
+      List<ItemStack> rejected = new ArrayList<>();
+      int added = 0;
+      for (ItemStack stack : removedStacks) {
+         BuildingInventory.AddStackResult result = dest.addExactStack(level, stack);
+         if (result.placed() > 0) {
+            ItemStack placed = stack.copy();
+            placed.setCount(result.placed());
+            accepted.add(placed);
+            added += result.placed();
+         }
+         if (!result.remainder().isEmpty()) {
+            rejected.add(result.remainder());
+         }
       }
-      List<ItemStack> concrete = new ArrayList<>();
-      if (added > 0) {
-         concrete.add(new ItemStack(item, added));
+      if (!rejected.isEmpty()) {
+         returnStacksToPlayer(level, player, rejected);
+         if (added <= 0) {
+            return new TransferDetail(0, List.of(), "living.millenaire.request.error.no_space");
+         }
       }
-      return new TransferDetail(added, concrete);
+      return new TransferDetail(added, accepted, null);
    }
 
-   private static TransferDetail transferAnywood(ServerLevel level, Inventory playerInv, BuildingInventory dest, int want) {
+   private static TransferDetail transferAnywood(
+      ServerLevel level,
+      ServerPlayer player,
+      Inventory playerInv,
+      BuildingInventory dest,
+      int want
+   ) {
       int remaining = want;
       int totalAdded = 0;
       List<ItemStack> concrete = new ArrayList<>();
@@ -157,24 +202,28 @@ public final class VillageDeliveryService {
          if (stack.isEmpty() || !stack.is(AnywoodHelper.LOGS_TAG)) {
             continue;
          }
-         Item item = stack.getItem();
          int take = Math.min(remaining, stack.getCount());
-         ItemStack extracted = stack.split(take);
+         ItemStack extracted = stack.split(take).copy();
          if (stack.isEmpty()) {
             playerInv.setItem(slot, ItemStack.EMPTY);
          }
-         int added = dest.add(level, item, extracted.getCount());
-         totalAdded += added;
-         remaining -= added;
-         if (added > 0) {
-            concrete.add(new ItemStack(item, added));
+         BuildingInventory.AddStackResult result = dest.addExactStack(level, extracted);
+         if (result.placed() > 0) {
+            ItemStack placed = extracted.copy();
+            placed.setCount(result.placed());
+            concrete.add(placed);
+            totalAdded += result.placed();
+            remaining -= result.placed();
          }
-         if (added < extracted.getCount()) {
-            returnExactStacks(playerInv, item, extracted.getCount() - added, level, null);
+         if (!result.remainder().isEmpty()) {
+            returnStacksToPlayer(level, player, List.of(result.remainder()));
+            if (totalAdded <= 0) {
+               return new TransferDetail(0, List.of(), "living.millenaire.request.error.no_space");
+            }
             break;
          }
       }
-      return new TransferDetail(totalAdded, concrete);
+      return new TransferDetail(totalAdded, concrete, null);
    }
 
    private static int countPlayerItem(Inventory inv, Item item) {
@@ -207,57 +256,59 @@ public final class VillageDeliveryService {
       return taken;
    }
 
-   private static int pullExactFromDest(ServerLevel level, BuildingInventory dest, List<ItemStack> concrete, int amount) {
+   private static List<ItemStack> pullExactStacksFromDest(
+      ServerLevel level,
+      BuildingInventory dest,
+      List<ItemStack> concrete,
+      int amount
+   ) {
+      List<ItemStack> pulled = new ArrayList<>();
       int remaining = amount;
       for (ItemStack sample : concrete) {
          if (remaining <= 0) {
             break;
          }
-         int took = dest.remove(level, sample.getItem(), Math.min(remaining, sample.getCount()));
-         remaining -= took;
+         List<ItemStack> took = dest.removeExactStacks(level, sample, Math.min(remaining, sample.getCount()));
+         for (ItemStack t : took) {
+            pulled.add(t);
+            remaining -= t.getCount();
+         }
       }
-      return amount - remaining;
+      return pulled;
    }
 
-   private static void returnExact(ServerLevel level, ServerPlayer player, List<ItemStack> concrete, int amount) {
-      int remaining = amount;
+   private static void returnStacksToPlayer(ServerLevel level, ServerPlayer player, List<ItemStack> stacks) {
       Inventory inv = player.getInventory();
-      for (ItemStack sample : concrete) {
-         if (remaining <= 0) {
-            break;
+      for (ItemStack stack : stacks) {
+         if (stack == null || stack.isEmpty()) {
+            continue;
          }
-         int give = Math.min(remaining, sample.getCount());
-         returnExactStacks(inv, sample.getItem(), give, level, player);
-         remaining -= give;
-      }
-   }
-
-   private static void returnExactStacks(Inventory inv, Item item, int amount, ServerLevel level, @Nullable ServerPlayer player) {
-      int remaining = amount;
-      while (remaining > 0) {
-         int stackSize = Math.min(item.getDefaultMaxStackSize(), remaining);
-         ItemStack stack = new ItemStack(item, stackSize);
-         if (!inv.add(stack)) {
-            for (int i = 0; i < inv.getContainerSize() && !stack.isEmpty(); i++) {
+         ItemStack remaining = stack.copy();
+         // Inventory.add returns false when nothing fit; otherwise mutates the passed stack to the leftover.
+         if (!inv.add(remaining)) {
+            remaining = stack.copy();
+         }
+         if (!remaining.isEmpty()) {
+            for (int i = 0; i < inv.getContainerSize() && !remaining.isEmpty(); i++) {
                if (inv.getItem(i).isEmpty()) {
-                  inv.setItem(i, stack.copy());
-                  stack.setCount(0);
+                  int place = Math.min(remaining.getCount(), remaining.getMaxStackSize());
+                  ItemStack slotStack = remaining.copy();
+                  slotStack.setCount(place);
+                  inv.setItem(i, slotStack);
+                  remaining.shrink(place);
                }
             }
-            if (!stack.isEmpty()) {
-               // Explicit recovery: drop at player feet rather than silently deleting items.
-               if (player != null && level != null) {
-                  ItemEntity dropped = new ItemEntity(level, player.getX(), player.getY() + 0.5, player.getZ(), stack.copy());
-                  dropped.setPickUpDelay(40);
-                  level.addFreshEntity(dropped);
-                  LOGGER.warn("[Living] Returned overflow {} x{} as ground drop after failed inventory insert", item, stack.getCount());
-               } else {
-                  LOGGER.warn("[Living] Could not fully return {} x{} to player inventory after failed village deposit", item, stack.getCount());
-               }
-            }
-            break;
          }
-         remaining -= stackSize;
+         if (!remaining.isEmpty()) {
+            ItemEntity dropped = new ItemEntity(level, player.getX(), player.getY() + 0.5, player.getZ(), remaining.copy());
+            dropped.setPickUpDelay(40);
+            level.addFreshEntity(dropped);
+            LOGGER.warn(
+               "[Living] Returned overflow {} x{} as ground drop after failed inventory insert",
+               remaining.getItem(),
+               remaining.getCount()
+            );
+         }
       }
    }
 
@@ -277,9 +328,9 @@ public final class VillageDeliveryService {
       }
    }
 
-   private record TransferDetail(int added, List<ItemStack> concreteStacks) {
+   private record TransferDetail(int added, List<ItemStack> concreteStacks, @Nullable String messageKey) {
       static TransferDetail empty() {
-         return new TransferDetail(0, List.of());
+         return new TransferDetail(0, List.of(), null);
       }
    }
 }

@@ -109,12 +109,12 @@ States: `AVAILABLE → OFFERED → ACCEPTED → IN_PROGRESS → READY_TO_COMPLET
 
 Delivery ordering:
 
-1. Validate ownership, state, village, destination inventory.
-2. Revalidate live shortage / shared committed remaining across players.
-3. Remove items from player.
-4. Add to townhall `BuildingInventory`.
-5. Return unaccepted remainder to player.
-6. Update request delivered counts only for committed amounts.
+1. Validate ownership, state, village, destination inventory, and expiry.
+2. Revalidate against a **live** need/project only (`request.remaining()` is a cap, not demand).
+3. Remove exact stacks from player (components preserved).
+4. Deposit via `BuildingInventory.addExactStack`.
+5. Return exact unaccepted remainder to player (or ground drop).
+6. Update request delivered counts only for committed amounts; ledger incomplete overdelivery recovery.
 7. On full fill: reputation reward once (`rewardClaimed`), living event, knowledge seed.
 
 If need resolves elsewhere: cancel remaining work; **do not confiscate** player items.

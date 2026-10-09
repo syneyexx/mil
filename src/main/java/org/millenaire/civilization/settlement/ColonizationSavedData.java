@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 public class ColonizationSavedData extends SavedData {
    private static final Logger LOGGER = LogUtils.getLogger();
    private static final String DATA_NAME = "millenaire_colonization";
-   public static final int SCHEMA = 1;
+   public static final int SCHEMA = 2;
    private static final int RETENTION = 128;
 
    private final Map<UUID, ColonizationOperation> operations = new HashMap<>();

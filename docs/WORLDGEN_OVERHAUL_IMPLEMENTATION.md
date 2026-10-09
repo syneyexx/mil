@@ -31,7 +31,10 @@ Unfinished plans whose old `materializedChunks` may have been marked after mid-b
 
 - Stable route IDs; duplicate planning avoided
 - Placement waits for loaded chunks; progress persisted in `millenaire_regional_roads`
-- Statuses: `PLANNED` / `PARTIAL` / `CONNECTED` / `BLOCKED`
+- Statuses: `PLANNED` / `PARTIAL` / `WAITING_CHUNKS` / `BLOCKED` / `CONNECTED` / `FAILED` / `RECOVERY_REQUIRED`
+- Coarse waypoints (~32) are expanded to continuous adjacent cells before placement; `CONNECTED` requires every cell and finished bridges
+- Schema v1 coarse-only `CONNECTED` routes migrate to `RECOVERY_REQUIRED` and resume forward without blind rebuild
+- Bridge placement returns an explicit incomplete result; the route cursor does not advance on a half-built crossing
 - Water crossings: deterministic stone supports + plank deck when bridges enabled (no invented template files)
 - A partial route is never described as connected
 

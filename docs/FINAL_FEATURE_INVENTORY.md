@@ -8,18 +8,18 @@ Legend: **IMPLEMENTED_UNVERIFIED** = source complete, runtime not verified by ag
 | Config master switch + budgets | IMPLEMENTED_UNVERIFIED | `MillenaireServerConfig` `civilization*` |
 | Membership reconcile cadence | IMPLEMENTED_UNVERIFIED | orchestrator + `FactionManager.reconcileSettlements` |
 | Population aggregates (real housing) | IMPLEMENTED_UNVERIFIED | `PopulationAggregator` / residential plan slots |
-| Migration transactions | IMPLEMENTED_UNVERIFIED | `MigrationTransactionService` → `Village.transferVillagerPermanently` |
-| Migration evaluator (housing pressure) | IMPLEMENTED_UNVERIFIED | `MigrationEvaluator` |
-| Conserved physical trade | IMPLEMENTED_UNVERIFIED | `SettlementTradeExecutor` |
+| Migration transactions | IMPLEMENTED_UNVERIFIED | `MigrationTransactionService` → `MigrationResult` + `transferVillagerPermanently` |
+| Migration evaluator (housing pressure) | IMPLEMENTED_UNVERIFIED | `MigrationEvaluator` (cooldown-before-select + recovery) |
+| Conserved physical trade | IMPLEMENTED_UNVERIFIED | `SettlementTradeExecutor` (`addExactStack`; incomplete compensation ≠ success) |
 | Needs→trade bridge (concrete villages) | IMPLEMENTED_UNVERIFIED | `NeedsTradeBridge` |
 | Intra-faction logistics | IMPLEMENTED_UNVERIFIED | `civilizationIntraFactionLogistics` |
 | Politics/diplomacy/war chronicle bridges | IMPLEMENTED_UNVERIFIED | `CivilizationEventBridge` |
 | Settlement development labels | IMPLEMENTED_UNVERIFIED | `SettlementDevelopmentClassifier` (fair cursor) |
 | Offscreen economy **profile refresh** | IMPLEMENTED_UNVERIFIED | `OffscreenReconciler` |
-| Autonomous founding | IMPLEMENTED_UNVERIFIED | `ColonizationService` (default **off**) |
-| Resumable worldgen materialization | IMPLEMENTED_UNVERIFIED | `ChunkSettlementMaterializer` + resume queue |
-| Regional roads + bridges | IMPLEMENTED_UNVERIFIED | `RegionalRoadPlanner` / `RegionalRoadMaterializer` |
-| Living request live need caps | IMPLEMENTED_UNVERIFIED | `NeedRevalidationResult` + delivery limits |
+| Autonomous founding | IMPLEMENTED_UNVERIFIED | `ColonizationService` full lifecycle (default **off**) |
+| Resumable worldgen materialization | IMPLEMENTED_UNVERIFIED | Per-unit cursors in `ChunkMaterializationProgress` (schema v3) |
+| Regional roads + bridges | IMPLEMENTED_UNVERIFIED | Continuous routes + resumable bridges; `CONNECTED` only when finished |
+| Living request live need caps | IMPLEMENTED_UNVERIFIED | Live need required; exact-stack delivery; unsafe overload disabled |
 | Living event types (civ) | IMPLEMENTED_UNVERIFIED | `LivingEventType` |
 | Worldgen founded event | IMPLEMENTED_UNVERIFIED | `SettlementActivator` → `LivingEventService` |
 | NPC civ dialogue context | IMPLEMENTED_UNVERIFIED | `CivilizationContextProvider` |

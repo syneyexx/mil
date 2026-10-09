@@ -35,7 +35,7 @@ Neighbor conflicts use unsigned priority from candidate identity (`SALT_ARBITER`
 
 `SettlementPlanSavedData` (`millenaire_worldgen_plans`) is independent from `VillageSavedData` (`millenaire_villages`). Existing villages are never rewritten by the Phase 4 schema.
 
-Progress schema v2 stores `ChunkMaterializationProgress` + resume queue. Legacy unfinished `materializedChunks` are reopened ambiguously (skip re-flatten, resume placement).
+Progress schema v3 stores `ChunkMaterializationProgress` with **independent cursors per building / wall / road / terrain / bridge column**, plus the resume queue. Legacy unfinished `materializedChunks` and schema-v2 mid-progress are reopened ambiguously (skip destructive re-flatten/deletion replay; resume placement). Missing required plans mark the unit `BLOCKED` — they are never silently treated as materialized.
 
 Statuses: `CANDIDATE → PLANNED → RESERVED → MATERIALIZING → PHYSICAL_COMPLETE → ACTIVATING → ACTIVE` (+ `INVALID` / `FAILED`).
 

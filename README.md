@@ -34,13 +34,15 @@ Server config lives in the NeoForge Millénaire server config (keys under `gener
 - `worldgenResumeQueueBudget` — unfinished chunk jobs drained per tick
 - `worldgenActivationBudget` — activation **attempts** per tick (counts failures)
 - `worldgenGenerateInitialRoads` / `worldgenGenerateStartingWalls`
-- `worldgenGenerateRegionalRoads` — plans + places bounded inter-settlement connectors when chunks are loaded
-- `worldgenGenerateBridges` — allows deterministic short water crossings on roads/regional routes
+- `worldgenGenerateRegionalRoads` — plans continuous inter-settlement routes; places adjacent cells when chunks are loaded
+- `worldgenGenerateBridges` — resumable water crossings; a route is never `CONNECTED` after a half-built bridge
 
 ### Living Villages / requests
 
 - `livingVillagesEnabled`, `villageRequestsEnabled`
-- Deliveries are capped by **live** need quantities, not stale `request.remaining()` alone
+- Deliveries require a **live** need/project; `request.remaining()` is only an upper bound
+- Player deliveries preserve exact `ItemStack`s (components included) for deposit, return, and overdelivery recovery
+- The unsafe `VillageDeliveryService.deliver(...)` overload without live caps refuses delivery
 
 ### Civilization
 
@@ -49,8 +51,8 @@ Server config lives in the NeoForge Millénaire server config (keys under `gener
 - `civilizationIntraFactionLogistics` — same-faction logistics (not diplomatic trade booking)
 - `civilizationOffscreenEnabled` — **profile refresh** for inactive settlements (not free goods / combat)
 - `civilizationCatchupDays` — caps offscreen elapsed profile refresh
-- `civilizationMigrationBudget` — housing-pressure migrations via `Village.transferVillagerPermanently`
-- `civilizationAutonomousFoundingEnabled` — **default false**; bounded colonization using existing worldgen + migration
+- `civilizationMigrationBudget` — housing-pressure migrations; success is `MigrationResult.completed()`, not a non-null operation id
+- `civilizationAutonomousFoundingEnabled` — **default false**; complete colonization lifecycle (layout → costs → materialize → activate → faction → migrate)
 - `civilizationColonizationOpsBudget` / `CandidateBudget` / `CooldownDays`
 
 ### NPC chat
@@ -58,29 +60,34 @@ Server config lives in the NeoForge Millénaire server config (keys under `gener
 - `npcChatEnabled`, `npcChatProvider`, `npcChatBaseUrl`, `npcChatModel`, `npcChatApiKey`
 - Supports LM Studio / OpenAI-compatible providers when configured
 - **API keys must not be stored in the repository**
+- Model output never authorizes game mutations
 
 ## Generation modes
 
 | Mode | Behaviour |
 |------|-----------|
-| Natural / worldgen engine | Seed-stable region plans; chunk materialization; activation when physically complete |
+| Natural / worldgen engine | Seed-stable region plans; per-unit resumable materialization; activation when physically complete |
 | Manual spawn | Existing `/millenaire` spawn / `VillageSpawner` paths remain |
-| Autonomous colonization | Optional; plans a nearby settlement in **already loaded** chunks, spends real goods, migrates real residents |
+| Autonomous colonization | Optional; `FoundingMode.COLONIZATION` plans, layouts, spends exact reserved stacks, queues loaded chunks without a new chunk event, skips free natural occupants/goods, assigns founding faction, migrates intended founders |
 
 ## Existing worlds
 
 - Active villages and faction data are preserved
-- Legacy worldgen `materializedChunks` on unfinished plans are treated as **ambiguous**: terrain is assumed prepared, placement resumes, blocks are not blindly rebuilt
-- Civilization SavedData schema v2 adds independent stage cursors and per-faction offscreen clocks
-- Request deliveries become stricter (current need caps); expired requests no longer accept items
+- Progress schema v3: per-building / per-wall / per-road / terrain / bridge cursors
+- Legacy unfinished `materializedChunks` / schema-v2 mid-progress: **ambiguous** — no destructive terrain/deletion replay; placement may resume
+- Regional roads schema v2: old coarse-only `CONNECTED` routes become `RECOVERY_REQUIRED` and expand to continuous cells without blind overwrite
+- Colonization SavedData schema v2: exact reserved stacks + refund outstanding + founder lists
+- Request schema v2: optional recovery ledger for incomplete overdelivery pullback
+- Civilization migration recovery consumer drains `needsRecovery` ops on the demographics stage
 
 ## Known limitations
 
 - Offscreen reconcile refreshes economic **profiles** only; it does not simulate combat, block placement, or invent inventory goods
-- Regional roads wait on naturally loaded chunks; unfinished routes stay `PARTIAL` / `BLOCKED` rather than claiming completion
-- Bridge placement uses a deterministic stone/plank strategy when templates are absent
-- Autonomous founding stays off by default and only acts when destination chunks are already available
-- Crash consistency across multiple SavedData + chunk files is best-effort, not a single atomic transaction
+- Regional roads wait on naturally loaded chunks (`WAITING_CHUNKS`); unfinished routes stay `PARTIAL` / `BLOCKED` / `RECOVERY_REQUIRED` rather than claiming completion
+- Bridge placement uses a deterministic stone/plank strategy when templates are absent; depth is capped
+- Autonomous founding stays off by default; when worldgen is disabled it records an explicit block marker instead of leaving silent ops
+- Founding costs use summed building `requiredResources` (BuildingCostCalculator content); if empty, a documented minimum levy of 32 any-log + 32 cobblestone applies
+- Crash consistency across multiple SavedData + chunk files is best-effort idempotent recovery, not a single atomic transaction
 
 ## Documentation
 
