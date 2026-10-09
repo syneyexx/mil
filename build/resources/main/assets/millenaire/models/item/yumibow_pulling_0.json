@@ -1,6 +1,0 @@
-{
-  "parent": "millenaire:item/yumibow",
-  "textures": {
-    "layer0": "millenaire:item/yumibow0"
-  }
-}

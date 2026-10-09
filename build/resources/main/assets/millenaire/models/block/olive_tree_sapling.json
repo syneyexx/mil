@@ -1,7 +1,0 @@
-{
-  "parent": "minecraft:block/cross",
-  "textures": {
-    "cross": "millenaire:block/olive_tree_sapling"
-  },
-  "render_type": "minecraft:cutout"
-}

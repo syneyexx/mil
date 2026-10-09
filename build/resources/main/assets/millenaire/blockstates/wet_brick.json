@@ -1,7 +1,0 @@
-{
-  "variants": {
-    "age=0": { "model": "millenaire:block/wet_brick_0" },
-    "age=1": { "model": "millenaire:block/wet_brick_1" },
-    "age=2": { "model": "millenaire:block/wet_brick_2" }
-  }
-}

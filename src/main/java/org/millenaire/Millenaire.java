@@ -502,6 +502,9 @@ public class Millenaire {
                   spawnQueue.markResolved(chunkPos);
                   if (isNewChunk) {
                      WorldgenEngine.onNewChunk(serverLevel, chunkPos);
+                  } else {
+                     // Resume unfinished materialization when existing chunks load — never force-load.
+                     WorldgenEngine.onChunkAvailable(serverLevel, chunkPos);
                   }
                   return;
                }

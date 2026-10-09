@@ -1,7 +1,0 @@
-{
-  "parent": "millenaire:block/mock_free_base",
-  "textures": {
-    "freeblock": "minecraft:block/white_wool"
-  },
-  "render_type": "minecraft:cutout"
-}

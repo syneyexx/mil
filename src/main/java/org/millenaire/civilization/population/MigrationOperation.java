@@ -24,6 +24,9 @@ public final class MigrationOperation {
    private final long createdAtGameTime;
    private Status status;
    private String failureReason;
+   @Nullable
+   private UUID destinationBuildingId;
+   private boolean needsRecovery;
 
    public MigrationOperation(
       UUID operationId,
@@ -69,12 +72,37 @@ public final class MigrationOperation {
       return this.failureReason;
    }
 
+   @Nullable
+   public UUID destinationBuildingId() {
+      return this.destinationBuildingId;
+   }
+
+   public void setDestinationBuilding(@Nullable UUID buildingId) {
+      this.destinationBuildingId = buildingId;
+   }
+
+   public boolean needsRecovery() {
+      return this.needsRecovery;
+   }
+
+   public void markNeedsRecovery(boolean v) {
+      this.needsRecovery = v;
+   }
+
+   public boolean isTerminal() {
+      return this.status == Status.COMPLETE || this.status == Status.FAILED || this.status == Status.ROLLED_BACK;
+   }
+
+   public boolean isActive() {
+      return !isTerminal() || this.needsRecovery;
+   }
+
    public boolean trySetStatus(Status next) {
       if (next == null || next == this.status) {
          return false;
       }
       boolean ok = switch (this.status) {
-         case RESERVED -> next == Status.REMOVED_FROM_ORIGIN || next == Status.FAILED || next == Status.ROLLED_BACK;
+         case RESERVED -> next == Status.REMOVED_FROM_ORIGIN || next == Status.FAILED || next == Status.ROLLED_BACK || next == Status.COMPLETE;
          case REMOVED_FROM_ORIGIN -> next == Status.ADDED_TO_DESTINATION || next == Status.FAILED || next == Status.ROLLED_BACK;
          case ADDED_TO_DESTINATION -> next == Status.COMPLETE || next == Status.FAILED;
          case COMPLETE, FAILED, ROLLED_BACK -> false;
@@ -101,6 +129,10 @@ public final class MigrationOperation {
       tag.putLong("at", this.createdAtGameTime);
       tag.putString("status", this.status.name());
       tag.putString("fail", this.failureReason);
+      tag.putBoolean("needsRecovery", this.needsRecovery);
+      if (this.destinationBuildingId != null) {
+         tag.putUUID("destBuilding", this.destinationBuildingId);
+      }
       return tag;
    }
 
@@ -119,6 +151,10 @@ public final class MigrationOperation {
          } catch (Exception ignored) {
          }
          op.failureReason = tag.getString("fail");
+         op.needsRecovery = tag.getBoolean("needsRecovery");
+         if (tag.hasUUID("destBuilding")) {
+            op.destinationBuildingId = tag.getUUID("destBuilding");
+         }
          return op;
       } catch (Exception e) {
          return null;

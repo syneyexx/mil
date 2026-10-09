@@ -8,7 +8,9 @@ import net.minecraft.server.level.ServerLevel;
 import org.millenaire.civilization.bridge.CivilizationEventBridge;
 import org.millenaire.civilization.bridge.NeedsTradeBridge;
 import org.millenaire.civilization.offscreen.OffscreenReconciler;
+import org.millenaire.civilization.population.MigrationEvaluator;
 import org.millenaire.civilization.population.PopulationAggregator;
+import org.millenaire.civilization.settlement.ColonizationService;
 import org.millenaire.civilization.settlement.SettlementDevelopmentClassifier;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.faction.Faction;
@@ -102,18 +104,20 @@ public final class CivilizationOrchestrator {
 
       runIfDue(overworld, state, CivilizationStage.DEMOGRAPHICS, gameTime, CivilizationConfig.STAGE_DEMOGRAPHICS_INTERVAL, () -> {
          PopulationAggregator.refreshDirtyFactions(overworld, state);
+         MigrationEvaluator.evaluate(overworld, state);
       });
 
       runIfDue(overworld, state, CivilizationStage.DEVELOPMENT, gameTime, CivilizationConfig.STAGE_DEVELOPMENT_INTERVAL, () -> {
          SettlementDevelopmentClassifier.refresh(overworld, state);
+         ColonizationService.tick(overworld, state);
       });
 
       runIfDue(overworld, state, CivilizationStage.HISTORY_PUBLISH, gameTime, CivilizationConfig.STAGE_HISTORY_INTERVAL, () -> {
          CivilizationEventBridge.flushHistory(overworld, state);
       });
 
-      runIfDue(overworld, state, CivilizationStage.OFFSCREEN_RECONCILE, gameTime, CivilizationConfig.STAGE_OFFSCREEN_INTERVAL, () -> {
-         OffscreenReconciler.reconcile(overworld, state);
+      runIfDueBeforeWrite(overworld, state, CivilizationStage.OFFSCREEN_RECONCILE, gameTime, CivilizationConfig.STAGE_OFFSCREEN_INTERVAL, previous -> {
+         OffscreenReconciler.reconcile(overworld, state, previous);
       });
 
       try {
@@ -143,6 +147,39 @@ public final class CivilizationOrchestrator {
       state.setLastStageGameTime(stage, gameTime);
       CivilizationMetrics.STAGES_RUN.incrementAndGet();
       safe(level, stage.name(), action);
+   }
+
+   /**
+    * Like {@link #runIfDue} but passes the previous stage timestamp before overwriting it.
+    * Used by offscreen reconcile so elapsed time is computed correctly.
+    */
+   private static void runIfDueBeforeWrite(
+      ServerLevel level,
+      CivilizationSavedData state,
+      CivilizationStage stage,
+      long gameTime,
+      long interval,
+      java.util.function.LongConsumer action
+   ) {
+      long last = state.lastStageGameTime(stage);
+      long staggered = interval + stage.ordinal() * 7L;
+      if (last > 0L && gameTime - last < staggered) {
+         return;
+      }
+      // Record attempt time only after reading previous; success time is set inside the reconciler.
+      state.setLastStageGameTime(stage, gameTime);
+      CivilizationMetrics.STAGES_RUN.incrementAndGet();
+      try {
+         action.accept(last);
+      } catch (Exception e) {
+         CivilizationMetrics.STAGE_FAILURES.incrementAndGet();
+         LOGGER.error(
+            "[Millenaire] Civilization stage '{}' failed: {}",
+            stage.name(),
+            e.getClass().getSimpleName() + ": " + e.getMessage(),
+            e
+         );
+      }
    }
 
    private static void safe(ServerLevel level, String label, Runnable action) {

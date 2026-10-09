@@ -7,7 +7,12 @@ import org.millenaire.TickConstants;
  * Runtime toggles live in MillenaireServerConfig; these are stable algorithm constants.
  */
 public final class CivilizationConfig {
-   public static final int SCHEMA_VERSION = 1;
+   public static final int SCHEMA_VERSION = 2;
+   public static final long STAGE_MIGRATION_INTERVAL = 2400L;
+   public static final long STAGE_COLONIZATION_INTERVAL = 6000L;
+   public static final int MAX_COLONIZATION_CANDIDATES_PER_CYCLE = 4;
+   public static final int MAX_COLONIZATION_OPS_PER_CYCLE = 1;
+   public static final int MAX_MIGRATION_SCANS_PER_CYCLE = 32;
 
    /** Stagger offsets so stages do not all land on the same tick. */
    public static final long STAGE_EVENT_INGEST_INTERVAL = 20L;

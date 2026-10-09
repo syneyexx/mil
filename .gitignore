@@ -1,0 +1,52 @@
+# Gradle
+.gradle/
+build/
+repo/
+
+# Local caches
+.cache/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+out/
+bin/
+
+# Minecraft / NeoForge run outputs
+run/
+runs/
+logs/
+crash-reports/
+*.log
+
+# Local credentials and overrides
+*.local.properties
+local.properties
+.env
+.env.*
+!.env.example
+secrets/
+**/npcChatApiKey*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Java
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+hs_err_pid*
+replay_pid*
+
+# Temporary
+tmp/
+temp/
+*.tmp
+*.swp
+*~

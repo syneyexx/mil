@@ -48,6 +48,10 @@ public final class SettlementActivator {
       if (plan.status() != SettlementPlanStatus.PHYSICAL_COMPLETE && plan.status() != SettlementPlanStatus.ACTIVATING) {
          return false;
       }
+      // Refuse activation until physical work is actually complete (not merely status-flagged).
+      if (!plan.allBuildingsMaterialized()) {
+         return false;
+      }
       if (!plan.hasMandatoryCentre() && !plan.loneBuilding()) {
          plan.markFailed(SettlementFailureReason.MISSING_MANDATORY_BUILDING, "activation_no_centre");
          SettlementPlanSavedData.get(level).markDirtyPlan();

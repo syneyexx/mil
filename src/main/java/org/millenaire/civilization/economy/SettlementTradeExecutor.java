@@ -13,7 +13,9 @@ import org.millenaire.building.BuildingInstance;
 import org.millenaire.building.BuildingInventory;
 import org.millenaire.civilization.CivilizationMetrics;
 import org.millenaire.civilization.CivilizationSavedData;
+import org.millenaire.faction.Faction;
 import org.millenaire.faction.FactionId;
+import org.millenaire.faction.FactionSavedData;
 import org.millenaire.faction.diplomacy.DiplomacySavedData;
 import org.millenaire.faction.diplomacy.DiplomaticManager;
 import org.millenaire.faction.economy.EconomicResourceId;
@@ -27,8 +29,9 @@ import org.millenaire.village.Village;
 import org.slf4j.Logger;
 
 /**
- * Conserved physical settlement-to-settlement trade.
- * removed_from_source == delivered_to_destination (no free materialization).
+ * Conserved physical settlement-to-settlement transfer.
+ * Success dedupe is written only after a conserved commit so failed attempts remain retryable.
+ * Intra-faction movement is logistics (profile refresh), not diplomatic trade booking.
  */
 public final class SettlementTradeExecutor {
    private static final Logger LOGGER = LogUtils.getLogger();
@@ -57,7 +60,8 @@ public final class SettlementTradeExecutor {
       if (exportFaction == null || importFaction == null) {
          return false;
       }
-      if (!exportFaction.equals(importFaction)) {
+      boolean sameFaction = exportFaction.equals(importFaction);
+      if (!sameFaction) {
          DiplomaticManager diplomacy = DiplomacySavedData.get(level).getDiplomaticManager();
          if (!diplomacy.canTrade(exportFaction, importFaction)) {
             return false;
@@ -67,17 +71,19 @@ public final class SettlementTradeExecutor {
          }
       }
 
-      int available = countInVillage(level, exporter, item);
+      int available = countExportable(level, exporter, item);
       int amount = Math.min(requested, available);
       if (amount <= 0) {
          return false;
       }
+      if (importer.getTownhall() == null || importer.getTownhall().getInventory() == null) {
+         return false;
+      }
 
-      // Idempotent daily op key — reserved only after supply is confirmed so failures can retry.
       long day = level.getGameTime() / 24000L;
-      String dedupe = "trade:" + exporter.getId().uuid() + ":" + importer.getId().uuid() + ":" + resourceId.id() + ":" + day;
+      String successKey = "trade-ok:" + exporter.getId().uuid() + ":" + importer.getId().uuid() + ":" + resourceId.id() + ":" + day;
       CivilizationSavedData civ = CivilizationSavedData.get(level);
-      if (!civ.tryMarkPublished(dedupe, level.getGameTime(), 24000L)) {
+      if (civ.isPublished(successKey, level.getGameTime(), 24000L)) {
          return false;
       }
 
@@ -87,28 +93,37 @@ public final class SettlementTradeExecutor {
       }
       int added = addToVillage(level, importer, item, removed);
       if (added < removed) {
-         // Compensation: return undelivered remainder to exporter to preserve conservation.
          int undelivered = removed - added;
-         addToVillage(level, exporter, item, undelivered);
-         LOGGER.warn(
-            "[Millenaire] Trade partial delivery {}/{} of {} from {} to {} — compensated undelivered {}",
-            added,
-            removed,
-            resourceId.id(),
-            exporter.getId().uuid(),
-            importer.getId().uuid(),
-            undelivered
-         );
+         int compensated = addToVillage(level, exporter, item, undelivered);
+         if (compensated < undelivered) {
+            LOGGER.warn(
+               "[Millenaire] Trade compensation incomplete {}/{} of {} from {} to {}",
+               compensated,
+               undelivered,
+               resourceId.id(),
+               exporter.getId().uuid(),
+               importer.getId().uuid()
+            );
+         }
          if (added <= 0) {
             return false;
          }
          removed = added;
       }
 
+      civ.tryMarkPublished(successKey, level.getGameTime(), 24000L);
+
       Map<Item, Integer> transferred = new LinkedHashMap<>();
       transferred.put(item, removed);
       TradeManager trade = EconomySavedData.get(level).getTradeManager();
-      trade.recordSettlementGoodsTransfer(level, exporter, importer, transferred);
+      if (sameFaction) {
+         Faction faction = FactionSavedData.get(level).getFactionManager().getFaction(exportFaction);
+         if (faction != null) {
+            trade.refreshProfile(level, faction, level.getGameTime());
+         }
+      } else {
+         trade.recordSettlementGoodsTransfer(level, exporter, importer, transferred);
+      }
       CivilizationMetrics.TRADE_OPS.incrementAndGet();
 
       LivingEventService.emit(
@@ -118,26 +133,20 @@ public final class SettlementTradeExecutor {
          importer,
          null,
          null,
-         "item=" + resourceId.id() + " qty=" + removed + " from=" + exporter.getId().uuid(),
+         (sameFaction ? "logistics=" : "trade=") + resourceId.id() + " qty=" + removed + " from=" + exporter.getId().uuid(),
          "public",
-         dedupe
-      );
-      LivingEventService.emit(
-         level,
-         LivingEventType.TRADE_CHANGED,
-         LivingEventSource.SYSTEM,
-         exporter,
-         null,
-         null,
-         "exported=" + resourceId.id() + " qty=" + removed + " to=" + importer.getId().uuid(),
-         "public",
-         dedupe + ":export"
+         successKey
       );
       return true;
    }
 
-   private static int countInVillage(ServerLevel level, Village village, Item item) {
-      return village.getVillageItemCount(level, item);
+   /**
+    * Exportable stock: village total minus a local reserve so home needs are not stripped bare.
+    */
+   public static int countExportable(ServerLevel level, Village village, Item item) {
+      int total = village.getVillageItemCount(level, item);
+      int reserve = Math.min(8, Math.max(0, total / 4));
+      return Math.max(0, total - reserve);
    }
 
    private static int removeFromVillage(ServerLevel level, Village village, Item item, int amount) {
@@ -151,6 +160,7 @@ public final class SettlementTradeExecutor {
          if (inv == null) {
             continue;
          }
+         inv.invalidateCacheOncePerTick(level.getGameTime());
          int took = inv.remove(level, item, remaining);
          removed += took;
          remaining -= took;
@@ -159,8 +169,6 @@ public final class SettlementTradeExecutor {
    }
 
    private static int addToVillage(ServerLevel level, Village village, Item item, int amount) {
-      // BuildingInventory.addStack copies the stack and does not mutate the caller's ItemStack.
-      // Measure placement via before/after counts to preserve conservation accounting.
       int remaining = amount;
       int added = 0;
       for (BuildingInstance building : village.getBuildings()) {
@@ -171,11 +179,13 @@ public final class SettlementTradeExecutor {
          if (inv == null) {
             continue;
          }
+         inv.invalidateCacheOncePerTick(level.getGameTime());
          int before = inv.getCount(level, item);
          ItemStack stack = new ItemStack(item, remaining);
          if (!inv.addStack(level, stack)) {
             continue;
          }
+         inv.invalidateCacheOncePerTick(level.getGameTime());
          int after = inv.getCount(level, item);
          int placed = Math.min(remaining, Math.max(0, after - before));
          if (placed <= 0) {

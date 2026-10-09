@@ -1,6 +1,0 @@
-{
-  "parent": "millenaire:block/mock_marker_carpet_base",
-  "textures": {
-    "icon": "millenaire:block/snail_soil_stage3"
-  }
-}

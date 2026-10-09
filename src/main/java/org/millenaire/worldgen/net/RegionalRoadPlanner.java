@@ -12,8 +12,9 @@ import org.millenaire.worldgen.plan.SettlementPlan;
 import org.millenaire.worldgen.plan.WorldgenSeeds;
 
 /**
- * Bounded foundation for inter-settlement connectors.
- * Does not invent trade simulation requirements — physical routes only when enabled.
+ * Plans bounded inter-settlement connectors with stable route identity.
+ * Physical placement is handled by {@link RegionalRoadMaterializer} when chunks are available.
+ * {@code worldgenGenerateRegionalRoads} gates planning; {@code worldgenGenerateBridges} gates water crossings.
  */
 public final class RegionalRoadPlanner {
    private static final int MAX_NEIGHBORS = 2;

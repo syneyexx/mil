@@ -1,6 +1,8 @@
 package org.millenaire.living.requests;
 
 import com.mojang.logging.LogUtils;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,7 +12,12 @@ import javax.annotation.Nullable;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.Item;
+import org.millenaire.building.AnywoodHelper;
+import org.millenaire.building.BuildingInstance;
+import org.millenaire.building.BuildingInventory;
 import org.millenaire.config.MillenaireServerConfig;
+import org.millenaire.item.ItemHelper;
 import org.millenaire.living.events.LivingEvent;
 import org.millenaire.living.events.LivingEventService;
 import org.millenaire.living.events.LivingEventSource;
@@ -48,7 +55,6 @@ public final class VillageRequestService {
       if (need.type() != VillageNeedType.CONSTRUCTION_MATERIAL_SHORTAGE
          && need.type() != VillageNeedType.WORK_RESOURCE_SHORTAGE
          && need.type() != VillageNeedType.VILLAGE_FOOD_SHORTAGE) {
-         // Non-shortage needs do not produce delivery requests.
          return null;
       }
 
@@ -61,7 +67,6 @@ public final class VillageRequestService {
          return null;
       }
 
-      // Prevent duplicate offers multiplying the same shortage.
       List<VillageRequest> existing = data.activeForNeed(village.getId().uuid(), need.projectRef() != null ? need.projectRef() : need.needId());
       for (VillageRequest r : existing) {
          if (r.playerId().equals(player.getUUID())) {
@@ -135,6 +140,15 @@ public final class VillageRequestService {
       if (request == null || !request.playerId().equals(player.getUUID())) {
          return false;
       }
+      if (!VillageRequestState.activeStates().contains(request.state()) && request.state() != VillageRequestState.OFFERED) {
+         return false;
+      }
+      NeedRevalidationResult reval = revalidateAgainstNeed(level, Village.resolve(level, new VillageId(request.villageId())), request);
+      if (!reval.valid() && request.totalDelivered() <= 0) {
+         request.forceState(VillageRequestState.CANCELLED, level.getGameTime());
+         VillageRequestSavedData.get(level).setDirty();
+         return false;
+      }
       if (!request.transitionTo(VillageRequestState.ACCEPTED, level.getGameTime())) {
          return false;
       }
@@ -144,12 +158,7 @@ public final class VillageRequestService {
          VillageRequestSavedData.get(level).setDirty();
          return false;
       }
-      // Revalidate need still exists.
-      if (!revalidateAgainstNeed(level, village, request)) {
-         request.forceState(VillageRequestState.CANCELLED, level.getGameTime());
-         VillageRequestSavedData.get(level).setDirty();
-         return false;
-      }
+      applyAllowedCap(request, reval);
       VillageRequestSavedData.get(level).setDirty();
       LivingEventService.emit(
          level,
@@ -196,20 +205,44 @@ public final class VillageRequestService {
       if (request == null) {
          return VillageDeliveryService.DeliveryResult.fail("living.millenaire.request.error.missing");
       }
+      if (!request.playerId().equals(player.getUUID())) {
+         return VillageDeliveryService.DeliveryResult.fail("living.millenaire.request.error.not_owner");
+      }
+      if (request.state() == VillageRequestState.EXPIRED || request.state() == VillageRequestState.CANCELLED || request.state() == VillageRequestState.DECLINED) {
+         return VillageDeliveryService.DeliveryResult.fail("living.millenaire.request.error.bad_state");
+      }
+      if (request.state() == VillageRequestState.COMPLETED || request.rewardClaimed()) {
+         return VillageDeliveryService.DeliveryResult.fail("living.millenaire.request.error.already_complete");
+      }
+
       Village village = Village.resolve(level, new VillageId(request.villageId()));
       if (village == null) {
          request.forceState(VillageRequestState.CANCELLED, level.getGameTime());
          VillageRequestSavedData.get(level).setDirty();
          return VillageDeliveryService.DeliveryResult.fail("living.millenaire.request.error.village_gone");
       }
-      if (!revalidateAgainstNeed(level, village, request)) {
-         // Need resolved elsewhere — cancel remaining without confiscating.
-         request.forceState(VillageRequestState.CANCELLED, level.getGameTime());
-         VillageRequestSavedData.get(level).setDirty();
-         return VillageDeliveryService.DeliveryResult.fail("living.millenaire.request.error.no_longer_needed");
+
+      NeedRevalidationResult reval = revalidateAgainstNeed(level, village, request);
+      if (!reval.valid()) {
+         if (request.totalDelivered() > 0) {
+            // Need resolved elsewhere after partial delivery — keep credited work, cancel remainder.
+            cancelRemainingKeepDelivered(request, level.getGameTime());
+            VillageRequestSavedData.get(level).setDirty();
+            if (request.state() == VillageRequestState.READY_TO_COMPLETE || request.remaining().isEmpty()) {
+               complete(level, player, request, village);
+               return VillageDeliveryService.DeliveryResult.ok(Map.of(), request.remaining(), request.state());
+            }
+         } else {
+            request.forceState(VillageRequestState.CANCELLED, level.getGameTime());
+            VillageRequestSavedData.get(level).setDirty();
+         }
+         return VillageDeliveryService.DeliveryResult.fail(
+            reval.reasonKey().isBlank() ? "living.millenaire.request.error.no_longer_needed" : reval.reasonKey()
+         );
       }
 
-      VillageDeliveryService.DeliveryResult result = VillageDeliveryService.deliver(level, player, village, request);
+      applyAllowedCap(request, reval);
+      VillageDeliveryService.DeliveryResult result = VillageDeliveryService.deliver(level, player, village, request, reval.allowedQuantities());
       if (result.success()) {
          needsEngine.invalidate(village.getId().uuid());
          LivingEventService.emit(
@@ -231,7 +264,16 @@ public final class VillageRequestService {
    }
 
    public static boolean complete(ServerLevel level, ServerPlayer player, VillageRequest request, Village village) {
+      if (request == null || player == null) {
+         return false;
+      }
+      if (!request.playerId().equals(player.getUUID())) {
+         return false;
+      }
       if (request.rewardClaimed()) {
+         return false;
+      }
+      if (request.state() == VillageRequestState.EXPIRED || request.state() == VillageRequestState.CANCELLED) {
          return false;
       }
       if (request.state() != VillageRequestState.READY_TO_COMPLETE && request.remaining().isEmpty()) {
@@ -270,8 +312,24 @@ public final class VillageRequestService {
       return true;
    }
 
-   private static boolean revalidateAgainstNeed(ServerLevel level, Village village, VillageRequest request) {
-      // Shared shortage accounting: remaining request must not exceed fresh shortage for same project.
+   /**
+    * Revalidate against a fresh need snapshot and compute per-item allowed delivery amounts.
+    * Other active requests for the same need reserve shortage in request-id order to avoid mutual deadlock.
+    */
+   public static NeedRevalidationResult revalidateAgainstNeed(ServerLevel level, @Nullable Village village, VillageRequest request) {
+      if (request == null) {
+         return NeedRevalidationResult.invalid("living.millenaire.request.error.missing");
+      }
+      if (village == null) {
+         return NeedRevalidationResult.invalid("living.millenaire.request.error.village_gone");
+      }
+      if (request.state() == VillageRequestState.EXPIRED) {
+         return NeedRevalidationResult.invalid("living.millenaire.request.error.expired");
+      }
+      if (request.state() == VillageRequestState.CANCELLED || request.state() == VillageRequestState.DECLINED) {
+         return NeedRevalidationResult.invalid("living.millenaire.request.error.bad_state");
+      }
+
       VillageNeedsSnapshot snap = org.millenaire.living.LivingVillagesService.get().needsEngine().requireFresh(level, village.getId());
       VillageNeed need = null;
       for (VillageNeed n : snap.needs()) {
@@ -281,39 +339,119 @@ public final class VillageRequestService {
             break;
          }
       }
-      if (need == null) {
-         // Also accept if request still has undelivered items but townhall still shows shortage of those items.
-         return !request.remaining().isEmpty() && stillShortInInventory(level, village, request.remaining());
+
+      Map<ResourceLocation, Integer> liveShortage;
+      String matchedRef;
+      if (need != null) {
+         liveShortage = need.shortage();
+         matchedRef = need.projectRef() != null ? need.projectRef() : need.needId();
+      } else {
+         // Fallback only when inventory still shows a real shortage for remaining items.
+         liveShortage = computeInventoryShortages(level, village, request.remaining());
+         matchedRef = request.linkedNeedOrProjectId();
+         if (liveShortage.isEmpty()) {
+            if (request.totalDelivered() > 0 && request.remaining().isEmpty()) {
+               return NeedRevalidationResult.valid(Map.of(), matchedRef);
+            }
+            return NeedRevalidationResult.invalid("living.millenaire.request.error.no_longer_needed");
+         }
       }
-      // Cap remaining against live shortage across all active requests.
-      Map<ResourceLocation, Integer> live = need.shortage();
-      Map<ResourceLocation, Integer> committedOthers = new LinkedHashMap<>();
-      for (VillageRequest other : VillageRequestSavedData.get(level).activeForNeed(village.getId().uuid(), request.linkedNeedOrProjectId())) {
+
+      List<VillageRequest> peers = new ArrayList<>(
+         VillageRequestSavedData.get(level).activeForNeed(village.getId().uuid(), request.linkedNeedOrProjectId())
+      );
+      peers.sort(Comparator.comparing(VillageRequest::requestId));
+
+      Map<ResourceLocation, Integer> reservedBefore = new LinkedHashMap<>();
+      for (VillageRequest other : peers) {
          if (other.requestId().equals(request.requestId())) {
-            continue;
-         }
-         for (Entry<ResourceLocation, Integer> e : other.remaining().entrySet()) {
-            committedOthers.merge(e.getKey(), e.getValue(), Integer::sum);
-         }
-      }
-      boolean any = false;
-      for (Entry<ResourceLocation, Integer> e : request.remaining().entrySet()) {
-         int liveNeed = live.getOrDefault(e.getKey(), 0) - committedOthers.getOrDefault(e.getKey(), 0);
-         if (liveNeed > 0) {
-            any = true;
             break;
          }
+         for (Entry<ResourceLocation, Integer> e : other.remaining().entrySet()) {
+            reservedBefore.merge(e.getKey(), e.getValue(), Integer::sum);
+         }
       }
-      return any || request.totalDelivered() > 0 && request.remaining().isEmpty();
+
+      Map<ResourceLocation, Integer> allowed = new LinkedHashMap<>();
+      boolean any = false;
+      for (Entry<ResourceLocation, Integer> e : request.remaining().entrySet()) {
+         int live = liveShortage.getOrDefault(e.getKey(), 0);
+         int reserved = reservedBefore.getOrDefault(e.getKey(), 0);
+         int availableNeed = Math.max(0, live - reserved);
+         int qty = Math.min(e.getValue(), availableNeed);
+         if (qty > 0) {
+            allowed.put(e.getKey(), qty);
+            any = true;
+         }
+      }
+
+      if (!any) {
+         if (request.totalDelivered() > 0 && request.remaining().isEmpty()) {
+            return NeedRevalidationResult.valid(Map.of(), matchedRef);
+         }
+         return NeedRevalidationResult.invalid("living.millenaire.request.error.no_longer_needed");
+      }
+      return NeedRevalidationResult.valid(allowed, matchedRef);
    }
 
-   private static boolean stillShortInInventory(ServerLevel level, Village village, Map<ResourceLocation, Integer> remaining) {
-      var th = village.getTownhall();
-      if (th == null || th.getInventory() == null) {
-         return false;
+   private static Map<ResourceLocation, Integer> computeInventoryShortages(
+      ServerLevel level,
+      Village village,
+      Map<ResourceLocation, Integer> remaining
+   ) {
+      BuildingInstance th = village.getTownhall();
+      if (th == null || th.getInventory() == null || remaining.isEmpty()) {
+         return Map.of();
       }
-      // Soft check: if player still has a request remaining, allow delivery attempt; growth engine will use items.
-      return !remaining.isEmpty();
+      BuildingInventory inv = th.getInventory();
+      inv.invalidateCacheOncePerTick(level.getGameTime());
+      Map<ResourceLocation, Integer> shortfalls = new LinkedHashMap<>();
+      for (Entry<ResourceLocation, Integer> e : remaining.entrySet()) {
+         int have;
+         if (AnywoodHelper.isAnywood(e.getKey())) {
+            have = inv.getCountByTag(level, AnywoodHelper.LOGS_TAG);
+         } else {
+            Item item = ItemHelper.resolve(e.getKey());
+            if (item == null) {
+               continue;
+            }
+            have = inv.getCount(level, item);
+         }
+         // Soft shortage: if request still asks for items and stock is below a modest threshold, allow.
+         int want = e.getValue();
+         if (have < want) {
+            shortfalls.put(e.getKey(), want - have);
+         }
+      }
+      return shortfalls;
+   }
+
+   private static void applyAllowedCap(VillageRequest request, NeedRevalidationResult reval) {
+      if (request == null || reval == null || !reval.valid()) {
+         return;
+      }
+      // Shrink outstanding required toward allowed+delivered so accounting matches live need,
+      // without erasing already delivered credit.
+      for (Entry<ResourceLocation, Integer> e : List.copyOf(request.required().entrySet())) {
+         int delivered = request.delivered().getOrDefault(e.getKey(), 0);
+         int allowed = reval.allowedFor(e.getKey());
+         int newRequired = delivered + allowed;
+         if (newRequired < e.getValue()) {
+            request.capRequired(e.getKey(), newRequired);
+         }
+      }
+   }
+
+   private static void cancelRemainingKeepDelivered(VillageRequest request, long now) {
+      for (Entry<ResourceLocation, Integer> e : List.copyOf(request.required().entrySet())) {
+         int delivered = request.delivered().getOrDefault(e.getKey(), 0);
+         request.capRequired(e.getKey(), delivered);
+      }
+      if (request.remaining().isEmpty()) {
+         request.forceState(VillageRequestState.READY_TO_COMPLETE, now);
+      } else {
+         request.forceState(VillageRequestState.CANCELLED, now);
+      }
    }
 
    public static void tickMaintenance(ServerLevel level) {

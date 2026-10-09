@@ -1,10 +1,9 @@
 # Phase 5 — Civilization Evolution & Release Hardening
 
-**Baseline HEAD:** `cc7af9ce9acb0da99f732a70d5cc01e4be3e3973` (main)  
-**Branch:** `cursor/civilization-evolution-7128`  
-**Status legend:** `PENDING` · `IN_PROGRESS` · `IMPLEMENTED_UNVERIFIED` · `BLOCKED`
-
+**Status legend:** `IMPLEMENTED_UNVERIFIED` · `PARTIAL`  
 Builds / CI / Minecraft / live AI were **not** executed by this agent.
+
+Integrity follow-up adds: resumable worldgen, live request caps, full migration via `transferVillagerPermanently`, fair cursors, corrected offscreen clocks, concrete auto-trade, real housing capacity, gated autonomous founding, regional roads/bridges, README/`.gitignore`.
 
 ## Merged baseline inventory
 

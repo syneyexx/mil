@@ -1,7 +1,0 @@
-{
-  "parent": "minecraft:block/cube_all",
-  "textures": {
-    "all": "minecraft:block/cocoa_stage2"
-  },
-  "render_type": "minecraft:cutout"
-}

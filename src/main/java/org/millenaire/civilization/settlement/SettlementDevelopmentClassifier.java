@@ -17,6 +17,7 @@ import org.millenaire.village.VillageSavedData;
 
 /**
  * Labels settlement development from real buildings/population. Does not spawn buildings.
+ * Uses an independent round-robin cursor so later villages are not starved.
  */
 public final class SettlementDevelopmentClassifier {
    private SettlementDevelopmentClassifier() {
@@ -24,17 +25,27 @@ public final class SettlementDevelopmentClassifier {
 
    public static void refresh(ServerLevel level, CivilizationSavedData state) {
       List<Village> villages = new ArrayList<>(VillageSavedData.get(level).getVillageManager().getAllVillages());
+      if (villages.isEmpty()) {
+         return;
+      }
       villages.sort(Comparator.comparing(v -> v.getId().uuid()));
-      int budget = Math.min(CivilizationConfig.MAX_FACTIONS_PER_STAGE * 4, MillenaireServerConfig.SERVER.civilizationFactionBudget.getAsInt() * 4);
-      int n = 0;
-      for (Village village : villages) {
-         if (n++ >= budget) {
-            break;
-         }
+      int mutateBudget = Math.min(CivilizationConfig.MAX_FACTIONS_PER_STAGE * 4, MillenaireServerConfig.SERVER.civilizationFactionBudget.getAsInt() * 4);
+      int scanBudget = mutateBudget * 4;
+      int n = villages.size();
+      int start = Math.floorMod(state.developmentCursor(), n);
+      int scanned = 0;
+      int mutated = 0;
+      for (int i = 0; i < n && scanned < scanBudget && mutated < mutateBudget; i++) {
+         scanned++;
+         Village village = villages.get((start + i) % n);
          String label = classify(village, level.getGameTime());
          String previous = state.getDevelopmentLabel(village.getId().uuid());
+         if (previous != null && previous.equals(label)) {
+            continue;
+         }
          state.putDevelopmentLabel(village.getId().uuid(), label);
-         if (previous != null && !previous.equals(label) && state.consumeEventBudget()) {
+         mutated++;
+         if (previous != null && state.consumeEventBudget()) {
             String key = "dev:" + village.getId().uuid() + ":" + label;
             if (state.tryMarkPublished(key, level.getGameTime(), 24000L * 3L)) {
                LivingEventService.emit(
@@ -48,9 +59,12 @@ public final class SettlementDevelopmentClassifier {
                   "public",
                   key
                );
+            } else {
+               state.queueHistoryKey(key);
             }
          }
       }
+      state.setDevelopmentCursor(start + Math.max(1, scanned));
    }
 
    public static String classify(Village village, long gameTime) {

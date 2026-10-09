@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/cube_bottom_top",
-  "textures": {
-    "bottom": "minecraft:block/birch_planks",
-    "side": "millenaire:block/sod_birch",
-    "top": "minecraft:block/birch_planks"
-  }
-}

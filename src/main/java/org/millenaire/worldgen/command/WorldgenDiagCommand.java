@@ -31,18 +31,27 @@ public final class WorldgenDiagCommand {
                      return 1;
                   }
                   for (SettlementPlan plan : plans) {
+                     long completeChunks = plan.materializedChunks().size();
+                     long partialChunks = plan.chunkProgress().values().stream()
+                        .filter(p -> p.status() != org.millenaire.worldgen.materialize.ChunkMaterializationProgress.Status.COMPLETE)
+                        .count();
+                     String recovery = plan.recoveryNote().isBlank() ? "-" : plan.recoveryNote();
                      ctx.getSource()
                         .sendSuccess(
                            () -> Component.literal(
                               String.format(
-                                 "%s status=%s type=%s center=%s fail=%s buildings=%d/%d",
+                                 "%s status=%s type=%s center=%s fail=%s buildings=%d/%d chunksComplete=%d partial=%d resumeQueue=%d recovery=%s",
                                  plan.planId(),
                                  plan.status(),
                                  plan.villageTypeId(),
                                  plan.center().toShortString(),
                                  plan.failureReason(),
                                  plan.buildings().stream().filter(b -> b.materialized()).count(),
-                                 plan.buildings().size()
+                                 plan.buildings().size(),
+                                 completeChunks,
+                                 partialChunks,
+                                 org.millenaire.worldgen.plan.SettlementPlanSavedData.get(level).resumeQueue().size(),
+                                 recovery
                               )
                            ),
                            false
