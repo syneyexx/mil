@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:block/cube_all",
-  "textures": {
-    "all": "millenaire:block/mud_brick_seljuk_decorated"
-  }
-}

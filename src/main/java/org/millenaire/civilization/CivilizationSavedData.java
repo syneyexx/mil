@@ -38,7 +38,17 @@ public class CivilizationSavedData extends SavedData {
    /** Keyed by {@link org.millenaire.faction.FactionId#asString()}, not UUID. */
    private final Map<String, CompoundTag> populationSnapshots = new HashMap<>();
    private final Set<String> pendingHistoryKeys = new HashSet<>();
+   private final Map<String, Long> factionOffscreenGameTime = new HashMap<>();
+   private final Map<String, Long> factionEconomyGameTime = new HashMap<>();
    private int membershipCursor;
+   private int populationCursor;
+   private int developmentCursor;
+   private int offscreenCursor;
+   private int tradeCursor;
+   private int migrationCursor;
+   private int colonizationCursor;
+   private long lastOffscreenAttemptGameTime;
+   private long lastOffscreenSuccessGameTime;
    private int eventsBudgetRemaining;
    private int schemaVersion = CivilizationConfig.SCHEMA_VERSION;
 
@@ -119,6 +129,92 @@ public class CivilizationSavedData extends SavedData {
       this.membershipCursor = Math.max(0, cursor);
    }
 
+   public int populationCursor() {
+      return this.populationCursor;
+   }
+
+   public void setPopulationCursor(int cursor) {
+      this.populationCursor = Math.max(0, cursor);
+   }
+
+   public int developmentCursor() {
+      return this.developmentCursor;
+   }
+
+   public void setDevelopmentCursor(int cursor) {
+      this.developmentCursor = Math.max(0, cursor);
+   }
+
+   public int offscreenCursor() {
+      return this.offscreenCursor;
+   }
+
+   public void setOffscreenCursor(int cursor) {
+      this.offscreenCursor = Math.max(0, cursor);
+   }
+
+   public int tradeCursor() {
+      return this.tradeCursor;
+   }
+
+   public void setTradeCursor(int cursor) {
+      this.tradeCursor = Math.max(0, cursor);
+   }
+
+   public int migrationCursor() {
+      return this.migrationCursor;
+   }
+
+   public void setMigrationCursor(int cursor) {
+      this.migrationCursor = Math.max(0, cursor);
+   }
+
+   public int colonizationCursor() {
+      return this.colonizationCursor;
+   }
+
+   public void setColonizationCursor(int cursor) {
+      this.colonizationCursor = Math.max(0, cursor);
+   }
+
+   public long lastOffscreenAttemptGameTime() {
+      return this.lastOffscreenAttemptGameTime;
+   }
+
+   public void setLastOffscreenAttemptGameTime(long gameTime) {
+      this.lastOffscreenAttemptGameTime = Math.max(0L, gameTime);
+   }
+
+   public long lastOffscreenSuccessGameTime() {
+      return this.lastOffscreenSuccessGameTime;
+   }
+
+   public void setLastOffscreenSuccessGameTime(long gameTime) {
+      this.lastOffscreenSuccessGameTime = Math.max(0L, gameTime);
+   }
+
+   public long lastFactionOffscreenGameTime(String factionId) {
+      return factionId == null ? 0L : this.factionOffscreenGameTime.getOrDefault(factionId, 0L);
+   }
+
+   public void setLastFactionOffscreenGameTime(String factionId, long gameTime) {
+      if (factionId != null && !factionId.isBlank()) {
+         this.factionOffscreenGameTime.put(factionId, gameTime);
+         this.setDirty();
+      }
+   }
+
+   public long lastFactionEconomyGameTime(String factionId) {
+      return factionId == null ? 0L : this.factionEconomyGameTime.getOrDefault(factionId, 0L);
+   }
+
+   public void setLastFactionEconomyGameTime(String factionId, long gameTime) {
+      if (factionId != null && !factionId.isBlank()) {
+         this.factionEconomyGameTime.put(factionId, gameTime);
+         this.setDirty();
+      }
+   }
+
    public boolean tryMarkPublished(String dedupeKey, long gameTime, long ttlTicks) {
       if (dedupeKey == null || dedupeKey.isBlank()) {
          return true;
@@ -134,6 +230,15 @@ public class CivilizationSavedData extends SavedData {
       }
       this.setDirty();
       return true;
+   }
+
+   /** True when a success key is still within its TTL (without writing). */
+   public boolean isPublished(String dedupeKey, long gameTime, long ttlTicks) {
+      if (dedupeKey == null || dedupeKey.isBlank()) {
+         return false;
+      }
+      Long prev = this.publishedEventKeys.get(dedupeKey);
+      return prev != null && gameTime - prev < ttlTicks;
    }
 
    public void queueHistoryKey(String key) {
@@ -154,10 +259,26 @@ public class CivilizationSavedData extends SavedData {
       if (op == null) {
          return;
       }
-      this.migrationOps.put(op.operationId(), op);
-      this.migrationOrder.addLast(op.operationId());
+      UUID id = op.operationId();
+      boolean alreadyQueued = this.migrationOps.containsKey(id);
+      this.migrationOps.put(id, op);
+      if (!alreadyQueued) {
+         this.migrationOrder.addLast(id);
+      }
+      // Retention must not drop active or recovery-needed operations.
       while (this.migrationOrder.size() > CivilizationConfig.MIGRATION_OPERATION_RETENTION) {
-         UUID old = this.migrationOrder.pollFirst();
+         UUID old = this.migrationOrder.peekFirst();
+         if (old == null) {
+            break;
+         }
+         MigrationOperation existing = this.migrationOps.get(old);
+         if (existing != null && existing.isActive()) {
+            // Rotate active op to the end instead of deleting it.
+            this.migrationOrder.pollFirst();
+            this.migrationOrder.addLast(old);
+            break;
+         }
+         this.migrationOrder.pollFirst();
          if (old != null) {
             this.migrationOps.remove(old);
          }
@@ -197,11 +318,29 @@ public class CivilizationSavedData extends SavedData {
    public CompoundTag save(CompoundTag root, Provider registries) {
       root.putInt("schema", this.schemaVersion);
       root.putInt("membershipCursor", this.membershipCursor);
+      root.putInt("populationCursor", this.populationCursor);
+      root.putInt("developmentCursor", this.developmentCursor);
+      root.putInt("offscreenCursor", this.offscreenCursor);
+      root.putInt("tradeCursor", this.tradeCursor);
+      root.putInt("migrationCursor", this.migrationCursor);
+      root.putInt("colonizationCursor", this.colonizationCursor);
+      root.putLong("offscreenAttempt", this.lastOffscreenAttemptGameTime);
+      root.putLong("offscreenSuccess", this.lastOffscreenSuccessGameTime);
       CompoundTag stages = new CompoundTag();
       for (Map.Entry<CivilizationStage, Long> e : this.lastStageGameTime.entrySet()) {
          stages.putLong(e.getKey().name(), e.getValue());
       }
       root.put("stages", stages);
+      CompoundTag offFaction = new CompoundTag();
+      for (Map.Entry<String, Long> e : this.factionOffscreenGameTime.entrySet()) {
+         offFaction.putLong(e.getKey(), e.getValue());
+      }
+      root.put("factionOffscreen", offFaction);
+      CompoundTag econFaction = new CompoundTag();
+      for (Map.Entry<String, Long> e : this.factionEconomyGameTime.entrySet()) {
+         econFaction.putLong(e.getKey(), e.getValue());
+      }
+      root.put("factionEconomy", econFaction);
 
       CompoundTag published = new CompoundTag();
       for (Map.Entry<String, Long> e : this.publishedEventKeys.entrySet()) {
@@ -248,12 +387,32 @@ public class CivilizationSavedData extends SavedData {
       CivilizationSavedData data = new CivilizationSavedData();
       data.schemaVersion = tag.contains("schema") ? tag.getInt("schema") : CivilizationConfig.SCHEMA_VERSION;
       data.membershipCursor = tag.getInt("membershipCursor");
+      data.populationCursor = tag.getInt("populationCursor");
+      data.developmentCursor = tag.getInt("developmentCursor");
+      data.offscreenCursor = tag.getInt("offscreenCursor");
+      data.tradeCursor = tag.getInt("tradeCursor");
+      data.migrationCursor = tag.getInt("migrationCursor");
+      data.colonizationCursor = tag.getInt("colonizationCursor");
+      data.lastOffscreenAttemptGameTime = tag.getLong("offscreenAttempt");
+      data.lastOffscreenSuccessGameTime = tag.getLong("offscreenSuccess");
       CompoundTag stages = tag.getCompound("stages");
       for (String key : stages.getAllKeys()) {
          try {
             data.lastStageGameTime.put(CivilizationStage.valueOf(key), stages.getLong(key));
          } catch (IllegalArgumentException ignored) {
          }
+      }
+      CompoundTag offFaction = tag.getCompound("factionOffscreen");
+      for (String key : offFaction.getAllKeys()) {
+         data.factionOffscreenGameTime.put(key, offFaction.getLong(key));
+      }
+      CompoundTag econFaction = tag.getCompound("factionEconomy");
+      for (String key : econFaction.getAllKeys()) {
+         data.factionEconomyGameTime.put(key, econFaction.getLong(key));
+      }
+      // Schema bump for multi-cursor + per-faction offscreen clocks.
+      if (data.schemaVersion < 2) {
+         data.schemaVersion = 2;
       }
       CompoundTag published = tag.getCompound("published");
       for (String key : published.getAllKeys()) {

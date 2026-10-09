@@ -16,6 +16,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedData.Factory;
+import org.millenaire.worldgen.materialize.MaterializationResumeQueue;
 import org.slf4j.Logger;
 
 /**
@@ -30,7 +31,9 @@ public class SettlementPlanSavedData extends SavedData {
    private final Map<UUID, SettlementPlan> plansById = new HashMap<>();
    private final Map<Long, UUID> regionIndex = new HashMap<>();
    private final Map<Long, List<UUID>> chunkIndex = new HashMap<>();
+   private final MaterializationResumeQueue resumeQueue = new MaterializationResumeQueue();
    private int schemaVersion = SCHEMA;
+   private int progressSchemaVersion = SettlementPlan.PROGRESS_SCHEMA_VERSION;
 
    private SettlementPlanSavedData() {
    }
@@ -84,6 +87,14 @@ public class SettlementPlanSavedData extends SavedData {
       this.setDirty();
    }
 
+   public MaterializationResumeQueue resumeQueue() {
+      return this.resumeQueue;
+   }
+
+   public int progressSchemaVersion() {
+      return this.progressSchemaVersion;
+   }
+
    public void reindexChunks(SettlementPlan plan) {
       long planIdBits = plan.planId().getMostSignificantBits() ^ plan.planId().getLeastSignificantBits();
       this.chunkIndex.values().forEach(list -> list.removeIf(id -> id.equals(plan.planId())));
@@ -91,10 +102,10 @@ public class SettlementPlanSavedData extends SavedData {
          this.chunkIndex.computeIfAbsent(packed, k -> new ArrayList<>()).add(plan.planId());
       }
       for (PlannedBuilding b : plan.buildings()) {
-         int minCx = b.origin().getX() >> 4;
-         int maxCx = (b.origin().getX() + Math.max(b.width(), 1)) >> 4;
-         int minCz = b.origin().getZ() >> 4;
-         int maxCz = (b.origin().getZ() + Math.max(b.depth(), 1)) >> 4;
+         int minCx = b.minChunkX();
+         int maxCx = b.maxChunkX();
+         int minCz = b.minChunkZ();
+         int maxCz = b.maxChunkZ();
          for (int cx = minCx; cx <= maxCx; cx++) {
             for (int cz = minCz; cz <= maxCz; cz++) {
                long key = ChunkPos.asLong(cx, cz);
@@ -128,17 +139,22 @@ public class SettlementPlanSavedData extends SavedData {
 
    public CompoundTag save(CompoundTag root, Provider registries) {
       root.putInt("schema", this.schemaVersion);
+      root.putInt("progressSchema", this.progressSchemaVersion);
       ListTag list = new ListTag();
       for (SettlementPlan plan : this.plansById.values()) {
          list.add(plan.save());
       }
       root.put("plans", list);
+      root.put("resumeQueue", this.resumeQueue.save());
       return root;
    }
 
    private static SettlementPlanSavedData load(CompoundTag tag) {
       SettlementPlanSavedData data = new SettlementPlanSavedData();
       data.schemaVersion = tag.contains("schema") ? tag.getInt("schema") : SCHEMA;
+      data.progressSchemaVersion = tag.contains("progressSchema")
+         ? tag.getInt("progressSchema")
+         : SettlementPlan.PROGRESS_SCHEMA_VERSION;
       ListTag list = tag.getList("plans", Tag.TAG_COMPOUND);
       for (int i = 0; i < list.size(); i++) {
          SettlementPlan plan = SettlementPlan.load(list.getCompound(i));
@@ -146,10 +162,25 @@ public class SettlementPlanSavedData extends SavedData {
             data.plansById.put(plan.planId(), plan);
             data.regionIndex.put(plan.region().packed(), plan.planId());
             data.reindexChunks(plan);
+            // Re-queue unfinished materialization after restart (loaded chunks only processed later).
+            if (plan.status() == SettlementPlanStatus.MATERIALIZING
+               || plan.status() == SettlementPlanStatus.RESERVED
+               || plan.status() == SettlementPlanStatus.PLANNED) {
+               for (var entry : plan.chunkProgress().entrySet()) {
+                  if (entry.getValue().status() != org.millenaire.worldgen.materialize.ChunkMaterializationProgress.Status.COMPLETE
+                     && !plan.isChunkFullyMaterialized(entry.getKey())) {
+                     data.resumeQueue.offer(plan.planId(), entry.getKey());
+                  }
+               }
+            }
          } else {
             LOGGER.warn("[Millenaire] Skipping corrupt worldgen plan entry #{}", i);
          }
       }
+      if (tag.contains("resumeQueue")) {
+         data.resumeQueue.load(tag.getCompound("resumeQueue"));
+      }
+      data.progressSchemaVersion = SettlementPlan.PROGRESS_SCHEMA_VERSION;
       return data;
    }
 

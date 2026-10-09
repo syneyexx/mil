@@ -112,13 +112,45 @@ public final class PlannedBuilding {
    public boolean intersectsChunk(ChunkPos chunk) {
       int minX = this.origin.getX();
       int minZ = this.origin.getZ();
-      int maxX = minX + Math.max(this.width, this.depth);
-      int maxZ = minZ + Math.max(this.width, this.depth);
+      int effW = effectiveWidth();
+      int effD = effectiveDepth();
+      int maxX = minX + Math.max(effW, 1) - 1;
+      int maxZ = minZ + Math.max(effD, 1) - 1;
       int cMinX = chunk.getMinBlockX();
       int cMinZ = chunk.getMinBlockZ();
       int cMaxX = chunk.getMaxBlockX();
       int cMaxZ = chunk.getMaxBlockZ();
       return minX <= cMaxX && maxX >= cMinX && minZ <= cMaxZ && maxZ >= cMinZ;
+   }
+
+   /** Footprint width after rotation (blocks). Matches TerrainPreparer. */
+   public int effectiveWidth() {
+      return this.rotation != Rotation.CLOCKWISE_90 && this.rotation != Rotation.COUNTERCLOCKWISE_90
+         ? this.width
+         : this.depth;
+   }
+
+   /** Footprint depth after rotation (blocks). Matches TerrainPreparer. */
+   public int effectiveDepth() {
+      return this.rotation != Rotation.CLOCKWISE_90 && this.rotation != Rotation.COUNTERCLOCKWISE_90
+         ? this.depth
+         : this.width;
+   }
+
+   public int minChunkX() {
+      return this.origin.getX() >> 4;
+   }
+
+   public int maxChunkX() {
+      return (this.origin.getX() + Math.max(effectiveWidth(), 1) - 1) >> 4;
+   }
+
+   public int minChunkZ() {
+      return this.origin.getZ() >> 4;
+   }
+
+   public int maxChunkZ() {
+      return (this.origin.getZ() + Math.max(effectiveDepth(), 1) - 1) >> 4;
    }
 
    public CompoundTag save() {

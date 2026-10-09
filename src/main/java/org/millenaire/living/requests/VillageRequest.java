@@ -181,6 +181,26 @@ public final class VillageRequest {
       return applied;
    }
 
+   /**
+    * Caps required quantity for an item without dropping already-delivered credit.
+    * Used when live need shrinks after a request was offered.
+    */
+   public void capRequired(ResourceLocation itemId, int newRequired) {
+      if (itemId == null) {
+         return;
+      }
+      int delivered = this.delivered.getOrDefault(itemId, 0);
+      int capped = Math.max(delivered, Math.max(0, newRequired));
+      if (capped <= 0 && delivered <= 0) {
+         this.required.remove(itemId);
+         this.delivered.remove(itemId);
+      } else {
+         this.required.put(itemId, capped);
+         this.delivered.putIfAbsent(itemId, delivered);
+      }
+      this.version++;
+   }
+
    public void markRewardClaimed(String eventId, long now) {
       this.rewardClaimed = true;
       this.completionEventId = eventId;

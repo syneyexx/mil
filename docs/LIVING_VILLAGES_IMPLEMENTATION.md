@@ -83,6 +83,8 @@ User performs local validation — see `docs/LIVING_VILLAGES_LOCAL_VALIDATION.md
 | LV-3.5.2 | Delivery transactions | IMPLEMENTED_UNVERIFIED |
 | LV-3.5.3 | Rewards + invalidation | IMPLEMENTED_UNVERIFIED |
 
+Delivery revalidation returns `NeedRevalidationResult` with per-item allowed quantities from a fresh need snapshot (and peer-request reservation in request-id order). `VillageDeliveryService` never delivers the full stale `remaining()` when live need is lower. Expired/cancelled/foreign requests cannot accept items or claim reputation. Anywood compensation returns the concrete log variants removed; inventory overflow drops at the player as explicit recovery. When a need resolves after partial delivery, credited deliveries are kept and the remainder is cancelled.
+
 ## Phase 3.6 — Action bridge
 
 | Task ID | Item | Status |

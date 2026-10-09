@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/stairs",
-  "textures": {
-    "bottom": "millenaire:block/japanese_tiles_0",
-    "side": "millenaire:block/japanese_tiles_0",
-    "top": "millenaire:block/japanese_tiles_0"
-  }
-}

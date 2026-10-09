@@ -48,6 +48,8 @@ public final class MillenaireServerConfig {
    public final BooleanValue worldgenAllowPartialInitialCompletion;
    public final IntValue worldgenPlanningCacheSize;
    public final IntValue worldgenMaterializationBudget;
+   public final IntValue worldgenMaterializationScanBudget;
+   public final IntValue worldgenResumeQueueBudget;
    public final IntValue worldgenActivationBudget;
    public final BooleanValue worldgenDetailedDiagnostics;
    public final BooleanValue forceLoadVillages;
@@ -125,6 +127,10 @@ public final class MillenaireServerConfig {
    public final IntValue civilizationEventPublishBudget;
    public final IntValue civilizationMigrationBudget;
    public final IntValue civilizationCatchupDays;
+   public final IntValue civilizationColonizationOpsBudget;
+   public final IntValue civilizationColonizationCandidateBudget;
+   public final IntValue civilizationColonizationCooldownDays;
+   public final BooleanValue civilizationIntraFactionLogistics;
 
    public static int getDefaultClearMargin() {
       try {
@@ -259,10 +265,20 @@ public final class MillenaireServerConfig {
       this.worldgenPlanningCacheSize = builder.comment("Soft cap on in-memory plan index hints (plans remain persisted in SavedData)")
          .translation("millenaire.config.worldgenPlanningCacheSize")
          .defineInRange("worldgenPlanningCacheSize", 2048, 64, 16384);
-      this.worldgenMaterializationBudget = builder.comment("Max block placement operations per chunk materialization pass")
+      this.worldgenMaterializationBudget = builder.comment(
+            "Max block/terrain operations per server tick for settlement materialization (shared across chunk loads)"
+         )
          .translation("millenaire.config.worldgenMaterializationBudget")
          .defineInRange("worldgenMaterializationBudget", 8000, 500, 50000);
-      this.worldgenActivationBudget = builder.comment("Max settlement activations per server tick")
+      this.worldgenMaterializationScanBudget = builder.comment(
+            "Max candidate scans (buildings/walls/roads inspected) per tick while searching for unfinished work"
+         )
+         .translation("millenaire.config.worldgenMaterializationScanBudget")
+         .defineInRange("worldgenMaterializationScanBudget", 256, 16, 4096);
+      this.worldgenResumeQueueBudget = builder.comment("Max unfinished chunk jobs drained from the resume queue per server tick")
+         .translation("millenaire.config.worldgenResumeQueueBudget")
+         .defineInRange("worldgenResumeQueueBudget", 4, 1, 32);
+      this.worldgenActivationBudget = builder.comment("Max settlement activation attempts per server tick (counts failures too)")
          .translation("millenaire.config.worldgenActivationBudget")
          .defineInRange("worldgenActivationBudget", 1, 1, 8);
       this.worldgenDetailedDiagnostics = builder.comment("Verbose worldgen planning/materialization logs (opt-in)")
@@ -597,8 +613,9 @@ public final class MillenaireServerConfig {
          .define("civilizationNpcContextEnabled", true);
       this.civilizationAutonomousFoundingEnabled = builder.comment(
             new String[]{
-               "Reserved: autonomous live-world colonization. Disabled until safe live founding is fully supported.",
-               "When false, factions do not create new settlements outside Phase 4 worldgen / existing spawn paths."
+               "Enable bounded autonomous colonization using existing worldgen planning + migration.",
+               "Default false for save safety. When enabled, overcrowded faction settlements may found nearby colonies",
+               "only in already-loaded chunks, without force-loading or free resident creation."
             }
          )
          .translation("millenaire.config.civilization.autonomousFoundingEnabled")
@@ -615,12 +632,26 @@ public final class MillenaireServerConfig {
       this.civilizationEventPublishBudget = builder.comment("Max civilization chronicle events published per tick")
          .translation("millenaire.config.civilization.eventPublishBudget")
          .defineInRange("civilizationEventPublishBudget", 12, 1, 64);
-      this.civilizationMigrationBudget = builder.comment("Max migration transactions per demographics stage (reserved)")
+      this.civilizationMigrationBudget = builder.comment("Max migration transactions per demographics stage")
          .translation("millenaire.config.civilization.migrationBudget")
          .defineInRange("civilizationMigrationBudget", 2, 0, 16);
-      this.civilizationCatchupDays = builder.comment("Max Minecraft days of offscreen catch-up after long inactivity")
+      this.civilizationCatchupDays = builder.comment("Max Minecraft days of offscreen profile-refresh catch-up after long inactivity")
          .translation("millenaire.config.civilization.catchupDays")
          .defineInRange("civilizationCatchupDays", 7, 1, 30);
+      this.civilizationColonizationOpsBudget = builder.comment("Max new autonomous colonization operations started per development stage")
+         .translation("millenaire.config.civilization.colonizationOpsBudget")
+         .defineInRange("civilizationColonizationOpsBudget", 1, 0, 4);
+      this.civilizationColonizationCandidateBudget = builder.comment("Max parent settlements scanned for colonization per stage")
+         .translation("millenaire.config.civilization.colonizationCandidateBudget")
+         .defineInRange("civilizationColonizationCandidateBudget", 4, 1, 32);
+      this.civilizationColonizationCooldownDays = builder.comment("Cooldown days before the same parent may start another colonization")
+         .translation("millenaire.config.civilization.colonizationCooldownDays")
+         .defineInRange("civilizationColonizationCooldownDays", 7, 1, 60);
+      this.civilizationIntraFactionLogistics = builder.comment(
+            "Allow conserved same-faction goods movement driven by local needs (logistics, not diplomatic trade)"
+         )
+         .translation("millenaire.config.civilization.intraFactionLogistics")
+         .define("civilizationIntraFactionLogistics", true);
       builder.pop();
    }
 

@@ -1,8 +1,10 @@
 package org.millenaire.worldgen.plan;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -14,13 +16,17 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Rotation;
+import org.millenaire.worldgen.materialize.ChunkMaterializationProgress;
 
 /**
  * Immutable identity + mutable progress for one natural settlement plan.
  * Planning selects content; materialization writes blocks; activation registers gameplay.
  */
 public final class SettlementPlan {
+   /** Planner content version (layout identity). Progress schema is tracked separately. */
    public static final int SCHEMA_VERSION = WorldgenSeeds.PLANNER_VERSION;
+   /** Progress persistence schema: chunk work units + legacy materializedChunks migration. */
+   public static final int PROGRESS_SCHEMA_VERSION = 2;
 
    private final UUID planId;
    private final VillageIdHolder villageId;
@@ -41,7 +47,11 @@ public final class SettlementPlan {
    private final List<PlannedWall> walls;
    private final List<PlannedHamlet> hamlets;
    private final Set<Long> reservedChunks;
+   /** Fully completed chunks only — never written while budget aborts mid-chunk. */
    private final Set<Long> materializedChunks;
+   private final Map<Long, ChunkMaterializationProgress> chunkProgress;
+   private int progressSchemaVersion = PROGRESS_SCHEMA_VERSION;
+   private String recoveryNote = "";
    private SettlementPlanStatus status;
    private SettlementFailureReason failureReason;
    private String failureDetail;
@@ -83,9 +93,45 @@ public final class SettlementPlan {
       this.hamlets = new ArrayList<>();
       this.reservedChunks = new HashSet<>();
       this.materializedChunks = new HashSet<>();
+      this.chunkProgress = new HashMap<>();
       this.status = SettlementPlanStatus.CANDIDATE;
       this.failureReason = SettlementFailureReason.NONE;
       this.failureDetail = "";
+   }
+
+   public int progressSchemaVersion() {
+      return this.progressSchemaVersion;
+   }
+
+   public String recoveryNote() {
+      return this.recoveryNote;
+   }
+
+   public void setRecoveryNote(String note) {
+      this.recoveryNote = note == null ? "" : note;
+   }
+
+   public Map<Long, ChunkMaterializationProgress> chunkProgress() {
+      return this.chunkProgress;
+   }
+
+   public ChunkMaterializationProgress progressFor(long packed) {
+      return this.chunkProgress.computeIfAbsent(packed, ChunkMaterializationProgress::new);
+   }
+
+   public boolean isChunkFullyMaterialized(long packed) {
+      if (this.materializedChunks.contains(packed)) {
+         return true;
+      }
+      ChunkMaterializationProgress progress = this.chunkProgress.get(packed);
+      return progress != null && progress.status() == ChunkMaterializationProgress.Status.COMPLETE;
+   }
+
+   public void markChunkFullyMaterialized(long packed) {
+      this.materializedChunks.add(packed);
+      ChunkMaterializationProgress progress = this.progressFor(packed);
+      progress.setStatus(ChunkMaterializationProgress.Status.COMPLETE);
+      progress.setBlockReason("");
    }
 
    public UUID planId() {
@@ -257,6 +303,35 @@ public final class SettlementPlan {
       return true;
    }
 
+   /**
+    * True when buildings and (when configured) walls/roads are all materialized.
+    * Used for PHYSICAL_COMPLETE / activation gates so walls and roads cannot be skipped.
+    */
+   public boolean isPhysicallyComplete() {
+      if (!allBuildingsMaterialized()) {
+         return false;
+      }
+      try {
+         if (Boolean.TRUE.equals(org.millenaire.config.MillenaireServerConfig.SERVER.worldgenGenerateStartingWalls.get())) {
+            for (PlannedWall wall : this.walls) {
+               if (!wall.materialized()) {
+                  return false;
+               }
+            }
+         }
+         if (Boolean.TRUE.equals(org.millenaire.config.MillenaireServerConfig.SERVER.worldgenGenerateInitialRoads.get())) {
+            for (PlannedRoad road : this.roads) {
+               if (!road.materialized()) {
+                  return false;
+               }
+            }
+         }
+      } catch (IllegalStateException e) {
+         // Config not loaded yet — require buildings only.
+      }
+      return true;
+   }
+
    public boolean hasMandatoryCentre() {
       for (PlannedBuilding b : this.buildings) {
          String role = b.role();
@@ -270,6 +345,8 @@ public final class SettlementPlan {
    public CompoundTag save() {
       CompoundTag tag = new CompoundTag();
       tag.putInt("schema", SCHEMA_VERSION);
+      tag.putInt("progressSchema", this.progressSchemaVersion);
+      tag.putString("recoveryNote", this.recoveryNote);
       tag.putUUID("planId", this.planId);
       tag.putUUID("villageId", this.villageId.uuid());
       tag.putInt("rx", this.region.regionX());
@@ -334,6 +411,12 @@ public final class SettlementPlan {
          mats.add(LongTag.valueOf(packed));
       }
       tag.put("materializedChunks", mats);
+
+      ListTag progressList = new ListTag();
+      for (ChunkMaterializationProgress progress : this.chunkProgress.values()) {
+         progressList.add(progress.save());
+      }
+      tag.put("chunkProgress", progressList);
       return tag;
    }
 
@@ -408,10 +491,78 @@ public final class SettlementPlan {
          for (int i = 0; i < mats.size(); i++) {
             plan.materializedChunks.add(((LongTag)mats.get(i)).getAsLong());
          }
+         ListTag progressList = tag.getList("chunkProgress", Tag.TAG_COMPOUND);
+         for (int i = 0; i < progressList.size(); i++) {
+            ChunkMaterializationProgress progress = ChunkMaterializationProgress.load(progressList.getCompound(i));
+            if (progress != null) {
+               plan.chunkProgress.put(progress.chunkPacked(), progress);
+            }
+         }
+         int loadedProgressSchema = tag.contains("progressSchema") ? tag.getInt("progressSchema") : 1;
+         plan.progressSchemaVersion = PROGRESS_SCHEMA_VERSION;
+         plan.recoveryNote = tag.contains("recoveryNote") ? tag.getString("recoveryNote") : "";
+         migrateLegacyProgress(plan, loadedProgressSchema);
          return plan;
       } catch (Exception e) {
          return null;
       }
+   }
+
+   /**
+    * Legacy {@code materializedChunks} may mark a chunk complete after a mid-building budget abort.
+    * For unfinished plans we treat those entries as ambiguous: keep them as hints that terrain may
+    * already exist (skip re-flatten) but clear the completion flag so placement can resume.
+    * Active/activated settlements are left untouched to avoid rewriting player worlds.
+    */
+   private static void migrateLegacyProgress(SettlementPlan plan, int loadedProgressSchema) {
+      if (loadedProgressSchema >= PROGRESS_SCHEMA_VERSION) {
+         return;
+      }
+      if (plan.activated || plan.status == SettlementPlanStatus.ACTIVE) {
+         plan.recoveryNote = "legacy_progress_trusted_active";
+         for (Long packed : plan.materializedChunks) {
+            ChunkMaterializationProgress progress = plan.progressFor(packed);
+            progress.setStatus(ChunkMaterializationProgress.Status.COMPLETE);
+         }
+         return;
+      }
+      if (plan.status == SettlementPlanStatus.FAILED || plan.status == SettlementPlanStatus.INVALID) {
+         plan.recoveryNote = "legacy_progress_terminal";
+         return;
+      }
+      if (plan.materializedChunks.isEmpty()) {
+         plan.recoveryNote = "legacy_progress_empty";
+         return;
+      }
+      Set<Long> ambiguous = new HashSet<>(plan.materializedChunks);
+      plan.materializedChunks.clear();
+      for (Long packed : ambiguous) {
+         ChunkMaterializationProgress progress = plan.progressFor(packed);
+         progress.setLegacyAmbiguous(true);
+         progress.setStatus(ChunkMaterializationProgress.Status.IN_PROGRESS);
+         progress.setBlockReason("legacy_materialized_unverified");
+         // Assume terrain may already exist for intersecting buildings — resume placement only.
+         for (PlannedBuilding building : plan.buildings) {
+            if (building.intersectsChunk(new ChunkPos(packed))) {
+               progress.terrainPreparedBuildings().add(building.buildingId());
+            }
+         }
+         for (PlannedWall wall : plan.walls) {
+            if (wallIntersectsChunk(wall, new ChunkPos(packed))) {
+               progress.terrainPreparedWalls().add(wall.segmentId());
+            }
+         }
+      }
+      plan.recoveryNote = "legacy_materializedChunks_reopened:" + ambiguous.size();
+   }
+
+   private static boolean wallIntersectsChunk(PlannedWall wall, ChunkPos chunk) {
+      int minX = wall.origin().getX();
+      int minZ = wall.origin().getZ();
+      int maxX = minX + Math.max(wall.width(), 1) - 1;
+      int maxZ = minZ + Math.max(wall.depth(), 1) - 1;
+      return minX <= chunk.getMaxBlockX() && maxX >= chunk.getMinBlockX()
+         && minZ <= chunk.getMaxBlockZ() && maxZ >= chunk.getMinBlockZ();
    }
 
    /** Thin holder so VillageId package need not be imported into every plan consumer. */

@@ -1,6 +1,0 @@
-{
-  "parent": "millenaire:block/mill_path_slab_top",
-  "textures": {
-    "top": "millenaire:block/path_dirt"
-  }
-}

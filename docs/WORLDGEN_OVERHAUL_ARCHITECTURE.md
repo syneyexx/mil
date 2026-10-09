@@ -6,11 +6,14 @@
 
 ## Chosen integration
 
-Primary path: **deterministic region plans + per-chunk materialization on `ChunkEvent.Load(isNewChunk)`**.
+Primary path: **deterministic region plans + resumable per-chunk materialization**.
 
-Native Structure JSON registration is reserved (`worldgenUseNativeStructures`) but not required for the first complete engine. Millénaire settlements are multi-building, expandable footprints; chunk-clipped `PlacementStep` application via existing `BuildingPlacer.compilePlacementSteps` matches that shape without force-loading neighbors.
+- New chunks: `ChunkEvent.Load(isNewChunk)` → `WorldgenEngine.onNewChunk`
+- Existing chunks with unfinished work: `onChunkAvailable` + tick `MaterializationResumeQueue` (never force-load)
+- Shared per-tick `MaterializationTickBudget` across all chunk-load and resume work
+- `LivingEventService` is called directly on activation (Living Villages is integrated; not a separate PR hook)
 
-**Generation stage:** after terrain heightmaps exist for a newly generated overworld chunk, on the server thread (`server.execute`).
+Native Structure JSON registration is reserved (`worldgenUseNativeStructures`) but not required.
 
 ## Three stages
 
@@ -32,6 +35,8 @@ Neighbor conflicts use unsigned priority from candidate identity (`SALT_ARBITER`
 
 `SettlementPlanSavedData` (`millenaire_worldgen_plans`) is independent from `VillageSavedData` (`millenaire_villages`). Existing villages are never rewritten by the Phase 4 schema.
 
+Progress schema v2 stores `ChunkMaterializationProgress` + resume queue. Legacy unfinished `materializedChunks` are reopened ambiguously (skip re-flatten, resume placement).
+
 Statuses: `CANDIDATE → PLANNED → RESERVED → MATERIALIZING → PHYSICAL_COMPLETE → ACTIVATING → ACTIVE` (+ `INVALID` / `FAILED`).
 
 ## Legacy bridge
@@ -49,12 +54,12 @@ Set `worldgenEngineEnabled=false` to restore the legacy post-load queue.
 - Internal roads planned as centre→starter polylines; path materials from village type.
 - Walls planned via existing `VillageWallGenerator` location math; materialized chunk-locally.
 - Hamlets stored on parent plan and expanded to child plans with parent UUID link.
-- Regional connectors: `RegionalRoadPlanner` foundation (off by default).
+- Regional connectors: `RegionalRoadPlanner` + `RegionalRoadMaterializer` (off by default). Bridges via `worldgenGenerateBridges`.
 
 ## Activation
 
-Creates `Village` with deterministic `VillageId`, registers buildings with stable `BuildingId`s from the plan, spawns occupants once, initializes inventories once, runs faction lifecycle, optional reflective Phase 3 `emitSettlementFounded` if present.
+Creates `Village` with deterministic `VillageId`, registers buildings with stable `BuildingId`s from the plan, spawns occupants once, initializes inventories once, runs faction lifecycle, emits `LivingEventService` `VILLAGE_FOUNDED`. Activation attempts are budgeted on the server tick (including failed attempts); `onNewChunk` does not bypass that budget.
 
 ## Existing-world safety
 
-Only `isNewChunk` paths run the engine. Explored terrain is not reprocessed. Legacy villages load via existing `VillageSavedData` unchanged.
+New chunks and reloaded unfinished chunks resume materialization. Force-load is never used to finish work. Legacy villages load via existing `VillageSavedData` unchanged.

@@ -22,7 +22,7 @@ This document describes state ownership, pipelines, and extension points for the
 | Derived needs | *(none persisted)* | `VillageNeedsEngine` recomputes snapshots |
 | Living events | `LivingEventSavedData` | Canonical journal with dedupe |
 | Social / personality | `SocialSavedData` | Directed relationships + traits + knowledge |
-| Assistance requests | `VillageRequestSavedData` | Persistent request lifecycle |
+| Assistance requests | `VillageRequestSavedData` / `VillageRequestService` | Persistent lifecycle; live need caps via `NeedRevalidationResult` |
 | Action proposals | In-memory `NpcActionRegistry` | Ephemeral server-owned proposals |
 
 AI model output is never authoritative.

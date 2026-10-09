@@ -7,10 +7,11 @@ config="millenaire.mixins.json"
 
 [[mods]]
 modId="millenaire"
+# Keep in sync with mod_version in gradle.properties (primary release version source).
 version="9.0.2"
 displayName="Millénaire"
 authors="Kinniken, Contributors"
-description='''Millénaire adds NPC villages to Minecraft with unique cultures, progressive building construction, trading, reputation, and quests.'''
+description='''Millénaire adds NPC villages to Minecraft with unique cultures, progressive building construction, trading, reputation, quests, Living Villages, deterministic worldgen, and optional civilization orchestration.'''
 
 [[dependencies.millenaire]]
     modId="neoforge"

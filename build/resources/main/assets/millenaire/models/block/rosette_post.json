@@ -1,8 +1,0 @@
-{
-  "render_type": "minecraft:translucent",
-  "parent": "minecraft:block/template_glass_pane_post",
-  "textures": {
-    "pane": "millenaire:block/rosette_center",
-    "edge": "millenaire:block/rosette_center"
-  }
-}
