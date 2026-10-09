@@ -26,6 +26,7 @@ public class VillageBookScreen extends AbstractMillenaireScreen {
       "gui.millenaire.book.section.projects",
       "gui.millenaire.book.section.resources",
       "gui.millenaire.book.section.military",
+      "gui.millenaire.book.section.civilization",
       "gui.millenaire.book.section.chronicle"
    };
    private static final String[] SECTION_TAB_KEYS = new String[]{
@@ -35,6 +36,7 @@ public class VillageBookScreen extends AbstractMillenaireScreen {
       "gui.millenaire.book.tab.projects",
       "gui.millenaire.book.tab.resources",
       "gui.millenaire.book.tab.military",
+      "gui.millenaire.book.tab.civilization",
       "gui.millenaire.book.tab.chronicle"
    };
    private final VillageBookPayload payload;

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -62,6 +63,10 @@ public final class RegionalRoadMaterializer {
       public int bridgeDeckY = Integer.MIN_VALUE;
       public boolean continuousExpanded;
       public boolean coarseOnlyLegacy;
+      /** Last successfully placed surface — persists across ticks for slope checks. */
+      public int lastPlacedX = Integer.MIN_VALUE;
+      public int lastPlacedY = Integer.MIN_VALUE;
+      public int lastPlacedZ = Integer.MIN_VALUE;
 
       RouteProgress(UUID routeId, UUID fromPlanId, UUID toPlanId, List<BlockPos> waypoints) {
          this.routeId = routeId;
@@ -69,6 +74,26 @@ public final class RegionalRoadMaterializer {
          this.toPlanId = toPlanId;
          this.waypoints = new ArrayList<>(waypoints);
          this.continuousExpanded = true;
+      }
+
+      @Nullable
+      public BlockPos lastPlacedSurface() {
+         if (this.lastPlacedX == Integer.MIN_VALUE) {
+            return null;
+         }
+         return new BlockPos(this.lastPlacedX, this.lastPlacedY, this.lastPlacedZ);
+      }
+
+      public void setLastPlacedSurface(BlockPos pos) {
+         if (pos == null) {
+            this.lastPlacedX = Integer.MIN_VALUE;
+            this.lastPlacedY = Integer.MIN_VALUE;
+            this.lastPlacedZ = Integer.MIN_VALUE;
+            return;
+         }
+         this.lastPlacedX = pos.getX();
+         this.lastPlacedY = pos.getY();
+         this.lastPlacedZ = pos.getZ();
       }
 
       CompoundTag save() {
@@ -83,6 +108,11 @@ public final class RegionalRoadMaterializer {
          tag.putInt("bridgeDeckY", this.bridgeDeckY);
          tag.putBoolean("continuous", this.continuousExpanded);
          tag.putBoolean("coarseLegacy", this.coarseOnlyLegacy);
+         if (this.lastPlacedX != Integer.MIN_VALUE) {
+            tag.putInt("lastX", this.lastPlacedX);
+            tag.putInt("lastY", this.lastPlacedY);
+            tag.putInt("lastZ", this.lastPlacedZ);
+         }
          ListTag pts = new ListTag();
          for (BlockPos p : this.waypoints) {
             CompoundTag pt = new CompoundTag();
@@ -120,6 +150,11 @@ public final class RegionalRoadMaterializer {
          progress.bridgeDeckY = tag.contains("bridgeDeckY") ? tag.getInt("bridgeDeckY") : Integer.MIN_VALUE;
          progress.continuousExpanded = tag.contains("continuous") && tag.getBoolean("continuous");
          progress.coarseOnlyLegacy = tag.getBoolean("coarseLegacy");
+         if (tag.contains("lastX")) {
+            progress.lastPlacedX = tag.getInt("lastX");
+            progress.lastPlacedY = tag.getInt("lastY");
+            progress.lastPlacedZ = tag.getInt("lastZ");
+         }
          ListTag done = tag.getList("doneChunks", Tag.TAG_COMPOUND);
          for (int i = 0; i < done.size(); i++) {
             progress.completedChunks.add(done.getCompound(i).getLong("c"));
@@ -283,10 +318,11 @@ public final class RegionalRoadMaterializer {
       }
       boolean bridges = Boolean.TRUE.equals(MillenaireServerConfig.SERVER.worldgenGenerateBridges.get());
       BlockState path = Blocks.DIRT_PATH.defaultBlockState();
+      SettlementPlan fromPlan = store.getPlan(route.fromPlanId);
       int scanned = 0;
       boolean waitingChunk = false;
       boolean any = false;
-      BlockPos previousSurface = null;
+      BlockPos previousSurface = route.lastPlacedSurface();
 
       for (int i = route.cursor; i < route.waypoints.size() && scanned < MAX_CELLS_SCAN; i++) {
          if (!MaterializationTickBudget.hasOps()) {
@@ -307,29 +343,20 @@ public final class RegionalRoadMaterializer {
          if (previousSurface != null) {
             int rise = Math.abs(surface.getY() - previousSurface.getY());
             if (rise > RegionalRoadPlanner.maxStepRise() + 1) {
-               // Prefer bridge only over fluid; otherwise block steep cliffs.
                BlockState at = level.getBlockState(surface);
                if (at.getFluidState().isEmpty()) {
-                  route.status = RouteStatus.BLOCKED;
-                  route.blockReason = "too_steep";
-                  route.cursor = i;
-                  return;
+                  // Attempt a continuous lateral detour before blocking.
+                  List<BlockPos> detour = planContinuousDetour(level, previousSurface, surface, path, fromPlan);
+                  if (detour.isEmpty()) {
+                     route.status = RouteStatus.BLOCKED;
+                     route.blockReason = "too_steep";
+                     route.cursor = i;
+                     return;
+                  }
+                  spliceDetour(route, i, detour);
+                  surface = new BlockPos(detour.getFirst().getX(), walkableSurfaceY(level, detour.getFirst().getX(), detour.getFirst().getZ()), detour.getFirst().getZ());
                }
             }
-         }
-
-         // Skip overwriting buildings / containers in loaded chunks.
-         if (!BridgePlacementHelper.isSafeToOverwrite(level, surface)
-            && !isExistingPath(level.getBlockState(surface))) {
-            // Try adjacent rim cell within ±1 before blocking.
-            BlockPos alt = findSafeAdjacent(level, surface, path);
-            if (alt == null) {
-               route.status = RouteStatus.BLOCKED;
-               route.blockReason = "obstacle_protected";
-               route.cursor = i;
-               return;
-            }
-            surface = alt;
          }
 
          BlockState cur = level.getBlockState(surface);
@@ -341,7 +368,6 @@ public final class RegionalRoadMaterializer {
                return;
             }
             UUID bridgeKey = BridgePlacementHelper.columnKey(route.routeId, surface);
-            // Persist deck height on the route so retries stay stable even without chunk progress.
             if (route.bridgeDeckY == Integer.MIN_VALUE) {
                route.bridgeDeckY = surface.getY();
             }
@@ -351,7 +377,8 @@ public final class RegionalRoadMaterializer {
                path,
                null,
                bridgeKey,
-               true
+               true,
+               fromPlan
             );
             if (!bridge.finished()) {
                route.status = bridge.budgetExhausted() ? RouteStatus.PARTIAL : RouteStatus.BLOCKED;
@@ -360,19 +387,53 @@ public final class RegionalRoadMaterializer {
                route.bridgeSupportCursor += bridge.ops();
                return;
             }
+            int deckY = route.bridgeDeckY != Integer.MIN_VALUE ? route.bridgeDeckY : surface.getY();
+            surface = new BlockPos(surface.getX(), deckY, surface.getZ());
             route.bridgeSupportCursor = 0;
             route.bridgeDeckY = Integer.MIN_VALUE;
-         } else if (!cur.is(Blocks.BEDROCK) && !isExistingPath(cur)) {
-            if (!MaterializationTickBudget.tryConsumeOp()) {
-               route.status = RouteStatus.PARTIAL;
-               route.blockReason = "budget_exhausted";
-               route.cursor = i;
-               return;
+         } else {
+            org.millenaire.worldgen.materialize.RoadPlacementGuard.Result permit =
+               org.millenaire.worldgen.materialize.RoadPlacementGuard.evaluate(
+                  level, surface, org.millenaire.worldgen.materialize.RoadPlacementGuard.Intent.PATH_SURFACE, fromPlan, path
+               );
+            if (!permit.allowed()) {
+               List<BlockPos> detour = planContinuousDetour(level, previousSurface != null ? previousSurface : surface, surface, path, fromPlan);
+               if (detour.isEmpty()) {
+                  route.status = RouteStatus.BLOCKED;
+                  route.blockReason = permit.reason().isEmpty() ? "obstacle_protected" : permit.reason();
+                  route.cursor = i;
+                  return;
+               }
+               spliceDetour(route, i, detour);
+               // Restart this index on the spliced continuous segment next iteration.
+               i--;
+               continue;
             }
-            level.setBlock(surface, path, 2);
+            if (!permit.alreadyPath()) {
+               // Commit-time recheck.
+               permit = org.millenaire.worldgen.materialize.RoadPlacementGuard.evaluate(
+                  level, surface, org.millenaire.worldgen.materialize.RoadPlacementGuard.Intent.PATH_SURFACE, fromPlan, path
+               );
+               if (!permit.allowed()) {
+                  route.status = RouteStatus.BLOCKED;
+                  route.blockReason = permit.reason();
+                  route.cursor = i;
+                  return;
+               }
+               if (!permit.alreadyPath()) {
+                  if (!MaterializationTickBudget.tryConsumeOp()) {
+                     route.status = RouteStatus.PARTIAL;
+                     route.blockReason = "budget_exhausted";
+                     route.cursor = i;
+                     return;
+                  }
+                  level.setBlock(surface, path, 2);
+               }
+            }
          }
          route.completedChunks.add(cp.toLong());
          route.cursor = i + 1;
+         route.setLastPlacedSurface(surface);
          previousSurface = surface;
          any = true;
       }
@@ -393,6 +454,130 @@ public final class RegionalRoadMaterializer {
       }
    }
 
+   /**
+    * Plan a short continuous lateral detour around an obstacle. Empty when no coherent path exists.
+    * Never returns a single sideways hop that would break route continuity.
+    */
+   private static List<BlockPos> planContinuousDetour(
+      ServerLevel level,
+      BlockPos from,
+      BlockPos blocked,
+      BlockState path,
+      @Nullable SettlementPlan owningPlan
+   ) {
+      List<BlockPos> best = List.of();
+      for (int side : new int[]{1, -1, 2, -2, 3, -3}) {
+         List<BlockPos> candidate = new ArrayList<>();
+         int dx = Math.abs(blocked.getX() - from.getX()) >= Math.abs(blocked.getZ() - from.getZ()) ? 0 : side;
+         int dz = dx == 0 ? 0 : 0;
+         if (dx == 0) {
+            dz = side;
+         }
+         BlockPos mid = new BlockPos(blocked.getX() + dx, blocked.getY(), blocked.getZ() + dz);
+         BlockPos join = new BlockPos(blocked.getX() + dx, blocked.getY(), blocked.getZ() + (dz == 0 ? 0 : 0));
+         // Corridor: from → mid → rejoined cell past obstacle in original direction.
+         int dirX = Integer.signum(blocked.getX() - from.getX());
+         int dirZ = Integer.signum(blocked.getZ() - from.getZ());
+         BlockPos after = blocked.offset(dirX, 0, dirZ);
+         List<BlockPos> corridor = List.of(mid, after.offset(dx, 0, dz), after);
+         boolean ok = true;
+         for (BlockPos cell : corridor) {
+            if (!level.hasChunk(cell.getX() >> 4, cell.getZ() >> 4)) {
+               ok = false;
+               break;
+            }
+            int y = walkableSurfaceY(level, cell.getX(), cell.getZ());
+            BlockPos at = new BlockPos(cell.getX(), y, cell.getZ());
+            BlockState state = level.getBlockState(at);
+            if (!state.getFluidState().isEmpty()) {
+               ok = false;
+               break;
+            }
+            org.millenaire.worldgen.materialize.RoadPlacementGuard.Result permit =
+               org.millenaire.worldgen.materialize.RoadPlacementGuard.evaluate(
+                  level, at, org.millenaire.worldgen.materialize.RoadPlacementGuard.Intent.PATH_SURFACE, owningPlan, path
+               );
+            if (!permit.allowed()) {
+               ok = false;
+               break;
+            }
+            candidate.add(cell);
+         }
+         if (ok && candidate.size() >= 2) {
+            best = candidate;
+            break;
+         }
+      }
+      return best;
+   }
+
+   private static void spliceDetour(RouteProgress route, int atIndex, List<BlockPos> detour) {
+      if (detour == null || detour.isEmpty() || atIndex < 0 || atIndex >= route.waypoints.size()) {
+         return;
+      }
+      route.waypoints.remove(atIndex);
+      route.waypoints.addAll(atIndex, detour);
+   }
+
+   /**
+    * Bounded lookup of a regional route touching a village's settlement plan.
+    * Presentation-only — does not force-load chunks or mutate routes.
+    */
+   @Nullable
+   public static RouteProgress findProgressForVillage(ServerLevel level, org.millenaire.village.Village village) {
+      if (level == null || village == null) {
+         return null;
+      }
+      SettlementPlanSavedData plans = SettlementPlanSavedData.get(level);
+      SettlementPlan own = null;
+      for (SettlementPlan plan : plans.allPlans()) {
+         if (village.getId().uuid().equals(plan.villageUuid())) {
+            own = plan;
+            break;
+         }
+      }
+      if (own == null) {
+         return null;
+      }
+      UUID planId = own.planId();
+      RouteProgress best = null;
+      for (RouteProgress route : RegionalRoadSavedData.get(level).routes().values()) {
+         if (!planId.equals(route.fromPlanId) && !planId.equals(route.toPlanId)) {
+            continue;
+         }
+         if (best == null
+            || route.status == RouteStatus.BLOCKED
+            || route.status == RouteStatus.WAITING_CHUNKS
+            || route.status == RouteStatus.PARTIAL) {
+            best = route;
+            if (route.status == RouteStatus.BLOCKED || route.status == RouteStatus.WAITING_CHUNKS) {
+               break;
+            }
+         }
+      }
+      return best;
+   }
+
+   public static String endpointLabel(ServerLevel level, RouteProgress route, UUID selfPlanId) {
+      if (route == null) {
+         return "";
+      }
+      UUID other = selfPlanId != null && selfPlanId.equals(route.fromPlanId) ? route.toPlanId : route.fromPlanId;
+      SettlementPlan plan = SettlementPlanSavedData.get(level).getPlan(other);
+      if (plan == null) {
+         return "???";
+      }
+      if (plan.villageUuid() != null) {
+         org.millenaire.village.Village v = org.millenaire.village.VillageSavedData.get(level)
+            .getVillageManager()
+            .getVillage(new org.millenaire.village.VillageId(plan.villageUuid()));
+         if (v != null && v.getVillageName() != null && !v.getVillageName().isBlank()) {
+            return v.getVillageName();
+         }
+      }
+      return plan.center().toShortString();
+   }
+
    private static boolean endpointsMissing(SettlementPlanSavedData store, RouteProgress route) {
       SettlementPlan from = store.getPlan(route.fromPlanId);
       SettlementPlan to = store.getPlan(route.toPlanId);
@@ -402,13 +587,8 @@ public final class RegionalRoadMaterializer {
    }
 
    private static boolean isExistingPath(BlockState state) {
-      return state.is(Blocks.DIRT_PATH)
-         || state.is(Blocks.GRAVEL)
-         || state.is(Blocks.COBBLESTONE)
-         || state.is(Blocks.OAK_PLANKS)
-         || state.is(Blocks.STONE_BRICKS)
-         || state.is(Blocks.SANDSTONE)
-         || state.is(Blocks.PACKED_MUD);
+      // Conservative: registered path types only — loose cobble/planks elsewhere are not “a road”.
+      return org.millenaire.worldgen.materialize.RoadPlacementGuard.isRegisteredPath(state);
    }
 
    private static BlockPos findSafeAdjacent(ServerLevel level, BlockPos surface, BlockState path) {
@@ -418,8 +598,11 @@ public final class RegionalRoadMaterializer {
          }
          int y = walkableSurfaceY(level, cand.getX(), cand.getZ());
          BlockPos at = new BlockPos(cand.getX(), y, cand.getZ());
-         BlockState s = level.getBlockState(at);
-         if (isExistingPath(s) || (BridgePlacementHelper.isSafeToOverwrite(level, at) && s.getFluidState().isEmpty())) {
+         org.millenaire.worldgen.materialize.RoadPlacementGuard.Result permit =
+            org.millenaire.worldgen.materialize.RoadPlacementGuard.evaluate(
+               level, at, org.millenaire.worldgen.materialize.RoadPlacementGuard.Intent.CONNECT_EXISTING_PATH, null, path
+            );
+         if (permit.allowed() && level.getBlockState(at).getFluidState().isEmpty()) {
             return at;
          }
       }

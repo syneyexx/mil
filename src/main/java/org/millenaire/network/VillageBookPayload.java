@@ -30,7 +30,7 @@ public record VillageBookPayload(
    boolean degraded
 ) implements CustomPacketPayload {
    private static final Logger LOGGER = LogUtils.getLogger();
-   private static final int MAX_SECTIONS = 7;
+   private static final int MAX_SECTIONS = 8;
    private static final int MAX_LINES = 200;
    private static final int MAX_MAP_ENTRIES = 256;
    private static final int MAX_ARGS = 8;

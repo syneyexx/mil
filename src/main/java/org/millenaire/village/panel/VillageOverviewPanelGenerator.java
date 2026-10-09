@@ -12,18 +12,11 @@ import net.minecraft.server.level.ServerLevel;
 import org.millenaire.DisplayUtils;
 import org.millenaire.building.BuildingInstance;
 import org.millenaire.building.BuildingPlanSet;
-import org.millenaire.civilization.CivilizationSavedData;
 import org.millenaire.culture.Gender;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillageType;
 import org.millenaire.culture.VillagerType;
 import org.millenaire.entity.MillVillager;
-import org.millenaire.faction.FactionId;
-import org.millenaire.faction.economy.EconomySavedData;
-import org.millenaire.faction.economy.FactionEconomicProfile;
-import org.millenaire.faction.politics.PoliticalLeader;
-import org.millenaire.faction.politics.PoliticsQueries;
-import org.millenaire.faction.war.WarSavedData;
 import org.millenaire.language.BuildingNameHelper;
 import org.millenaire.village.Village;
 import org.millenaire.village.VillageEvent;
@@ -189,29 +182,185 @@ public final class VillageOverviewPanelGenerator {
       if (level == null) {
          return;
       }
-      FactionId factionId = village.getFactionId();
+      org.millenaire.civilization.presentation.CivilizationVillageSnapshot snap =
+         org.millenaire.civilization.presentation.CivilizationPresentationService.villageSnapshot(level, village, null);
       lines.add(PanelLine.separator());
       lines.add(PanelLine.translatable("panel.millenaire.civilization"));
-      if (factionId == null) {
+      if (snap.factionId() == null) {
          lines.add(PanelLine.translatable("panel.millenaire.civilization_independent"));
-         return;
+      } else {
+         String factionLabel = snap.factionDisplayName().isBlank()
+            ? Component.translatable("civilization.millenaire.faction.unnamed").getString()
+            : snap.factionDisplayName();
+         lines.add(PanelLine.translatableWithArgs("panel.millenaire.civilization_faction", factionLabel));
+         lines.add(PanelLine.translatable(snap.developmentLabelKey()));
       }
-      lines.add(PanelLine.translatableWithArgs("panel.millenaire.civilization_faction", factionId.asString()));
-      PoliticalLeader leader = PoliticsQueries.leader(level, factionId);
-      if (leader != null && leader.getDisplayName() != null && !leader.getDisplayName().isBlank()) {
-         lines.add(PanelLine.translatableWithArgs("panel.millenaire.civilization_leader", leader.getDisplayName()));
+      lines.add(
+         PanelLine.translatableWithArgs(
+            "civilization.millenaire.overview.housing",
+            String.valueOf(snap.residents()),
+            String.valueOf(snap.housingCapacity())
+         )
+      );
+      if (snap.overcrowded()) {
+         lines.add(PanelLine.translatable("civilization.millenaire.overview.overcrowded"));
       }
-      FactionEconomicProfile profile = EconomySavedData.get(level).getTradeManager().getProfile(factionId);
-      if (profile != null) {
-         lines.add(PanelLine.translatableWithArgs("panel.millenaire.civilization_economy", profile.getBalanceLevel().name()));
+      if (!snap.inventoryKnown()) {
+         lines.add(PanelLine.translatable("civilization.millenaire.overview.inventory_unknown"));
       }
-      if (WarSavedData.get(level).getWarManager().isAtWar(factionId)) {
-         lines.add(PanelLine.translatable("panel.millenaire.civilization_at_war"));
+      if (!snap.topNeeds().isEmpty()) {
+         var need = snap.topNeeds().getFirst();
+         lines.add(PanelLine.translatableWithArgs(need.summaryKey(), need.detail(), need.severityCode(), String.valueOf(need.shortage())));
       }
-      String development = CivilizationSavedData.get(level).getDevelopmentLabel(village.getId().uuid());
-      if (development != null) {
-         lines.add(PanelLine.translatableWithArgs("panel.millenaire.civilization_development", development));
+      if (snap.colonization() != null) {
+         lines.add(PanelLine.translatable(snap.colonization().statusLabelKey()));
+         lines.add(PanelLine.translatable(snap.colonization().reasonLabelKey()));
+         lines.add(
+            PanelLine.translatableWithArgs(
+               "civilization.millenaire.overview.founders",
+               String.valueOf(snap.colonization().migratedFounders()),
+               String.valueOf(snap.colonization().founderTarget())
+            )
+         );
       }
+      if (snap.connection() != null) {
+         lines.add(
+            PanelLine.translatableWithArgs(
+               "civilization.millenaire.overview.connection",
+               snap.connection().endpointName(),
+               Component.translatable("civilization.millenaire.status." + snap.connection().statusCode()).getString()
+            )
+         );
+      }
+      lines.add(PanelLine.translatable("civilization.millenaire.overview.see_civilization_section"));
+   }
+
+   public static PanelContent generateCivilization(Village village, @Nullable ServerLevel level, @Nullable net.minecraft.server.level.ServerPlayer player) {
+      List<PanelLine> lines = new ArrayList<>();
+      String titleKey = "panel.millenaire.title.civilization";
+      String[] titleArgs = new String[]{village.getVillageName()};
+      if (level == null) {
+         lines.add(PanelLine.translatable("civilization.millenaire.overview.unavailable"));
+         return new PanelContent(PanelType.CIVILIZATION, titleKey, lines, true, titleArgs);
+      }
+      org.millenaire.civilization.presentation.CivilizationVillageSnapshot snap =
+         org.millenaire.civilization.presentation.CivilizationPresentationService.villageSnapshot(level, village, player);
+      if (snap.factionId() == null) {
+         lines.add(PanelLine.translatable("panel.millenaire.civilization_independent"));
+      } else {
+         String factionLabel = snap.factionDisplayName().isBlank()
+            ? Component.translatable("civilization.millenaire.faction.unnamed").getString()
+            : snap.factionDisplayName();
+         lines.add(PanelLine.translatableWithArgs("panel.millenaire.civilization_faction", factionLabel));
+      }
+      lines.add(PanelLine.translatable(snap.developmentLabelKey()));
+      lines.add(PanelLine.separator());
+      lines.add(PanelLine.translatable("civilization.millenaire.section.population"));
+      lines.add(
+         PanelLine.translatableWithArgs(
+            "civilization.millenaire.overview.housing",
+            String.valueOf(snap.residents()),
+            String.valueOf(snap.housingCapacity())
+         )
+      );
+      if (snap.overcrowded()) {
+         lines.add(PanelLine.translatable("civilization.millenaire.overview.overcrowded"));
+      }
+      lines.add(PanelLine.separator());
+      lines.add(PanelLine.translatable("civilization.millenaire.section.needs"));
+      if (snap.topNeeds().isEmpty()) {
+         lines.add(PanelLine.translatable("civilization.millenaire.overview.no_needs"));
+      } else {
+         for (var need : snap.topNeeds()) {
+            lines.add(PanelLine.translatableWithArgs(need.summaryKey(), need.detail(), need.severityCode(), String.valueOf(need.shortage())));
+         }
+      }
+      if (snap.currentProject() != null) {
+         lines.add(PanelLine.separator());
+         lines.add(PanelLine.translatable("civilization.millenaire.section.building"));
+         lines.add(PanelLine.translatableWithArgs("civilization.millenaire.overview.project", snap.currentProject().nameKeyOrLiteral()));
+      }
+      if (snap.tradeSummary() != null) {
+         lines.add(PanelLine.separator());
+         lines.add(PanelLine.translatable("civilization.millenaire.section.trade"));
+         lines.add(
+            PanelLine.translatableWithArgs(
+               "civilization.millenaire.overview.trade",
+               snap.tradeSummary().itemLabel(),
+               snap.tradeSummary().statusCode()
+            )
+         );
+      }
+      if (snap.migration() != null) {
+         lines.add(PanelLine.separator());
+         lines.add(PanelLine.translatable("civilization.millenaire.section.migration"));
+         lines.add(
+            PanelLine.translatableWithArgs(
+               "civilization.millenaire.overview.migration",
+               snap.migration().originName(),
+               snap.migration().destinationName(),
+               String.valueOf(snap.migration().migrated()),
+               String.valueOf(snap.migration().target())
+            )
+         );
+         lines.add(PanelLine.translatable(org.millenaire.civilization.presentation.CivilizationStatusCodes.reasonLabelKey(snap.migration().reasonCode())));
+      }
+      if (snap.colonization() != null) {
+         lines.add(PanelLine.separator());
+         lines.add(PanelLine.translatable("civilization.millenaire.section.colonization"));
+         lines.add(PanelLine.translatable(snap.colonization().statusLabelKey()));
+         lines.add(PanelLine.translatable(snap.colonization().reasonLabelKey()));
+         lines.add(
+            PanelLine.translatableWithArgs(
+               "civilization.millenaire.overview.founders",
+               String.valueOf(snap.colonization().migratedFounders()),
+               String.valueOf(snap.colonization().founderTarget())
+            )
+         );
+         lines.add(PanelLine.translatable(snap.colonization().nextStepKey()));
+         if (snap.colonization().refundOutstanding()) {
+            lines.add(PanelLine.translatable("civilization.millenaire.reason.refund_outstanding"));
+         }
+      } else if (!Boolean.TRUE.equals(org.millenaire.config.MillenaireServerConfig.SERVER.civilizationAutonomousFoundingEnabled.get())) {
+         lines.add(PanelLine.separator());
+         lines.add(PanelLine.translatable("civilization.millenaire.section.colonization"));
+         lines.add(PanelLine.translatable("civilization.millenaire.overview.colonization_off"));
+      }
+      if (snap.connection() != null) {
+         lines.add(PanelLine.separator());
+         lines.add(PanelLine.translatable("civilization.millenaire.section.connections"));
+         lines.add(
+            PanelLine.translatableWithArgs(
+               "civilization.millenaire.overview.connection",
+               snap.connection().endpointName(),
+               Component.translatable("civilization.millenaire.status." + snap.connection().statusCode()).getString()
+            )
+         );
+         if (snap.connection().reasonCode() != null && !"none".equals(snap.connection().reasonCode()) && !snap.connection().reasonCode().isBlank()) {
+            lines.add(PanelLine.translatable(org.millenaire.civilization.presentation.CivilizationStatusCodes.reasonLabelKey(snap.connection().reasonCode())));
+         }
+      }
+      lines.add(PanelLine.separator());
+      lines.add(PanelLine.translatable("civilization.millenaire.section.actions"));
+      boolean anyAction = false;
+      for (var action : snap.allowedActions()) {
+         if (!action.enabled()) {
+            continue;
+         }
+         anyAction = true;
+         lines.add(PanelLine.translatable(action.labelKey()));
+      }
+      if (!anyAction) {
+         lines.add(PanelLine.translatable("civilization.millenaire.overview.no_actions"));
+      }
+      if (!snap.recentHistory().isEmpty()) {
+         lines.add(PanelLine.separator());
+         lines.add(PanelLine.translatable("civilization.millenaire.section.history"));
+         for (var h : snap.recentHistory()) {
+            lines.add(PanelLine.translatableWithArgs(h.typeKey(), h.summary()));
+         }
+      }
+      return new PanelContent(PanelType.CIVILIZATION, titleKey, lines, true, titleArgs);
    }
 
    public static PanelContent generatePopulation(Village village, @Nullable ServerLevel level) {

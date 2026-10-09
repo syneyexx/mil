@@ -761,7 +761,7 @@ public final class ChunkSettlementMaterializer {
             }
             java.util.UUID bridgeKey = BridgePlacementHelper.columnKey(road.roadId(), surface);
             BridgePlacementHelper.Outcome bridge = BridgePlacementHelper.placeBridge(
-               level, surface, pathState, progress, bridgeKey, true
+               level, surface, pathState, progress, bridgeKey, true, plan
             );
             ops += bridge.ops();
             if (!bridge.finished()) {
@@ -772,16 +772,22 @@ public final class ChunkSettlementMaterializer {
                return WorkOutcome.blocked(bridge.reason(), ops);
             }
          } else if (!cur.is(Blocks.BEDROCK) && !BridgePlacementHelper.statesMatch(cur, pathState)) {
-            if (!BridgePlacementHelper.isSafeToOverwrite(level, surface)) {
+            RoadPlacementGuard.Result permit = RoadPlacementGuard.evaluate(
+               level, surface, RoadPlacementGuard.Intent.PATH_SURFACE, plan, pathState
+            );
+            if (permit.alreadyPath()) {
+               // already matching path — continue
+            } else if (!permit.allowed()) {
                progress.setRoadWaypointCursor(road.roadId(), i);
-               return WorkOutcome.blocked("road_protected", ops);
+               return WorkOutcome.blocked(permit.reason().isEmpty() ? "road_protected" : permit.reason(), ops);
+            } else {
+               if (!MaterializationTickBudget.tryConsumeOp()) {
+                  progress.setRoadWaypointCursor(road.roadId(), i);
+                  return WorkOutcome.budget(ops);
+               }
+               level.setBlock(surface, pathState, 2);
+               ops++;
             }
-            if (!MaterializationTickBudget.tryConsumeOp()) {
-               progress.setRoadWaypointCursor(road.roadId(), i);
-               return WorkOutcome.budget(ops);
-            }
-            level.setBlock(surface, pathState, 2);
-            ops++;
          }
          for (BlockPos side : List.of(surface.north(), surface.south(), surface.east(), surface.west())) {
             if (side.getX() < minX || side.getX() > maxX || side.getZ() < minZ || side.getZ() > maxZ) {
@@ -796,7 +802,7 @@ public final class ChunkSettlementMaterializer {
                if (bridges) {
                   java.util.UUID sideKey = BridgePlacementHelper.columnKey(road.roadId(), side);
                   BridgePlacementHelper.Outcome sideBridge = BridgePlacementHelper.placeBridge(
-                     level, side, pathState, progress, sideKey, true
+                     level, side, pathState, progress, sideKey, true, plan
                   );
                   ops += sideBridge.ops();
                   if (!sideBridge.finished()) {
@@ -809,14 +815,18 @@ public final class ChunkSettlementMaterializer {
                }
                continue;
             }
-            if (s.is(Blocks.GRASS_BLOCK) || s.is(Blocks.DIRT) || s.is(Blocks.COARSE_DIRT) || s.is(Blocks.PODZOL)) {
-               if (!MaterializationTickBudget.tryConsumeOp()) {
-                  progress.setRoadWaypointCursor(road.roadId(), i);
-                  return WorkOutcome.budget(ops);
-               }
-               level.setBlock(side, pathState, 2);
-               ops++;
+            RoadPlacementGuard.Result sidePermit = RoadPlacementGuard.evaluate(
+               level, side, RoadPlacementGuard.Intent.PATH_SIDE, plan, pathState
+            );
+            if (!sidePermit.allowed() || sidePermit.alreadyPath()) {
+               continue;
             }
+            if (!MaterializationTickBudget.tryConsumeOp()) {
+               progress.setRoadWaypointCursor(road.roadId(), i);
+               return WorkOutcome.budget(ops);
+            }
+            level.setBlock(side, pathState, 2);
+            ops++;
          }
          progress.setRoadWaypointCursor(road.roadId(), i + 1);
       }

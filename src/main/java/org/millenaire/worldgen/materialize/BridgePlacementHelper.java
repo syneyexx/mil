@@ -6,14 +6,14 @@ import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
+import org.millenaire.worldgen.plan.SettlementPlan;
 
 /**
  * Shared resumable bridge placement for local and regional roads.
  * Deck height is stored so retries never climb on already-placed pillars.
- * Returns an explicit {@link WorkResult} — never silently completes a half-built crossing.
+ * Placement uses {@link RoadPlacementGuard} — ordinary building blocks are never treated as free terrain.
  */
 public final class BridgePlacementHelper {
    private static final int MAX_SUPPORT_DEPTH = 24;
@@ -37,10 +37,6 @@ public final class BridgePlacementHelper {
          return new Outcome(WorkResult.DEFERRED_BUDGET, ops, "budget_exhausted");
       }
 
-      public static Outcome partial(int ops, String reason) {
-         return new Outcome(WorkResult.PARTIAL, ops, reason == null ? "" : reason);
-      }
-
       public static Outcome blocked(String reason) {
          return new Outcome(WorkResult.BLOCKED, 0, reason == null ? "" : reason);
       }
@@ -54,9 +50,6 @@ public final class BridgePlacementHelper {
       }
    }
 
-   /**
-    * Stable key for a bridge column so progress survives across ticks.
-    */
    public static UUID columnKey(UUID roadId, BlockPos column) {
       String raw = (roadId == null ? "anon" : roadId.toString())
          + ":" + column.getX() + ":" + column.getZ();
@@ -71,6 +64,18 @@ public final class BridgePlacementHelper {
       UUID bridgeKey,
       boolean bridgesEnabled
    ) {
+      return placeBridge(level, approxSurface, deck, progress, bridgeKey, bridgesEnabled, null);
+   }
+
+   public static Outcome placeBridge(
+      ServerLevel level,
+      BlockPos approxSurface,
+      BlockState deck,
+      @Nullable ChunkMaterializationProgress progress,
+      UUID bridgeKey,
+      boolean bridgesEnabled,
+      @Nullable SettlementPlan owningPlan
+   ) {
       if (!bridgesEnabled) {
          return Outcome.blocked("water_no_bridges");
       }
@@ -80,8 +85,11 @@ public final class BridgePlacementHelper {
 
       int deckY = resolveDeckHeight(level, approxSurface, progress, bridgeKey);
       BlockPos deckPos = new BlockPos(approxSurface.getX(), deckY, approxSurface.getZ());
-      if (!isSafeToOverwrite(level, deckPos)) {
-         return Outcome.blocked("protected_or_occupied");
+      RoadPlacementGuard.Result deckPermit = RoadPlacementGuard.evaluate(
+         level, deckPos, RoadPlacementGuard.Intent.BRIDGE_DECK, owningPlan, deck
+      );
+      if (!deckPermit.allowed()) {
+         return Outcome.blocked(deckPermit.reason().isEmpty() ? "deck_blocked" : deckPermit.reason());
       }
 
       int ops = 0;
@@ -92,14 +100,20 @@ public final class BridgePlacementHelper {
       while (y > minY) {
          BlockPos support = new BlockPos(deckPos.getX(), y, deckPos.getZ());
          BlockState state = level.getBlockState(support);
-         if (state.canOcclude() && state.getFluidState().isEmpty()) {
+         if (state.canOcclude() && state.getFluidState().isEmpty() && RoadPlacementGuard.isNaturalTerrain(state)) {
             break;
          }
-         if (!isSafeToOverwrite(level, support)) {
+         RoadPlacementGuard.Result supportPermit = RoadPlacementGuard.evaluate(
+            level, support, RoadPlacementGuard.Intent.BRIDGE_SUPPORT, owningPlan, deck
+         );
+         if (supportPermit.alreadyPath()) {
+            break;
+         }
+         if (!supportPermit.allowed()) {
             if (progress != null) {
                progress.setBridgeSupportCursor(bridgeKey, deckY - y);
             }
-            return Outcome.blocked("support_blocked");
+            return Outcome.blocked(supportPermit.reason().isEmpty() ? "support_blocked" : supportPermit.reason());
          }
          if (!MaterializationTickBudget.tryConsumeOp()) {
             if (progress != null) {
@@ -107,6 +121,13 @@ public final class BridgePlacementHelper {
                progress.setBridgeDeckHeight(bridgeKey, deckY);
             }
             return Outcome.deferred(ops);
+         }
+         // Re-check immediately before mutation.
+         supportPermit = RoadPlacementGuard.evaluate(
+            level, support, RoadPlacementGuard.Intent.BRIDGE_SUPPORT, owningPlan, deck
+         );
+         if (!supportPermit.allowed()) {
+            return Outcome.blocked(supportPermit.reason());
          }
          level.setBlock(support, Blocks.STONE.defaultBlockState(), 2);
          ops++;
@@ -126,16 +147,28 @@ public final class BridgePlacementHelper {
             }
             return Outcome.deferred(ops);
          }
-         if (!isSafeToOverwrite(level, deckPos)) {
-            return Outcome.blocked("deck_blocked");
+         RoadPlacementGuard.Result recheck = RoadPlacementGuard.evaluate(
+            level, deckPos, RoadPlacementGuard.Intent.BRIDGE_DECK, owningPlan, desiredDeck
+         );
+         if (!recheck.allowed()) {
+            return Outcome.blocked(recheck.reason().isEmpty() ? "deck_blocked" : recheck.reason());
          }
-         level.setBlock(deckPos, desiredDeck, 2);
-         ops++;
+         if (!recheck.alreadyPath()) {
+            level.setBlock(deckPos, desiredDeck, 2);
+            ops++;
+         }
       }
 
       BlockPos above = deckPos.above();
+      RoadPlacementGuard.Result passage = RoadPlacementGuard.evaluate(
+         level, above, RoadPlacementGuard.Intent.CLEAR_PASSAGE, owningPlan, desiredDeck
+      );
+      if (!passage.allowed()) {
+         // Deck exists but passage is blocked by a solid non-replaceable block — not complete.
+         return Outcome.blocked(passage.reason().isEmpty() ? "passage_blocked" : passage.reason());
+      }
       BlockState aboveState = level.getBlockState(above);
-      if (!aboveState.isAir() && aboveState.canBeReplaced()) {
+      if (!aboveState.isAir() && (aboveState.canBeReplaced() || RoadPlacementGuard.isClearableVegetation(aboveState))) {
          if (!MaterializationTickBudget.tryConsumeOp()) {
             return Outcome.deferred(ops);
          }
@@ -149,6 +182,14 @@ public final class BridgePlacementHelper {
       return Outcome.complete(ops);
    }
 
+   /** @deprecated use {@link RoadPlacementGuard#evaluate} — kept for callers that only need a boolean. */
+   public static boolean isSafeToOverwrite(ServerLevel level, BlockPos pos) {
+      RoadPlacementGuard.Result r = RoadPlacementGuard.evaluate(
+         level, pos, RoadPlacementGuard.Intent.PATH_SURFACE, null, null
+      );
+      return r.allowed();
+   }
+
    private static int resolveDeckHeight(
       ServerLevel level,
       BlockPos approxSurface,
@@ -158,8 +199,7 @@ public final class BridgePlacementHelper {
       if (progress != null && bridgeKey != null && progress.bridgeDeckHeight(bridgeKey, Integer.MIN_VALUE) != Integer.MIN_VALUE) {
          return progress.bridgeDeckHeight(bridgeKey, approxSurface.getY());
       }
-      // Prefer the first non-fluid surface reference so retries do not climb on pillars.
-      int surface = level.getHeight(Heightmap.Types.WORLD_SURFACE_WG, approxSurface.getX(), approxSurface.getZ()) - 1;
+      int surface = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, approxSurface.getX(), approxSurface.getZ()) - 1;
       int y = Math.max(approxSurface.getY(), surface);
       for (int probe = 0; probe < 8; probe++) {
          BlockPos p = new BlockPos(approxSurface.getX(), y - probe, approxSurface.getZ());
@@ -167,10 +207,10 @@ public final class BridgePlacementHelper {
          if (!s.getFluidState().isEmpty()) {
             continue;
          }
-         if (s.is(Blocks.OAK_PLANKS) || s.is(Blocks.DIRT_PATH) || s.is(Blocks.GRAVEL) || s.is(Blocks.COBBLESTONE)) {
+         if (RoadPlacementGuard.isRegisteredPath(s) || s.is(Blocks.OAK_PLANKS) || s.is(Blocks.STONE)) {
             return p.getY();
          }
-         if (s.canOcclude()) {
+         if (RoadPlacementGuard.isNaturalTerrain(s) && s.canOcclude()) {
             return Math.max(p.getY(), approxSurface.getY());
          }
       }
@@ -179,18 +219,6 @@ public final class BridgePlacementHelper {
          progress.setBridgeDeckHeight(bridgeKey, deckY);
       }
       return deckY;
-   }
-
-   public static boolean isSafeToOverwrite(ServerLevel level, BlockPos pos) {
-      BlockState state = level.getBlockState(pos);
-      if (state.is(Blocks.BEDROCK) || state.is(Blocks.BARRIER) || state.is(Blocks.COMMAND_BLOCK)) {
-         return false;
-      }
-      BlockEntity be = level.getBlockEntity(pos);
-      if (be != null) {
-         return false;
-      }
-      return true;
    }
 
    public static boolean statesMatch(BlockState current, BlockState desired) {

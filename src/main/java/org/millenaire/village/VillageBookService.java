@@ -50,13 +50,14 @@ public final class VillageBookService {
    public static List<PanelContent> generateBookContent(Village village, @Nullable ServerLevel level, @Nullable ServerPlayer player) {
       ServerLevel effectiveLevel = level != null && isDegraded(village, level) ? null : level;
       BuildingInstance townhall = village.getTownhall();
-      List<PanelContent> sections = new ArrayList<>(7);
+      List<PanelContent> sections = new ArrayList<>(8);
       sections.add(VillageOverviewPanelGenerator.generateSummary(village, townhall, effectiveLevel));
       sections.add(VillageOverviewPanelGenerator.generatePopulation(village, effectiveLevel));
       sections.add(ConstructionPanelGenerator.generateConstructions(village, player));
       sections.add(ConstructionPanelGenerator.generateProjects(village, player));
       sections.add(ConstructionPanelGenerator.generateResources(village, effectiveLevel));
       sections.add(MilitaryPanelGenerator.generateMilitary(village, effectiveLevel));
+      sections.add(VillageOverviewPanelGenerator.generateCivilization(village, effectiveLevel, player));
       sections.add(VillageOverviewPanelGenerator.generateChronicle(village));
       return sections;
    }

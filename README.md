@@ -52,8 +52,9 @@ Server config lives in the NeoForge Millénaire server config (keys under `gener
 - `civilizationOffscreenEnabled` — **profile refresh** for inactive settlements (not free goods / combat)
 - `civilizationCatchupDays` — caps offscreen elapsed profile refresh
 - `civilizationMigrationBudget` — housing-pressure migrations; success is `MigrationResult.completed()`, not a non-null operation id
-- `civilizationAutonomousFoundingEnabled` — **default false**; complete colonization lifecycle (layout → costs → materialize → activate → faction → migrate)
+- `civilizationAutonomousFoundingEnabled` — **default false**; complete colonization lifecycle (layout → costs → materialize → activate → faction → migrate). Disabling stops new proposals but still drains refunds and advances already-active ops.
 - `civilizationColonizationOpsBudget` / `CandidateBudget` / `CooldownDays`
+- Village book **Civilization** section + NPC action buttons use server-derived snapshots (`CivilizationPresentationService`); visitors may support needs/view proposals, controllers may prioritize housing and authorize colonization progress (never flips the master switch)
 
 ### NPC chat
 
@@ -76,9 +77,11 @@ Server config lives in the NeoForge Millénaire server config (keys under `gener
 - Progress schema v3: per-building / per-wall / per-road / terrain / bridge cursors
 - Legacy unfinished `materializedChunks` / schema-v2 mid-progress: **ambiguous** — no destructive terrain/deletion replay; placement may resume
 - Regional roads schema v2: old coarse-only `CONNECTED` routes become `RECOVERY_REQUIRED` and expand to continuous cells without blind overwrite
-- Colonization SavedData schema v2: exact reserved stacks + refund outstanding + founder lists
+- Colonization SavedData schema v3: advance/refund cursors, exclusive founder reservations, founder slots, exact reserved/refund stacks (components via registry encode when available)
+- Older colonization schema v2 worlds migrate `intendedFounders` into reserved founder slots
 - Request schema v2: optional recovery ledger for incomplete overdelivery pullback
 - Civilization migration recovery consumer drains `needsRecovery` ops on the demographics stage
+- Road/bridge placement uses `RoadPlacementGuard` (natural terrain only; village/planned footprints and ordinary building blocks are not free overwrite targets)
 
 ## Known limitations
 
@@ -86,7 +89,8 @@ Server config lives in the NeoForge Millénaire server config (keys under `gener
 - Regional roads wait on naturally loaded chunks (`WAITING_CHUNKS`); unfinished routes stay `PARTIAL` / `BLOCKED` / `RECOVERY_REQUIRED` rather than claiming completion
 - Bridge placement uses a deterministic stone/plank strategy when templates are absent; depth is capped
 - Autonomous founding stays off by default; when worldgen is disabled it records an explicit block marker instead of leaving silent ops
-- Founding costs use summed building `requiredResources` (BuildingCostCalculator content); if empty, a documented minimum levy of 32 any-log + 32 cobblestone applies
+- Founding costs use summed building `requiredResources` (BuildingCostCalculator content); if empty, a documented minimum levy of 32 any-log + 32 cobblestone applies. Levy is held until physical materialization begins; incomplete refunds persist as `refundOutstanding`.
+- Player-placed block provenance is imperfect — road protection is conservative (natural terrain + footprints/structures), not a guarantee every player build is detected.
 - Crash consistency across multiple SavedData + chunk files is best-effort idempotent recovery, not a single atomic transaction
 
 ## Documentation

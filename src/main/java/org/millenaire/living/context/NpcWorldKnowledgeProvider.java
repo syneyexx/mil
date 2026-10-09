@@ -40,17 +40,20 @@ public final class NpcWorldKnowledgeProvider {
 
       if (chief) {
          VillageContextProvider.appendVerifiedVillageState(level, village, ctx);
+         CivilizationContextProvider.appendVerified(level, village, ctx, record);
          String focus = VillageActivityCoordinator.chiefFocusLine(snap, village.isUnderAttack());
          if (focus != null) {
             ctx.addFirsthand("asChiefYouKnow=" + focus);
          }
          ctx.addActionHint("You may mention verified village needs and that the player can offer assistance through the game UI.");
+         ctx.addActionHint("You may point to server action buttons for colonization status or housing priority when available.");
       } else if (trader) {
-         CivilizationContextProvider.appendVerified(level, village, ctx);
+         CivilizationContextProvider.appendVerified(level, village, ctx, record);
          snap.firstOfType(VillageNeedType.TRADE_DISRUPTION).ifPresent(n -> ctx.addFirsthand("tradeIssue=" + n.summaryDetail()));
          snap.firstOfType(VillageNeedType.MERCHANT_OR_SUPPLY_UNAVAILABLE).ifPresent(n -> ctx.addFirsthand("supplyIssue=" + n.summaryDetail()));
          ctx.addUnknown("construction resource tallies unless told");
       } else if (builder) {
+         CivilizationContextProvider.appendVerified(level, village, ctx, record);
          String line = VillageActivityCoordinator.builderFocusLine(snap);
          if (line != null) {
             ctx.addFirsthand(line);
@@ -75,6 +78,7 @@ public final class NpcWorldKnowledgeProvider {
          }
       } else {
          // Ordinary resident: public needs at low detail + personal knowledge.
+         CivilizationContextProvider.appendVerified(level, village, ctx, record);
          snap.mostSevere().ifPresent(n -> ctx.addSecondhand("heardVillageNeed=" + n.type().name() + ":" + n.summaryDetail()));
          ctx.addUnknown("exact missing material quantities");
       }

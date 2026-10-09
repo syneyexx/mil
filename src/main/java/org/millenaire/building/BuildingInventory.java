@@ -458,6 +458,101 @@ public class BuildingInventory {
       return removed;
    }
 
+   /**
+    * Removes up to {@code amount} of {@code item}, returning the concrete stacks taken
+    * (components preserved). Prefer this over {@link #remove} when ledgering refunds.
+    */
+   public RemoveStacksResult removeByItemExact(Level level, Item item, int amount) {
+      List<ItemStack> removed = new ArrayList<>();
+      if (item == null || amount <= 0) {
+         return RemoveStacksResult.empty();
+      }
+      int remaining = amount;
+      for (Container container : this.resolveContainers(level)) {
+         for (int slot = 0; slot < container.getContainerSize() && remaining > 0; slot++) {
+            ItemStack stack = container.getItem(slot);
+            if (stack.isEmpty() || !stack.is(item)) {
+               continue;
+            }
+            int take = Math.min(remaining, stack.getCount());
+            ItemStack split = stack.split(take);
+            if (stack.isEmpty()) {
+               container.setItem(slot, ItemStack.EMPTY);
+            }
+            container.setChanged();
+            removed.add(split.copy());
+            remaining -= take;
+         }
+      }
+      // Furnace / firepit outputs — take concrete stacks too.
+      for (BlockPos pos : this.furnacePositions) {
+         if (remaining <= 0) {
+            break;
+         }
+         if (level.isLoaded(pos) && level.getBlockEntity(pos) instanceof AbstractFurnaceBlockEntity furnace) {
+            ItemStack stack = furnace.getItem(2);
+            if (!stack.isEmpty() && stack.is(item)) {
+               int take = Math.min(remaining, stack.getCount());
+               ItemStack split = stack.split(take);
+               if (stack.isEmpty()) {
+                  furnace.setItem(2, ItemStack.EMPTY);
+               }
+               furnace.setChanged();
+               removed.add(split.copy());
+               remaining -= take;
+            }
+         }
+      }
+      if (!removed.isEmpty()) {
+         this.invalidateCache();
+      }
+      int taken = removed.stream().mapToInt(ItemStack::getCount).sum();
+      return new RemoveStacksResult(taken, amount - taken, removed);
+   }
+
+   /**
+    * Removes up to {@code amount} matching {@code tag}, returning concrete stacks.
+    */
+   public RemoveStacksResult removeByTagExact(Level level, TagKey<Item> tag, int amount, Set<Item> excluded) {
+      List<ItemStack> removed = new ArrayList<>();
+      if (tag == null || amount <= 0) {
+         return RemoveStacksResult.empty();
+      }
+      Set<Item> skip = excluded == null ? Set.of() : excluded;
+      int remaining = amount;
+      for (Container container : this.resolveContainers(level)) {
+         for (int slot = 0; slot < container.getContainerSize() && remaining > 0; slot++) {
+            ItemStack stack = container.getItem(slot);
+            if (stack.isEmpty() || !stack.is(tag) || skip.contains(stack.getItem())) {
+               continue;
+            }
+            int take = Math.min(remaining, stack.getCount());
+            ItemStack split = stack.split(take);
+            if (stack.isEmpty()) {
+               container.setItem(slot, ItemStack.EMPTY);
+            }
+            container.setChanged();
+            removed.add(split.copy());
+            remaining -= take;
+         }
+      }
+      if (!removed.isEmpty()) {
+         this.invalidateCache();
+      }
+      int taken = removed.stream().mapToInt(ItemStack::getCount).sum();
+      return new RemoveStacksResult(taken, amount - taken, removed);
+   }
+
+   public record RemoveStacksResult(int removed, int unsatisfied, List<ItemStack> stacks) {
+      public static RemoveStacksResult empty() {
+         return new RemoveStacksResult(0, 0, List.of());
+      }
+
+      public boolean fullySatisfied() {
+         return this.unsatisfied <= 0;
+      }
+   }
+
    public void invalidateCache() {
       this.cachedContents = null;
    }

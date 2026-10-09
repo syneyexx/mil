@@ -75,6 +75,10 @@ When `npcChat.provider` is `auto`/`lmstudio` and the base URL points at LM Studi
 
 Remote OpenAI-compatible providers (`provider=openai` or non-LM Studio URLs) keep the configured manual model id and API key requirements.
 
+## Civilization facts
+
+`CivilizationContextProvider` appends role-scoped verified facts from `CivilizationPresentationService` snapshots (same derivation as the village book Civilization section). Chiefs see housing pressure / colonization / faction status; merchants see shortages and route issues; builders see projects; residents get limited local events. Dialogue may point at server-owned `NpcActionType` buttons; the model never invents migrants, colonies, trades, rewards, or player authority, and never authorizes mutations.
+
 ## Gossip
 
 `VillageManager.tick` → `NpcGossipScheduler.tick` once per Minecraft day transition. Culture isolation preserved. Generic/vanilla NPCs do not auto-join Millénaire culture gossip.
