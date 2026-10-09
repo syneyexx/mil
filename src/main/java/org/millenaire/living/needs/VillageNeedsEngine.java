@@ -14,6 +14,11 @@ import org.millenaire.living.events.LivingEventSource;
 import org.millenaire.living.events.LivingEventType;
 import org.millenaire.building.BuildingInstance;
 import org.millenaire.building.BuildingInventory;
+import org.millenaire.faction.FactionId;
+import org.millenaire.faction.economy.EconomySavedData;
+import org.millenaire.faction.economy.TradeManager;
+import org.millenaire.faction.economy.TradeRoute;
+import org.millenaire.faction.economy.TradeRouteStatus;
 import org.millenaire.village.Village;
 import org.millenaire.village.VillageId;
 import org.millenaire.village.VillageManager;
@@ -199,7 +204,7 @@ public final class VillageNeedsEngine {
          );
       }
 
-      // Merchant / supply: only when MarketManager exposes no market inventory and a market building exists.
+      // Merchant / supply: only when market/shop buildings exist and scanned inventories are empty.
       if (hasMarketWithoutStock(level, village)) {
          needs.add(
             new VillageNeed(
@@ -213,6 +218,27 @@ public final class VillageNeedsEngine {
                Map.of(),
                "living.millenaire.need.merchant_or_supply_unavailable",
                "market",
+               now,
+               version
+            )
+         );
+      }
+
+      // Trade disruption: only from authoritative TradeManager route state (no fictional caravans).
+      String tradeDetail = resolveTradeDisruption(level, village);
+      if (tradeDetail != null) {
+         needs.add(
+            new VillageNeed(
+               "trade_disruption",
+               village.getId().uuid(),
+               VillageNeedType.TRADE_DISRUPTION,
+               VillageNeedPriority.MODERATE,
+               null,
+               Map.of(),
+               Map.of(),
+               Map.of(),
+               "living.millenaire.need.trade_disruption",
+               tradeDetail,
                now,
                version
             )
@@ -291,6 +317,33 @@ public final class VillageNeedsEngine {
          }
       }
       return count;
+   }
+
+   @Nullable
+   private static String resolveTradeDisruption(ServerLevel level, Village village) {
+      FactionId factionId = village.getFactionId();
+      if (factionId == null) {
+         return null;
+      }
+      try {
+         TradeManager trade = EconomySavedData.get(level).getTradeManager();
+         int disrupted = 0;
+         String reason = null;
+         for (TradeRoute route : trade.getRoutesInvolving(factionId)) {
+            if (route.getStatus() == TradeRouteStatus.DISRUPTED) {
+               disrupted++;
+               if (reason == null && route.getDisruptionReason() != null) {
+                  reason = route.getDisruptionReason().name();
+               }
+            }
+         }
+         if (disrupted <= 0) {
+            return null;
+         }
+         return "routes=" + disrupted + (reason != null ? " reason=" + reason : "");
+      } catch (Exception e) {
+         return null;
+      }
    }
 
    private static boolean hasMarketWithoutStock(ServerLevel level, Village village) {

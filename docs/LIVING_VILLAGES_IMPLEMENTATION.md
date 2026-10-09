@@ -124,7 +124,8 @@ User performs local validation — see `docs/LIVING_VILLAGES_LOCAL_VALIDATION.md
 
 ## Known limitations (source-level)
 
-- `VILLAGE_FOOD_SHORTAGE` / `WORK_RESOURCE_SHORTAGE` / `TRADE_DISRUPTION` types exist but only emit when defensible detectors fire; food/trade detectors are conservative (no invented hunger/caravan systems).
+- `VILLAGE_FOOD_SHORTAGE` / `WORK_RESOURCE_SHORTAGE` types exist but only emit when defensible detectors fire; food/work detectors are conservative (no invented hunger systems).
+- `TRADE_DISRUPTION` reads authoritative `TradeManager` disrupted routes for the village faction (no fictional caravans).
 - Security assistance requests are informational (`SECURITY_ASSISTANCE_INFO`) unless an executable pathway exists — no fake raid-completion quests.
 - Action buttons show up to four choices at once in NPC chat.
 - Living event types are separate from `VillageEventType` chronicle enums to avoid corrupting legacy chronicle i18n; significant assistance still recorded in living journal + reputation.

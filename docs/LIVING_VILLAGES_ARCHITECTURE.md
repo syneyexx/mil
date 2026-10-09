@@ -55,6 +55,7 @@ Shortage detection uses **transition** emission (`MATERIAL_SHORTAGE_DETECTED` / 
 - Security: `village.isUnderAttack()`.
 - Resident loss: count of killed `VillagerRecord`s.
 - Merchant/supply: market/shop building with empty scanned inventory.
+- Trade disruption: `EconomySavedData.getTradeManager().getRoutesInvolving(factionId)` where `TradeRouteStatus.DISRUPTED` (requires village faction id).
 - Severity: ratio bands with hysteresis (`VillageNeedPriority.fromShortageRatio`).
 - Mutations always revalidate with `requireFresh` / live inventory — never authorize from a stale snapshot alone.
 
