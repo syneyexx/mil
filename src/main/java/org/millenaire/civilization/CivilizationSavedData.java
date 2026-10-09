@@ -18,11 +18,12 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedData.Factory;
+import org.millenaire.civilization.economy.SettlementTradeOperation;
 import org.millenaire.civilization.population.MigrationOperation;
 import org.slf4j.Logger;
 
 /**
- * Orchestration progress, migration operation log, and published-event dedupe keys.
+ * Orchestration progress, migration operation log, trade recovery, and published-event dedupe keys.
  * Does not own faction/village authoritative records.
  */
 public class CivilizationSavedData extends SavedData {
@@ -34,6 +35,8 @@ public class CivilizationSavedData extends SavedData {
    private final Map<String, String> stateMarkers = new HashMap<>();
    private final Map<UUID, MigrationOperation> migrationOps = new HashMap<>();
    private final ArrayDeque<UUID> migrationOrder = new ArrayDeque<>();
+   private final Map<UUID, SettlementTradeOperation> tradeOps = new HashMap<>();
+   private final ArrayDeque<UUID> tradeOrder = new ArrayDeque<>();
    private final Map<UUID, String> settlementDevelopmentLabels = new HashMap<>();
    /** Keyed by {@link org.millenaire.faction.FactionId#asString()}, not UUID. */
    private final Map<String, CompoundTag> populationSnapshots = new HashMap<>();
@@ -45,6 +48,7 @@ public class CivilizationSavedData extends SavedData {
    private int developmentCursor;
    private int offscreenCursor;
    private int tradeCursor;
+   private int tradeRecoveryCursor;
    private int migrationCursor;
    private int colonizationCursor;
    private long lastOffscreenAttemptGameTime;
@@ -99,6 +103,22 @@ public class CivilizationSavedData extends SavedData {
    /** Convenience alias for first-seen emission. */
    public boolean updateStateMarkerAllowFirst(String key, String value) {
       return updateStateMarker(key, value, true);
+   }
+
+   @Nullable
+   public String getStateMarker(String key) {
+      return key == null ? null : this.stateMarkers.get(key);
+   }
+
+   public void removeStateMarker(String key) {
+      if (key != null && this.stateMarkers.remove(key) != null) {
+         this.setDirty();
+      }
+   }
+
+   /** Read-only view for legacy marker migration. */
+   public java.util.Map<String, String> stateMarkersView() {
+      return java.util.Collections.unmodifiableMap(this.stateMarkers);
    }
 
    public void resetTickBudgets(int eventsBudget) {
@@ -159,6 +179,14 @@ public class CivilizationSavedData extends SavedData {
 
    public void setTradeCursor(int cursor) {
       this.tradeCursor = Math.max(0, cursor);
+   }
+
+   public int tradeRecoveryCursor() {
+      return this.tradeRecoveryCursor;
+   }
+
+   public void setTradeRecoveryCursor(int cursor) {
+      this.tradeRecoveryCursor = Math.max(0, cursor);
    }
 
    public int migrationCursor() {
@@ -296,6 +324,42 @@ public class CivilizationSavedData extends SavedData {
       return java.util.Collections.unmodifiableCollection(this.migrationOps.values());
    }
 
+   public void putTradeOperation(SettlementTradeOperation op) {
+      if (op == null) {
+         return;
+      }
+      UUID id = op.operationId();
+      boolean alreadyQueued = this.tradeOps.containsKey(id);
+      this.tradeOps.put(id, op);
+      if (!alreadyQueued) {
+         this.tradeOrder.addLast(id);
+      }
+      while (this.tradeOrder.size() > CivilizationConfig.TRADE_OPERATION_RETENTION) {
+         UUID old = this.tradeOrder.peekFirst();
+         if (old == null) {
+            break;
+         }
+         SettlementTradeOperation existing = this.tradeOps.get(old);
+         if (existing != null && existing.isActive()) {
+            this.tradeOrder.pollFirst();
+            this.tradeOrder.addLast(old);
+            break;
+         }
+         this.tradeOrder.pollFirst();
+         this.tradeOps.remove(old);
+      }
+      this.setDirty();
+   }
+
+   @Nullable
+   public SettlementTradeOperation getTradeOperation(UUID operationId) {
+      return operationId == null ? null : this.tradeOps.get(operationId);
+   }
+
+   public java.util.Collection<SettlementTradeOperation> tradeOperationsView() {
+      return java.util.Collections.unmodifiableCollection(this.tradeOps.values());
+   }
+
    public void putDevelopmentLabel(UUID villageId, String label) {
       if (villageId != null && label != null) {
          this.settlementDevelopmentLabels.put(villageId, label);
@@ -327,6 +391,7 @@ public class CivilizationSavedData extends SavedData {
       root.putInt("developmentCursor", this.developmentCursor);
       root.putInt("offscreenCursor", this.offscreenCursor);
       root.putInt("tradeCursor", this.tradeCursor);
+      root.putInt("tradeRecoveryCursor", this.tradeRecoveryCursor);
       root.putInt("migrationCursor", this.migrationCursor);
       root.putInt("colonizationCursor", this.colonizationCursor);
       root.putLong("offscreenAttempt", this.lastOffscreenAttemptGameTime);
@@ -368,6 +433,15 @@ public class CivilizationSavedData extends SavedData {
       }
       root.put("migrations", migrations);
 
+      ListTag trades = new ListTag();
+      for (UUID id : this.tradeOrder) {
+         SettlementTradeOperation op = this.tradeOps.get(id);
+         if (op != null) {
+            trades.add(op.save(registries));
+         }
+      }
+      root.put("tradeOps", trades);
+
       CompoundTag labels = new CompoundTag();
       for (Map.Entry<UUID, String> e : this.settlementDevelopmentLabels.entrySet()) {
          labels.putString(e.getKey().toString(), e.getValue());
@@ -396,6 +470,7 @@ public class CivilizationSavedData extends SavedData {
       data.developmentCursor = tag.getInt("developmentCursor");
       data.offscreenCursor = tag.getInt("offscreenCursor");
       data.tradeCursor = tag.getInt("tradeCursor");
+      data.tradeRecoveryCursor = tag.getInt("tradeRecoveryCursor");
       data.migrationCursor = tag.getInt("migrationCursor");
       data.colonizationCursor = tag.getInt("colonizationCursor");
       data.lastOffscreenAttemptGameTime = tag.getLong("offscreenAttempt");
@@ -415,9 +490,9 @@ public class CivilizationSavedData extends SavedData {
       for (String key : econFaction.getAllKeys()) {
          data.factionEconomyGameTime.put(key, econFaction.getLong(key));
       }
-      // Schema bump for multi-cursor + per-faction offscreen clocks.
-      if (data.schemaVersion < 2) {
-         data.schemaVersion = 2;
+      // Schema bump for multi-cursor + per-faction offscreen clocks + trade ops.
+      if (data.schemaVersion < 3) {
+         data.schemaVersion = 3;
       }
       CompoundTag published = tag.getCompound("published");
       for (String key : published.getAllKeys()) {
@@ -433,6 +508,14 @@ public class CivilizationSavedData extends SavedData {
          if (op != null) {
             data.migrationOps.put(op.operationId(), op);
             data.migrationOrder.addLast(op.operationId());
+         }
+      }
+      ListTag trades = tag.getList("tradeOps", Tag.TAG_COMPOUND);
+      for (int i = 0; i < trades.size(); i++) {
+         SettlementTradeOperation op = SettlementTradeOperation.load(trades.getCompound(i), null);
+         if (op != null) {
+            data.tradeOps.put(op.operationId(), op);
+            data.tradeOrder.addLast(op.operationId());
          }
       }
       CompoundTag labels = tag.getCompound("devLabels");

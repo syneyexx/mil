@@ -13,6 +13,10 @@ public enum CivilizationActionId {
    VIEW_INTERRUPTED_OPERATION;
 
    public String i18nKey() {
+      // AUTHORIZE_COLONIZATION retained for stored proposals / network decode; UI means resume.
+      if (this == AUTHORIZE_COLONIZATION) {
+         return "civilization.millenaire.action.resume_colonization";
+      }
       return "civilization.millenaire.action." + name().toLowerCase();
    }
 

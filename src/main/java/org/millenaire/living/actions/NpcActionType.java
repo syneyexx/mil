@@ -23,6 +23,10 @@ public enum NpcActionType {
    VIEW_INTERRUPTED_OPERATION;
 
    public String i18nKey() {
+      // Legacy enum name kept for stored proposals; player-facing meaning is resume.
+      if (this == AUTHORIZE_COLONIZATION_PROPOSAL) {
+         return "living.millenaire.action.resume_colonization";
+      }
       return "living.millenaire.action." + this.name().toLowerCase(Locale.ROOT);
    }
 

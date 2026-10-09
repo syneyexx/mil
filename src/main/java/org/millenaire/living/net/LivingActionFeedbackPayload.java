@@ -52,9 +52,23 @@ public record LivingActionFeedbackPayload(int entityId, boolean success, String 
       context.enqueueWork(() -> {
          NpcChatScreen.handleLivingFeedback(payload);
          Minecraft mc = Minecraft.getInstance();
-         if (mc.player != null && payload.detail() != null && !payload.detail().isBlank()) {
-            mc.player.displayClientMessage(Component.literal(payload.detail()), false);
+         if (mc.player == null || payload.messageKey() == null || payload.messageKey().isBlank()) {
+            return;
          }
+         Component message;
+         if (payload.detail() != null && !payload.detail().isBlank()) {
+            Component detailComponent = looksLikeTranslationKey(payload.detail())
+               ? Component.translatable(payload.detail())
+               : Component.literal(payload.detail());
+            message = Component.translatable(payload.messageKey(), detailComponent);
+         } else {
+            message = Component.translatable(payload.messageKey());
+         }
+         mc.player.displayClientMessage(message, !payload.success());
       });
+   }
+
+   private static boolean looksLikeTranslationKey(String value) {
+      return value.indexOf('.') > 0 && value.indexOf(' ') < 0 && value.equals(value.toLowerCase());
    }
 }

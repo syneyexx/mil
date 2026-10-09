@@ -205,12 +205,15 @@ public final class VillageOverviewPanelGenerator {
       if (snap.overcrowded()) {
          lines.add(PanelLine.translatable("civilization.millenaire.overview.overcrowded"));
       }
-      if (!snap.inventoryKnown()) {
-         lines.add(PanelLine.translatable("civilization.millenaire.overview.inventory_unknown"));
+      if (snap.inventoryCertainty() != org.millenaire.civilization.presentation.InventoryCertainty.KNOWN) {
+         lines.add(PanelLine.translatable(snap.inventoryCertainty().labelKey()));
       }
       if (!snap.topNeeds().isEmpty()) {
          var need = snap.topNeeds().getFirst();
-         lines.add(PanelLine.translatableWithArgs(need.summaryKey(), need.detail(), need.severityCode(), String.valueOf(need.shortage())));
+         String shortageText = need.shortageProven()
+            ? String.valueOf(need.shortage())
+            : String.valueOf(need.observedShortage());
+         lines.add(PanelLine.translatableWithArgs(need.summaryKey(), need.detail(), need.severityCode(), shortageText));
       }
       if (snap.colonization() != null) {
          lines.add(PanelLine.translatable(snap.colonization().statusLabelKey()));
@@ -263,8 +266,13 @@ public final class VillageOverviewPanelGenerator {
             String.valueOf(snap.housingCapacity())
          )
       );
-      if (snap.overcrowded()) {
+      if (!snap.housingCapacityKnown()) {
+         lines.add(PanelLine.translatable("civilization.millenaire.overview.housing_capacity_unknown"));
+      } else if (snap.overcrowded()) {
          lines.add(PanelLine.translatable("civilization.millenaire.overview.overcrowded"));
+      }
+      if (snap.inventoryCertainty() != org.millenaire.civilization.presentation.InventoryCertainty.KNOWN) {
+         lines.add(PanelLine.translatable(snap.inventoryCertainty().labelKey()));
       }
       lines.add(PanelLine.separator());
       lines.add(PanelLine.translatable("civilization.millenaire.section.needs"));
@@ -272,7 +280,12 @@ public final class VillageOverviewPanelGenerator {
          lines.add(PanelLine.translatable("civilization.millenaire.overview.no_needs"));
       } else {
          for (var need : snap.topNeeds()) {
-            lines.add(PanelLine.translatableWithArgs(need.summaryKey(), need.detail(), need.severityCode(), String.valueOf(need.shortage())));
+            if (need.shortageProven()) {
+               lines.add(PanelLine.translatableWithArgs(need.summaryKey(), need.detail(), need.severityCode(), String.valueOf(need.shortage())));
+            } else {
+               lines.add(PanelLine.translatableWithArgs(need.summaryKey(), need.detail(), need.severityCode(), String.valueOf(need.observedShortage())));
+               lines.add(PanelLine.translatableWithArgs("civilization.millenaire.overview.shortage_unproven", String.valueOf(need.observedShortage())));
+            }
          }
       }
       if (snap.currentProject() != null) {
@@ -280,30 +293,40 @@ public final class VillageOverviewPanelGenerator {
          lines.add(PanelLine.translatable("civilization.millenaire.section.building"));
          lines.add(PanelLine.translatableWithArgs("civilization.millenaire.overview.project", snap.currentProject().nameKeyOrLiteral()));
       }
-      if (snap.tradeSummary() != null) {
+      if (!snap.tradeLines().isEmpty()) {
          lines.add(PanelLine.separator());
          lines.add(PanelLine.translatable("civilization.millenaire.section.trade"));
-         lines.add(
-            PanelLine.translatableWithArgs(
-               "civilization.millenaire.overview.trade",
-               snap.tradeSummary().itemLabel(),
-               snap.tradeSummary().statusCode()
-            )
-         );
+         for (var trade : snap.tradeLines()) {
+            String kindKey = "civilization.millenaire.overview.trade_kind." + trade.kindCode();
+            lines.add(PanelLine.translatable(kindKey));
+            lines.add(
+               PanelLine.translatableWithArgs(
+                  "civilization.millenaire.overview.trade",
+                  trade.itemLabel(),
+                  Component.translatable("civilization.millenaire.status." + trade.statusCode()).getString()
+               )
+            );
+            if ("trade_recovery".equals(trade.kindCode()) && "legacy_unrecoverable".equals(trade.statusCode())) {
+               lines.add(PanelLine.translatable("civilization.millenaire.overview.legacy_trade_limited"));
+            }
+         }
       }
-      if (snap.migration() != null) {
+      if (!snap.migrations().isEmpty()) {
          lines.add(PanelLine.separator());
          lines.add(PanelLine.translatable("civilization.millenaire.section.migration"));
-         lines.add(
-            PanelLine.translatableWithArgs(
-               "civilization.millenaire.overview.migration",
-               snap.migration().originName(),
-               snap.migration().destinationName(),
-               String.valueOf(snap.migration().migrated()),
-               String.valueOf(snap.migration().target())
-            )
-         );
-         lines.add(PanelLine.translatable(org.millenaire.civilization.presentation.CivilizationStatusCodes.reasonLabelKey(snap.migration().reasonCode())));
+         for (var migration : snap.migrations()) {
+            lines.add(PanelLine.translatable("civilization.millenaire.overview.migration_kind." + migration.kindCode()));
+            lines.add(
+               PanelLine.translatableWithArgs(
+                  "civilization.millenaire.overview.migration",
+                  migration.originName(),
+                  migration.destinationName(),
+                  String.valueOf(migration.migrated()),
+                  String.valueOf(migration.target())
+               )
+            );
+            lines.add(PanelLine.translatable(org.millenaire.civilization.presentation.CivilizationStatusCodes.reasonLabelKey(migration.reasonCode())));
+         }
       }
       if (snap.colonization() != null) {
          lines.add(PanelLine.separator());
@@ -344,11 +367,31 @@ public final class VillageOverviewPanelGenerator {
       lines.add(PanelLine.translatable("civilization.millenaire.section.actions"));
       boolean anyAction = false;
       for (var action : snap.allowedActions()) {
-         if (!action.enabled()) {
-            continue;
-         }
          anyAction = true;
-         lines.add(PanelLine.translatable(action.labelKey()));
+         String targetId = action.targetId() == null ? "" : action.targetId();
+         if (action.enabled()) {
+            lines.add(
+               PanelLine.clickableTranslatable(
+                  action.labelKey(),
+                  new PanelLine.PanelNavTarget("civ_action", action.actionId().name(), targetId, "")
+               )
+            );
+         } else {
+            String blocked = action.blockedReasonKey() == null ? "" : action.blockedReasonKey();
+            if (!blocked.isBlank()) {
+               lines.add(
+                  PanelLine.translatableWithMixedArgsColored(
+                     "civilization.millenaire.action.blocked_format",
+                     0xFF888888,
+                     3,
+                     action.labelKey(),
+                     blocked
+                  )
+               );
+            } else {
+               lines.add(PanelLine.translatableColored(action.labelKey(), 0xFF888888));
+            }
+         }
       }
       if (!anyAction) {
          lines.add(PanelLine.translatable("civilization.millenaire.overview.no_actions"));

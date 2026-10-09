@@ -20,8 +20,10 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import org.millenaire.config.MillenaireServerConfig;
+import org.millenaire.worldgen.materialize.BridgeColumnProgress;
 import org.millenaire.worldgen.materialize.BridgePlacementHelper;
 import org.millenaire.worldgen.materialize.MaterializationTickBudget;
+import org.millenaire.worldgen.materialize.RoadPlacementGuard;
 import org.millenaire.worldgen.plan.PlannedRoad;
 import org.millenaire.worldgen.plan.SettlementPlan;
 import org.millenaire.worldgen.plan.SettlementPlanSavedData;
@@ -39,6 +41,8 @@ public final class RegionalRoadMaterializer {
    private static final int MAX_CELLS_SCAN = 96;
    private static final int MAX_PLAN_LINKS_PER_TICK = 4;
    private static final int MAX_PLAN_PAIR_SCANS = 24;
+   private static final int DETOUR_MAX_SEARCHED = 48;
+   private static final int DETOUR_MAX_LENGTH = 12;
 
    public enum RouteStatus {
       PLANNED,
@@ -56,6 +60,8 @@ public final class RegionalRoadMaterializer {
       public final UUID toPlanId;
       public final List<BlockPos> waypoints;
       public final Set<Long> completedChunks = new HashSet<>();
+      /** Packed XZ cells that finished placement (via {@link RoadPlacementGuard#packCell}). */
+      public final Set<Long> completedCells = new HashSet<>();
       public RouteStatus status = RouteStatus.PLANNED;
       public String blockReason = "";
       public int cursor;
@@ -129,6 +135,13 @@ public final class RegionalRoadMaterializer {
             done.add(ct);
          }
          tag.put("doneChunks", done);
+         ListTag cells = new ListTag();
+         for (Long c : this.completedCells) {
+            CompoundTag ct = new CompoundTag();
+            ct.putLong("c", c);
+            cells.add(ct);
+         }
+         tag.put("doneCells", cells);
          return tag;
       }
 
@@ -158,6 +171,10 @@ public final class RegionalRoadMaterializer {
          ListTag done = tag.getList("doneChunks", Tag.TAG_COMPOUND);
          for (int i = 0; i < done.size(); i++) {
             progress.completedChunks.add(done.getCompound(i).getLong("c"));
+         }
+         ListTag cells = tag.getList("doneCells", Tag.TAG_COMPOUND);
+         for (int i = 0; i < cells.size(); i++) {
+            progress.completedCells.add(cells.getCompound(i).getLong("c"));
          }
          return progress;
       }
@@ -210,6 +227,10 @@ public final class RegionalRoadMaterializer {
    }
 
    private RegionalRoadMaterializer() {
+   }
+
+   static {
+      org.millenaire.worldgen.materialize.RegisteredRoadIndex.bindRegionalLookup(RegionalRoadMaterializer::isRegisteredRoadCell);
    }
 
    public static void tick(ServerLevel level, SettlementPlanSavedData store) {
@@ -310,6 +331,20 @@ public final class RegionalRoadMaterializer {
       return false;
    }
 
+   /** True when any regional route has registered this XZ cell as completed path. */
+   public static boolean isRegisteredRoadCell(ServerLevel level, BlockPos pos) {
+      if (level == null || pos == null) {
+         return false;
+      }
+      long packed = RoadPlacementGuard.packCell(pos.getX(), pos.getZ());
+      for (RouteProgress route : RegionalRoadSavedData.get(level).routes().values()) {
+         if (route.completedCells.contains(packed)) {
+            return true;
+         }
+      }
+      return false;
+   }
+
    private static void advanceRoute(ServerLevel level, SettlementPlanSavedData store, RouteProgress route) {
       if (endpointsMissing(store, route)) {
          route.status = RouteStatus.FAILED;
@@ -354,7 +389,16 @@ public final class RegionalRoadMaterializer {
                      return;
                   }
                   spliceDetour(route, i, detour);
-                  surface = new BlockPos(detour.getFirst().getX(), walkableSurfaceY(level, detour.getFirst().getX(), detour.getFirst().getZ()), detour.getFirst().getZ());
+                  p = route.waypoints.get(i);
+                  cp = new ChunkPos(p);
+                  surface = new BlockPos(p.getX(), walkableSurfaceY(level, p.getX(), p.getZ()), p.getZ());
+                  // Re-check rise against previousSurface before placing.
+                  if (Math.abs(surface.getY() - previousSurface.getY()) > RegionalRoadPlanner.maxStepRise() + 1) {
+                     route.status = RouteStatus.BLOCKED;
+                     route.blockReason = "too_steep";
+                     route.cursor = i;
+                     return;
+                  }
                }
             }
          }
@@ -368,34 +412,42 @@ public final class RegionalRoadMaterializer {
                return;
             }
             UUID bridgeKey = BridgePlacementHelper.columnKey(route.routeId, surface);
-            if (route.bridgeDeckY == Integer.MIN_VALUE) {
-               route.bridgeDeckY = surface.getY();
-            }
+            BridgeColumnProgress.SingleColumn column =
+               new BridgeColumnProgress.SingleColumn(route.bridgeSupportCursor, route.bridgeDeckY);
             BridgePlacementHelper.Outcome bridge = BridgePlacementHelper.placeBridge(
                level,
-               new BlockPos(surface.getX(), route.bridgeDeckY, surface.getZ()),
+               new BlockPos(surface.getX(), route.bridgeDeckY != Integer.MIN_VALUE ? route.bridgeDeckY : surface.getY(), surface.getZ()),
                path,
-               null,
+               column,
                bridgeKey,
                true,
                fromPlan
             );
+            route.bridgeSupportCursor = bridge.supportCursor();
+            if (bridge.deckY() != Integer.MIN_VALUE) {
+               route.bridgeDeckY = bridge.deckY();
+            }
             if (!bridge.finished()) {
                route.status = bridge.budgetExhausted() ? RouteStatus.PARTIAL : RouteStatus.BLOCKED;
                route.blockReason = bridge.reason().isEmpty() ? "bridge_incomplete" : bridge.reason();
                route.cursor = i;
-               route.bridgeSupportCursor += bridge.ops();
                return;
             }
-            int deckY = route.bridgeDeckY != Integer.MIN_VALUE ? route.bridgeDeckY : surface.getY();
+            int deckY = bridge.deckY() != Integer.MIN_VALUE ? bridge.deckY() : surface.getY();
             surface = new BlockPos(surface.getX(), deckY, surface.getZ());
             route.bridgeSupportCursor = 0;
             route.bridgeDeckY = Integer.MIN_VALUE;
          } else {
-            org.millenaire.worldgen.materialize.RoadPlacementGuard.Result permit =
-               org.millenaire.worldgen.materialize.RoadPlacementGuard.evaluate(
-                  level, surface, org.millenaire.worldgen.materialize.RoadPlacementGuard.Intent.PATH_SURFACE, fromPlan, path
-               );
+            RoadPlacementGuard.Result permit =
+               RoadPlacementGuard.evaluate(level, surface, RoadPlacementGuard.Intent.PATH_SURFACE, fromPlan, path);
+            if (permit.deferred()) {
+               route.status = "chunk_not_loaded".equals(permit.reason())
+                  ? RouteStatus.WAITING_CHUNKS
+                  : RouteStatus.PARTIAL;
+               route.blockReason = permit.reason().isEmpty() ? "deferred" : permit.reason();
+               route.cursor = i;
+               return;
+            }
             if (!permit.allowed()) {
                List<BlockPos> detour = planContinuousDetour(level, previousSurface != null ? previousSurface : surface, surface, path, fromPlan);
                if (detour.isEmpty()) {
@@ -411,9 +463,17 @@ public final class RegionalRoadMaterializer {
             }
             if (!permit.alreadyPath()) {
                // Commit-time recheck.
-               permit = org.millenaire.worldgen.materialize.RoadPlacementGuard.evaluate(
-                  level, surface, org.millenaire.worldgen.materialize.RoadPlacementGuard.Intent.PATH_SURFACE, fromPlan, path
+               permit = RoadPlacementGuard.evaluate(
+                  level, surface, RoadPlacementGuard.Intent.PATH_SURFACE, fromPlan, path
                );
+               if (permit.deferred()) {
+                  route.status = "chunk_not_loaded".equals(permit.reason())
+                     ? RouteStatus.WAITING_CHUNKS
+                     : RouteStatus.PARTIAL;
+                  route.blockReason = permit.reason().isEmpty() ? "deferred" : permit.reason();
+                  route.cursor = i;
+                  return;
+               }
                if (!permit.allowed()) {
                   route.status = RouteStatus.BLOCKED;
                   route.blockReason = permit.reason();
@@ -432,6 +492,7 @@ public final class RegionalRoadMaterializer {
             }
          }
          route.completedChunks.add(cp.toLong());
+         route.completedCells.add(RoadPlacementGuard.packCell(surface.getX(), surface.getZ()));
          route.cursor = i + 1;
          route.setLastPlacedSurface(surface);
          previousSurface = surface;
@@ -456,7 +517,8 @@ public final class RegionalRoadMaterializer {
 
    /**
     * Plan a short continuous lateral detour around an obstacle. Empty when no coherent path exists.
-    * Never returns a single sideways hop that would break route continuity.
+    * Returns a full orthogonal step sequence from {@code from} (exclusive) around {@code blocked}
+    * to a rejoin past the obstacle. Never force-loads chunks.
     */
    private static List<BlockPos> planContinuousDetour(
       ServerLevel level,
@@ -465,50 +527,153 @@ public final class RegionalRoadMaterializer {
       BlockState path,
       @Nullable SettlementPlan owningPlan
    ) {
-      List<BlockPos> best = List.of();
-      for (int side : new int[]{1, -1, 2, -2, 3, -3}) {
-         List<BlockPos> candidate = new ArrayList<>();
-         int dx = Math.abs(blocked.getX() - from.getX()) >= Math.abs(blocked.getZ() - from.getZ()) ? 0 : side;
-         int dz = dx == 0 ? 0 : 0;
-         if (dx == 0) {
-            dz = side;
-         }
-         BlockPos mid = new BlockPos(blocked.getX() + dx, blocked.getY(), blocked.getZ() + dz);
-         BlockPos join = new BlockPos(blocked.getX() + dx, blocked.getY(), blocked.getZ() + (dz == 0 ? 0 : 0));
-         // Corridor: from → mid → rejoined cell past obstacle in original direction.
-         int dirX = Integer.signum(blocked.getX() - from.getX());
-         int dirZ = Integer.signum(blocked.getZ() - from.getZ());
-         BlockPos after = blocked.offset(dirX, 0, dirZ);
-         List<BlockPos> corridor = List.of(mid, after.offset(dx, 0, dz), after);
-         boolean ok = true;
-         for (BlockPos cell : corridor) {
-            if (!level.hasChunk(cell.getX() >> 4, cell.getZ() >> 4)) {
-               ok = false;
-               break;
+      if (from == null || blocked == null || level == null) {
+         return List.of();
+      }
+      int fwdX = Integer.signum(blocked.getX() - from.getX());
+      int fwdZ = Integer.signum(blocked.getZ() - from.getZ());
+      if (fwdX == 0 && fwdZ == 0) {
+         fwdX = 1;
+      }
+
+      for (int mag = 1; mag <= 3; mag++) {
+         for (int sign : new int[]{1, -1}) {
+            int side = mag * sign;
+            int latX;
+            int latZ;
+            if (Math.abs(fwdX) >= Math.abs(fwdZ)) {
+               latX = 0;
+               latZ = side;
+            } else {
+               latX = side;
+               latZ = 0;
             }
-            int y = walkableSurfaceY(level, cell.getX(), cell.getZ());
-            BlockPos at = new BlockPos(cell.getX(), y, cell.getZ());
-            BlockState state = level.getBlockState(at);
-            if (!state.getFluidState().isEmpty()) {
-               ok = false;
-               break;
+            List<BlockPos> candidate = buildSideDetour(level, from, blocked, fwdX, fwdZ, latX, latZ, path, owningPlan);
+            if (!candidate.isEmpty()) {
+               return candidate;
             }
-            org.millenaire.worldgen.materialize.RoadPlacementGuard.Result permit =
-               org.millenaire.worldgen.materialize.RoadPlacementGuard.evaluate(
-                  level, at, org.millenaire.worldgen.materialize.RoadPlacementGuard.Intent.PATH_SURFACE, owningPlan, path
-               );
-            if (!permit.allowed()) {
-               ok = false;
-               break;
-            }
-            candidate.add(cell);
-         }
-         if (ok && candidate.size() >= 2) {
-            best = candidate;
-            break;
          }
       }
-      return best;
+      return List.of();
+   }
+
+   private static List<BlockPos> buildSideDetour(
+      ServerLevel level,
+      BlockPos from,
+      BlockPos blocked,
+      int fwdX,
+      int fwdZ,
+      int latX,
+      int latZ,
+      BlockState path,
+      @Nullable SettlementPlan owningPlan
+   ) {
+      // Key points: lateral from last placed → lateral at blocked → past obstacle on side → rejoin centerline.
+      List<BlockPos> keys = new ArrayList<>();
+      keys.add(new BlockPos(from.getX() + latX, from.getY(), from.getZ() + latZ));
+      keys.add(new BlockPos(blocked.getX() + latX, blocked.getY(), blocked.getZ() + latZ));
+      keys.add(new BlockPos(blocked.getX() + fwdX + latX, blocked.getY(), blocked.getZ() + fwdZ + latZ));
+      BlockPos rejoin = new BlockPos(blocked.getX() + fwdX, blocked.getY(), blocked.getZ() + fwdZ);
+      BlockPos lastKey = keys.get(keys.size() - 1);
+      if (rejoin.getX() != lastKey.getX() || rejoin.getZ() != lastKey.getZ()) {
+         keys.add(rejoin);
+      }
+
+      List<BlockPos> sequence = new ArrayList<>();
+      BlockPos prev = from;
+      int searched = 0;
+      for (BlockPos key : keys) {
+         for (BlockPos step : orthogonalFill(prev, key)) {
+            searched++;
+            if (searched > DETOUR_MAX_SEARCHED || sequence.size() >= DETOUR_MAX_LENGTH) {
+               return List.of();
+            }
+            if (step.getX() == blocked.getX() && step.getZ() == blocked.getZ()) {
+               return List.of();
+            }
+            if (!isValidDetourTransition(level, prev, step, path, owningPlan)) {
+               return List.of();
+            }
+            sequence.add(step);
+            prev = step;
+         }
+      }
+      return sequence.isEmpty() ? List.of() : sequence;
+   }
+
+   /** Orthogonal-only steps from {@code a} (exclusive) to {@code b} (inclusive). */
+   private static List<BlockPos> orthogonalFill(BlockPos a, BlockPos b) {
+      List<BlockPos> steps = new ArrayList<>();
+      if (a.getX() == b.getX() && a.getZ() == b.getZ()) {
+         return steps;
+      }
+      int x = a.getX();
+      int z = a.getZ();
+      while (x != b.getX()) {
+         x += Integer.signum(b.getX() - x);
+         steps.add(new BlockPos(x, a.getY(), z));
+      }
+      while (z != b.getZ()) {
+         z += Integer.signum(b.getZ() - z);
+         steps.add(new BlockPos(x, a.getY(), z));
+      }
+      return steps;
+   }
+
+   private static boolean isValidDetourTransition(
+      ServerLevel level,
+      BlockPos from,
+      BlockPos to,
+      BlockState path,
+      @Nullable SettlementPlan owningPlan
+   ) {
+      int dx = Math.abs(to.getX() - from.getX());
+      int dz = Math.abs(to.getZ() - from.getZ());
+      if (dx > 1 || dz > 1 || dx + dz == 0) {
+         return false;
+      }
+      // Diagonal: require both corner footprints clear (corner-cut policy).
+      if (dx == 1 && dz == 1) {
+         BlockPos cornerA = new BlockPos(from.getX(), from.getY(), to.getZ());
+         BlockPos cornerB = new BlockPos(to.getX(), from.getY(), from.getZ());
+         if (!detourCellPlaceable(level, cornerA, path, owningPlan)
+            || !detourCellPlaceable(level, cornerB, path, owningPlan)) {
+            return false;
+         }
+      }
+      if (!detourCellPlaceable(level, to, path, owningPlan)) {
+         return false;
+      }
+      int fromY = walkableSurfaceY(level, from.getX(), from.getZ());
+      int toY = walkableSurfaceY(level, to.getX(), to.getZ());
+      return Math.abs(toY - fromY) <= RegionalRoadPlanner.maxStepRise();
+   }
+
+   private static boolean detourCellPlaceable(
+      ServerLevel level,
+      BlockPos cell,
+      BlockState path,
+      @Nullable SettlementPlan owningPlan
+   ) {
+      if (!level.hasChunk(cell.getX() >> 4, cell.getZ() >> 4)) {
+         return false;
+      }
+      int y = walkableSurfaceY(level, cell.getX(), cell.getZ());
+      BlockPos at = new BlockPos(cell.getX(), y, cell.getZ());
+      BlockState state = level.getBlockState(at);
+      if (!state.getFluidState().isEmpty()) {
+         return false;
+      }
+      // Free passage: two blocks above the walkable surface.
+      for (int dy = 1; dy <= 2; dy++) {
+         BlockState above = level.getBlockState(at.above(dy));
+         if (!(above.isAir() || above.canBeReplaced() || RoadPlacementGuard.isClearableVegetation(above))) {
+            return false;
+         }
+      }
+      RoadPlacementGuard.Result permit =
+         RoadPlacementGuard.evaluate(level, at, RoadPlacementGuard.Intent.PATH_SURFACE, owningPlan, path);
+      return permit.allowed() && !permit.deferred();
    }
 
    private static void spliceDetour(RouteProgress route, int atIndex, List<BlockPos> detour) {
@@ -516,7 +681,23 @@ public final class RegionalRoadMaterializer {
          return;
       }
       route.waypoints.remove(atIndex);
-      route.waypoints.addAll(atIndex, detour);
+      List<BlockPos> cleaned = new ArrayList<>(detour.size());
+      BlockPos prev = atIndex > 0 ? route.waypoints.get(atIndex - 1) : null;
+      for (BlockPos p : detour) {
+         if (prev != null && prev.getX() == p.getX() && prev.getZ() == p.getZ()) {
+            continue;
+         }
+         cleaned.add(p);
+         prev = p;
+      }
+      if (!cleaned.isEmpty() && atIndex < route.waypoints.size()) {
+         BlockPos next = route.waypoints.get(atIndex);
+         BlockPos last = cleaned.get(cleaned.size() - 1);
+         if (last.getX() == next.getX() && last.getZ() == next.getZ()) {
+            cleaned.remove(cleaned.size() - 1);
+         }
+      }
+      route.waypoints.addAll(atIndex, cleaned);
    }
 
    /**
@@ -588,7 +769,7 @@ public final class RegionalRoadMaterializer {
 
    private static boolean isExistingPath(BlockState state) {
       // Conservative: registered path types only — loose cobble/planks elsewhere are not “a road”.
-      return org.millenaire.worldgen.materialize.RoadPlacementGuard.isRegisteredPath(state);
+      return RoadPlacementGuard.isRegisteredPath(state);
    }
 
    private static BlockPos findSafeAdjacent(ServerLevel level, BlockPos surface, BlockState path) {
@@ -598,10 +779,8 @@ public final class RegionalRoadMaterializer {
          }
          int y = walkableSurfaceY(level, cand.getX(), cand.getZ());
          BlockPos at = new BlockPos(cand.getX(), y, cand.getZ());
-         org.millenaire.worldgen.materialize.RoadPlacementGuard.Result permit =
-            org.millenaire.worldgen.materialize.RoadPlacementGuard.evaluate(
-               level, at, org.millenaire.worldgen.materialize.RoadPlacementGuard.Intent.CONNECT_EXISTING_PATH, null, path
-            );
+         RoadPlacementGuard.Result permit =
+            RoadPlacementGuard.evaluate(level, at, RoadPlacementGuard.Intent.CONNECT_EXISTING_PATH, null, path);
          if (permit.allowed() && level.getBlockState(at).getFluidState().isEmpty()) {
             return at;
          }

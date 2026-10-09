@@ -117,6 +117,14 @@ public class BuildingInventory {
       return Collections.unmodifiableList(this.chestPositions);
    }
 
+   public List<BlockPos> getFurnacePositions() {
+      return Collections.unmodifiableList(this.furnacePositions);
+   }
+
+   public List<BlockPos> getFirepitPositions() {
+      return Collections.unmodifiableList(this.firepitPositions);
+   }
+
    public int add(Level level, Item item, int count) {
       if (count <= 0) {
          return 0;

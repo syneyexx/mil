@@ -112,7 +112,7 @@ public final class NpcActionRegistry {
             params.putString("target", targetId);
          }
       }
-      if ((type == NpcActionType.SUPPORT_VILLAGE_NEED || type == NpcActionType.SUPPORT_COLONIZATION_MATERIALS)
+      if (type == NpcActionType.SUPPORT_VILLAGE_NEED
          && (targetId == null || targetId.isBlank())
          && ctx.village() != null) {
          VillageNeedsSnapshot snap = LivingVillagesService.get().needsEngine().evaluate(ctx.level(), ctx.village(), true);
@@ -124,7 +124,8 @@ public final class NpcActionRegistry {
       }
       if ((type == NpcActionType.VIEW_COLONIZATION_PROPOSAL
          || type == NpcActionType.AUTHORIZE_COLONIZATION_PROPOSAL
-         || type == NpcActionType.VIEW_INTERRUPTED_OPERATION)
+         || type == NpcActionType.VIEW_INTERRUPTED_OPERATION
+         || type == NpcActionType.SUPPORT_COLONIZATION_MATERIALS)
          && (targetId == null || targetId.isBlank())
          && ctx.village() != null) {
          org.millenaire.civilization.settlement.ColonizationOperation op =

@@ -93,6 +93,10 @@ public final class ModPayloads {
       }
 
       registrar.playToServer(VillageScrollPurchasePayload.TYPE, VillageScrollPurchasePayload.STREAM_CODEC, VillageBookService::handleScrollPurchasePacket);
+      registrar.playToServer(VillageBookActionPayload.TYPE, VillageBookActionPayload.STREAM_CODEC, VillageBookActionPayload::handleOnServer);
+      registrar.playToServer(
+         VillageBookRefreshRequestPayload.TYPE, VillageBookRefreshRequestPayload.STREAM_CODEC, VillageBookRefreshRequestPayload::handleOnServer
+      );
       registrar.playToServer(BuildingPurchasePayload.TYPE, BuildingPurchasePayload.STREAM_CODEC, BuildingPurchaseService::handlePurchasePacket);
       registrar.playToServer(ImportTableActionPayload.TYPE, ImportTableActionPayload.STREAM_CODEC, ImportTableActionHandler::handleAction);
       registrar.playToServer(

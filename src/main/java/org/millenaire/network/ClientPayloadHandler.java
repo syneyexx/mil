@@ -134,7 +134,14 @@ public final class ClientPayloadHandler {
    }
 
    public static void handleVillageBook(VillageBookPayload payload, IPayloadContext context) {
-      context.enqueueWork(() -> Minecraft.getInstance().setScreen(new VillageBookScreen(payload)));
+      context.enqueueWork(() -> {
+         Minecraft mc = Minecraft.getInstance();
+         if (mc.screen instanceof VillageBookScreen open && open.sameVillage(payload)) {
+            open.applyUpdate(payload);
+         } else {
+            mc.setScreen(new VillageBookScreen(payload));
+         }
+      });
    }
 
    public static void handleImportTableSync(ImportTableSyncPayload payload, IPayloadContext context) {

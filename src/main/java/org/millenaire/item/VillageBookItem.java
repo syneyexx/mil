@@ -1,13 +1,11 @@
 package org.millenaire.item;
 
 import com.mojang.logging.LogUtils;
-import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -18,15 +16,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Item.Properties;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.network.PacketDistributor;
-import org.millenaire.network.MapData;
-import org.millenaire.network.PanelContentPayload;
-import org.millenaire.network.VillageBookPayload;
 import org.millenaire.village.Village;
 import org.millenaire.village.VillageBookService;
 import org.millenaire.village.VillageId;
-import org.millenaire.village.panel.PanelContent;
-import org.millenaire.village.panel.PanelContentGenerator;
 import org.slf4j.Logger;
 
 public class VillageBookItem extends Item {
@@ -58,55 +50,8 @@ public class VillageBookItem extends Item {
             return InteractionResultHolder.fail(stack);
          }
 
-         try {
-            boolean degraded = VillageBookService.isDegraded(village, serverLevel);
-            ServerLevel effectiveLevel = degraded ? null : serverLevel;
-            List<PanelContent> sections = VillageBookService.generateBookContent(village, effectiveLevel, serverPlayer);
-            List<MapData.MapBuilding> mapBuildings = List.of();
-            List<MapData.MapVillager> mapVillagers = List.of();
-            int mapPlayerX = 0;
-            int mapPlayerZ = 0;
-            int mapCenterX = 0;
-            int mapCenterZ = 0;
-            MapData.MapTerrain mapTerrain = MapData.MapTerrain.EMPTY;
-            List<MapData.MapPath> mapPaths = List.of();
-            boolean hasMapData = false;
-            if (!degraded) {
-               PanelContent dummyContent = sections.get(0);
-               PanelContentPayload mapPayload = PanelContentGenerator.createMapPayload(dummyContent, village, serverLevel, serverPlayer);
-               mapBuildings = mapPayload.mapBuildings();
-               mapVillagers = mapPayload.mapVillagers();
-               mapPlayerX = mapPayload.mapPlayerX();
-               mapPlayerZ = mapPayload.mapPlayerZ();
-               mapCenterX = mapPayload.mapCenterX();
-               mapCenterZ = mapPayload.mapCenterZ();
-               mapTerrain = mapPayload.mapTerrain();
-               mapPaths = mapPayload.mapPaths();
-               hasMapData = mapPayload.hasMapData();
-            }
-
-            VillageBookPayload payload = new VillageBookPayload(
-               village.getVillageName(),
-               village.getCultureId().toString(),
-               sections,
-               mapBuildings,
-               mapVillagers,
-               mapPlayerX,
-               mapPlayerZ,
-               mapCenterX,
-               mapCenterZ,
-               mapTerrain,
-               mapPaths,
-               hasMapData,
-               degraded
-            );
-            PacketDistributor.sendToPlayer(serverPlayer, payload, new CustomPacketPayload[0]);
-            LOGGER.debug("Scroll used by {} for village {}", player.getName().getString(), village.getVillageName());
-         } catch (Exception e) {
-            LOGGER.error("Error generating scroll for village {}", village.getVillageName(), e);
-            serverPlayer.sendSystemMessage(Component.translatable("millenaire.scroll.error.generation_failed"));
-         }
-
+         VillageBookService.openOrRefreshBook(serverPlayer, village, 0, 0, "");
+         LOGGER.debug("Scroll used by {} for village {}", player.getName().getString(), village.getVillageName());
          return InteractionResultHolder.success(stack);
       } else {
          return InteractionResultHolder.fail(stack);

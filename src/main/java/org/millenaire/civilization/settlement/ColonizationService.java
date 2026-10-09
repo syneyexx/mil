@@ -89,15 +89,13 @@ public final class ColonizationService {
    public static void tick(ServerLevel level, CivilizationSavedData state) {
       ColonizationSavedData store = ColonizationSavedData.get(level);
       store.reconcileOrphanReservations();
-      // Refunds always run — disabling new founding must not freeze recovery.
+      // Refunds always run — independent of new founding / worldgen switches.
       processRefunds(level, store);
       boolean foundingEnabled = Boolean.TRUE.equals(MillenaireServerConfig.SERVER.civilizationAutonomousFoundingEnabled.get());
       if (!WorldgenEngine.isEnabled()) {
          state.updateStateMarker("colonize-worldgen", "blocked_worldgen_disabled");
-         // Still advance active ops that only need refunds/migration bookkeeping when worldgen is off.
-         if (foundingEnabled) {
-            advanceExisting(level, store, false);
-         }
+         // No physical worldgen, but always continue migration bookkeeping / safe admin recovery.
+         advanceExisting(level, store, false);
          store.setDirty();
          return;
       }
@@ -440,15 +438,15 @@ public final class ColonizationService {
       int start = Math.floorMod(store.refundCursor(), n);
       int examined = 0;
       int handled = 0;
-      int stacks = 0;
-      for (int i = 0; i < n && examined < MAX_CANDIDATES_PER_TICK && handled < MAX_REFUNDS_PER_TICK && stacks < MAX_REFUND_STACKS_PER_TICK; i++) {
+      int stacksWorked = 0;
+      for (int i = 0; i < n && examined < MAX_CANDIDATES_PER_TICK && handled < MAX_REFUNDS_PER_TICK && stacksWorked < MAX_REFUND_STACKS_PER_TICK; i++) {
          ColonizationOperation op = refundable.get(Math.floorMod(start + i, n));
          examined++;
-         int before = op.refundOutstanding().size() + op.reservedStacks().size();
-         tryRefund(level, store, op);
+         int budgetLeft = MAX_REFUND_STACKS_PER_TICK - stacksWorked;
+         int worked = tryRefundBudgeted(level, store, op, budgetLeft);
+         // Failed attempts still consume budget.
+         stacksWorked += Math.max(1, worked);
          store.put(op);
-         int after = op.refundOutstanding().size() + (op.costsConsumed() ? 0 : op.reservedStacks().size());
-         stacks += Math.max(0, before - after);
          handled++;
       }
       store.setRefundCursor(start + Math.max(1, examined));
@@ -901,26 +899,57 @@ public final class ColonizationService {
    }
 
    private static void tryRefund(ServerLevel level, ColonizationSavedData store, ColonizationOperation op) {
+      tryRefundBudgeted(level, store, op, MAX_REFUND_STACKS_PER_TICK);
+   }
+
+   /**
+    * @return number of stack insert attempts performed (successful or not)
+    */
+   private static int tryRefundBudgeted(ServerLevel level, ColonizationSavedData store, ColonizationOperation op, int stackBudget) {
+      if (stackBudget <= 0) {
+         return 0;
+      }
       if (op.costsConsumed()) {
          op.reservedStacks().clear();
          if (op.refundOutstanding().isEmpty()) {
             op.setResourcesReserved(false);
          }
-         return;
+         return 1;
       }
       Village parent = VillageSavedData.get(level).getVillageManager().getVillage(new VillageId(op.parentVillageId()));
       if (parent == null) {
-         return;
+         return 1;
       }
       List<ItemStack> pending = new ArrayList<>();
       if (!op.refundOutstanding().isEmpty()) {
          pending.addAll(op.refundOutstanding());
       } else {
          pending.addAll(op.reservedStacks());
+         op.reservedStacks().clear();
       }
-      op.refundOutstanding().clear();
+      if (pending.isEmpty()) {
+         op.setResourcesReserved(false);
+         return 1;
+      }
+      int n = pending.size();
+      int start = Math.floorMod(op.refundStackCursor(), n);
       List<ItemStack> leftover = new ArrayList<>();
-      for (ItemStack stack : pending) {
+      int attempts = 0;
+      int nextCursor = 0;
+      for (int i = 0; i < n; i++) {
+         int idx = Math.floorMod(start + i, n);
+         ItemStack stack = pending.get(idx);
+         if (stack == null || stack.isEmpty()) {
+            continue;
+         }
+         if (attempts >= stackBudget) {
+            leftover.add(stack.copy());
+            if (leftover.size() == 1) {
+               nextCursor = leftover.size() - 1;
+            }
+            continue;
+         }
+         attempts++;
          int left = addExactStack(level, parent, stack.copy());
          if (left > 0) {
             ItemStack rem = stack.copy();
@@ -928,20 +957,24 @@ public final class ColonizationService {
             leftover.add(rem);
          }
       }
-      op.reservedStacks().clear();
+      op.refundOutstanding().clear();
       if (leftover.isEmpty()) {
+         op.setRefundStackCursor(0);
          op.setResourcesReserved(false);
          if (op.reason().contains("refund_outstanding")) {
             op.setReason(op.reason().replace(";refund_outstanding", "").replace("refund_outstanding", "refund_complete"));
          }
       } else {
          op.refundOutstanding().addAll(leftover);
+         // Advance so the next pass does not always retry the same full chest first.
+         op.setRefundStackCursor(Math.floorMod(nextCursor + 1, leftover.size()));
          op.setResourcesReserved(true);
          if (!op.reason().contains("refund_outstanding")) {
             op.setReason((op.reason().isEmpty() ? "" : op.reason() + ";") + "refund_outstanding");
          }
       }
       store.put(op);
+      return Math.max(1, attempts);
    }
 
    /** @return stacks that could not be reinserted */

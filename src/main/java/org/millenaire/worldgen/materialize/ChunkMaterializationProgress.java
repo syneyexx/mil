@@ -16,7 +16,7 @@ import net.minecraft.nbt.Tag;
  * keeps independent cursors so budget exhaustion never restarts another unit from scratch
  * and never reuses a shared cursor across different placement lists.
  */
-public final class ChunkMaterializationProgress {
+public final class ChunkMaterializationProgress implements BridgeColumnProgress {
    public enum Status {
       PENDING,
       IN_PROGRESS,

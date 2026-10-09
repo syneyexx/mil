@@ -9,9 +9,9 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+import org.millenaire.living.actions.NpcActionRegistry;
 import org.millenaire.living.actions.NpcActionResult;
 import org.millenaire.living.actions.NpcActionType;
-import org.millenaire.living.actions.NpcActionRegistry;
 
 public record LivingActionRequestPayload(int entityId, String actionType, String targetId) implements CustomPacketPayload {
    public static final Type<LivingActionRequestPayload> TYPE =
@@ -46,15 +46,17 @@ public record LivingActionRequestPayload(int entityId, String actionType, String
          try {
             type = NpcActionType.valueOf(payload.actionType());
          } catch (Exception e) {
-            player.displayClientMessage(Component.translatable("living.millenaire.action.error.unknown_type"), true);
+            // Single feedback owner for living actions.
+            LivingActionFeedbackPayload.send(
+               player,
+               payload.entityId(),
+               NpcActionResult.fail("living.millenaire.action.error.unknown_type")
+            );
             return;
          }
          String target = payload.targetId() == null || payload.targetId().isBlank() ? null : payload.targetId();
          NpcActionResult result = NpcActionRegistry.executeDirect(player.serverLevel(), player, payload.entityId(), type, target);
-         player.displayClientMessage(Component.translatable(result.messageKey()), !result.success());
-         if (result.detail() != null && !result.detail().isBlank()) {
-            player.displayClientMessage(Component.literal(result.detail()), false);
-         }
+         // Single player-facing feedback channel for living actions.
          LivingActionFeedbackPayload.send(player, payload.entityId(), result);
          org.millenaire.living.context.LivingDialogueSupport.sendActionChoices(player, payload.entityId());
       });

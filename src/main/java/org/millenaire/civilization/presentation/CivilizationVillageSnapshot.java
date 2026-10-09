@@ -16,28 +16,54 @@ public record CivilizationVillageSnapshot(
    String developmentLabelKey,
    int residents,
    int housingCapacity,
+   boolean housingCapacityKnown,
    boolean overcrowded,
-   boolean inventoryKnown,
+   InventoryCertainty inventoryCertainty,
    List<NeedLine> topNeeds,
    @Nullable ProjectLine currentProject,
-   @Nullable TradeLine tradeSummary,
-   @Nullable MigrationLine migration,
+   List<TradeLine> tradeLines,
+   List<MigrationLine> migrations,
    @Nullable ColonizationLine colonization,
    @Nullable ConnectionLine connection,
    List<HistoryLine> recentHistory,
    List<AllowedAction> allowedActions,
    long capturedAtGameTime
 ) {
-   public record NeedLine(String needId, String summaryKey, String detail, int shortage, String severityCode) {
+   public record NeedLine(
+      String needId,
+      String summaryKey,
+      String detail,
+      int shortage,
+      int observedShortage,
+      boolean shortageProven,
+      String severityCode
+   ) {
    }
 
    public record ProjectLine(String nameKeyOrLiteral, boolean upgrading, int level, String statusCode) {
    }
 
-   public record TradeLine(String statusCode, String partnerName, String itemLabel, String directionCode, long lastTransferGameTime) {
+   /**
+    * @param kindCode settlement_trade | logistics | player_support | trade_recovery
+    */
+   public record TradeLine(
+      String kindCode,
+      String statusCode,
+      String partnerName,
+      String itemLabel,
+      String directionCode,
+      int deliveredQty,
+      int outstandingQty,
+      String reasonCode,
+      long lastTransferGameTime
+   ) {
    }
 
+   /**
+    * @param kindCode ordinary | colonist | recovery
+    */
    public record MigrationLine(
+      String kindCode,
       String statusCode,
       String reasonCode,
       String originName,
