@@ -18,6 +18,7 @@ Severity: BLOCKER · CRITICAL · MAJOR · MINOR · INFORMATIONAL
 | P5-08 | MAJOR | No offscreen catch-up | `OffscreenReconciler` |
 | P5-09 | MAJOR | No civilization config / disable switch | `MillenaireServerConfig` civilization section |
 | P5-10 | MAJOR | Leadership/treaty/war chronicle spam risk | State markers seed-on-load; emit on change |
+| P5-11 | CRITICAL | `VillageManager.removeVillage` never called `LivingVillagesLifecycle.onVillageRemoved` (needs/event leak) | Call Living cleanup after faction detach |
 
 ## Remaining risks (not falsely claimed fixed)
 

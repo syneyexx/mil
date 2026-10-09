@@ -78,6 +78,10 @@ Builds / CI / Minecraft / live AI were **not** executed by this agent.
 3. `FactionId` is ResourceLocation-based — never call `.uuid()`; use `asString()`.
 4. Autonomous founding remains disabled until safe live colonization exists.
 5. Chronicle uses state markers to avoid reload spam.
+6. Village removal must notify both `FactionLifecycle` and `LivingVillagesLifecycle` (audit follow-up).
+
+## Follow-up from authority audit
+Confirmed remaining gap closed: `VillageManager.removeVillage` now invokes `LivingVillagesLifecycle.onVillageRemoved` so needs caches and living event journals are pruned. Other audit items (orchestrator, founded emit, config, trade idempotence, living↔faction bridge) were already addressed in the Phase 5 commit. Peacetime auto-declare / multi-step treaty negotiation remain intentional pre-existing API shapes (documented, not duplicated).
 
 ## Next for user
 Run local Gradle build, GameTests if any, and `docs/CIVILIZATION_LOCAL_VALIDATION.md` scenarios.

@@ -17,6 +17,7 @@ import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillageType;
 import org.millenaire.faction.FactionLifecycle;
+import org.millenaire.living.LivingVillagesLifecycle;
 import org.slf4j.Logger;
 
 public class VillageManager {
@@ -35,6 +36,11 @@ public class VillageManager {
       Village village = this.villages.get(id);
       if (village != null) {
          FactionLifecycle.onVillageRemoved(level, village);
+         try {
+            org.millenaire.living.LivingVillagesLifecycle.onVillageRemoved(level, village);
+         } catch (Exception e) {
+            // Living Villages cleanup must not block faction detach / removal.
+         }
       }
 
       this.villages.remove(id);
