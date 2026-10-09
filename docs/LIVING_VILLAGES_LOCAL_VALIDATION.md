@@ -84,9 +84,23 @@ Dev diagnostics: `/millenaire dev living needs|events|requests|social` (permissi
 
 - **Setup:** Fill townhall chests nearly full; attempt large delivery.
 - **Actions:** Deliver.
-- **Expected:** Only fitting items move; remainder returns to player; request progress matches transferred amount.
+- **Expected:** Only fitting items move; exact remainder returns to player (or ground drop); request progress matches transferred amount.
 - **Evidence:** Player + chest inventories.
-- **Failure:** Silent item loss.
+- **Failure:** Silent item loss; fabricated default stacks.
+- **Result:** [ ] Pass [ ] Fail
+
+## 9b. Cancelled project cannot soft-prove demand
+
+- **Setup:** Accepted request linked to a construction project; cancel/complete the project while townhall stock is below the old remaining count.
+- **Actions:** Attempt deliver.
+- **Expected:** Revalidation fails with no-longer-needed (or reserved-by-other); no new items taken; delivered credit kept.
+- **Failure:** Soft inventory shortage from `request.remaining()` authorizes delivery.
+- **Result:** [ ] Pass [ ] Fail
+
+## 9c. Component-preserving delivery
+
+- **Setup:** Deliver a custom-named / component-bearing stack that matches a live need item id.
+- **Expected:** Destination chest receives the same components; partial return restores the same stack data.
 - **Result:** [ ] Pass [ ] Fail
 
 ## 10. NPC-to-NPC social interaction

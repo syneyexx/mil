@@ -12,12 +12,7 @@ import javax.annotation.Nullable;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.Item;
-import org.millenaire.building.AnywoodHelper;
-import org.millenaire.building.BuildingInstance;
-import org.millenaire.building.BuildingInventory;
 import org.millenaire.config.MillenaireServerConfig;
-import org.millenaire.item.ItemHelper;
 import org.millenaire.living.events.LivingEvent;
 import org.millenaire.living.events.LivingEventService;
 import org.millenaire.living.events.LivingEventSource;
@@ -143,6 +138,11 @@ public final class VillageRequestService {
       if (!VillageRequestState.activeStates().contains(request.state()) && request.state() != VillageRequestState.OFFERED) {
          return false;
       }
+      if (level.getGameTime() > request.expiryGameTime()) {
+         request.forceState(VillageRequestState.EXPIRED, level.getGameTime());
+         VillageRequestSavedData.get(level).setDirty();
+         return false;
+      }
       NeedRevalidationResult reval = revalidateAgainstNeed(level, Village.resolve(level, new VillageId(request.villageId())), request);
       if (!reval.valid() && request.totalDelivered() <= 0) {
          request.forceState(VillageRequestState.CANCELLED, level.getGameTime());
@@ -210,6 +210,11 @@ public final class VillageRequestService {
       }
       if (request.state() == VillageRequestState.EXPIRED || request.state() == VillageRequestState.CANCELLED || request.state() == VillageRequestState.DECLINED) {
          return VillageDeliveryService.DeliveryResult.fail("living.millenaire.request.error.bad_state");
+      }
+      if (level.getGameTime() > request.expiryGameTime()) {
+         request.forceState(VillageRequestState.EXPIRED, level.getGameTime());
+         VillageRequestSavedData.get(level).setDirty();
+         return VillageDeliveryService.DeliveryResult.fail("living.millenaire.request.error.expired");
       }
       if (request.state() == VillageRequestState.COMPLETED || request.rewardClaimed()) {
          return VillageDeliveryService.DeliveryResult.fail("living.millenaire.request.error.already_complete");
@@ -323,6 +328,9 @@ public final class VillageRequestService {
       if (village == null) {
          return NeedRevalidationResult.invalid("living.millenaire.request.error.village_gone");
       }
+      if (level != null && level.getGameTime() > request.expiryGameTime()) {
+         return NeedRevalidationResult.invalid("living.millenaire.request.error.expired");
+      }
       if (request.state() == VillageRequestState.EXPIRED) {
          return NeedRevalidationResult.invalid("living.millenaire.request.error.expired");
       }
@@ -340,22 +348,16 @@ public final class VillageRequestService {
          }
       }
 
-      Map<ResourceLocation, Integer> liveShortage;
-      String matchedRef;
-      if (need != null) {
-         liveShortage = need.shortage();
-         matchedRef = need.projectRef() != null ? need.projectRef() : need.needId();
-      } else {
-         // Fallback only when inventory still shows a real shortage for remaining items.
-         liveShortage = computeInventoryShortages(level, village, request.remaining());
-         matchedRef = request.linkedNeedOrProjectId();
-         if (liveShortage.isEmpty()) {
-            if (request.totalDelivered() > 0 && request.remaining().isEmpty()) {
-               return NeedRevalidationResult.valid(Map.of(), matchedRef);
-            }
-            return NeedRevalidationResult.invalid("living.millenaire.request.error.no_longer_needed");
+      // Only a live need/project authorizes new deliveries. request.remaining() is a cap, never the demand source.
+      if (need == null) {
+         if (request.totalDelivered() > 0 && request.remaining().isEmpty()) {
+            return NeedRevalidationResult.valid(Map.of(), request.linkedNeedOrProjectId());
          }
+         return NeedRevalidationResult.invalid("living.millenaire.request.error.no_longer_needed");
       }
+
+      Map<ResourceLocation, Integer> liveShortage = need.shortage();
+      String matchedRef = need.projectRef() != null ? need.projectRef() : need.needId();
 
       List<VillageRequest> peers = new ArrayList<>(
          VillageRequestSavedData.get(level).activeForNeed(village.getId().uuid(), request.linkedNeedOrProjectId())
@@ -367,6 +369,10 @@ public final class VillageRequestService {
          if (other.requestId().equals(request.requestId())) {
             break;
          }
+         // Peer reservation only applies while the peer is still active and linked to the same live need.
+         if (!VillageRequestState.activeStates().contains(other.state()) && other.state() != VillageRequestState.OFFERED) {
+            continue;
+         }
          for (Entry<ResourceLocation, Integer> e : other.remaining().entrySet()) {
             reservedBefore.merge(e.getKey(), e.getValue(), Integer::sum);
          }
@@ -374,6 +380,7 @@ public final class VillageRequestService {
 
       Map<ResourceLocation, Integer> allowed = new LinkedHashMap<>();
       boolean any = false;
+      boolean reservedOnly = false;
       for (Entry<ResourceLocation, Integer> e : request.remaining().entrySet()) {
          int live = liveShortage.getOrDefault(e.getKey(), 0);
          int reserved = reservedBefore.getOrDefault(e.getKey(), 0);
@@ -382,6 +389,8 @@ public final class VillageRequestService {
          if (qty > 0) {
             allowed.put(e.getKey(), qty);
             any = true;
+         } else if (live > 0 && reserved >= live) {
+            reservedOnly = true;
          }
       }
 
@@ -389,41 +398,12 @@ public final class VillageRequestService {
          if (request.totalDelivered() > 0 && request.remaining().isEmpty()) {
             return NeedRevalidationResult.valid(Map.of(), matchedRef);
          }
+         if (reservedOnly) {
+            return NeedRevalidationResult.invalid("living.millenaire.request.error.reserved_by_other");
+         }
          return NeedRevalidationResult.invalid("living.millenaire.request.error.no_longer_needed");
       }
       return NeedRevalidationResult.valid(allowed, matchedRef);
-   }
-
-   private static Map<ResourceLocation, Integer> computeInventoryShortages(
-      ServerLevel level,
-      Village village,
-      Map<ResourceLocation, Integer> remaining
-   ) {
-      BuildingInstance th = village.getTownhall();
-      if (th == null || th.getInventory() == null || remaining.isEmpty()) {
-         return Map.of();
-      }
-      BuildingInventory inv = th.getInventory();
-      inv.invalidateCacheOncePerTick(level.getGameTime());
-      Map<ResourceLocation, Integer> shortfalls = new LinkedHashMap<>();
-      for (Entry<ResourceLocation, Integer> e : remaining.entrySet()) {
-         int have;
-         if (AnywoodHelper.isAnywood(e.getKey())) {
-            have = inv.getCountByTag(level, AnywoodHelper.LOGS_TAG);
-         } else {
-            Item item = ItemHelper.resolve(e.getKey());
-            if (item == null) {
-               continue;
-            }
-            have = inv.getCount(level, item);
-         }
-         // Soft shortage: if request still asks for items and stock is below a modest threshold, allow.
-         int want = e.getValue();
-         if (have < want) {
-            shortfalls.put(e.getKey(), want - have);
-         }
-      }
-      return shortfalls;
    }
 
    private static void applyAllowedCap(VillageRequest request, NeedRevalidationResult reval) {

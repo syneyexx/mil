@@ -96,16 +96,23 @@ public final class SettlementTradeExecutor {
          int undelivered = removed - added;
          int compensated = addToVillage(level, exporter, item, undelivered);
          if (compensated < undelivered) {
+            int lost = undelivered - compensated;
+            // Persist outstanding compensation so a later tick can retry — do not claim conserved success.
+            String recoveryKey = "trade-recovery:" + exporter.getId().uuid() + ":" + resourceId.id();
+            civ.updateStateMarker(recoveryKey, String.valueOf(lost));
             LOGGER.warn(
-               "[Millenaire] Trade compensation incomplete {}/{} of {} from {} to {}",
+               "[Millenaire] Trade compensation incomplete {}/{} of {} from {} to {} — recovery={}",
                compensated,
                undelivered,
                resourceId.id(),
                exporter.getId().uuid(),
-               importer.getId().uuid()
+               importer.getId().uuid(),
+               lost
             );
-         }
-         if (added <= 0) {
+            if (added <= 0) {
+               return false;
+            }
+            // Partial delivery without full compensation is not a conserved success.
             return false;
          }
          removed = added;
@@ -180,19 +187,14 @@ public final class SettlementTradeExecutor {
             continue;
          }
          inv.invalidateCacheOncePerTick(level.getGameTime());
-         int before = inv.getCount(level, item);
          ItemStack stack = new ItemStack(item, remaining);
-         if (!inv.addStack(level, stack)) {
+         BuildingInventory.AddStackResult result = inv.addExactStack(level, stack);
+         if (result.placed() <= 0) {
             continue;
          }
-         inv.invalidateCacheOncePerTick(level.getGameTime());
-         int after = inv.getCount(level, item);
-         int placed = Math.min(remaining, Math.max(0, after - before));
-         if (placed <= 0) {
-            continue;
-         }
-         added += placed;
-         remaining -= placed;
+         added += result.placed();
+         remaining -= result.placed();
+         inv.invalidateCache();
       }
       return added;
    }

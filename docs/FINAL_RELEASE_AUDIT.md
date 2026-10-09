@@ -7,7 +7,7 @@
 | ID | Finding | Resolution |
 |----|---------|------------|
 | W-01 | Chunk marked materialized after budget abort mid-buildings | Confirmed; chunk completion only after all units done; resume queue + progress schema |
-| W-02 | Request revalidation boolean / soft inventory check | Confirmed; `NeedRevalidationResult` with per-item caps passed to delivery |
+| W-02 | Request revalidation boolean / soft inventory check | Closed: live need/project required; `request.remaining()` is only a cap; soft self-proof fallback removed |
 | W-03 | Migration map-only move bypassed `transferVillagerPermanently` | Confirmed; single path now uses permanent transfer + housing select |
 | W-04 | `putMigration` duplicated queue ids | Confirmed; update-in-place without re-queue; retention skips active ops |
 | W-05 | Unfair stage cursors / shared membershipCursor | Confirmed; independent cursors + scan/mutate budgets |

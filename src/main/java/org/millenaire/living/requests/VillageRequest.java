@@ -11,7 +11,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceLocation;
 
 public final class VillageRequest {
-   public static final int SCHEMA_VERSION = 1;
+   public static final int SCHEMA_VERSION = 2;
 
    private final String requestId;
    private final UUID playerId;
@@ -31,6 +31,8 @@ public final class VillageRequest {
    private int version;
    private boolean rewardClaimed;
    private long lastUpdateGameTime;
+   /** Goods that could not be pulled back after overdelivery — explicit recovery ledger. */
+   private final Map<ResourceLocation, Integer> recoveryOutstanding = new LinkedHashMap<>();
 
    public VillageRequest(
       String requestId,
@@ -208,6 +210,22 @@ public final class VillageRequest {
       this.version++;
    }
 
+   public void markRecoveryOutstanding(ResourceLocation itemId, int amount) {
+      if (itemId == null || amount <= 0) {
+         return;
+      }
+      this.recoveryOutstanding.merge(itemId, amount, Integer::sum);
+      this.version++;
+   }
+
+   public Map<ResourceLocation, Integer> recoveryOutstanding() {
+      return Collections.unmodifiableMap(this.recoveryOutstanding);
+   }
+
+   public boolean hasRecoveryOutstanding() {
+      return this.recoveryOutstanding.values().stream().anyMatch(v -> v > 0);
+   }
+
    public int totalRequired() {
       return this.required.values().stream().mapToInt(Integer::intValue).sum();
    }
@@ -246,6 +264,16 @@ public final class VillageRequest {
          req.add(item);
       }
       tag.put("items", req);
+      if (!this.recoveryOutstanding.isEmpty()) {
+         ListTag recovery = new ListTag();
+         for (Entry<ResourceLocation, Integer> e : this.recoveryOutstanding.entrySet()) {
+            CompoundTag item = new CompoundTag();
+            item.putString("id", e.getKey().toString());
+            item.putInt("amount", e.getValue());
+            recovery.add(item);
+         }
+         tag.put("recovery", recovery);
+      }
       return tag;
    }
 
@@ -288,6 +316,16 @@ public final class VillageRequest {
          request.rewardClaimed = tag.getBoolean("rewardClaimed");
          request.completionEventId = tag.contains("completionEvent") ? tag.getString("completionEvent") : null;
          request.lastUpdateGameTime = tag.getLong("lastUpdate");
+         if (tag.contains("recovery")) {
+            ListTag recovery = tag.getList("recovery", 10);
+            for (int i = 0; i < recovery.size(); i++) {
+               CompoundTag item = recovery.getCompound(i);
+               ResourceLocation rl = ResourceLocation.tryParse(item.getString("id"));
+               if (rl != null) {
+                  request.recoveryOutstanding.put(rl, item.getInt("amount"));
+               }
+            }
+         }
          return request;
       } catch (Exception e) {
          return null;

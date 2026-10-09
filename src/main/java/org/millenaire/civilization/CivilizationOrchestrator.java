@@ -9,6 +9,7 @@ import org.millenaire.civilization.bridge.CivilizationEventBridge;
 import org.millenaire.civilization.bridge.NeedsTradeBridge;
 import org.millenaire.civilization.offscreen.OffscreenReconciler;
 import org.millenaire.civilization.population.MigrationEvaluator;
+import org.millenaire.civilization.population.MigrationTransactionService;
 import org.millenaire.civilization.population.PopulationAggregator;
 import org.millenaire.civilization.settlement.ColonizationService;
 import org.millenaire.civilization.settlement.SettlementDevelopmentClassifier;
@@ -104,6 +105,7 @@ public final class CivilizationOrchestrator {
 
       runIfDue(overworld, state, CivilizationStage.DEMOGRAPHICS, gameTime, CivilizationConfig.STAGE_DEMOGRAPHICS_INTERVAL, () -> {
          PopulationAggregator.refreshDirtyFactions(overworld, state);
+         MigrationTransactionService.recoverPending(overworld, state);
          MigrationEvaluator.evaluate(overworld, state);
       });
 

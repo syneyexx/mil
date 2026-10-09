@@ -83,7 +83,7 @@ User performs local validation — see `docs/LIVING_VILLAGES_LOCAL_VALIDATION.md
 | LV-3.5.2 | Delivery transactions | IMPLEMENTED_UNVERIFIED |
 | LV-3.5.3 | Rewards + invalidation | IMPLEMENTED_UNVERIFIED |
 
-Delivery revalidation returns `NeedRevalidationResult` with per-item allowed quantities from a fresh need snapshot (and peer-request reservation in request-id order). `VillageDeliveryService` never delivers the full stale `remaining()` when live need is lower. Expired/cancelled/foreign requests cannot accept items or claim reputation. Anywood compensation returns the concrete log variants removed; inventory overflow drops at the player as explicit recovery. When a need resolves after partial delivery, credited deliveries are kept and the remainder is cancelled.
+Delivery revalidation returns `NeedRevalidationResult` with per-item allowed quantities from a **fresh live need/project only**. `request.remaining()` is an upper bound, never a substitute demand source when the linked need is gone. Peer reservation can yield `reserved_by_other` without cancelling a still-valid need. Expiry is checked on accept/deliver/revalidate paths, not only maintenance ticks. `VillageDeliveryService` preserves exact removed `ItemStack`s through deposit and return via `BuildingInventory.addExactStack` / `removeExactStacks`; incomplete overdelivery pullback is ledgered on the request (`recoveryOutstanding`). The 4-arg overload without live caps refuses delivery. Inventory overflow drops the exact remainder at the player. When a need resolves after partial delivery, credited deliveries are kept and the remainder is cancelled.
 
 ## Phase 3.6 — Action bridge
 

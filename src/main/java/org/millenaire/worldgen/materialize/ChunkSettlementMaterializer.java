@@ -7,6 +7,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import org.millenaire.building.BuildingPlan;
@@ -36,6 +37,8 @@ import org.slf4j.Logger;
  */
 public final class ChunkSettlementMaterializer {
    private static final Logger LOGGER = LogUtils.getLogger();
+   /** Caps scanning of placement steps outside the current cursor window per unit pass. */
+   private static final int MAX_STEP_SCAN_PER_PASS = 512;
 
    public enum PassResult {
       IDLE,
@@ -72,6 +75,7 @@ public final class ChunkSettlementMaterializer {
          ChunkMaterializationProgress progress = plan.progressFor(packed);
          progress.setStatus(ChunkMaterializationProgress.Status.BLOCKED);
          progress.setBlockReason("budget_exhausted");
+         SettlementPlanSavedData.get(level).markDirtyPlan();
          return PassResult.BUDGET_EXHAUSTED;
       }
 
@@ -82,9 +86,12 @@ public final class ChunkSettlementMaterializer {
       }
 
       ChunkMaterializationProgress progress = plan.progressFor(packed);
-      if (progress.status() != ChunkMaterializationProgress.Status.COMPLETE) {
+      if (progress.status() != ChunkMaterializationProgress.Status.COMPLETE
+         && progress.status() != ChunkMaterializationProgress.Status.FAILED) {
          progress.setStatus(ChunkMaterializationProgress.Status.IN_PROGRESS);
-         progress.setBlockReason("");
+         if (!"legacy_materialized_unverified".equals(progress.blockReason())) {
+            progress.setBlockReason("");
+         }
       }
 
       SettlementPlanSavedData store = SettlementPlanSavedData.get(level);
@@ -93,6 +100,7 @@ public final class ChunkSettlementMaterializer {
       try {
          boolean budgetHit = false;
          boolean anyProgress = false;
+         boolean unitBlocked = false;
 
          for (PlannedBuilding building : plan.buildings()) {
             if (!MaterializationTickBudget.hasScanCandidates()) {
@@ -109,6 +117,11 @@ public final class ChunkSettlementMaterializer {
             WorkOutcome outcome = materializeBuildingInChunk(level, chunk, building, progress);
             if (outcome.ops() > 0) {
                anyProgress = true;
+            }
+            if (outcome.blocked()) {
+               unitBlocked = true;
+               progress.setStatus(ChunkMaterializationProgress.Status.BLOCKED);
+               progress.setBlockReason(outcome.reason());
             }
             if (outcome.budgetExhausted()) {
                budgetHit = true;
@@ -133,6 +146,11 @@ public final class ChunkSettlementMaterializer {
                if (outcome.ops() > 0) {
                   anyProgress = true;
                }
+               if (outcome.blocked()) {
+                  unitBlocked = true;
+                  progress.setStatus(ChunkMaterializationProgress.Status.BLOCKED);
+                  progress.setBlockReason(outcome.reason());
+               }
                if (outcome.budgetExhausted()) {
                   budgetHit = true;
                   break;
@@ -156,6 +174,11 @@ public final class ChunkSettlementMaterializer {
                WorkOutcome outcome = materializeRoadInChunk(level, chunk, plan, road, progress);
                if (outcome.ops() > 0) {
                   anyProgress = true;
+               }
+               if (outcome.blocked()) {
+                  unitBlocked = true;
+                  progress.setStatus(ChunkMaterializationProgress.Status.BLOCKED);
+                  progress.setBlockReason(outcome.reason());
                }
                if (outcome.budgetExhausted()) {
                   budgetHit = true;
@@ -198,8 +221,10 @@ public final class ChunkSettlementMaterializer {
             return PassResult.BUDGET_EXHAUSTED;
          }
 
-         progress.setStatus(ChunkMaterializationProgress.Status.IN_PROGRESS);
-         progress.setBlockReason(anyProgress ? "partial" : "waiting_units");
+         progress.setStatus(unitBlocked ? ChunkMaterializationProgress.Status.BLOCKED : ChunkMaterializationProgress.Status.IN_PROGRESS);
+         if (!unitBlocked) {
+            progress.setBlockReason(anyProgress ? "partial" : "waiting_units");
+         }
          store.markDirtyPlan();
          return anyProgress ? PassResult.PROGRESS : PassResult.IDLE;
       } catch (Exception e) {
@@ -279,13 +304,12 @@ public final class ChunkSettlementMaterializer {
    ) {
       BuildingPlan plan = ModCultures.getBuildingPlan(building.planId());
       if (plan == null) {
-         progress.placementCompleteBuildings().add(building.buildingId());
-         progress.terrainPreparedBuildings().add(building.buildingId());
-         building.setMaterialized(true);
-         building.setChunksComplete(true);
-         return WorkOutcome.done(0);
+         progress.setBlockReason("missing_building_plan:" + building.planId());
+         progress.setStatus(ChunkMaterializationProgress.Status.BLOCKED);
+         return WorkOutcome.blocked("missing_building_plan:" + building.planId());
       }
 
+      // Ambiguous legacy chunks: never re-run destructive terrain clear; resume placement only.
       ClearMargins margins = ClearMargins.symmetric(PlacementConstraints.getDefaultClearMargin());
       if (building.planSetId() != null) {
          BuildingPlanSet set = ModCultures.getBuildingPlanSet(building.planSetId());
@@ -297,15 +321,28 @@ public final class ChunkSettlementMaterializer {
       BlockPos origin = building.origin();
       int baseY = origin.getY() - building.groundLevel();
       int ops = 0;
-      boolean budgetExhausted = false;
+
+      progress.setActiveBuilding(building.buildingId());
 
       if (!progress.isTerrainPreparedBuilding(building.buildingId())) {
-         WorkOutcome terrain = flattenFootprintInChunk(level, chunk, origin, plan, building.rotation(), baseY, margins);
-         ops += terrain.ops();
-         if (terrain.budgetExhausted()) {
-            return WorkOutcome.budget(ops);
+         if (progress.legacyAmbiguous()) {
+            progress.terrainPreparedBuildings().add(building.buildingId());
+            progress.clearTerrainBuildingCursor(building.buildingId());
+         } else {
+            WorkOutcome terrain = flattenFootprintInChunk(
+               level, chunk, origin, plan, building.rotation(), baseY, margins,
+               progress, building.buildingId(), true
+            );
+            ops += terrain.ops();
+            if (terrain.budgetExhausted()) {
+               return WorkOutcome.budget(ops);
+            }
+            if (terrain.blocked()) {
+               return WorkOutcome.blocked(terrain.reason(), ops);
+            }
+            progress.terrainPreparedBuildings().add(building.buildingId());
+            progress.clearTerrainBuildingCursor(building.buildingId());
          }
-         progress.terrainPreparedBuildings().add(building.buildingId());
       }
 
       List<PlacementStep> steps = BuildingPlacer.compilePlacementSteps(level, plan, origin, building.rotation());
@@ -313,67 +350,96 @@ public final class ChunkSettlementMaterializer {
       int maxX = chunk.getMaxBlockX();
       int minZ = chunk.getMinBlockZ();
       int maxZ = chunk.getMaxBlockZ();
-      int cursor = progress.placementCursor();
+      int cursor = progress.buildingPlacementCursor(building.buildingId());
+      // Migrate leftover shared cursor once for this building.
+      if (cursor == 0 && progress.placementCursor() > 0 && progress.buildingPlacementCursor(building.buildingId()) == 0) {
+         // no-op: placementCursor() already routes via activeBuilding
+         cursor = progress.buildingPlacementCursor(building.buildingId());
+      }
       int index = 0;
+      int scanned = 0;
+      boolean budgetExhausted = false;
 
       for (PlacementStep step : steps) {
          if (index++ < cursor) {
             continue;
          }
+         if (++scanned > MAX_STEP_SCAN_PER_PASS) {
+            progress.setBuildingPlacementCursor(building.buildingId(), index - 1);
+            budgetExhausted = true;
+            break;
+         }
          if (!MaterializationTickBudget.hasOps()) {
-            progress.setPlacementCursor(index - 1);
+            progress.setBuildingPlacementCursor(building.buildingId(), index - 1);
             budgetExhausted = true;
             break;
          }
          BlockPos worldPos = step.relativePos().offset(origin);
          if (worldPos.getX() < minX || worldPos.getX() > maxX || worldPos.getZ() < minZ || worldPos.getZ() > maxZ) {
-            progress.setPlacementCursor(index);
+            progress.setBuildingPlacementCursor(building.buildingId(), index);
             continue;
          }
          if (step.phase() == PlacementPhase.DELETION) {
+            // Never re-delete on ambiguous legacy resume — treat as already progressed.
+            if (progress.legacyAmbiguous()) {
+               progress.setBuildingPlacementCursor(building.buildingId(), index);
+               continue;
+            }
             if (!level.getBlockState(worldPos).isAir()) {
                if (!MaterializationTickBudget.tryConsumeOp()) {
-                  progress.setPlacementCursor(index - 1);
+                  progress.setBuildingPlacementCursor(building.buildingId(), index - 1);
                   budgetExhausted = true;
                   break;
                }
                level.setBlock(worldPos, Blocks.AIR.defaultBlockState(), 2);
                ops++;
             }
-            progress.setPlacementCursor(index);
+            progress.setBuildingPlacementCursor(building.buildingId(), index);
             continue;
          }
          BlockState state = step.blockState();
          if (state.isAir()) {
-            progress.setPlacementCursor(index);
+            progress.setBuildingPlacementCursor(building.buildingId(), index);
             continue;
-         }
-         if (!MaterializationTickBudget.tryConsumeOp()) {
-            progress.setPlacementCursor(index - 1);
-            budgetExhausted = true;
-            break;
          }
          BlockState fixed = BuildingPlacer.applyFacingGuess(
             level, worldPos, state, step.guessChestFacing(), step.guessTorchFacing(), step.guessFurnaceFacing()
          );
+         BlockState current = level.getBlockState(worldPos);
+         if (alreadyCorrect(level, worldPos, current, fixed)) {
+            progress.setBuildingPlacementCursor(building.buildingId(), index);
+            continue;
+         }
+         if (!MaterializationTickBudget.tryConsumeOp()) {
+            progress.setBuildingPlacementCursor(building.buildingId(), index - 1);
+            budgetExhausted = true;
+            break;
+         }
          level.setBlock(worldPos, fixed, 2);
          ops++;
-         progress.setPlacementCursor(index);
+         progress.setBuildingPlacementCursor(building.buildingId(), index);
       }
 
       if (!budgetExhausted) {
          progress.placementCompleteBuildings().add(building.buildingId());
-         progress.setPlacementCursor(0);
-         if (buildingChunksCovered(building, progress, null) || building.minChunkX() == building.maxChunkX() && building.minChunkZ() == building.maxChunkZ()) {
-            // Single-chunk buildings complete immediately; multi-chunk wait for refreshBuildingCompletion.
-            if (building.minChunkX() == building.maxChunkX() && building.minChunkZ() == building.maxChunkZ()) {
-               building.setMaterialized(true);
-               building.setChunksComplete(true);
-            }
+         progress.clearBuildingPlacementCursor(building.buildingId());
+         progress.setActiveBuilding(null);
+         if (building.minChunkX() == building.maxChunkX() && building.minChunkZ() == building.maxChunkZ()) {
+            building.setMaterialized(true);
+            building.setChunksComplete(true);
          }
          return WorkOutcome.done(ops);
       }
       return WorkOutcome.budget(ops);
+   }
+
+   private static boolean alreadyCorrect(ServerLevel level, BlockPos pos, BlockState current, BlockState desired) {
+      if (current.getBlock() != desired.getBlock()) {
+         return false;
+      }
+      // Do not re-init block entities / inventories on retry.
+      BlockEntity be = level.getBlockEntity(pos);
+      return be != null || current.equals(desired) || BridgePlacementHelper.statesMatch(current, desired);
    }
 
    private static WorkOutcome flattenFootprintInChunk(
@@ -383,7 +449,10 @@ public final class ChunkSettlementMaterializer {
       BuildingPlan plan,
       net.minecraft.world.level.block.Rotation rotation,
       int baseY,
-      ClearMargins margins
+      ClearMargins margins,
+      ChunkMaterializationProgress progress,
+      java.util.UUID unitId,
+      boolean building
    ) {
       int effW = TerrainPreparer.effectiveWidth(plan.width(), plan.depth(), rotation);
       int effD = TerrainPreparer.effectiveDepth(plan.width(), plan.depth(), rotation);
@@ -396,67 +465,70 @@ public final class ChunkSettlementMaterializer {
       int maxX = Math.min(chunk.getMaxBlockX(), origin.getX() + effW + padX1 - 1);
       int minZ = Math.max(chunk.getMinBlockZ(), origin.getZ() - padZ0);
       int maxZ = Math.min(chunk.getMaxBlockZ(), origin.getZ() + effD + padZ1 - 1);
+      int width = Math.max(1, maxX - minX + 1);
+      int depth = Math.max(1, maxZ - minZ + 1);
+      int total = width * depth;
+      int cursor = building ? progress.terrainBuildingCursor(unitId) : progress.terrainWallCursor(unitId);
       int maxMod = MillenaireServerConfig.SERVER.worldgenMaximumTerrainModification.getAsInt();
       int ops = 0;
-      for (int x = minX; x <= maxX; x++) {
-         for (int z = minZ; z <= maxZ; z++) {
-            if (!MaterializationTickBudget.hasOps()) {
-               return WorkOutcome.budget(ops);
+
+      for (int cell = cursor; cell < total; cell++) {
+         if (!MaterializationTickBudget.hasOps()) {
+            if (building) {
+               progress.setTerrainBuildingCursor(unitId, cell);
+            } else {
+               progress.setTerrainWallCursor(unitId, cell);
             }
-            int surface = level.getHeight(Heightmap.Types.WORLD_SURFACE_WG, x, z);
-            if (Math.abs(surface - baseY) > maxMod) {
-               continue;
-            }
-            for (int y = baseY + 1; y <= Math.min(surface + plan.height(), baseY + plan.height() + 4); y++) {
-               BlockPos p = new BlockPos(x, y, z);
-               if (!level.getBlockState(p).isAir()) {
-                  if (!MaterializationTickBudget.tryConsumeOp()) {
-                     return WorkOutcome.budget(ops);
-                  }
-                  level.setBlock(p, Blocks.AIR.defaultBlockState(), 2);
-                  ops++;
+            return WorkOutcome.budget(ops);
+         }
+         int x = minX + (cell % width);
+         int z = minZ + (cell / width);
+         int surface = level.getHeight(Heightmap.Types.WORLD_SURFACE_WG, x, z);
+         if (Math.abs(surface - baseY) > maxMod) {
+            continue;
+         }
+         for (int y = baseY + 1; y <= Math.min(surface + plan.height(), baseY + plan.height() + 4); y++) {
+            BlockPos p = new BlockPos(x, y, z);
+            if (!level.getBlockState(p).isAir()) {
+               if (level.getBlockEntity(p) != null) {
+                  continue;
                }
-            }
-            BlockPos ground = new BlockPos(x, baseY, z);
-            if (level.getBlockState(ground).isAir() || level.getBlockState(ground).canBeReplaced()) {
                if (!MaterializationTickBudget.tryConsumeOp()) {
+                  if (building) {
+                     progress.setTerrainBuildingCursor(unitId, cell);
+                  } else {
+                     progress.setTerrainWallCursor(unitId, cell);
+                  }
                   return WorkOutcome.budget(ops);
                }
-               BlockState filler = level.getBlockState(new BlockPos(x, Math.max(level.getMinBuildHeight(), baseY - 1), z));
-               if (filler.isAir()) {
-                  filler = Blocks.DIRT.defaultBlockState();
-               }
-               level.setBlock(ground, filler, 2);
+               level.setBlock(p, Blocks.AIR.defaultBlockState(), 2);
                ops++;
             }
          }
-      }
-      return WorkOutcome.done(ops);
-   }
-
-   private static boolean buildingChunksCovered(
-      PlannedBuilding building,
-      ChunkMaterializationProgress current,
-      SettlementPlan plan
-   ) {
-      if (plan == null) {
-         return false;
-      }
-      for (int cx = building.minChunkX(); cx <= building.maxChunkX(); cx++) {
-         for (int cz = building.minChunkZ(); cz <= building.maxChunkZ(); cz++) {
-            long packed = ChunkPos.asLong(cx, cz);
-            if (plan.isChunkFullyMaterialized(packed)) {
-               continue;
+         BlockPos ground = new BlockPos(x, baseY, z);
+         if (level.getBlockState(ground).isAir() || level.getBlockState(ground).canBeReplaced()) {
+            if (!MaterializationTickBudget.tryConsumeOp()) {
+               if (building) {
+                  progress.setTerrainBuildingCursor(unitId, cell);
+               } else {
+                  progress.setTerrainWallCursor(unitId, cell);
+               }
+               return WorkOutcome.budget(ops);
             }
-            ChunkMaterializationProgress progress = packed == current.chunkPacked()
-               ? current
-               : plan.chunkProgress().get(packed);
-            if (progress == null || !progress.isPlacementCompleteBuilding(building.buildingId())) {
-               return false;
+            BlockState filler = level.getBlockState(new BlockPos(x, Math.max(level.getMinBuildHeight(), baseY - 1), z));
+            if (filler.isAir()) {
+               filler = Blocks.DIRT.defaultBlockState();
             }
+            level.setBlock(ground, filler, 2);
+            ops++;
+         }
+         if (building) {
+            progress.setTerrainBuildingCursor(unitId, cell + 1);
+         } else {
+            progress.setTerrainWallCursor(unitId, cell + 1);
          }
       }
-      return true;
+      return WorkOutcome.done(ops);
    }
 
    public static void refreshBuildingCompletion(SettlementPlan plan) {
@@ -531,10 +603,9 @@ public final class ChunkSettlementMaterializer {
    ) {
       BuildingPlan plan = ModCultures.getBuildingPlan(wall.planId());
       if (plan == null) {
-         progress.placementCompleteWalls().add(wall.segmentId());
-         progress.terrainPreparedWalls().add(wall.segmentId());
-         wall.setMaterialized(true);
-         return WorkOutcome.done(0);
+         progress.setBlockReason("missing_wall_plan:" + wall.planId());
+         progress.setStatus(ChunkMaterializationProgress.Status.BLOCKED);
+         return WorkOutcome.blocked("missing_wall_plan:" + wall.planId());
       }
       ClearMargins margins = ClearMargins.symmetric(PlacementConstraints.getDefaultClearMargin());
       if (wall.planSetId() != null) {
@@ -547,53 +618,94 @@ public final class ChunkSettlementMaterializer {
       int baseY = origin.getY() - plan.groundLevel();
       int ops = 0;
       if (!progress.isTerrainPreparedWall(wall.segmentId())) {
-         WorkOutcome terrain = flattenFootprintInChunk(level, chunk, origin, plan, wall.rotation(), baseY, margins);
-         ops += terrain.ops();
-         if (terrain.budgetExhausted()) {
-            return WorkOutcome.budget(ops);
+         if (progress.legacyAmbiguous()) {
+            progress.terrainPreparedWalls().add(wall.segmentId());
+            progress.clearTerrainWallCursor(wall.segmentId());
+         } else {
+            WorkOutcome terrain = flattenFootprintInChunk(
+               level, chunk, origin, plan, wall.rotation(), baseY, margins,
+               progress, wall.segmentId(), false
+            );
+            ops += terrain.ops();
+            if (terrain.budgetExhausted()) {
+               return WorkOutcome.budget(ops);
+            }
+            progress.terrainPreparedWalls().add(wall.segmentId());
+            progress.clearTerrainWallCursor(wall.segmentId());
          }
-         progress.terrainPreparedWalls().add(wall.segmentId());
       }
 
-      // Temporarily map wall into building progress by using a nested local progress mirror via building methods.
-      // Instead place blocks directly with budget.
       List<PlacementStep> steps = BuildingPlacer.compilePlacementSteps(level, plan, origin, wall.rotation());
       int minX = chunk.getMinBlockX();
       int maxX = chunk.getMaxBlockX();
       int minZ = chunk.getMinBlockZ();
       int maxZ = chunk.getMaxBlockZ();
+      int cursor = progress.wallPlacementCursor(wall.segmentId());
+      int index = 0;
+      int scanned = 0;
+      boolean budgetExhausted = false;
+
       for (PlacementStep step : steps) {
+         if (index++ < cursor) {
+            continue;
+         }
+         if (++scanned > MAX_STEP_SCAN_PER_PASS) {
+            progress.setWallPlacementCursor(wall.segmentId(), index - 1);
+            budgetExhausted = true;
+            break;
+         }
          BlockPos worldPos = step.relativePos().offset(origin);
          if (worldPos.getX() < minX || worldPos.getX() > maxX || worldPos.getZ() < minZ || worldPos.getZ() > maxZ) {
+            progress.setWallPlacementCursor(wall.segmentId(), index);
             continue;
          }
          if (!MaterializationTickBudget.hasOps()) {
+            progress.setWallPlacementCursor(wall.segmentId(), index - 1);
             return WorkOutcome.budget(ops);
          }
          if (step.phase() == PlacementPhase.DELETION) {
+            if (progress.legacyAmbiguous()) {
+               progress.setWallPlacementCursor(wall.segmentId(), index);
+               continue;
+            }
             if (!level.getBlockState(worldPos).isAir()) {
                if (!MaterializationTickBudget.tryConsumeOp()) {
+                  progress.setWallPlacementCursor(wall.segmentId(), index - 1);
                   return WorkOutcome.budget(ops);
                }
                level.setBlock(worldPos, Blocks.AIR.defaultBlockState(), 2);
                ops++;
             }
+            progress.setWallPlacementCursor(wall.segmentId(), index);
             continue;
          }
          BlockState state = step.blockState();
          if (state.isAir()) {
+            progress.setWallPlacementCursor(wall.segmentId(), index);
             continue;
-         }
-         if (!MaterializationTickBudget.tryConsumeOp()) {
-            return WorkOutcome.budget(ops);
          }
          BlockState fixed = BuildingPlacer.applyFacingGuess(
             level, worldPos, state, step.guessChestFacing(), step.guessTorchFacing(), step.guessFurnaceFacing()
          );
+         BlockState current = level.getBlockState(worldPos);
+         if (alreadyCorrect(level, worldPos, current, fixed)) {
+            progress.setWallPlacementCursor(wall.segmentId(), index);
+            continue;
+         }
+         if (!MaterializationTickBudget.tryConsumeOp()) {
+            progress.setWallPlacementCursor(wall.segmentId(), index - 1);
+            return WorkOutcome.budget(ops);
+         }
          level.setBlock(worldPos, fixed, 2);
          ops++;
+         progress.setWallPlacementCursor(wall.segmentId(), index);
+      }
+
+      if (budgetExhausted) {
+         return WorkOutcome.budget(ops);
       }
       progress.placementCompleteWalls().add(wall.segmentId());
+      progress.clearWallPlacementCursor(wall.segmentId());
       int minCx = wall.origin().getX() >> 4;
       int maxCx = (wall.origin().getX() + Math.max(wall.width(), 1) - 1) >> 4;
       int minCz = wall.origin().getZ() >> 4;
@@ -627,23 +739,45 @@ public final class ChunkSettlementMaterializer {
       int maxZ = chunk.getMaxBlockZ();
       int ops = 0;
       List<BlockPos> pts = road.waypoints();
-      for (BlockPos p : pts) {
+      int cursor = progress.roadWaypointCursor(road.roadId());
+
+      for (int i = cursor; i < pts.size(); i++) {
+         BlockPos p = pts.get(i);
          if (p.getX() < minX || p.getX() > maxX || p.getZ() < minZ || p.getZ() > maxZ) {
+            progress.setRoadWaypointCursor(road.roadId(), i + 1);
             continue;
          }
          if (!MaterializationTickBudget.hasOps()) {
+            progress.setRoadWaypointCursor(road.roadId(), i);
             return WorkOutcome.budget(ops);
          }
-         int surfaceY = level.getHeight(Heightmap.Types.WORLD_SURFACE_WG, p.getX(), p.getZ()) - 1;
+         int surfaceY = walkableSurfaceY(level, p.getX(), p.getZ());
          BlockPos surface = new BlockPos(p.getX(), surfaceY, p.getZ());
          BlockState cur = level.getBlockState(surface);
          if (!cur.getFluidState().isEmpty()) {
             if (!bridges) {
-               continue;
+               progress.setRoadWaypointCursor(road.roadId(), i);
+               return WorkOutcome.blocked("water_no_bridges", ops);
             }
-            ops += placeBridgeSegment(level, surface, pathState);
-         } else if (!cur.is(Blocks.BEDROCK)) {
+            java.util.UUID bridgeKey = BridgePlacementHelper.columnKey(road.roadId(), surface);
+            BridgePlacementHelper.Outcome bridge = BridgePlacementHelper.placeBridge(
+               level, surface, pathState, progress, bridgeKey, true
+            );
+            ops += bridge.ops();
+            if (!bridge.finished()) {
+               progress.setRoadWaypointCursor(road.roadId(), i);
+               if (bridge.budgetExhausted()) {
+                  return WorkOutcome.budget(ops);
+               }
+               return WorkOutcome.blocked(bridge.reason(), ops);
+            }
+         } else if (!cur.is(Blocks.BEDROCK) && !BridgePlacementHelper.statesMatch(cur, pathState)) {
+            if (!BridgePlacementHelper.isSafeToOverwrite(level, surface)) {
+               progress.setRoadWaypointCursor(road.roadId(), i);
+               return WorkOutcome.blocked("road_protected", ops);
+            }
             if (!MaterializationTickBudget.tryConsumeOp()) {
+               progress.setRoadWaypointCursor(road.roadId(), i);
                return WorkOutcome.budget(ops);
             }
             level.setBlock(surface, pathState, 2);
@@ -654,52 +788,70 @@ public final class ChunkSettlementMaterializer {
                continue;
             }
             if (!MaterializationTickBudget.hasOps()) {
+               progress.setRoadWaypointCursor(road.roadId(), i);
                return WorkOutcome.budget(ops);
             }
             BlockState s = level.getBlockState(side);
             if (!s.getFluidState().isEmpty()) {
                if (bridges) {
-                  ops += placeBridgeSegment(level, side, pathState);
+                  java.util.UUID sideKey = BridgePlacementHelper.columnKey(road.roadId(), side);
+                  BridgePlacementHelper.Outcome sideBridge = BridgePlacementHelper.placeBridge(
+                     level, side, pathState, progress, sideKey, true
+                  );
+                  ops += sideBridge.ops();
+                  if (!sideBridge.finished()) {
+                     progress.setRoadWaypointCursor(road.roadId(), i);
+                     if (sideBridge.budgetExhausted()) {
+                        return WorkOutcome.budget(ops);
+                     }
+                     return WorkOutcome.blocked(sideBridge.reason(), ops);
+                  }
                }
                continue;
             }
             if (s.is(Blocks.GRASS_BLOCK) || s.is(Blocks.DIRT) || s.is(Blocks.COARSE_DIRT) || s.is(Blocks.PODZOL)) {
                if (!MaterializationTickBudget.tryConsumeOp()) {
+                  progress.setRoadWaypointCursor(road.roadId(), i);
                   return WorkOutcome.budget(ops);
                }
                level.setBlock(side, pathState, 2);
                ops++;
             }
          }
+         progress.setRoadWaypointCursor(road.roadId(), i + 1);
+      }
+
+      // Only complete when every waypoint belonging to this chunk has been advanced past.
+      for (int i = 0; i < pts.size(); i++) {
+         BlockPos p = pts.get(i);
+         if (p.getX() < minX || p.getX() > maxX || p.getZ() < minZ || p.getZ() > maxZ) {
+            continue;
+         }
+         if (progress.roadWaypointCursor(road.roadId()) <= i) {
+            return WorkOutcome.budget(ops);
+         }
       }
       progress.roadsCompleteInChunk().add(road.roadId());
+      progress.clearRoadWaypointCursor(road.roadId());
       return WorkOutcome.done(ops);
    }
 
-   /**
-    * Deterministic short water crossing: stone support pillars + path deck.
-    * Does not invent missing template files.
-    */
-   private static int placeBridgeSegment(ServerLevel level, BlockPos surface, BlockState deck) {
-      int ops = 0;
-      int y = surface.getY();
-      while (y > level.getMinBuildHeight() + 1 && !level.getBlockState(new BlockPos(surface.getX(), y, surface.getZ())).canOcclude()) {
-         if (!MaterializationTickBudget.tryConsumeOp()) {
-            return ops;
+   private static int walkableSurfaceY(ServerLevel level, int x, int z) {
+      int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1;
+      int min = level.getMinBuildHeight() + 1;
+      for (int y = top; y >= min; y--) {
+         BlockState state = level.getBlockState(new BlockPos(x, y, z));
+         if (state.isAir()) {
+            continue;
          }
-         level.setBlock(new BlockPos(surface.getX(), y, surface.getZ()), Blocks.STONE.defaultBlockState(), 2);
-         ops++;
-         y--;
+         if (!state.getFluidState().isEmpty()) {
+            return y;
+         }
+         if (state.canOcclude() || state.is(Blocks.DIRT_PATH) || state.is(Blocks.FARMLAND)) {
+            return y;
+         }
       }
-      if (MaterializationTickBudget.tryConsumeOp()) {
-         level.setBlock(surface, deck.isAir() ? Blocks.OAK_PLANKS.defaultBlockState() : deck, 2);
-         ops++;
-      }
-      BlockPos above = surface.above();
-      if (level.getBlockState(above).canBeReplaced() && MaterializationTickBudget.tryConsumeOp()) {
-         // leave air for passage — counted as scanned work already
-      }
-      return ops;
+      return Math.max(min, top);
    }
 
    private static BlockState resolvePathState(String material) {
@@ -714,13 +866,21 @@ public final class ChunkSettlementMaterializer {
       };
    }
 
-   private record WorkOutcome(int ops, boolean budgetExhausted) {
+   private record WorkOutcome(int ops, boolean budgetExhausted, boolean blocked, String reason) {
       static WorkOutcome done(int ops) {
-         return new WorkOutcome(ops, false);
+         return new WorkOutcome(ops, false, false, "");
       }
 
       static WorkOutcome budget(int ops) {
-         return new WorkOutcome(ops, true);
+         return new WorkOutcome(ops, true, false, "budget_exhausted");
+      }
+
+      static WorkOutcome blocked(String reason) {
+         return new WorkOutcome(0, false, true, reason == null ? "" : reason);
+      }
+
+      static WorkOutcome blocked(String reason, int ops) {
+         return new WorkOutcome(ops, false, true, reason == null ? "" : reason);
       }
    }
 }

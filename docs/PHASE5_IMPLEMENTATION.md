@@ -75,7 +75,7 @@ Integrity follow-up adds: resumable worldgen, live request caps, full migration 
 1. Extend FactionLifecycle via orchestrator wrapper; keep original as disable fallback.
 2. Physical trade conservation uses inventory remove/add with compensation; abstract ledgers stay derived.
 3. `FactionId` is ResourceLocation-based — never call `.uuid()`; use `asString()`.
-4. Autonomous founding remains disabled until safe live colonization exists.
+4. Autonomous founding remains **default off**; when enabled it runs the complete colonization lifecycle (layout → exact costs → kick materialization → colony activation → faction → founders).
 5. Chronicle uses state markers to avoid reload spam.
 6. Village removal must notify both `FactionLifecycle` and `LivingVillagesLifecycle` (audit follow-up).
 

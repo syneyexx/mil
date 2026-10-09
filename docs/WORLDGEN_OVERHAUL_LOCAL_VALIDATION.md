@@ -74,8 +74,13 @@ Fill the Result column when you verify locally.
 
 ## Scenario J — Restart during generation
 
-- **Steps:** Force-quit while a plan is `MATERIALIZING`; reload.
-- **Expected:** Resume without duplicate village/NPC/inventory; no blind re-flatten of player edits in already-seen chunks.
+- **Steps:** Force-quit while a plan is `MATERIALIZING` mid-wall or mid-road; reload.
+- **Expected:** Per-unit cursors resume; walls/roads do not restart from index 0; no blind re-flatten/deletion replay on ambiguous legacy progress; no duplicate village/NPC/inventory.
+
+## Scenario J2 — Regional continuous route
+
+- **Setup:** Two nearby ACTIVE/PHYSICAL settlements; regional roads + bridges enabled; load corridor chunks gradually.
+- **Expected:** Continuous adjacent path cells (not only ~32-block samples); bridge budget abort keeps `PARTIAL` (not `CONNECTED`); schema-v1 coarse `CONNECTED` reopens as `RECOVERY_REQUIRED`.
 
 ## Scenario K — Multiplayer
 

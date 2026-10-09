@@ -116,3 +116,18 @@ Diagnostics: `/millenaire dev civilization status|metrics|stages`, `/millenaire 
 - **Setup:** Play many Minecraft days.
 - **Expected:** Development labels evolve from real buildings/pop; history bounded; wars/treaties/trade remain coherent.
 - **Result:** ☐ PASS ☐ FAIL
+
+## 21. Colonization exact-stack refund
+- **Setup:** Enable founding; parent reserves spruce/birch logs for colony; force plan failure before materialization.
+- **Expected:** Same species refunded (not oak wash); `resourcesReserved` stays true if chests cannot accept full refund (`refundOutstanding`).
+- **Result:** ☐ PASS ☐ FAIL
+
+## 22. Colonization without new chunk event
+- **Setup:** Destination region chunks already loaded; start founding.
+- **Expected:** Layout + materialization queue starts without reloading the chunk; colony activation skips free occupants; founders migrate to founding faction.
+- **Result:** ☐ PASS ☐ FAIL
+
+## 23. Migration cooldown selection
+- **Setup:** Overcrowded village; lowest UUID on cooldown; another eligible resident present.
+- **Expected:** Alternate resident migrates; failed attempt does not apply full success cooldown.
+- **Result:** ☐ PASS ☐ FAIL

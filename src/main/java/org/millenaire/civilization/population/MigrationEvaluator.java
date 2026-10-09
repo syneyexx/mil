@@ -16,15 +16,20 @@ import org.slf4j.Logger;
 
 /**
  * Bounded migration evaluator: moves residents under housing pressure to villages with spare homes.
- * Does not shuffle randomly. AI dialogue may describe outcomes; it never authorizes migrations.
+ * Cooldown is checked before selection finalizes so one cooling villager cannot block others.
+ * Success cooldown is applied only after a completed migration.
  */
 public final class MigrationEvaluator {
    private static final Logger LOGGER = LogUtils.getLogger();
+   private static final long SUCCESS_COOLDOWN = 24000L * 3L;
+   private static final long RETRY_BACKOFF = 24000L;
 
    private MigrationEvaluator() {
    }
 
    public static void evaluate(ServerLevel level, CivilizationSavedData state) {
+      MigrationTransactionService.recoverPending(level, state);
+
       int maxOps = Math.min(
          CivilizationConfig.MAX_MIGRATIONS_PER_CYCLE,
          MillenaireServerConfig.SERVER.civilizationMigrationBudget.getAsInt()
@@ -53,27 +58,24 @@ public final class MigrationEvaluator {
          if (originPop.residents() <= originPop.housingCapacity()) {
             continue;
          }
-         // Overcrowded — find same-faction destination with spare housing.
          Village destination = findDestination(level, origin);
          if (destination == null) {
             continue;
          }
-         UUID migrant = selectMigrant(level, origin);
+         UUID migrant = selectMigrant(level, origin, state);
          if (migrant == null) {
             continue;
          }
-         // Cooldown: same villager cannot bounce every cycle.
-         String cdKey = "mig-cd:" + migrant;
-         if (!state.tryMarkPublished(cdKey, level.getGameTime(), 24000L * 3L)) {
-            continue;
-         }
-         UUID op = MigrationTransactionService.migrate(level, origin.getId(), destination.getId(), migrant);
-         if (op != null) {
+         MigrationResult result = MigrationTransactionService.migrate(level, origin.getId(), destination.getId(), migrant);
+         if (result.completed()) {
             ops++;
-            state.updateStateMarker(
-               "mig-reason:" + op,
-               "housing_pressure:" + origin.getId().uuid() + "->" + destination.getId().uuid()
-            );
+            state.tryMarkPublished("mig-cd:" + migrant, level.getGameTime(), SUCCESS_COOLDOWN);
+            if (result.operationId() != null) {
+               state.updateStateMarker(
+                  "mig-reason:" + result.operationId(),
+                  "housing_pressure:" + origin.getId().uuid() + "->" + destination.getId().uuid()
+               );
+            }
             if (Boolean.TRUE.equals(MillenaireServerConfig.SERVER.civilizationMetricsLogging.get())) {
                LOGGER.debug(
                   "[Millenaire] Migration {} overcrowding {} -> {}",
@@ -82,6 +84,9 @@ public final class MigrationEvaluator {
                   destination.getId().uuid()
                );
             }
+         } else if (result.retryable()) {
+            // Short backoff key — must not reuse the success cooldown key.
+            state.tryMarkPublished("mig-backoff:" + migrant, level.getGameTime(), RETRY_BACKOFF);
          }
       }
       state.setMigrationCursor(start + Math.max(1, scanned));
@@ -92,6 +97,9 @@ public final class MigrationEvaluator {
       List<Village> candidates = new ArrayList<>();
       for (Village other : VillageSavedData.get(level).getVillageManager().getAllVillages()) {
          if (other.getId().equals(origin.getId())) {
+            continue;
+         }
+         if (!MigrationTransactionService.factionAllowsMigration(origin, other)) {
             continue;
          }
          if (faction != null) {
@@ -114,12 +122,20 @@ public final class MigrationEvaluator {
       return candidates.getFirst();
    }
 
-   private static UUID selectMigrant(ServerLevel level, Village origin) {
+   private static UUID selectMigrant(ServerLevel level, Village origin, CivilizationSavedData state) {
       List<UUID> eligible = new ArrayList<>();
       for (VillagerRecord record : origin.getVillagerRecords().values()) {
-         if (MigrationTransactionService.isEligibleForPermanentMigration(level, origin, record)) {
-            eligible.add(record.getUuid());
+         if (!MigrationTransactionService.isEligibleForPermanentMigration(level, origin, record)) {
+            continue;
          }
+         UUID id = record.getUuid();
+         if (state.isPublished("mig-cd:" + id, level.getGameTime(), SUCCESS_COOLDOWN)) {
+            continue;
+         }
+         if (state.isPublished("mig-backoff:" + id, level.getGameTime(), RETRY_BACKOFF)) {
+            continue;
+         }
+         eligible.add(id);
       }
       if (eligible.isEmpty()) {
          return null;

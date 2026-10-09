@@ -10,7 +10,10 @@ import org.millenaire.building.BuildingPlanSet;
 import org.millenaire.culture.BrickColourTheme;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillageType;
+import org.millenaire.faction.FactionId;
 import org.millenaire.faction.FactionLifecycle;
+import org.millenaire.faction.FactionManager;
+import org.millenaire.faction.FactionSavedData;
 import org.millenaire.living.events.LivingEventService;
 import org.millenaire.living.events.LivingEventSource;
 import org.millenaire.living.events.LivingEventType;
@@ -127,7 +130,10 @@ public final class SettlementActivator {
                   if (level0 != null) {
                      SubBuildingHelper.spawnUpgradeSubBuildings(level, village, planSet, level0, instance, false);
                   }
-                  VillageGrowthManager.spawnBuildingOccupants(level, village, planSet, instance);
+                  // Colonies receive founders via migration — never invent free natural residents.
+                  if (!plan.isColonizationFounding()) {
+                     VillageGrowthManager.spawnBuildingOccupants(level, village, planSet, instance);
+                  }
                }
             }
          }
@@ -136,7 +142,10 @@ public final class SettlementActivator {
             BuildingInstance centre = village.getBuildings().isEmpty() ? null : village.getBuildings().getFirst();
             if (centre != null && centre.getPlanSetId() != null) {
                BuildingPlanSet centrePlanSet = ModCultures.getBuildingPlanSet(centre.getPlanSetId());
-               if (centrePlanSet != null && !centrePlanSet.startingGoods().isEmpty()) {
+               // Colonization spends reserved parent goods; do not grant free starting stock.
+               if (!plan.isColonizationFounding()
+                  && centrePlanSet != null
+                  && !centrePlanSet.startingGoods().isEmpty()) {
                   village.fillStartingGoods(level, centre, centrePlanSet, true);
                   village.setLastGoodsRefresh(level.getGameTime());
                }
@@ -156,7 +165,11 @@ public final class SettlementActivator {
          }
 
          manager.addVillage(village);
-         FactionLifecycle.onVillageRegistered(level, village);
+         if (plan.isColonizationFounding() && plan.foundingFactionId() != null) {
+            assignFoundingFaction(level, village, plan.foundingFactionId());
+         } else {
+            FactionLifecycle.onVillageRegistered(level, village);
+         }
          if (plan.loneBuilding()) {
             String culturePath = plan.cultureId() != null ? plan.cultureId().getPath() : "";
             savedData.registerLoneBuilding(plan.center(), plan.villageTypeId(), culturePath, null);
@@ -174,7 +187,10 @@ public final class SettlementActivator {
             }
          }
 
-         emitOptionalPhase3Event(level, village);
+         // Colonization emits its own founding event after founders migrate successfully.
+         if (!plan.isColonizationFounding()) {
+            emitOptionalPhase3Event(level, village);
+         }
 
          plan.setActivated(true);
          plan.forceStatus(SettlementPlanStatus.ACTIVE);
@@ -195,6 +211,25 @@ public final class SettlementActivator {
          SettlementPlanSavedData.get(level).markDirtyPlan();
          return false;
       }
+   }
+
+   private static void assignFoundingFaction(ServerLevel level, Village village, String factionIdRaw) {
+      try {
+         FactionId factionId = FactionId.tryParse(factionIdRaw);
+         FactionManager factions = FactionSavedData.get(level).getFactionManager();
+         if (factionId != null && factions.getFaction(factionId) != null) {
+            factions.assignVillage(village, factionId);
+            return;
+         }
+         LOGGER.warn(
+            "[Millenaire] Colonization founding faction {} missing — falling back to culture default for {}",
+            factionIdRaw,
+            village.getId().uuid()
+         );
+      } catch (Exception e) {
+         LOGGER.warn("[Millenaire] Colonization faction assign failed: {}", e.toString());
+      }
+      FactionLifecycle.onVillageRegistered(level, village);
    }
 
    private static void emitOptionalPhase3Event(ServerLevel level, Village village) {

@@ -40,11 +40,14 @@ Each stage has its **own** cursor (`membershipCursor`, `populationCursor`, `deve
 
 ## Migration
 
-1. Eligibility (not killed, not hired/away, not raider/visitor).
-2. Destination housing selected from residential plan capacity.
-3. Single mutation path: `Village.transferVillagerPermanently` (home, entity villageId, teleport/discard).
-4. `putMigration` does not duplicate queue entries; retention skips active/recovery ops.
-5. Events publish only on COMPLETE.
+1. Eligibility uses real fields (`isAwayHired`, `isAwayRaiding`, `isRaidingVillage`, hire state) plus type rules; children are not independent migrants.
+2. Cooldown is filtered **before** migrant selection so one cooling UUID cannot block others; success cooldown is applied only after `MigrationResult.completed()`.
+3. Destination housing matches gender/resident declarations when known; factionless villages only migrate to other factionless destinations.
+4. `migrate` returns `MigrationResult` (`COMPLETE` / `ALREADY_COMPLETE` / `REJECTED` / `FAILED` / `RECOVERY_REQUIRED` / …). A non-null operation id is **not** success.
+5. Single mutation path: `Village.transferVillagerPermanently`.
+6. `putMigration` does not duplicate queue entries; retention skips active/recovery ops.
+7. `recoverPending` consumes `needsRecovery` flags on the demographics stage.
+8. Events and metrics publish only on completed migrations.
 
 ## Trade / logistics
 
@@ -59,7 +62,18 @@ Separates last **attempt**, last **success**, and per-faction last economy/offsc
 
 ## Autonomous founding
 
-Default **off**. When enabled: housing/population pressure + real inventory costs + nearby loaded-chunk region via `SettlementPlanner` + later migration of real residents. Never invents free villagers. Block reasons are stored in civilization markers for panels/NPC context.
+Default **off**. Explicit lifecycle on `ColonizationOperation` + `SettlementPlan.FoundingMode.COLONIZATION`:
+
+1. Parent pressure / faction / war / cooldown gates  
+2. Site + `SettlementPlanner.ensureRegionPlan` (culture-compatible, non-lone)  
+3. Immediate `SettlementLayoutPlanner.ensureLayout`  
+4. Exact cost reservation from building `requiredResources` (fallback levy 32 any-log + 32 cobble when content has no costs)  
+5. `WorldgenEngine.kickPlanExecution` queues already-loaded footprint chunks (no new chunk-event required)  
+6. Colony activation skips free occupants and free starting goods; assigns `parentFactionId`  
+7. Intended founders migrate via `MigrationResult`; `MIGRATED` only when the founder target is met  
+8. `VILLAGE_FOUNDED` emits once after successful founding, not from the natural activator path  
+
+Refunds restore exact reserved stacks (or keep `refundOutstanding`). Consumed physical founding does not invent a full refund. When worldgen is disabled, colonization records `blocked_worldgen_disabled`.
 
 ## Crash consistency
 
