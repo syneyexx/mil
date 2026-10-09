@@ -412,6 +412,7 @@ public class Millenaire {
          TestCommand.register(event.getDispatcher());
          DevCommand.register(event.getDispatcher());
          TpCommand.register(event.getDispatcher());
+         org.millenaire.command.NpcChatModelCommand.register(event);
       });
       NeoForge.EVENT_BUS.addListener(ServerStoppingEvent.class, event -> {
          org.millenaire.chat.NpcChatService.onServerStopping();

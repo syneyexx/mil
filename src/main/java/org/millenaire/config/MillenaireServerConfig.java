@@ -44,6 +44,7 @@ public final class MillenaireServerConfig {
    public final BooleanValue legacyAutoConvert;
    public final IntValue legacyAutoConvertMaxPngs;
    public final BooleanValue npcChatEnabled;
+   public final ConfigValue<String> npcChatProvider;
    public final ConfigValue<String> npcChatBaseUrl;
    public final ConfigValue<String> npcChatModel;
    public final ConfigValue<String> npcChatApiKey;
@@ -258,16 +259,39 @@ public final class MillenaireServerConfig {
       this.npcChatEnabled = builder.comment("Master switch for NPC free chat. When false, no HTTP calls are made.")
          .translation("millenaire.config.npcChat.enabled")
          .define("enabled", true);
-      this.npcChatBaseUrl = builder.comment("API base URL without a trailing slash (e.g. https://api.x.ai/v1)")
+      this.npcChatProvider = builder.comment(
+            new String[]{
+               "NPC chat provider mode: auto | lmstudio | openai.",
+               "auto detects LM Studio from the base URL (e.g. http://localhost:1234/v1).",
+               "lmstudio forces GET /api/v1/models discovery and loaded_instances selection.",
+               "openai keeps the configured model name for remote OpenAI-compatible APIs."
+            }
+         )
+         .translation("millenaire.config.npcChat.provider")
+         .define("provider", "auto");
+      this.npcChatBaseUrl = builder.comment(
+            new String[]{
+               "API base URL without a trailing slash.",
+               "Remote example: https://api.x.ai/v1",
+               "LM Studio local example: http://localhost:1234/v1 (model name optional; loaded LLMs are auto-detected)."
+            }
+         )
          .translation("millenaire.config.npcChat.baseUrl")
          .define("baseUrl", "https://api.x.ai/v1");
-      this.npcChatModel = builder.comment("Model id sent in the chat completions body")
+      this.npcChatModel = builder.comment(
+            new String[]{
+               "Model id for remote OpenAI-compatible providers.",
+               "For LM Studio: leave empty for automatic selection when exactly one LLM is loaded;",
+               "when multiple LLMs are loaded, set this (or use /millenaire npcchat model select) to choose one."
+            }
+         )
          .translation("millenaire.config.npcChat.model")
          .define("model", "grok-4-latest");
       this.npcChatApiKey = builder.comment(
             new String[]{
                "API key for NPC chat. Leave empty to read MILLENAIRE_NPC_API_KEY from the environment.",
-               "Never log this value. An empty key disables the model while still storing player quotes."
+               "For local LM Studio, an empty key is allowed (optional LM_API_TOKEN).",
+               "Never log this value. For remote providers an empty key disables the model while still storing player quotes."
             }
          )
          .translation("millenaire.config.npcChat.apiKey")

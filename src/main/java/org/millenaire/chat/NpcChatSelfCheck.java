@@ -19,10 +19,37 @@ public final class NpcChatSelfCheck {
       checkGreeting(failures);
       checkCulture(failures);
       checkPrompt(failures);
+      checkLmStudioDiscovery(failures);
       if (failures.isEmpty()) {
          return "PASS";
       }
       return "FAIL: " + failures.get(0);
+   }
+
+   private static void checkLmStudioDiscovery(List<String> failures) {
+      String url = LmStudioModelDiscovery.toNativeModelsUrl("http://localhost:1234/v1/");
+      if (!"http://localhost:1234/api/v1/models".equals(url)) {
+         failures.add("lmstudio models url");
+         return;
+      }
+      if (!LmStudioModelDiscovery.isLmStudioBaseUrl("http://127.0.0.1:1234/v1")) {
+         failures.add("lmstudio detect localhost");
+         return;
+      }
+      String body = "{\"models\":["
+         + "{\"type\":\"embedding\",\"key\":\"emb\",\"loaded_instances\":[{\"id\":\"emb\"}]},"
+         + "{\"type\":\"llm\",\"key\":\"a\",\"display_name\":\"Alpha\",\"loaded_instances\":[]},"
+         + "{\"type\":\"llm\",\"key\":\"b\",\"display_name\":\"Beta\",\"loaded_instances\":[{\"id\":\"b-inst\"}]}"
+         + "]}";
+      List<LmStudioModelInfo> loaded = LmStudioModelDiscovery.parseLoadedLlms(body);
+      if (loaded.size() != 1 || !"b-inst".equals(loaded.get(0).effectiveModelId())) {
+         failures.add("lmstudio loaded_instances filter");
+         return;
+      }
+      NpcModelResolver.Result one = NpcModelResolver.resolveLmStudio(LmStudioModelDiscovery.Snapshot.ok(1L, loaded));
+      if (!one.ok() || !"b-inst".equals(one.modelId())) {
+         failures.add("lmstudio auto single");
+      }
    }
 
    private static void checkParser(List<String> failures) {

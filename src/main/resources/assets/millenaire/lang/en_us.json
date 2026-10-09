@@ -4888,5 +4888,21 @@
   "gui.millenaire.npcchat.fallback.hostile": "*It watches you in silence.*",
   "gui.millenaire.npcchat.fallback.animal": "*A soft sound. Curious eyes.*",
   "gui.millenaire.npcchat.fallback.monster": "*A low growl. Nothing more.*",
-  "gui.millenaire.npcchat.fallback.generic": "*They regard you without words.*"
+  "gui.millenaire.npcchat.fallback.generic": "*They regard you without words.*",
+  "gui.millenaire.npcchat.missing_api_key": "NPC chat has no API key configured.",
+  "gui.millenaire.npcchat.missing_base_url": "NPC chat has no API base URL configured.",
+  "gui.millenaire.npcchat.missing_manual_model": "Set a model id in the NPC chat config for this provider.",
+  "gui.millenaire.npcchat.lmstudio.unreachable": "Cannot reach LM Studio. Is the local server running?",
+  "gui.millenaire.npcchat.lmstudio.no_loaded": "No language model is loaded in LM Studio. Load one LLM, then try again.",
+  "gui.millenaire.npcchat.lmstudio.choose_model": "Several language models are loaded. Choose one with /millenaire npcchat model select <id>.",
+  "gui.millenaire.npcchat.lmstudio.ready": "LM Studio model ready.",
+  "command.millenaire.npcchat.model.remote": "Remote provider model: %s",
+  "command.millenaire.npcchat.model.not_lmstudio": "This command is for LM Studio. Remote providers use the configured model name.",
+  "command.millenaire.npcchat.model.not_loaded": "Model '%s' is not among the currently loaded LM Studio language models.",
+  "command.millenaire.npcchat.model.selected": "Selected LM Studio model: %s",
+  "command.millenaire.npcchat.model.cleared": "Cleared manual LM Studio model selection.",
+  "command.millenaire.npcchat.model.loaded_count": "Loaded LM Studio language models: %s",
+  "command.millenaire.npcchat.model.active": "Active model: %s (%s)",
+  "command.millenaire.npcchat.model.select_hint": "Use /millenaire npcchat model select <id>",
+  "command.millenaire.npcchat.model.changed": "Detected a change in LM Studio loaded models."
 }

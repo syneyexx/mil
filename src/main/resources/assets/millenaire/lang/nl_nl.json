@@ -4888,5 +4888,21 @@
   "gui.millenaire.npcchat.fallback.hostile": "*Het kijkt je zwijgend aan.*",
   "gui.millenaire.npcchat.fallback.animal": "*Een zacht geluid. Nieuwsgierige ogen.*",
   "gui.millenaire.npcchat.fallback.monster": "*Een laag gegrom. Meer niet.*",
-  "gui.millenaire.npcchat.fallback.generic": "*Ze kijken je aan zonder woorden.*"
+  "gui.millenaire.npcchat.fallback.generic": "*Ze kijken je aan zonder woorden.*",
+  "gui.millenaire.npcchat.missing_api_key": "NPC-chat heeft geen API-sleutel geconfigureerd.",
+  "gui.millenaire.npcchat.missing_base_url": "NPC-chat heeft geen API-basis-URL geconfigureerd.",
+  "gui.millenaire.npcchat.missing_manual_model": "Stel een model-id in bij de NPC-chatconfiguratie voor deze provider.",
+  "gui.millenaire.npcchat.lmstudio.unreachable": "LM Studio is niet bereikbaar. Draait de lokale server?",
+  "gui.millenaire.npcchat.lmstudio.no_loaded": "Er is geen taalmodel geladen in LM Studio. Laad één LLM en probeer opnieuw.",
+  "gui.millenaire.npcchat.lmstudio.choose_model": "Er zijn meerdere taalmodellen geladen. Kies er één met /millenaire npcchat model select <id>.",
+  "gui.millenaire.npcchat.lmstudio.ready": "LM Studio-model is gereed.",
+  "command.millenaire.npcchat.model.remote": "Extern provider-model: %s",
+  "command.millenaire.npcchat.model.not_lmstudio": "Dit commando is voor LM Studio. Externe providers gebruiken de geconfigureerde modelnaam.",
+  "command.millenaire.npcchat.model.not_loaded": "Model '%s' hoort niet bij de momenteel geladen LM Studio-taalmodellen.",
+  "command.millenaire.npcchat.model.selected": "Gekozen LM Studio-model: %s",
+  "command.millenaire.npcchat.model.cleared": "Handmatige LM Studio-modelkeuze gewist.",
+  "command.millenaire.npcchat.model.loaded_count": "Geladen LM Studio-taalmodellen: %s",
+  "command.millenaire.npcchat.model.active": "Actief model: %s (%s)",
+  "command.millenaire.npcchat.model.select_hint": "Gebruik /millenaire npcchat model select <id>",
+  "command.millenaire.npcchat.model.changed": "Wijziging in geladen LM Studio-modellen gedetecteerd."
 }

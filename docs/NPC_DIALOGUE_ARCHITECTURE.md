@@ -60,7 +60,20 @@ Adapters build `NpcDialogueContext`. Millénaire reuses `NpcPersonaBuilder`. Pro
 
 ## Model request lifecycle
 
-Acquire in-flight slot → async HTTP → `server.execute` → validate session/generation/entity/range → apply sanitized reply → release slot exactly once. Model output cannot spawn items, run commands, or mutate inventories.
+Acquire in-flight slot → resolve model → async HTTP → `server.execute` → validate session/generation/entity/range → apply sanitized reply → release slot exactly once. Model output cannot spawn items, run commands, or mutate inventories.
+
+### LM Studio auto-detection
+
+When `npcChat.provider` is `auto`/`lmstudio` and the base URL points at LM Studio (typically `http://localhost:1234/v1`):
+
+1. `LmStudioModelDiscovery` calls `GET /api/v1/models` (host-derived native API, not the OpenAI `/v1` path).
+2. Only entries with `type` llm/vlm and non-empty `loaded_instances` are eligible.
+3. **Exactly one** loaded LLM → selected automatically (no manual model name required).
+4. **Multiple** loaded LLMs → use runtime selection (`/millenaire npcchat model select <id>`) or a matching configured `npcChat.model`.
+5. **None** loaded → clear UI/command message (`gui.millenaire.npcchat.lmstudio.no_loaded`).
+6. Loaded-set fingerprint changes clear stale manual selections and are noticed on periodic refresh / next chat.
+
+Remote OpenAI-compatible providers (`provider=openai` or non-LM Studio URLs) keep the configured manual model id and API key requirements.
 
 ## Gossip
 

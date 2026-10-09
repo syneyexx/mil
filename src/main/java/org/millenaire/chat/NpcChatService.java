@@ -44,9 +44,16 @@ public final class NpcChatService {
 
    public static void bootstrap() {
       NpcDialogueAdapterRegistry.bootstrap();
+      if (NpcModelResolver.usesLmStudio()) {
+         LmStudioModelDiscovery.refreshAsync(true);
+      }
    }
 
    public static void tickSessions(MinecraftServer server) {
+      // Periodic LM Studio discovery so model load/unload switches are noticed without chat traffic.
+      if (server.getTickCount() % 200 == 40 && NpcModelResolver.usesLmStudio()) {
+         LmStudioModelDiscovery.refreshAsync(false);
+      }
       if (SESSIONS.isEmpty()) {
          return;
       }
@@ -331,6 +338,12 @@ public final class NpcChatService {
                NpcMindSavedData mindData = NpcMindSavedData.get(online.serverLevel());
                NpcMind livingMind = mindData.getOrCreateMind(targetUuid);
                if (reply == null || reply.isEmpty()) {
+                  String resolveFail = NpcModelClient.resolveFailureMessageKey();
+                  if (resolveFail != null) {
+                     current.endRequest(capturedGeneration);
+                     sendSystemLine(online, capturedEntityId, resolveFail, false);
+                     return;
+                  }
                   NpcDialogueContext failCtx = livingTarget.adapter().buildContext(online, livingTarget.entity(), livingMind, mindData, capturedSpeech, languageCode);
                   String fallback = failCtx.fallbackLine().isBlank()
                      ? Component.translatable("gui.millenaire.npcchat.no_model").getString()
