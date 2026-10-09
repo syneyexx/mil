@@ -34,6 +34,12 @@ public record NpcChatOpenRequestPayload(int entityId) implements CustomPacketPay
       context.enqueueWork(() -> {
          if (context.player() instanceof ServerPlayer player) {
             if (!RATE.acquire(player.getUUID())) {
+               // Avoid opening storms; closed payload clears any client wait without a session.
+               net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(
+                  player,
+                  new org.millenaire.chat.NpcChatClosedPayload(payload.entityId(), "gui.millenaire.npcchat.rate_limited"),
+                  new CustomPacketPayload[0]
+               );
                return;
             }
             NpcChatService.handleOpen(player, payload.entityId());

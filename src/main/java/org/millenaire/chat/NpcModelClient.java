@@ -14,12 +14,18 @@ import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
 import org.millenaire.config.MillenaireServerConfig;
 import org.slf4j.Logger;
 
+/**
+ * OpenAI-compatible chat completions client. Never blocks the server thread.
+ * Concurrency uses an in-flight counter so live config changes cannot grant extra permits mid-flight.
+ * LM Studio model ids are resolved via {@link NpcModelResolver} / {@link LmStudioModelDiscovery}.
+ */
 public final class NpcModelClient {
    private static final Logger LOGGER = LogUtils.getLogger();
    private static final Gson GSON = new Gson();
@@ -28,14 +34,30 @@ public final class NpcModelClient {
       .followRedirects(Redirect.NORMAL)
       .version(Version.HTTP_1_1)
       .build();
-   private static final Semaphore SEMAPHORE = new Semaphore(0);
-   private static int configuredPermits = -1;
+   private static final AtomicInteger IN_FLIGHT = new AtomicInteger(0);
+   private static final Object LOCK = new Object();
 
    private NpcModelClient() {
    }
 
    public static boolean isConfigured() {
-      return (Boolean)MillenaireServerConfig.SERVER.npcChatEnabled.get() && resolveApiKey() != null;
+      if (!(Boolean)MillenaireServerConfig.SERVER.npcChatEnabled.get()) {
+         return false;
+      }
+      String baseUrl = MillenaireServerConfig.SERVER.npcChatBaseUrl.get();
+      if (baseUrl == null || baseUrl.isBlank()) {
+         return false;
+      }
+      if (NpcModelResolver.usesLmStudio()) {
+         // Local LM Studio does not require a non-empty API key for normal use.
+         return true;
+      }
+      return resolveApiKey() != null && hasManualModelConfigured();
+   }
+
+   private static boolean hasManualModelConfigured() {
+      String model = MillenaireServerConfig.SERVER.npcChatModel.get();
+      return model != null && !model.isBlank();
    }
 
    @Nullable
@@ -45,32 +67,90 @@ public final class NpcModelClient {
          return key.trim();
       }
       String env = System.getenv("MILLENAIRE_NPC_API_KEY");
-      return env != null && !env.isBlank() ? env.trim() : null;
+      if (env != null && !env.isBlank()) {
+         return env.trim();
+      }
+      if (NpcModelResolver.usesLmStudio()) {
+         String lmEnv = System.getenv("LM_API_TOKEN");
+         if (lmEnv != null && !lmEnv.isBlank()) {
+            return lmEnv.trim();
+         }
+         // LM Studio local default: no token required.
+         return "";
+      }
+      return null;
    }
 
-   private static synchronized void ensurePermits() {
-      int desired = MillenaireServerConfig.SERVER.npcChatMaxConcurrent.getAsInt();
-      if (desired != configuredPermits) {
-         SEMAPHORE.drainPermits();
-         SEMAPHORE.release(desired);
-         configuredPermits = desired;
-      }
+   /** API key for LM Studio discovery; blank string means "send no Authorization unless configured". */
+   @Nullable
+   static String resolveApiKeyAllowingBlankForLmStudio() {
+      return resolveApiKey();
    }
 
    public static boolean tryAcquire() {
-      ensurePermits();
-      return SEMAPHORE.tryAcquire();
+      int max = MillenaireServerConfig.SERVER.npcChatMaxConcurrent.getAsInt();
+      synchronized (LOCK) {
+         int current = IN_FLIGHT.get();
+         if (current >= max) {
+            return false;
+         }
+         IN_FLIGHT.incrementAndGet();
+         return true;
+      }
    }
 
    public static void release() {
-      SEMAPHORE.release();
+      synchronized (LOCK) {
+         int next = IN_FLIGHT.decrementAndGet();
+         if (next < 0) {
+            IN_FLIGHT.set(0);
+            LOGGER.warn("NPC model client permit accounting underflow; reset to 0");
+         }
+      }
    }
 
-   public static CompletableFuture<Optional<NpcModelReply>> sendAsync(String systemPrompt, String userPrompt, java.util.UUID villagerId) {
-      return sendRawAsync(systemPrompt, userPrompt, villagerId, 260).thenApply(raw -> raw.flatMap(NpcReplyParser::parse));
+   public static int inFlight() {
+      return IN_FLIGHT.get();
    }
 
-   public static CompletableFuture<Optional<String>> sendRawAsync(String systemPrompt, String userPrompt, java.util.UUID villagerId, int maxTokens) {
+   public static CompletableFuture<Optional<NpcModelReply>> sendAsync(String systemPrompt, String userPrompt, UUID targetId) {
+      return sendRawAsync(systemPrompt, userPrompt, targetId, 260).thenApply(raw -> raw.flatMap(NpcReplyParser::parse));
+   }
+
+   /**
+    * Resolves the model (including LM Studio auto-detect), then performs the HTTP call.
+    * Returns empty when resolution or the provider fails. Callers should use
+    * {@link #resolveFailureMessageKey()} after an empty result when appropriate.
+    */
+   public static CompletableFuture<Optional<String>> sendRawAsync(String systemPrompt, String userPrompt, UUID targetId, int maxTokens) {
+      return NpcModelResolver.resolveAsync().thenCompose(resolution -> {
+         if (!resolution.ok()) {
+            lastResolveFailureKey = resolution.messageKey();
+            LOGGER.warn("NPC chat model resolution failed for {}: {}", targetId, resolution.status());
+            return CompletableFuture.completedFuture(Optional.empty());
+         }
+         lastResolveFailureKey = null;
+         lastResolvedModelLabel = resolution.displayLabel();
+         return sendWithModel(systemPrompt, userPrompt, targetId, maxTokens, resolution.modelId());
+      });
+   }
+
+   private static volatile String lastResolveFailureKey;
+   private static volatile String lastResolvedModelLabel;
+
+   @Nullable
+   public static String resolveFailureMessageKey() {
+      return lastResolveFailureKey;
+   }
+
+   @Nullable
+   public static String lastResolvedModelLabel() {
+      return lastResolvedModelLabel;
+   }
+
+   private static CompletableFuture<Optional<String>> sendWithModel(
+      String systemPrompt, String userPrompt, UUID targetId, int maxTokens, String model
+   ) {
       String apiKey = resolveApiKey();
       if (apiKey == null) {
          return CompletableFuture.completedFuture(Optional.empty());
@@ -82,45 +162,52 @@ public final class NpcModelClient {
       while (baseUrl.endsWith("/")) {
          baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
       }
-      String model = MillenaireServerConfig.SERVER.npcChatModel.get();
       int timeout = MillenaireServerConfig.SERVER.npcChatTimeoutSeconds.getAsInt();
 
       JsonObject body = new JsonObject();
       body.addProperty("model", model);
       body.addProperty("temperature", 0.8);
-      body.addProperty("max_tokens", maxTokens);
+      body.addProperty("max_tokens", Math.max(32, Math.min(maxTokens, 800)));
       JsonArray messages = new JsonArray();
       JsonObject system = new JsonObject();
       system.addProperty("role", "system");
-      system.addProperty("content", systemPrompt);
+      system.addProperty("content", systemPrompt == null ? "" : systemPrompt);
       messages.add(system);
       JsonObject user = new JsonObject();
       user.addProperty("role", "user");
-      user.addProperty("content", userPrompt);
+      user.addProperty("content", userPrompt == null ? "" : userPrompt);
       messages.add(user);
       body.add("messages", messages);
 
-      HttpRequest request = HttpRequest.newBuilder()
-         .uri(URI.create(baseUrl + "/chat/completions"))
-         .timeout(Duration.ofSeconds(timeout))
-         .header("Content-Type", "application/json")
-         .header("Authorization", "Bearer " + apiKey)
-         .POST(BodyPublishers.ofString(GSON.toJson(body)))
-         .build();
+      HttpRequest.Builder requestBuilder;
+      try {
+         requestBuilder = HttpRequest.newBuilder()
+            .uri(URI.create(baseUrl + "/chat/completions"))
+            .timeout(Duration.ofSeconds(timeout))
+            .header("Content-Type", "application/json")
+            .POST(BodyPublishers.ofString(GSON.toJson(body)));
+         if (!apiKey.isBlank()) {
+            requestBuilder.header("Authorization", "Bearer " + apiKey);
+         }
+      } catch (Exception e) {
+         LOGGER.warn("NPC chat request build failed for {}: {}", targetId, e.toString());
+         return CompletableFuture.completedFuture(Optional.empty());
+      }
 
+      HttpRequest request = requestBuilder.build();
       return CLIENT.sendAsync(request, BodyHandlers.ofString()).handle((response, error) -> {
          if (error != null) {
-            LOGGER.warn("NPC chat request failed for villager {}: {}", villagerId, error.toString());
+            LOGGER.warn("NPC chat request failed for {}: {}", targetId, error.toString());
             return Optional.empty();
          }
          int status = response.statusCode();
          if (status < 200 || status >= 300) {
-            LOGGER.warn("NPC chat non-2xx for villager {}: {}", villagerId, status);
+            LOGGER.warn("NPC chat non-2xx for {}: {}", targetId, status);
             return Optional.empty();
          }
          String content = extractContent(response.body());
          if (content == null || content.isBlank()) {
-            LOGGER.warn("NPC chat empty body for villager {}", villagerId);
+            LOGGER.warn("NPC chat empty body for {}", targetId);
             return Optional.empty();
          }
          return Optional.of(content);

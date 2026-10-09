@@ -44,6 +44,7 @@ public final class MillenaireServerConfig {
    public final BooleanValue legacyAutoConvert;
    public final IntValue legacyAutoConvertMaxPngs;
    public final BooleanValue npcChatEnabled;
+   public final ConfigValue<String> npcChatProvider;
    public final ConfigValue<String> npcChatBaseUrl;
    public final ConfigValue<String> npcChatModel;
    public final ConfigValue<String> npcChatApiKey;
@@ -54,6 +55,16 @@ public final class MillenaireServerConfig {
    public final IntValue npcChatLeaveRange;
    public final BooleanValue npcChatGossip;
    public final IntValue npcChatGossipExpiryDays;
+   public final BooleanValue npcChatMillenaire;
+   public final BooleanValue npcChatVanilla;
+   public final BooleanValue npcChatModded;
+   public final BooleanValue npcChatGenericLiving;
+   public final BooleanValue npcChatNonverbal;
+   public final BooleanValue npcChatRequireLineOfSight;
+   public final IntValue npcChatTransientRetentionDays;
+   public final IntValue npcChatMaxStoredMinds;
+   public final ConfigValue<String> npcChatEntityAllowList;
+   public final ConfigValue<String> npcChatEntityDenyList;
 
    public static int getDefaultClearMargin() {
       try {
@@ -248,16 +259,39 @@ public final class MillenaireServerConfig {
       this.npcChatEnabled = builder.comment("Master switch for NPC free chat. When false, no HTTP calls are made.")
          .translation("millenaire.config.npcChat.enabled")
          .define("enabled", true);
-      this.npcChatBaseUrl = builder.comment("API base URL without a trailing slash (e.g. https://api.x.ai/v1)")
+      this.npcChatProvider = builder.comment(
+            new String[]{
+               "NPC chat provider mode: auto | lmstudio | openai.",
+               "auto detects LM Studio from the base URL (e.g. http://localhost:1234/v1).",
+               "lmstudio forces GET /api/v1/models discovery and loaded_instances selection.",
+               "openai keeps the configured model name for remote OpenAI-compatible APIs."
+            }
+         )
+         .translation("millenaire.config.npcChat.provider")
+         .define("provider", "auto");
+      this.npcChatBaseUrl = builder.comment(
+            new String[]{
+               "API base URL without a trailing slash.",
+               "Remote example: https://api.x.ai/v1",
+               "LM Studio local example: http://localhost:1234/v1 (model name optional; loaded LLMs are auto-detected)."
+            }
+         )
          .translation("millenaire.config.npcChat.baseUrl")
          .define("baseUrl", "https://api.x.ai/v1");
-      this.npcChatModel = builder.comment("Model id sent in the chat completions body")
+      this.npcChatModel = builder.comment(
+            new String[]{
+               "Model id for remote OpenAI-compatible providers.",
+               "For LM Studio: leave empty for automatic selection when exactly one LLM is loaded;",
+               "when multiple LLMs are loaded, set this (or use /millenaire npcchat model select) to choose one."
+            }
+         )
          .translation("millenaire.config.npcChat.model")
          .define("model", "grok-4-latest");
       this.npcChatApiKey = builder.comment(
             new String[]{
                "API key for NPC chat. Leave empty to read MILLENAIRE_NPC_API_KEY from the environment.",
-               "Never log this value. An empty key disables the model while still storing player quotes."
+               "For local LM Studio, an empty key is allowed (optional LM_API_TOKEN).",
+               "Never log this value. For remote providers an empty key disables the model while still storing player quotes."
             }
          )
          .translation("millenaire.config.npcChat.apiKey")
@@ -283,6 +317,38 @@ public final class MillenaireServerConfig {
       this.npcChatGossipExpiryDays = builder.comment("Days before an inactive rumor expires")
          .translation("millenaire.config.npcChat.gossipExpiryDays")
          .defineInRange("gossipExpiryDays", 30, 7, 120);
+      this.npcChatMillenaire = builder.comment("Allow dialogue with Millénaire villagers")
+         .translation("millenaire.config.npcChat.millenaire")
+         .define("millenaire", true);
+      this.npcChatVanilla = builder.comment("Allow dialogue with vanilla villagers, traders, illagers, piglins, golems, allays, hostiles and animals")
+         .translation("millenaire.config.npcChat.vanilla")
+         .define("vanilla", true);
+      this.npcChatModded = builder.comment("Allow dialogue with living entities from other mods via the generic adapter")
+         .translation("millenaire.config.npcChat.modded")
+         .define("modded", true);
+      this.npcChatGenericLiving = builder.comment("Generic LivingEntity fallback for types without a dedicated adapter")
+         .translation("millenaire.config.npcChat.genericLiving")
+         .define("genericLiving", true);
+      this.npcChatNonverbal = builder.comment("Allow nonverbal / atmospheric dialogue for animals and monsters")
+         .translation("millenaire.config.npcChat.nonverbal")
+         .define("nonverbal", true);
+      this.npcChatRequireLineOfSight = builder.comment("Require clear line of sight to open or continue dialogue")
+         .translation("millenaire.config.npcChat.requireLineOfSight")
+         .define("requireLineOfSight", true);
+      this.npcChatTransientRetentionDays = builder.comment("Days to retain minds for transient NPCs after last talk")
+         .translation("millenaire.config.npcChat.transientRetentionDays")
+         .defineInRange("transientRetentionDays", 7, 1, 60);
+      this.npcChatMaxStoredMinds = builder.comment("Soft cap on stored NPC minds; excess transient minds are pruned first")
+         .translation("millenaire.config.npcChat.maxStoredMinds")
+         .defineInRange("maxStoredMinds", 2000, 100, 20000);
+      this.npcChatEntityAllowList = builder.comment(
+            "Optional comma-separated entity type ids (namespace:path or path) for extra documentation; empty = no allow-list restriction"
+         )
+         .translation("millenaire.config.npcChat.entityAllowList")
+         .define("entityAllowList", "");
+      this.npcChatEntityDenyList = builder.comment("Comma-separated entity type ids denied from the generic adapter")
+         .translation("millenaire.config.npcChat.entityDenyList")
+         .define("entityDenyList", "");
       builder.pop();
    }
 

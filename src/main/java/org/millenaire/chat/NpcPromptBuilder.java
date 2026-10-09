@@ -3,6 +3,7 @@ package org.millenaire.chat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import org.millenaire.chat.dialogue.NpcDialogueContext;
 
 public final class NpcPromptBuilder {
    public static final int USER_CAP = 6000;
@@ -108,6 +109,116 @@ public final class NpcPromptBuilder {
       return trimToCap(identity, memory, rumors, speech);
    }
 
+   public static String buildUserPromptFromContext(
+      NpcDialogueContext ctx,
+      NpcMind mind,
+      java.util.UUID playerId,
+      String languageCode,
+      String sanitizedSpeech,
+      List<String> rumorLines
+   ) {
+      List<String> identity = new ArrayList<>();
+      identity.add("YOU ARE:");
+      identity.add("name=" + ctx.displayName() + " type=" + ctx.speciesOrTypeLabel());
+      identity.add("role=" + ctx.occupation() + " gender=" + ctx.gender() + " child=" + ctx.child() + " age=" + ctx.ageCategory());
+      if (!ctx.familyFather().isBlank()) {
+         identity.add("father=" + ctx.familyFather());
+      }
+      if (!ctx.familyMother().isBlank()) {
+         identity.add("mother=" + ctx.familyMother());
+      }
+      if (!ctx.familyPartner().isBlank()) {
+         identity.add("partner=" + ctx.familyPartner());
+      }
+      if (!ctx.cultureId().isBlank()) {
+         identity.add("culture=" + ctx.cultureId() + " (" + ctx.cultureDisplayName() + ")");
+      }
+      if (!ctx.settlementName().isBlank()) {
+         identity.add("settlement=" + ctx.settlementName());
+      }
+      if (!ctx.faction().isBlank()) {
+         identity.add("faction=" + ctx.faction());
+      }
+      if (!ctx.tags().isEmpty()) {
+         identity.add("tags=" + String.join(",", ctx.tags()));
+      }
+      identity.add("task=" + ctx.currentTask() + " underAttack=" + ctx.underAttack() + " time=" + ctx.timeOfDay() + " raining=" + ctx.raining());
+      if (!ctx.reputationLabel().isBlank()) {
+         identity.add("reputation=" + ctx.reputation() + " (" + ctx.reputationLabel() + ")");
+      }
+      if (!ctx.languageAside().isBlank()) {
+         identity.add(ctx.languageAside());
+      }
+      identity.add("hiredByThisPlayer=" + ctx.hiredByPlayer());
+      identity.add("mood=" + mind.getMood());
+      NpcOpinion opinion = mind.getOpinion(playerId);
+      identity.add(
+         "opinion trust="
+            + format(opinion.trust())
+            + " fear="
+            + format(opinion.fear())
+            + " affection="
+            + format(opinion.affection())
+      );
+      if (!mind.getLastThought().isBlank()) {
+         identity.add("privateThought=" + mind.getLastThought());
+      }
+      if (!ctx.communicationInstructions().isBlank()) {
+         identity.add("COMMUNICATION POLICY: " + ctx.communicationInstructions());
+      }
+
+      List<String> memory = new ArrayList<>();
+      if (!mind.getSummary().isBlank()) {
+         memory.add("SUMMARY:");
+         memory.add(mind.getSummary());
+      }
+      List<NpcFact> facts = mind.selectFactsForPrompt(playerId, sanitizedSpeech, 8);
+      if (!facts.isEmpty()) {
+         memory.add("FACTS:");
+         for (NpcFact f : facts) {
+            memory.add("- [" + f.importance() + "] " + f.text());
+         }
+      }
+      memory.add("EXACT WORDS THIS PLAYER TOLD YOU:");
+      List<NpcQuote> quotes = mind.recentQuotes(playerId, 12);
+      if (quotes.isEmpty()) {
+         memory.add("(none yet)");
+      } else {
+         for (NpcQuote q : quotes) {
+            memory.add("- " + q.text());
+         }
+      }
+      for (NpcQuote q : mind.matchingOlderQuotes(playerId, sanitizedSpeech, 12, 4)) {
+         memory.add("- " + q.text());
+      }
+      List<NpcTurn> turns = mind.recentTurns(playerId, 8);
+      if (!turns.isEmpty()) {
+         memory.add("RECENT TURNS:");
+         for (NpcTurn t : turns) {
+            memory.add(t.role() + ": " + t.text());
+         }
+      }
+
+      List<String> rumors = new ArrayList<>();
+      if (rumorLines != null && !rumorLines.isEmpty()) {
+         rumors.add("RUMORS YOU KNOW:");
+         rumors.addAll(rumorLines);
+      }
+
+      List<String> speech = List.of(
+         "PLAYER LANGUAGE: " + languageCode,
+         "UNTRUSTED PLAYER SPEECH:",
+         "\"\"\"" + sanitizedSpeech + "\"\"\""
+      );
+
+      return trimToCap(identity, memory, rumors, speech);
+   }
+
+   /**
+    * Deterministic context budgeting. Priority (keep first):
+    * identity → player speech (always) → quotes → facts → turns → summary → rumors/vague.
+    * Never removes the complete current user message. Never raw-substrings the finished prompt.
+    */
    static String trimToCap(List<String> identity, List<String> memory, List<String> rumors, List<String> speech) {
       String summary = "";
       List<String> factBodies = new ArrayList<>();
@@ -155,8 +266,11 @@ public final class NpcPromptBuilder {
          }
       }
 
+      List<String> identityMutable = new ArrayList<>(identity);
+      List<String> quoteMutable = new ArrayList<>(quotes);
+
       while (true) {
-         String built = joinSections(identity, summary, factBodies, quotes, turnBodies, rumorBodies, vague, speech);
+         String built = joinSections(identityMutable, summary, factBodies, quoteMutable, turnBodies, rumorBodies, vague, speech);
          if (built.length() <= USER_CAP) {
             return built;
          }
@@ -164,20 +278,44 @@ public final class NpcPromptBuilder {
             vague.remove(vague.size() - 1);
             continue;
          }
-         if (!turnBodies.isEmpty()) {
-            turnBodies.remove(0);
+         if (!rumorBodies.isEmpty()) {
+            rumorBodies.remove(rumorBodies.size() - 1);
             continue;
          }
-         if (!factBodies.isEmpty()) {
-            // drop lowest-importance style: last selected / lowest priority last in list
-            factBodies.remove(factBodies.size() - 1);
+         if (!turnBodies.isEmpty()) {
+            turnBodies.remove(0);
             continue;
          }
          if (!summary.isBlank()) {
             summary = "";
             continue;
          }
-         return built.substring(0, USER_CAP);
+         if (!factBodies.isEmpty()) {
+            factBodies.remove(factBodies.size() - 1);
+            continue;
+         }
+         // Trim older quotes but keep the header and at least "(none yet)" or the newest quote.
+         if (quoteMutable.size() > 2) {
+            quoteMutable.remove(1);
+            continue;
+         }
+         // Trim optional identity flavor lines from the end, keep YOU ARE: + first two lines.
+         if (identityMutable.size() > 3) {
+            identityMutable.remove(identityMutable.size() - 1);
+            continue;
+         }
+         // Absolute last resort: shrink optional speech label padding is forbidden.
+         // Compress identity to essentials; speech block is never truncated.
+         if (identityMutable.size() > 2) {
+            List<String> essentials = new ArrayList<>();
+            essentials.add(identityMutable.get(0));
+            essentials.add(identityMutable.get(1));
+            identityMutable = essentials;
+            continue;
+         }
+         // If still over budget solely because speech + essentials exceed the cap, keep speech intact
+         // and return essentials + speech without further cutting the player message.
+         return joinSections(identityMutable, "", List.of(), List.of("EXACT WORDS THIS PLAYER TOLD YOU:", "(none yet)"), List.of(), List.of(), List.of(), speech);
       }
    }
 

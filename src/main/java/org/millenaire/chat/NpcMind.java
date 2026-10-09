@@ -29,6 +29,9 @@ public final class NpcMind {
    private final List<NpcRumorKnowledge> knowledge = new ArrayList<>();
    private long nextFactId = 1L;
    private long nextQuoteId = 1L;
+   /** Game time of last dialogue touch for transient (non-persistent) NPC minds. 0 = persistent / unspecified. */
+   private long lastTransientTouchGameTime = 0L;
+   private boolean transientMind = false;
 
    public String getMood() {
       return this.mood;
@@ -328,5 +331,30 @@ public final class NpcMind {
             it.remove();
          }
       }
+   }
+
+   public void touchTransient(long gameTime) {
+      this.transientMind = true;
+      this.lastTransientTouchGameTime = gameTime;
+   }
+
+   public boolean isTransientMind() {
+      return this.transientMind;
+   }
+
+   public void setTransientMind(boolean transientMind) {
+      this.transientMind = transientMind;
+   }
+
+   public long lastTransientTouchGameTime() {
+      return this.lastTransientTouchGameTime;
+   }
+
+   public void setLastTransientTouchGameTime(long gameTime) {
+      this.lastTransientTouchGameTime = gameTime;
+   }
+
+   public boolean isTransientExpired(long nowGameTime, long retentionTicks) {
+      return this.transientMind && this.lastTransientTouchGameTime > 0L && nowGameTime - this.lastTransientTouchGameTime > retentionTicks;
    }
 }

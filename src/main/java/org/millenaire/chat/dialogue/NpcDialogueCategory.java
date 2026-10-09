@@ -1,0 +1,16 @@
+package org.millenaire.chat.dialogue;
+
+public enum NpcDialogueCategory {
+   MILLENAIRE_VILLAGER,
+   VANILLA_VILLAGER,
+   WANDERING_TRADER,
+   ILLAGER,
+   PIGLIN,
+   GOLEM,
+   ALLAY,
+   INTELLIGENT_HOSTILE,
+   NONVERBAL_ANIMAL,
+   NONVERBAL_MONSTER,
+   GENERIC_LIVING,
+   UNSUPPORTED
+}

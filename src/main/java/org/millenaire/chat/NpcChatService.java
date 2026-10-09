@@ -1,6 +1,5 @@
 package org.millenaire.chat;
 
-import com.mojang.logging.LogUtils;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -15,22 +14,26 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
+import org.millenaire.chat.dialogue.NpcDialogueAdapterRegistry;
+import org.millenaire.chat.dialogue.NpcDialogueCategory;
+import org.millenaire.chat.dialogue.NpcDialogueContext;
+import org.millenaire.chat.dialogue.NpcDialogueTarget;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillagerType;
-import org.millenaire.dialogue.SentenceLoader;
 import org.millenaire.entity.MillVillager;
-import org.millenaire.entity.VillagerInteraction;
 import org.millenaire.goal.GoalScheduler;
 import org.millenaire.network.ServerPayloadGuards;
-import org.millenaire.network.SpeechChatPayload;
 import org.millenaire.village.Village;
-import org.slf4j.Logger;
 
+/**
+ * Single authoritative NPC dialogue orchestration. Entity diversity lives in adapters.
+ */
 public final class NpcChatService {
-   private static final Logger LOGGER = LogUtils.getLogger();
    private static final Map<UUID, NpcChatSession> SESSIONS = new ConcurrentHashMap<>();
    public static final byte SPEAKER_NPC = 0;
    public static final byte SPEAKER_PLAYER = 1;
@@ -39,7 +42,18 @@ public final class NpcChatService {
    private NpcChatService() {
    }
 
+   public static void bootstrap() {
+      NpcDialogueAdapterRegistry.bootstrap();
+      if (NpcModelResolver.usesLmStudio()) {
+         LmStudioModelDiscovery.refreshAsync(true);
+      }
+   }
+
    public static void tickSessions(MinecraftServer server) {
+      // Periodic LM Studio discovery so model load/unload switches are noticed without chat traffic.
+      if (server.getTickCount() % 200 == 40 && NpcModelResolver.usesLmStudio()) {
+         LmStudioModelDiscovery.refreshAsync(false);
+      }
       if (SESSIONS.isEmpty()) {
          return;
       }
@@ -54,19 +68,35 @@ public final class NpcChatService {
             continue;
          }
          Entity entity = player.level().getEntity(session.entityId());
-         if (!(entity instanceof MillVillager villager) || !villager.isAlive()) {
+         if (!(entity instanceof LivingEntity living) || !living.isAlive() || !living.getUUID().equals(session.targetUuid())) {
             closeSession(player, session.entityId(), "gui.millenaire.npcchat.closed");
             continue;
          }
-         if (!ServerPayloadGuards.isWithinDistance(player, villager, leaveRange)) {
+         if (player.level() != living.level()) {
+            closeSession(player, session.entityId(), "gui.millenaire.npcchat.closed");
+            continue;
+         }
+         if (!ServerPayloadGuards.isWithinDistance(player, living, leaveRange)) {
             closeSession(player, session.entityId(), "gui.millenaire.npcchat.too_far");
             continue;
          }
-         villager.getLookControl().setLookAt(player);
-         GoalScheduler scheduler = villager.getGoalScheduler();
-         boolean leisure = scheduler == null || scheduler.getCurrentTask() == null || isLeisureGoal(villager);
-         if (leisure) {
-            villager.getNavigation().stop();
+         if (session.lookAtPlayer() && living instanceof Mob mob) {
+            mob.getLookControl().setLookAt(player);
+         }
+         if (session.stopNavigation() && living instanceof MillVillager villager) {
+            GoalScheduler scheduler = villager.getGoalScheduler();
+            boolean leisure = scheduler == null || scheduler.getCurrentTask() == null || isLeisureGoal(villager);
+            if (leisure) {
+               villager.getNavigation().stop();
+            }
+         }
+      }
+
+      // Bounded transient mind pruning occasionally (not every tick).
+      if (server.getTickCount() % 1200 == 0) {
+         ServerLevel overworld = server.overworld();
+         if (overworld != null) {
+            NpcMindSavedData.get(overworld).pruneTransientMinds(overworld.getGameTime());
          }
       }
    }
@@ -82,38 +112,68 @@ public final class NpcChatService {
    public static void onPlayerLogout(ServerPlayer player) {
       NpcChatSession session = SESSIONS.remove(player.getUUID());
       if (session != null) {
+         session.cancelPending();
          PacketDistributor.sendToPlayer(player, new NpcChatClosedPayload(session.entityId(), "gui.millenaire.npcchat.closed"), new CustomPacketPayload[0]);
       }
    }
 
+   public static void onServerStopping() {
+      for (NpcChatSession session : SESSIONS.values()) {
+         session.cancelPending();
+      }
+      SESSIONS.clear();
+   }
+
    public static void handleOpen(ServerPlayer player, int entityId) {
       if (player.isSpectator()) {
+         rejectOpen(player, entityId, "gui.millenaire.npcchat.refused");
          return;
       }
-      MillVillager villager = resolveVillager(player, entityId);
-      if (villager == null) {
+      if (!(Boolean)MillenaireServerConfig.SERVER.npcChatEnabled.get()) {
+         rejectOpen(player, entityId, "gui.millenaire.npcchat.disabled");
+         return;
+      }
+      Entity raw = player.level().getEntity(entityId);
+      NpcDialogueTarget target = NpcDialogueAdapterRegistry.resolve(player, raw);
+      if (target == null) {
+         rejectOpen(player, entityId, "gui.millenaire.npcchat.unsupported");
+         return;
+      }
+      if (!target.sameLevelAs(player)) {
+         rejectOpen(player, entityId, "gui.millenaire.npcchat.unsupported");
          return;
       }
       double chatRange = MillenaireServerConfig.SERVER.npcChatChatRange.getAsInt();
-      if (!ServerPayloadGuards.isWithinDistance(player, villager, chatRange)) {
+      if (!ServerPayloadGuards.isWithinDistance(player, target.entity(), chatRange)) {
+         rejectOpen(player, entityId, "gui.millenaire.npcchat.too_far");
+         return;
+      }
+      if ((Boolean)MillenaireServerConfig.SERVER.npcChatRequireLineOfSight.get() && !hasLineOfSight(player, target.entity())) {
+         rejectOpen(player, entityId, "gui.millenaire.npcchat.no_sight");
          return;
       }
 
       NpcChatSession previous = SESSIONS.remove(player.getUUID());
-      if (previous != null && previous.entityId() != entityId) {
-         PacketDistributor.sendToPlayer(
-            player, new NpcChatClosedPayload(previous.entityId(), "gui.millenaire.npcchat.closed"), new CustomPacketPayload[0]
-         );
+      if (previous != null) {
+         previous.cancelPending();
+         if (previous.entityId() != entityId) {
+            PacketDistributor.sendToPlayer(
+               player, new NpcChatClosedPayload(previous.entityId(), "gui.millenaire.npcchat.closed"), new CustomPacketPayload[0]
+            );
+         }
       }
 
-      String refusal = refusalKey(player, villager);
+      String refusal = target.adapter().refusalKey(player, target.entity());
       if (refusal != null) {
-         sendRefusal(player, villager, refusal);
+         sendRefusal(player, target, refusal);
          return;
       }
 
       NpcMindSavedData data = NpcMindSavedData.get(player.serverLevel());
-      NpcMind mind = data.getOrCreateMind(villager.getUUID());
+      NpcMind mind = data.getOrCreateMind(target.identity().entityUuid());
+      if (!target.identity().persistent()) {
+         mind.touchTransient(player.serverLevel().getGameTime());
+      }
       data.markChanged();
 
       List<NpcChatOpenPayload.HistoryLine> history = new ArrayList<>();
@@ -122,12 +182,23 @@ public final class NpcChatService {
          history.add(new NpcChatOpenPayload.HistoryLine(speaker, turn.text()));
       }
 
-      String roleLine = buildRoleLine(villager);
-      String repLabel = resolveRepLabel(player, villager);
-      SESSIONS.put(player.getUUID(), new NpcChatSession(player.getUUID(), villager.getUUID(), entityId));
+      NpcDialogueContext preview = target.adapter().buildContext(player, target.entity(), mind, data, "", "en_us");
+      NpcChatSession session = new NpcChatSession(
+         player.getUUID(),
+         target.identity().entityUuid(),
+         entityId,
+         target.category(),
+         target.policy().persistMind(),
+         target.policy().canGossip(),
+         target.policy().stopNavigationWhileTalking(),
+         target.policy().lookAtPlayer(),
+         target.policy().bossNonIntrusive(),
+         player.serverLevel().getGameTime()
+      );
+      SESSIONS.put(player.getUUID(), session);
       PacketDistributor.sendToPlayer(
          player,
-         new NpcChatOpenPayload(entityId, villager.getVillagerDisplayName(), roleLine, repLabel, history),
+         new NpcChatOpenPayload(entityId, preview.displayName(), preview.roleLine(), preview.reputationLabel(), history),
          new CustomPacketPayload[0]
       );
    }
@@ -135,42 +206,54 @@ public final class NpcChatService {
    public static void handleClose(ServerPlayer player, int entityId) {
       NpcChatSession session = SESSIONS.get(player.getUUID());
       if (session != null && session.entityId() == entityId) {
+         session.cancelPending();
          SESSIONS.remove(player.getUUID());
       }
    }
 
    public static void handleSend(ServerPlayer player, int entityId, String text, String languageCode) {
       if (player.isSpectator()) {
+         sendReject(player, entityId, "gui.millenaire.npcchat.refused");
          return;
       }
       if (!NpcChatSanitize.isValidLanguageCode(languageCode)) {
+         sendReject(player, entityId, "gui.millenaire.npcchat.invalid");
          return;
       }
       String sanitized = NpcChatSanitize.sanitize(text);
       if (sanitized.isEmpty()) {
-         return;
-      }
-      MillVillager villager = resolveVillager(player, entityId);
-      if (villager == null) {
-         return;
-      }
-      double leaveRange = MillenaireServerConfig.SERVER.effectiveNpcChatLeaveRange();
-      if (!ServerPayloadGuards.isWithinDistance(player, villager, leaveRange)) {
-         sendSystemLine(player, entityId, "gui.millenaire.npcchat.too_far", false);
-         closeSession(player, entityId, "gui.millenaire.npcchat.too_far");
+         sendReject(player, entityId, "gui.millenaire.npcchat.invalid");
          return;
       }
 
       NpcChatSession session = SESSIONS.get(player.getUUID());
-      if (session == null || session.entityId() != entityId || !session.villagerUuid().equals(villager.getUUID())) {
-         session = new NpcChatSession(player.getUUID(), villager.getUUID(), entityId);
-         SESSIONS.put(player.getUUID(), session);
+      if (session == null || session.entityId() != entityId) {
+         sendReject(player, entityId, "gui.millenaire.npcchat.session_expired");
+         return;
       }
 
-      String refusal = refusalKey(player, villager);
+      Entity raw = player.level().getEntity(entityId);
+      NpcDialogueTarget target = NpcDialogueAdapterRegistry.resolve(player, raw);
+      if (target == null || !target.identity().entityUuid().equals(session.targetUuid())) {
+         sendReject(player, entityId, "gui.millenaire.npcchat.unavailable");
+         closeSession(player, entityId, "gui.millenaire.npcchat.unavailable");
+         return;
+      }
+
+      double leaveRange = MillenaireServerConfig.SERVER.effectiveNpcChatLeaveRange();
+      if (!ServerPayloadGuards.isWithinDistance(player, target.entity(), leaveRange)) {
+         sendSystemLine(player, entityId, "gui.millenaire.npcchat.too_far", false);
+         closeSession(player, entityId, "gui.millenaire.npcchat.too_far");
+         return;
+      }
+      if ((Boolean)MillenaireServerConfig.SERVER.npcChatRequireLineOfSight.get() && !hasLineOfSight(player, target.entity())) {
+         sendReject(player, entityId, "gui.millenaire.npcchat.no_sight");
+         return;
+      }
+
+      String refusal = target.adapter().refusalKey(player, target.entity());
       if (refusal != null) {
          sendSystemLine(player, entityId, refusal, false);
-         speakTranslated(player, villager, refusal);
          return;
       }
 
@@ -182,16 +265,23 @@ public final class NpcChatService {
       ServerLevel level = player.serverLevel();
       long gameTime = level.getGameTime();
       NpcMindSavedData data = NpcMindSavedData.get(level);
-      NpcMind mind = data.getOrCreateMind(villager.getUUID());
+      NpcMind mind = data.getOrCreateMind(session.targetUuid());
+      if (!session.persistMind()) {
+         mind.touchTransient(gameTime);
+      }
       mind.addQuote(player.getUUID(), sanitized, gameTime);
       mind.addTurn(player.getUUID(), NpcTurn.ROLE_PLAYER, sanitized, gameTime);
       data.markChanged();
 
       PacketDistributor.sendToPlayer(player, new NpcChatLinePayload(entityId, SPEAKER_PLAYER, sanitized, false), new CustomPacketPayload[0]);
 
+      NpcDialogueContext ctx = target.adapter().buildContext(player, target.entity(), mind, data, sanitized, languageCode);
+
       if (!NpcModelClient.isConfigured()) {
-         String fallback = fallbackLine(villager, languageCode);
-         deliverNpcLine(player, villager, session, mind, data, fallback, null, sanitized, false);
+         String fallback = ctx.fallbackLine().isBlank()
+            ? Component.translatable("gui.millenaire.npcchat.no_model").getString()
+            : ctx.fallbackLine();
+         deliverNpcLine(player, target, session, mind, data, fallback, null, sanitized, false);
          return;
       }
 
@@ -200,25 +290,23 @@ public final class NpcChatService {
          return;
       }
 
-      session.setPendingRequest(true);
+      long generation = session.beginRequest();
       sendSystemLine(player, entityId, "gui.millenaire.npcchat.thinking", true);
 
-      int reputation = 0;
-      String repLabel = "Unknown";
-      Village village = villager.getVillageId() != null ? Village.resolve(level, villager.getVillageId()) : null;
-      if (village != null) {
-         reputation = village.getCombinedReputation(level, player.getUUID());
-         repLabel = VillagerInteraction.resolveReputationLabelPublic(reputation, village.getCultureId());
-      }
+      List<String> rumorLines = buildRumorLinesFor(mind, data, target);
+      String systemPrompt = ctx.systemPromptOverride().isBlank()
+         ? (target.adapter().defaultSystemPrompt().isBlank() ? NpcPromptBuilder.SYSTEM_PROMPT : target.adapter().defaultSystemPrompt())
+         : ctx.systemPromptOverride();
+      String userPrompt = NpcPromptBuilder.buildUserPromptFromContext(ctx, mind, player.getUUID(), languageCode, sanitized, rumorLines);
 
-      NpcPersona persona = NpcPersonaBuilder.build(player, villager, mind, data, sanitized, languageCode, reputation, repLabel);
-      String userPrompt = NpcPromptBuilder.buildUserPrompt(persona);
-      UUID villagerUuid = villager.getUUID();
+      UUID targetUuid = session.targetUuid();
       UUID playerId = player.getUUID();
       int capturedEntityId = entityId;
       String capturedSpeech = sanitized;
+      long capturedSessionId = session.sessionId();
+      long capturedGeneration = generation;
 
-      NpcModelClient.sendAsync(NpcPromptBuilder.SYSTEM_PROMPT, userPrompt, villagerUuid).whenComplete((reply, error) -> {
+      NpcModelClient.sendAsync(systemPrompt, userPrompt, targetUuid).whenComplete((reply, error) -> {
          MinecraftServer server = player.getServer();
          if (server == null) {
             NpcModelClient.release();
@@ -228,30 +316,43 @@ public final class NpcChatService {
             try {
                NpcChatSession current = SESSIONS.get(playerId);
                ServerPlayer online = server.getPlayerList().getPlayer(playerId);
+               boolean sessionMatches = current != null
+                  && current.sessionId() == capturedSessionId
+                  && current.requestGeneration() == capturedGeneration
+                  && current.matches(playerId, targetUuid, capturedEntityId);
                Entity entity = online != null ? online.level().getEntity(capturedEntityId) : null;
+               NpcDialogueTarget livingTarget = online != null ? NpcDialogueAdapterRegistry.resolve(online, entity) : null;
                boolean valid = online != null
-                  && current != null
-                  && current.entityId() == capturedEntityId
-                  && current.villagerUuid().equals(villagerUuid)
-                  && entity instanceof MillVillager living
-                  && living.isAlive()
-                  && ServerPayloadGuards.isWithinDistance(online, living, MillenaireServerConfig.SERVER.effectiveNpcChatLeaveRange());
+                  && sessionMatches
+                  && livingTarget != null
+                  && livingTarget.identity().entityUuid().equals(targetUuid)
+                  && livingTarget.isAlive()
+                  && online.level() == livingTarget.entity().level()
+                  && ServerPayloadGuards.isWithinDistance(online, livingTarget.entity(), MillenaireServerConfig.SERVER.effectiveNpcChatLeaveRange());
                if (!valid) {
-                  if (current != null) {
-                     current.setPendingRequest(false);
+                  if (current != null && current.sessionId() == capturedSessionId) {
+                     current.endRequest(capturedGeneration);
                   }
                   return;
                }
-               MillVillager livingVillager = (MillVillager)entity;
                NpcMindSavedData mindData = NpcMindSavedData.get(online.serverLevel());
-               NpcMind livingMind = mindData.getOrCreateMind(villagerUuid);
+               NpcMind livingMind = mindData.getOrCreateMind(targetUuid);
                if (reply == null || reply.isEmpty()) {
-                  String fallback = fallbackLine(livingVillager, languageCode);
-                  deliverNpcLine(online, livingVillager, current, livingMind, mindData, fallback, null, capturedSpeech, true);
+                  String resolveFail = NpcModelClient.resolveFailureMessageKey();
+                  if (resolveFail != null) {
+                     current.endRequest(capturedGeneration);
+                     sendSystemLine(online, capturedEntityId, resolveFail, false);
+                     return;
+                  }
+                  NpcDialogueContext failCtx = livingTarget.adapter().buildContext(online, livingTarget.entity(), livingMind, mindData, capturedSpeech, languageCode);
+                  String fallback = failCtx.fallbackLine().isBlank()
+                     ? Component.translatable("gui.millenaire.npcchat.no_model").getString()
+                     : failCtx.fallbackLine();
+                  deliverNpcLine(online, livingTarget, current, livingMind, mindData, fallback, null, capturedSpeech, true);
                   sendSystemLine(online, capturedEntityId, "gui.millenaire.npcchat.failed", false);
                   return;
                }
-               deliverNpcLine(online, livingVillager, current, livingMind, mindData, reply.get().say(), reply.get(), capturedSpeech, true);
+               deliverNpcLine(online, livingTarget, current, livingMind, mindData, reply.get().say(), reply.get(), capturedSpeech, true);
             } finally {
                NpcModelClient.release();
             }
@@ -261,7 +362,7 @@ public final class NpcChatService {
 
    private static void deliverNpcLine(
       ServerPlayer player,
-      MillVillager villager,
+      NpcDialogueTarget target,
       NpcChatSession session,
       NpcMind mind,
       NpcMindSavedData data,
@@ -271,8 +372,12 @@ public final class NpcChatService {
       boolean fromModel
    ) {
       session.setPendingRequest(false);
+      String sanitizedSay = NpcChatSanitize.sanitize(say);
+      if (sanitizedSay.isEmpty()) {
+         sanitizedSay = Component.translatable("gui.millenaire.npcchat.no_model").getString();
+      }
       long gameTime = player.serverLevel().getGameTime();
-      mind.addTurn(player.getUUID(), NpcTurn.ROLE_NPC, say, gameTime);
+      mind.addTurn(player.getUUID(), NpcTurn.ROLE_NPC, sanitizedSay, gameTime);
       if (reply != null) {
          if (reply.mood() != null && !reply.mood().isBlank() && NpcMind.VALID_MOODS.contains(NpcMind.normalizeMood(reply.mood()))) {
             mind.setMood(reply.mood());
@@ -282,25 +387,41 @@ public final class NpcChatService {
          for (String memory : reply.newMemories()) {
             mind.addFact(memory, gameTime, 2, player.getUUID());
          }
-         maybeCreateRumor(player, villager, mind, data, reply, playerSpeech, gameTime);
-         maybeConsolidate(player.serverLevel(), villager.getUUID(), mind, data);
+         if (session.canGossip()) {
+            maybeCreateRumor(player, target, mind, data, reply, playerSpeech, gameTime);
+         }
+         maybeConsolidate(player.serverLevel(), session.targetUuid(), mind, data);
+         target.adapter().onModelReplyAccepted(player, target.entity(), reply);
       }
       data.markChanged();
 
-      villager.getSpeech().setSpeechText(say);
-      PacketDistributor.sendToPlayer(player, new NpcChatLinePayload(villager.getId(), SPEAKER_NPC, say, false), new CustomPacketPayload[0]);
-      broadcastSpeechChat(player, villager, say);
+      target.adapter().applySpokenLine(player, target.entity(), sanitizedSay);
+      PacketDistributor.sendToPlayer(player, new NpcChatLinePayload(target.entityId(), SPEAKER_NPC, sanitizedSay, false), new CustomPacketPayload[0]);
+   }
+
+   private static List<String> buildRumorLinesFor(NpcMind mind, NpcMindSavedData data, NpcDialogueTarget target) {
+      if (target.category() != NpcDialogueCategory.MILLENAIRE_VILLAGER) {
+         return List.of();
+      }
+      if (!(target.entity() instanceof MillVillager villager)) {
+         return List.of();
+      }
+      Village village = villager.getVillageId() != null ? Village.resolve((ServerLevel)villager.level(), villager.getVillageId()) : null;
+      return NpcPersonaBuilder.buildRumorLinesPublic(mind, data, village);
    }
 
    private static void maybeCreateRumor(
       ServerPlayer player,
-      MillVillager villager,
+      NpcDialogueTarget target,
       NpcMind mind,
       NpcMindSavedData data,
       NpcModelReply reply,
       String playerSpeech,
       long gameTime
    ) {
+      if (!(target.entity() instanceof MillVillager villager)) {
+         return;
+      }
       Village village = villager.getVillageId() != null ? Village.resolve(player.serverLevel(), villager.getVillageId()) : null;
       VillagerType vType = villager.getVillagerTypeId() != null ? ModCultures.getVillagerType(villager.getVillagerTypeId()) : null;
       boolean hasCulture = village != null && village.getCultureId() != null;
@@ -375,7 +496,7 @@ public final class NpcChatService {
       data.markChanged();
    }
 
-   private static void maybeConsolidate(ServerLevel level, UUID villagerId, NpcMind mind, NpcMindSavedData data) {
+   private static void maybeConsolidate(ServerLevel level, UUID mindId, NpcMind mind, NpcMindSavedData data) {
       if (mind.getFacts().size() <= 24) {
          return;
       }
@@ -384,7 +505,7 @@ public final class NpcChatService {
          data.markChanged();
          return;
       }
-      String system = "You consolidate a villager's long-term notes. Output only JSON {\"summary\":\"...\",\"facts\":[{\"text\":\"...\",\"importance\":1}] } with max 8 facts. Never invent events. Never include exact quotes.";
+      String system = "You consolidate long-term notes. Output only JSON {\"summary\":\"...\",\"facts\":[{\"text\":\"...\",\"importance\":1}] } with max 8 facts. Never invent events. Never include exact quotes.";
       StringBuilder user = new StringBuilder();
       user.append("SUMMARY:\n").append(mind.getSummary()).append("\nFACTS:\n");
       for (NpcFact fact : mind.getFacts()) {
@@ -398,12 +519,16 @@ public final class NpcChatService {
             user.append(t.role()).append(": ").append(t.text()).append('\n');
          }
       }
-      NpcModelClient.sendRawAsync(system, user.toString(), villagerId, 400).whenComplete((raw, err) -> {
+      NpcModelClient.sendRawAsync(system, user.toString(), mindId, 400).whenComplete((raw, err) -> {
          MinecraftServer server = level.getServer();
+         if (server == null) {
+            NpcModelClient.release();
+            return;
+         }
          server.execute(() -> {
             try {
                NpcMindSavedData mindData = NpcMindSavedData.get(level);
-               NpcMind living = mindData.getOrCreateMind(villagerId);
+               NpcMind living = mindData.getOrCreateMind(mindId);
                if (raw == null || raw.isEmpty()) {
                   living.pruneOldestFactsAbove(NpcMind.MAX_FACTS);
                } else {
@@ -455,75 +580,55 @@ public final class NpcChatService {
       }
    }
 
-   private static void broadcastSpeechChat(ServerPlayer player, MillVillager villager, String say) {
-      String cultureKey = "";
-      int languageScore = 0;
-      Village village = villager.getVillageId() != null ? Village.resolve(player.serverLevel(), villager.getVillageId()) : null;
-      if (village != null && village.getCultureId() != null) {
-         cultureKey = village.getCultureId().getPath();
-         languageScore = org.millenaire.village.PlayerCultureReputation.get(player.serverLevel())
-            .getLanguageKnowledge(player.getUUID(), village.getCultureId());
-      }
-      PacketDistributor.sendToPlayer(
-         player, new SpeechChatPayload(villager.getVillagerDisplayName(), say, cultureKey, languageScore, ""), new CustomPacketPayload[0]
-      );
+   private static boolean hasLineOfSight(ServerPlayer player, LivingEntity target) {
+      Vec3 from = player.getEyePosition();
+      Vec3 to = target.getEyePosition();
+      return player.level().clip(
+            new net.minecraft.world.level.ClipContext(
+               from,
+               to,
+               net.minecraft.world.level.ClipContext.Block.COLLIDER,
+               net.minecraft.world.level.ClipContext.Fluid.NONE,
+               player
+            )
+         )
+         .getType()
+         == net.minecraft.world.phys.HitResult.Type.MISS;
    }
 
-   private static String fallbackLine(MillVillager villager, String languageCode) {
-      VillagerType vType = villager.getVillagerTypeId() != null ? ModCultures.getVillagerType(villager.getVillagerTypeId()) : null;
-      ResourceLocation culture = vType != null ? vType.culture() : null;
-      String role = villager.getRoleName();
-      if (role == null || role.isBlank()) {
-         role = "villager";
-      }
-      if (culture != null) {
-         List<String> sentences = SentenceLoader.getSentences(culture, languageCode, role.toLowerCase(), "greeting");
-         if (sentences.isEmpty()) {
-            sentences = SentenceLoader.getSentences(culture, "en_us", role.toLowerCase(), "greeting");
-         }
-         if (!sentences.isEmpty()) {
-            return sentences.get(Math.floorMod((int)villager.getUUID().getLeastSignificantBits(), sentences.size()));
-         }
-      }
-      return Component.translatable("gui.millenaire.npcchat.no_model").getString();
-   }
-
-   @Nullable
-   private static String refusalKey(ServerPlayer player, MillVillager villager) {
-      if (villager.isSleeping() || villager.isVillagerSleeping()) {
-         return "gui.millenaire.npcchat.asleep";
-      }
-      Village village = villager.getVillageId() != null ? Village.resolve(player.serverLevel(), villager.getVillageId()) : null;
-      if (villager.getTarget() != null || village != null && village.isUnderAttack()) {
-         return "gui.millenaire.npcchat.combat";
-      }
-      VillagerType vType = villager.getVillagerTypeId() != null ? ModCultures.getVillagerType(villager.getVillagerTypeId()) : null;
-      if (vType != null && vType.hasTag("hostile")) {
-         boolean targetingPlayer = villager.getTarget() instanceof Player p && p.getUUID().equals(player.getUUID());
-         int rep = village != null ? village.getCombinedReputation(player.serverLevel(), player.getUUID()) : 0;
-         if (targetingPlayer || rep < 0) {
-            return "gui.millenaire.npcchat.refused";
-         }
-      }
-      return null;
-   }
-
-   private static void sendRefusal(ServerPlayer player, MillVillager villager, String key) {
+   private static void sendRefusal(ServerPlayer player, NpcDialogueTarget target, String key) {
       String text = Component.translatable(key).getString();
       List<NpcChatOpenPayload.HistoryLine> history = List.of(new NpcChatOpenPayload.HistoryLine(SPEAKER_SYSTEM, text));
-      SESSIONS.put(player.getUUID(), new NpcChatSession(player.getUUID(), villager.getUUID(), villager.getId()));
+      NpcDialogueContext preview = target.adapter()
+         .buildContext(player, target.entity(), NpcMindSavedData.get(player.serverLevel()).getOrCreateMind(target.identity().entityUuid()), NpcMindSavedData.get(player.serverLevel()), "", "en_us");
+      NpcChatSession session = new NpcChatSession(
+         player.getUUID(),
+         target.identity().entityUuid(),
+         target.entityId(),
+         target.category(),
+         target.policy().persistMind(),
+         false,
+         false,
+         false,
+         target.policy().bossNonIntrusive(),
+         player.serverLevel().getGameTime()
+      );
+      SESSIONS.put(player.getUUID(), session);
       PacketDistributor.sendToPlayer(
          player,
-         new NpcChatOpenPayload(villager.getId(), villager.getVillagerDisplayName(), buildRoleLine(villager), resolveRepLabel(player, villager), history),
+         new NpcChatOpenPayload(target.entityId(), preview.displayName(), preview.roleLine(), preview.reputationLabel(), history),
          new CustomPacketPayload[0]
       );
-      PacketDistributor.sendToPlayer(player, new NpcChatLinePayload(villager.getId(), SPEAKER_SYSTEM, text, false), new CustomPacketPayload[0]);
-      speakTranslated(player, villager, key);
+      PacketDistributor.sendToPlayer(player, new NpcChatLinePayload(target.entityId(), SPEAKER_SYSTEM, text, false), new CustomPacketPayload[0]);
    }
 
-   private static void speakTranslated(ServerPlayer player, MillVillager villager, String key) {
-      String text = Component.translatable(key).getString();
-      villager.getSpeech().setSpeechText(text);
+   private static void rejectOpen(ServerPlayer player, int entityId, String key) {
+      // Client may not have a screen yet; send a closed payload so any pending UI clears, plus a system message.
+      PacketDistributor.sendToPlayer(player, new NpcChatClosedPayload(entityId, key), new CustomPacketPayload[0]);
+   }
+
+   private static void sendReject(ServerPlayer player, int entityId, String key) {
+      sendSystemLine(player, entityId, key, false);
    }
 
    private static void sendSystemLine(ServerPlayer player, int entityId, String key, boolean pending) {
@@ -532,33 +637,10 @@ public final class NpcChatService {
    }
 
    private static void closeSession(ServerPlayer player, int entityId, String reasonKey) {
-      SESSIONS.remove(player.getUUID());
+      NpcChatSession removed = SESSIONS.remove(player.getUUID());
+      if (removed != null) {
+         removed.cancelPending();
+      }
       PacketDistributor.sendToPlayer(player, new NpcChatClosedPayload(entityId, reasonKey), new CustomPacketPayload[0]);
-   }
-
-   @Nullable
-   private static MillVillager resolveVillager(ServerPlayer player, int entityId) {
-      Entity entity = player.level().getEntity(entityId);
-      return entity instanceof MillVillager villager && villager.level() == player.level() ? villager : null;
-   }
-
-   private static String buildRoleLine(MillVillager villager) {
-      VillagerType vType = villager.getVillagerTypeId() != null ? ModCultures.getVillagerType(villager.getVillagerTypeId()) : null;
-      String role = vType != null && vType.nativeName() != null && !vType.nativeName().isBlank() ? vType.nativeName() : villager.getRoleName();
-      Village village = villager.getVillageId() != null ? Village.resolve((ServerLevel)villager.level(), villager.getVillageId()) : null;
-      String villageName = village != null && village.getVillageName() != null ? village.getVillageName() : "";
-      if (villageName.isBlank()) {
-         return role;
-      }
-      return role + " — " + villageName;
-   }
-
-   private static String resolveRepLabel(ServerPlayer player, MillVillager villager) {
-      Village village = villager.getVillageId() != null ? Village.resolve(player.serverLevel(), villager.getVillageId()) : null;
-      if (village == null) {
-         return "Unknown";
-      }
-      int rep = village.getCombinedReputation(player.serverLevel(), player.getUUID());
-      return VillagerInteraction.resolveReputationLabelPublic(rep, village.getCultureId());
    }
 }
