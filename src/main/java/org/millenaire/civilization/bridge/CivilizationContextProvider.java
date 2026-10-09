@@ -5,6 +5,7 @@ import net.minecraft.server.level.ServerLevel;
 import org.millenaire.civilization.presentation.CivilizationFactionSnapshot;
 import org.millenaire.civilization.presentation.CivilizationPresentationService;
 import org.millenaire.civilization.presentation.CivilizationVillageSnapshot;
+import org.millenaire.civilization.presentation.InventoryCertainty;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillagerType;
@@ -49,16 +50,21 @@ public final class CivilizationContextProvider {
 
       ctx.addVerified("residents=" + snap.residents());
       ctx.addVerified("housingCapacity=" + snap.housingCapacity());
+      ctx.addVerified("housingCapacityKnown=" + snap.housingCapacityKnown());
       if (snap.overcrowded()) {
          ctx.addVerified("housingPressure=overcrowded");
       }
-      if (!snap.inventoryKnown()) {
-         ctx.addVerified("inventoryAvailability=unknown_chunks_unloaded");
+      if (snap.inventoryCertainty() != InventoryCertainty.KNOWN) {
+         ctx.addVerified("inventoryAvailability=" + snap.inventoryCertainty().name().toLowerCase());
       }
 
       if (scope.includesLocalNeeds() && !snap.topNeeds().isEmpty()) {
          CivilizationVillageSnapshot.NeedLine need = snap.topNeeds().getFirst();
-         ctx.addVerified("topNeed=" + need.detail() + " shortage=" + need.shortage());
+         ctx.addVerified(
+            "topNeed=" + need.detail()
+               + " observedShortage=" + need.observedShortage()
+               + " shortageProven=" + need.shortageProven()
+         );
       }
 
       if (scope.includesProjects() && snap.currentProject() != null) {
@@ -69,10 +75,12 @@ public final class CivilizationContextProvider {
       }
 
       if (scope.includesTrade()) {
-         if (snap.tradeSummary() != null) {
+         for (CivilizationVillageSnapshot.TradeLine trade : snap.tradeLines()) {
             ctx.addVerified(
-               "activeSupportRequest=" + snap.tradeSummary().itemLabel()
-                  + " status=" + snap.tradeSummary().statusCode()
+               "trade=" + trade.kindCode()
+                  + " item=" + trade.itemLabel()
+                  + " status=" + trade.statusCode()
+                  + " direction=" + trade.directionCode()
             );
          }
          if (snap.connection() != null) {
@@ -98,12 +106,15 @@ public final class CivilizationContextProvider {
          }
       }
 
-      if (scope.includesMigration() && snap.migration() != null) {
-         ctx.addVerified(
-            "migration=" + snap.migration().migrated() + "/" + snap.migration().target()
-               + " to=" + snap.migration().destinationName()
-               + " reason=" + snap.migration().reasonCode()
-         );
+      if (scope.includesMigration()) {
+         for (CivilizationVillageSnapshot.MigrationLine migration : snap.migrations()) {
+            ctx.addVerified(
+               "migration=" + migration.kindCode()
+                  + " " + migration.migrated() + "/" + migration.target()
+                  + " to=" + migration.destinationName()
+                  + " reason=" + migration.reasonCode()
+            );
+         }
       }
 
       if (scope.includesFactionWide() && snap.factionId() != null) {
@@ -115,6 +126,8 @@ public final class CivilizationContextProvider {
             }
             ctx.addVerified("factionSettlements=" + faction.settlementCount());
             ctx.addVerified("factionResidents=" + faction.residents());
+            ctx.addVerified("factionActiveColonizations=" + faction.activeColonizations());
+            ctx.addVerified("factionActiveMigrations=" + faction.activeMigrations());
             if (faction.atWar()) {
                ctx.addVerified("warState=active");
             }

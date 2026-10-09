@@ -11,6 +11,7 @@ public record CivilizationFactionSnapshot(
    int settlementCount,
    int residents,
    int housingCapacity,
+   boolean housingCapacityKnown,
    boolean housingPressure,
    String economyLabelKey,
    boolean atWar,

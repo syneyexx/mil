@@ -148,6 +148,8 @@ public final class ColonizationOperation {
    private boolean costsConsumed;
    private boolean proposalEventPublished;
    private boolean reservedEventPublished;
+   /** Persistent position within the refund queue so large ops cannot starve others. */
+   private int refundStackCursor;
 
    public ColonizationOperation(
       UUID operationId,
@@ -300,6 +302,14 @@ public final class ColonizationOperation {
       this.costsConsumed = v;
    }
 
+   public int refundStackCursor() {
+      return this.refundStackCursor;
+   }
+
+   public void setRefundStackCursor(int cursor) {
+      this.refundStackCursor = Math.max(0, cursor);
+   }
+
    public boolean isTerminal() {
       return this.status == Status.MIGRATED || this.status == Status.FAILED || this.status == Status.CANCELLED;
    }
@@ -373,6 +383,7 @@ public final class ColonizationOperation {
       tag.putBoolean("proposalEvent", this.proposalEventPublished);
       tag.putBoolean("reservedEvent", this.reservedEventPublished);
       tag.putInt("founderTarget", this.founderTarget);
+      tag.putInt("refundStackCursor", this.refundStackCursor);
       tag.put("reservedStacks", stackList(this.reservedStacks, registries));
       tag.put("refundOutstanding", stackList(this.refundOutstanding, registries));
       ListTag slots = new ListTag();
@@ -417,6 +428,7 @@ public final class ColonizationOperation {
          if (tag.contains("founderTarget")) {
             op.founderTarget = Math.max(1, tag.getInt("founderTarget"));
          }
+         op.refundStackCursor = tag.getInt("refundStackCursor");
          readStacks(tag.getList("reservedStacks", Tag.TAG_COMPOUND), op.reservedStacks, registries);
          readStacks(tag.getList("refundOutstanding", Tag.TAG_COMPOUND), op.refundOutstanding, registries);
          ListTag slots = tag.getList("founderSlots", Tag.TAG_COMPOUND);

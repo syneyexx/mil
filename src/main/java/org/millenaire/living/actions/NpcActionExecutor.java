@@ -68,6 +68,7 @@ public final class NpcActionExecutor {
       if (ctx.village() == null) {
          return NpcActionResult.fail("living.millenaire.action.error.no_village");
       }
+      // Feedback ownership: LivingActionRequestPayload / LivingActionFeedbackPayload only.
       org.millenaire.civilization.presentation.CivilizationActionService.ActionResult result =
          org.millenaire.civilization.presentation.CivilizationActionService.execute(
             ctx.level(),
@@ -75,12 +76,12 @@ public final class NpcActionExecutor {
             ctx.village(),
             actionId,
             proposal.targetId(),
-            ctx.npcId()
+            ctx.npcId(),
+            false
          );
-      result.notify(ctx.player());
       return result.success()
          ? NpcActionResult.ok(result.messageKey(), result.detail() == null ? "" : result.detail())
-         : NpcActionResult.fail(result.messageKey());
+         : NpcActionResult.fail(result.messageKey(), result.detail() == null ? "" : result.detail());
    }
 
    private static NpcActionResult viewNeeds(NpcActionContext ctx) {

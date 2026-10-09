@@ -2,15 +2,36 @@ package org.millenaire.civilization.presentation;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.UUID;
 import javax.annotation.Nullable;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import org.millenaire.block.FirePitBlockEntity;
+import org.millenaire.building.AnywoodHelper;
 import org.millenaire.building.BuildingInstance;
+import org.millenaire.building.BuildingInventory;
 import org.millenaire.building.BuildingPlanSet;
 import org.millenaire.civilization.CivilizationSavedData;
+import org.millenaire.civilization.economy.SettlementTradeOperation;
+import org.millenaire.civilization.population.MigrationOperation;
 import org.millenaire.civilization.population.PopulationAggregator;
 import org.millenaire.civilization.population.PopulationSnapshot;
 import org.millenaire.civilization.settlement.ColonizationOperation;
@@ -42,6 +63,7 @@ import org.millenaire.village.Village;
 import org.millenaire.village.VillageId;
 import org.millenaire.village.VillageSavedData;
 import org.millenaire.worldgen.net.RegionalRoadMaterializer;
+import org.millenaire.worldgen.plan.PlannedBuilding;
 import org.millenaire.worldgen.plan.SettlementPlan;
 import org.millenaire.worldgen.plan.SettlementPlanSavedData;
 
@@ -53,6 +75,9 @@ public final class CivilizationPresentationService {
    private static final int MAX_NEEDS = 5;
    private static final int MAX_HISTORY = 8;
    private static final int MAX_SETTLEMENT_NAMES = 12;
+   private static final int MAX_TRADE_LINES = 3;
+   private static final int MAX_MIGRATION_LINES = 5;
+   private static final long RECENT_TRADE_WINDOW = 24000L;
 
    private CivilizationPresentationService() {
    }
@@ -64,7 +89,10 @@ public final class CivilizationPresentationService {
    ) {
       long now = level.getGameTime();
       PopulationSnapshot pop = PopulationAggregator.aggregateVillage(village, now);
-      boolean overcrowded = pop.housingCapacity() > 0 && pop.residents() > pop.housingCapacity();
+      boolean housingKnown = true;
+      boolean overcrowded = housingKnown
+         && ((pop.housingCapacity() == 0 && pop.residents() > 0)
+            || (pop.housingCapacity() > 0 && pop.residents() > pop.housingCapacity()));
 
       FactionId factionId = village.getFactionId();
       String factionDisplay = factionDisplayName(level, factionId);
@@ -74,7 +102,7 @@ public final class CivilizationPresentationService {
       }
       String developmentKey = "civilization.millenaire.development." + development.toLowerCase(Locale.ROOT);
 
-      boolean inventoryKnown = hasLoadedInventoryChunk(level, village);
+      InventoryCertainty inventoryCertainty = evaluateInventoryCertainty(level, village);
 
       List<CivilizationVillageSnapshot.NeedLine> needs = new ArrayList<>();
       VillageNeedsSnapshot needSnap = LivingVillagesService.get().needsEngine().evaluate(level, village, false);
@@ -83,26 +111,31 @@ public final class CivilizationPresentationService {
             if (needs.size() >= MAX_NEEDS) {
                break;
             }
-            if (need.shortage().isEmpty()) {
+            if (need.isEmpty()) {
                continue;
             }
+            int observed = need.totalShortage();
+            boolean proven = inventoryCertainty.isFullyKnown();
             needs.add(new CivilizationVillageSnapshot.NeedLine(
                need.needId(),
                need.summaryKey(),
                need.summaryDetail(),
-               need.totalShortage(),
+               proven ? observed : 0,
+               observed,
+               proven,
                need.severity().name().toLowerCase(Locale.ROOT)
             ));
          }
       }
 
       CivilizationVillageSnapshot.ProjectLine project = resolveProject(village);
-      CivilizationVillageSnapshot.TradeLine trade = resolveTrade(level, village);
-      CivilizationVillageSnapshot.MigrationLine migration = resolveMigration(level, village);
+      List<CivilizationVillageSnapshot.TradeLine> trades = resolveTrade(level, village, now);
+      List<CivilizationVillageSnapshot.MigrationLine> migrations = resolveMigration(level, village);
       CivilizationVillageSnapshot.ColonizationLine colonization = resolveColonization(level, village);
       CivilizationVillageSnapshot.ConnectionLine connection = resolveConnection(level, village);
       List<CivilizationVillageSnapshot.HistoryLine> history = resolveHistory(level, village);
-      List<CivilizationVillageSnapshot.AllowedAction> actions = resolveActions(level, village, viewer, needSnap, colonization);
+      List<CivilizationVillageSnapshot.AllowedAction> actions =
+         resolveActions(level, village, viewer, needSnap, colonization);
 
       return new CivilizationVillageSnapshot(
          village.getId().uuid(),
@@ -113,12 +146,13 @@ public final class CivilizationPresentationService {
          developmentKey,
          pop.residents(),
          pop.housingCapacity(),
+         housingKnown,
          overcrowded,
-         inventoryKnown,
+         inventoryCertainty,
          List.copyOf(needs),
          project,
-         trade,
-         migration,
+         List.copyOf(trades),
+         List.copyOf(migrations),
          colonization,
          connection,
          List.copyOf(history),
@@ -138,8 +172,9 @@ public final class CivilizationPresentationService {
 
       int residents = 0;
       int housing = 0;
+      boolean housingKnown = faction != null;
       List<String> settlementNames = new ArrayList<>();
-      int colonizations = 0;
+      Set<UUID> colonizationIds = new LinkedHashSet<>();
       if (faction != null) {
          for (VillageId vid : faction.getSettlementIds()) {
             Village v = VillageSavedData.get(level).getVillageManager().getVillage(vid);
@@ -152,9 +187,26 @@ public final class CivilizationPresentationService {
             if (settlementNames.size() < MAX_SETTLEMENT_NAMES) {
                settlementNames.add(villageName(v));
             }
-            ColonizationOperation op = ColonizationService.findActiveForParent(level, vid.uuid());
-            if (op != null && op.isActive()) {
-               colonizations++;
+            for (ColonizationOperation op : ColonizationService.listForVillage(level, vid.uuid(), 8)) {
+               if (op != null && op.isActive()) {
+                  colonizationIds.add(op.operationId());
+               }
+            }
+         }
+      }
+
+      int activeMigrations = 0;
+      if (faction != null) {
+         Set<UUID> settlementUuids = new HashSet<>();
+         for (VillageId vid : faction.getSettlementIds()) {
+            settlementUuids.add(vid.uuid());
+         }
+         for (MigrationOperation op : CivilizationSavedData.get(level).migrationOpsView()) {
+            if (op == null || !op.isActive()) {
+               continue;
+            }
+            if (settlementUuids.contains(op.originVillageId()) || settlementUuids.contains(op.destinationVillageId())) {
+               activeMigrations++;
             }
          }
       }
@@ -180,17 +232,28 @@ public final class CivilizationPresentationService {
       }
 
       List<CivilizationVillageSnapshot.HistoryLine> events = new ArrayList<>();
-      // Bound faction history via first settlement journal if present.
       if (faction != null) {
+         Set<String> seen = new HashSet<>();
          for (VillageId vid : faction.getSettlementIds()) {
             Village v = VillageSavedData.get(level).getVillageManager().getVillage(vid);
             if (v == null) {
                continue;
             }
-            events.addAll(resolveHistory(level, v));
-            break;
+            for (CivilizationVillageSnapshot.HistoryLine line : resolveHistory(level, v)) {
+               String key = line.typeKey() + "|" + line.summary() + "|" + line.gameTime();
+               if (seen.add(key)) {
+                  events.add(line);
+               }
+            }
+         }
+         events.sort(Comparator.comparingLong(CivilizationVillageSnapshot.HistoryLine::gameTime).reversed());
+         if (events.size() > MAX_HISTORY) {
+            events = new ArrayList<>(events.subList(0, MAX_HISTORY));
          }
       }
+
+      boolean overcrowded = housingKnown
+         && ((housing == 0 && residents > 0) || (housing > 0 && residents > housing));
 
       return new CivilizationFactionSnapshot(
          factionId == null ? "" : factionId.asString(),
@@ -199,14 +262,15 @@ public final class CivilizationPresentationService {
          faction == null ? 0 : faction.getSettlementCount(),
          residents,
          housing,
-         housing > 0 && residents > housing,
+         housingKnown,
+         overcrowded,
          economyKey,
          atWar,
          treaties,
-         colonizations,
-         0,
+         colonizationIds.size(),
+         activeMigrations,
          List.copyOf(settlementNames),
-         List.copyOf(events.subList(0, Math.min(MAX_HISTORY, events.size()))),
+         List.copyOf(events),
          now
       );
    }
@@ -232,11 +296,94 @@ public final class CivilizationPresentationService {
       return name == null || name.isBlank() ? "???" : name;
    }
 
-   private static boolean hasLoadedInventoryChunk(ServerLevel level, Village village) {
-      if (village.getCenter() == null) {
+   /**
+    * Inspect registered chest/furnace/firepit positions without force-loading.
+    * Missing containers in loaded chunks are simply not counted as known stock.
+    */
+   static InventoryCertainty evaluateInventoryCertainty(ServerLevel level, Village village) {
+      int registered = 0;
+      int readable = 0;
+      for (BuildingInstance building : village.getBuildings()) {
+         BuildingInventory inv = building.getInventory();
+         if (inv == null) {
+            // Fall back to registered special points when inventory was not initialized.
+            for (BlockPos pos : building.getChestPositions()) {
+               registered++;
+               if (isChestReadable(level, pos)) {
+                  readable++;
+               }
+            }
+            for (BlockPos pos : building.getFurnacePositions()) {
+               registered++;
+               if (isFurnaceReadable(level, pos)) {
+                  readable++;
+               }
+            }
+            for (BlockPos pos : building.getFirePitPositions()) {
+               registered++;
+               if (isFirepitReadable(level, pos)) {
+                  readable++;
+               }
+            }
+            continue;
+         }
+         for (BlockPos pos : inv.getChestPositions()) {
+            registered++;
+            if (isChestReadable(level, pos)) {
+               readable++;
+            }
+         }
+         for (BlockPos pos : inv.getFurnacePositions()) {
+            registered++;
+            if (isFurnaceReadable(level, pos)) {
+               readable++;
+            }
+         }
+         for (BlockPos pos : inv.getFirepitPositions()) {
+            registered++;
+            if (isFirepitReadable(level, pos)) {
+               readable++;
+            }
+         }
+      }
+
+      if (registered == 0) {
+         if (village.getCenter() == null
+            || !level.hasChunk(village.getCenter().getX() >> 4, village.getCenter().getZ() >> 4)) {
+            return InventoryCertainty.UNKNOWN;
+         }
+         return InventoryCertainty.KNOWN;
+      }
+      if (readable == 0) {
+         return InventoryCertainty.UNKNOWN;
+      }
+      if (readable < registered) {
+         return InventoryCertainty.PARTIAL;
+      }
+      return InventoryCertainty.KNOWN;
+   }
+
+   private static boolean isChestReadable(ServerLevel level, BlockPos pos) {
+      if (!level.isLoaded(pos)) {
          return false;
       }
-      return level.hasChunk(village.getCenter().getX() >> 4, village.getCenter().getZ() >> 4);
+      BlockEntity be = level.getBlockEntity(pos);
+      if (!(be instanceof ChestBlockEntity)) {
+         return false;
+      }
+      BlockState state = level.getBlockState(pos);
+      if (!(state.getBlock() instanceof ChestBlock chestBlock)) {
+         return false;
+      }
+      return ChestBlock.getContainer(chestBlock, state, level, pos, true) != null;
+   }
+
+   private static boolean isFurnaceReadable(ServerLevel level, BlockPos pos) {
+      return level.isLoaded(pos) && level.getBlockEntity(pos) instanceof AbstractFurnaceBlockEntity;
+   }
+
+   private static boolean isFirepitReadable(ServerLevel level, BlockPos pos) {
+      return level.isLoaded(pos) && level.getBlockEntity(pos) instanceof FirePitBlockEntity;
    }
 
    @Nullable
@@ -273,57 +420,202 @@ public final class CivilizationPresentationService {
       return null;
    }
 
-   @Nullable
-   private static CivilizationVillageSnapshot.TradeLine resolveTrade(ServerLevel level, Village village) {
-      VillageRequest active = null;
-      for (VillageRequest req : VillageRequestSavedData.get(level).forVillage(village.getId().uuid())) {
-         if (req.state() == VillageRequestState.ACCEPTED
-            || req.state() == VillageRequestState.IN_PROGRESS
-            || req.state() == VillageRequestState.OFFERED) {
-            active = req;
+   private static List<CivilizationVillageSnapshot.TradeLine> resolveTrade(
+      ServerLevel level,
+      Village village,
+      long now
+   ) {
+      UUID villageId = village.getId().uuid();
+      List<CivilizationVillageSnapshot.TradeLine> out = new ArrayList<>();
+
+      for (SettlementTradeOperation op : CivilizationSavedData.get(level).tradeOperationsView()) {
+         if (op == null) {
+            continue;
+         }
+         boolean involved = villageId.equals(op.exporterVillageId()) || villageId.equals(op.importerVillageId());
+         if (!involved) {
+            continue;
+         }
+         SettlementTradeOperation.Status status = op.status();
+         boolean recovery = status == SettlementTradeOperation.Status.COMPENSATING
+            || status == SettlementTradeOperation.Status.RECOVERY_REQUIRED
+            || status == SettlementTradeOperation.Status.LEGACY_UNRECOVERABLE;
+         boolean active = op.isActive() || recovery;
+         boolean recentTerminal = (status == SettlementTradeOperation.Status.COMPLETE
+               || status == SettlementTradeOperation.Status.FAILED)
+            && now - op.lastChangeGameTime() <= RECENT_TRADE_WINDOW;
+         if (!active && !recentTerminal) {
+            continue;
+         }
+
+         String kind;
+         if (recovery) {
+            kind = "trade_recovery";
+         } else if (op.sameFactionLogistics()) {
+            kind = "logistics";
+         } else {
+            kind = "settlement_trade";
+         }
+
+         boolean exporting = villageId.equals(op.exporterVillageId());
+         UUID partnerId = exporting ? op.importerVillageId() : op.exporterVillageId();
+         String partner = villageNameOrFallback(level, partnerId, partnerId.toString());
+         String itemLabel = op.resourceId() == null || op.resourceId().isBlank() ? "unknown" : op.resourceId();
+         int outstanding = countStacks(op.pendingDelivery()) + countStacks(op.pendingCompensation());
+         // Legacy markers must not invent outstanding goods from a count-only record.
+         if (status == SettlementTradeOperation.Status.LEGACY_UNRECOVERABLE) {
+            outstanding = 0;
+         }
+         out.add(new CivilizationVillageSnapshot.TradeLine(
+            kind,
+            op.statusCode(),
+            partner,
+            itemLabel,
+            exporting ? "outbound" : "inbound",
+            op.deliveredCount(),
+            outstanding,
+            op.reasonCode(),
+            op.lastChangeGameTime()
+         ));
+      }
+
+      for (VillageRequest req : VillageRequestSavedData.get(level).forVillage(villageId)) {
+         if (!VillageRequestState.activeStates().contains(req.state())) {
+            continue;
+         }
+         String itemLabel = req.required().isEmpty()
+            ? req.type().name().toLowerCase(Locale.ROOT)
+            : req.required().entrySet().iterator().next().getKey().toString();
+         int delivered = 0;
+         for (int v : req.delivered().values()) {
+            delivered += Math.max(0, v);
+         }
+         int outstanding = 0;
+         for (int v : req.remaining().values()) {
+            outstanding += Math.max(0, v);
+         }
+         out.add(new CivilizationVillageSnapshot.TradeLine(
+            "player_support",
+            req.state().name().toLowerCase(Locale.ROOT),
+            villageName(village),
+            itemLabel,
+            "inbound_support",
+            delivered,
+            outstanding,
+            "",
+            req.lastUpdateGameTime()
+         ));
+      }
+
+      out.sort(Comparator
+         .comparingInt((CivilizationVillageSnapshot.TradeLine t) -> tradeKindPriority(t.kindCode()))
+         .thenComparingLong(CivilizationVillageSnapshot.TradeLine::lastTransferGameTime)
+         .reversed());
+      if (out.size() > MAX_TRADE_LINES) {
+         return new ArrayList<>(out.subList(0, MAX_TRADE_LINES));
+      }
+      return out;
+   }
+
+   private static int tradeKindPriority(String kind) {
+      return switch (kind == null ? "" : kind) {
+         case "trade_recovery" -> 3;
+         case "settlement_trade", "logistics" -> 2;
+         case "player_support" -> 1;
+         default -> 0;
+      };
+   }
+
+   private static int countStacks(List<ItemStack> stacks) {
+      int n = 0;
+      if (stacks == null) {
+         return 0;
+      }
+      for (ItemStack stack : stacks) {
+         if (stack != null && !stack.isEmpty()) {
+            n += stack.getCount();
+         }
+      }
+      return n;
+   }
+
+   private static List<CivilizationVillageSnapshot.MigrationLine> resolveMigration(ServerLevel level, Village village) {
+      UUID villageId = village.getId().uuid();
+      List<CivilizationVillageSnapshot.MigrationLine> out = new ArrayList<>();
+      Set<UUID> colonistVillagerIds = new HashSet<>();
+
+      // Prefer colonization founder lines so underlying MigrationOperations are not double-counted.
+      for (ColonizationOperation op : ColonizationService.listForVillage(level, villageId, 8)) {
+         if (op == null) {
+            continue;
+         }
+         if (op.status() != ColonizationOperation.Status.MIGRATING
+            && op.status() != ColonizationOperation.Status.ACTIVATED) {
+            continue;
+         }
+         for (ColonizationOperation.FounderSlot slot : op.founderSlots()) {
+            if (slot != null && slot.villagerId() != null) {
+               colonistVillagerIds.add(slot.villagerId());
+            }
+         }
+         SettlementPlan plan = SettlementPlanSavedData.get(level).getPlan(op.planId());
+         String dest = plan != null && plan.villageUuid() != null
+            ? villageNameOrFallback(level, plan.villageUuid(), op.targetCenter().toShortString())
+            : op.targetCenter().toShortString();
+         String origin = villageNameOrFallback(level, op.parentVillageId(), villageName(village));
+         out.add(new CivilizationVillageSnapshot.MigrationLine(
+            "colonist",
+            op.statusCode(),
+            CivilizationStatusCodes.normalizeReason(op.reason()),
+            origin,
+            dest,
+            op.migratedCount(),
+            op.founderTarget()
+         ));
+      }
+
+      for (MigrationOperation op : CivilizationSavedData.get(level).migrationOpsView()) {
+         if (op == null || !op.isActive()) {
+            continue;
+         }
+         if (!villageId.equals(op.originVillageId()) && !villageId.equals(op.destinationVillageId())) {
+            continue;
+         }
+         if (colonistVillagerIds.contains(op.villagerId())) {
+            continue;
+         }
+         String kind = op.needsRecovery() ? "recovery" : "ordinary";
+         int migrated = switch (op.status()) {
+            case ADDED_TO_DESTINATION, COMPLETE -> 1;
+            default -> 0;
+         };
+         String reason = op.failureReason() == null || op.failureReason().isBlank()
+            ? (op.needsRecovery() ? "recovery" : "none")
+            : CivilizationStatusCodes.normalizeReason(op.failureReason());
+         out.add(new CivilizationVillageSnapshot.MigrationLine(
+            kind,
+            op.status().name().toLowerCase(Locale.ROOT),
+            reason,
+            villageNameOrFallback(level, op.originVillageId(), op.originVillageId().toString()),
+            villageNameOrFallback(level, op.destinationVillageId(), op.destinationVillageId().toString()),
+            migrated,
+            1
+         ));
+         if (out.size() >= MAX_MIGRATION_LINES) {
             break;
          }
       }
-      if (active == null) {
-         return null;
-      }
-      String itemLabel = active.required().isEmpty()
-         ? active.type().name().toLowerCase(Locale.ROOT)
-         : active.required().entrySet().iterator().next().getKey().toString();
-      return new CivilizationVillageSnapshot.TradeLine(
-         active.state().name().toLowerCase(Locale.ROOT),
-         villageName(village),
-         itemLabel,
-         "inbound_support",
-         active.lastUpdateGameTime()
-      );
-   }
 
-   @Nullable
-   private static CivilizationVillageSnapshot.MigrationLine resolveMigration(ServerLevel level, Village village) {
-      ColonizationOperation op = ColonizationService.findActiveForParent(level, village.getId().uuid());
-      if (op == null || (op.status() != ColonizationOperation.Status.MIGRATING && op.status() != ColonizationOperation.Status.ACTIVATED)) {
-         return null;
+      if (out.size() > MAX_MIGRATION_LINES) {
+         return new ArrayList<>(out.subList(0, MAX_MIGRATION_LINES));
       }
-      SettlementPlan plan = SettlementPlanSavedData.get(level).getPlan(op.planId());
-      String dest = plan != null && plan.villageUuid() != null
-         ? villageNameOrFallback(level, plan.villageUuid(), op.targetCenter().toShortString())
-         : op.targetCenter().toShortString();
-      return new CivilizationVillageSnapshot.MigrationLine(
-         op.statusCode(),
-         CivilizationStatusCodes.normalizeReason(op.reason()),
-         villageName(village),
-         dest,
-         op.migratedCount(),
-         op.founderTarget()
-      );
+      return out;
    }
 
    @Nullable
    private static CivilizationVillageSnapshot.ColonizationLine resolveColonization(ServerLevel level, Village village) {
       ColonizationOperation op = ColonizationService.findActiveForParent(level, village.getId().uuid());
       if (op == null) {
-         // Also show when this village is the child colony.
          for (ColonizationOperation candidate : ColonizationService.listForVillage(level, village.getId().uuid(), 4)) {
             op = candidate;
             break;
@@ -394,7 +686,7 @@ public final class CivilizationPresentationService {
       boolean civilizationOn = Boolean.TRUE.equals(MillenaireServerConfig.SERVER.civilizationEvolutionEnabled.get());
 
       VillageNeed topNeed = needSnap == null ? null : needSnap.mostSevere().orElse(null);
-      boolean hasNeed = topNeed != null && !topNeed.shortage().isEmpty();
+      boolean hasNeed = topNeed != null && !topNeed.isEmpty();
       actions.add(new CivilizationVillageSnapshot.AllowedAction(
          CivilizationActionId.SUPPORT_NEED,
          hasNeed,
@@ -412,7 +704,7 @@ public final class CivilizationPresentationService {
          !controlled
             ? "civilization.millenaire.action.blocked.not_controller"
             : housing == null ? "civilization.millenaire.action.blocked.no_housing_project" : "",
-         housing == null ? null : housing.planSetId().toString()
+         housing == null || housing.planSetId() == null ? null : housing.planSetId().toString()
       ));
 
       boolean foundingEnabled = Boolean.TRUE.equals(MillenaireServerConfig.SERVER.civilizationAutonomousFoundingEnabled.get());
@@ -429,25 +721,45 @@ public final class CivilizationPresentationService {
          hasColonization ? colonization.operationId().toString() : null
       ));
 
+      ColonizationOperation materialOp = null;
+      if (hasColonization) {
+         for (ColonizationOperation candidate : ColonizationService.listForVillage(level, village.getId().uuid(), 8)) {
+            if (candidate.operationId().equals(colonization.operationId())) {
+               materialOp = candidate;
+               break;
+            }
+         }
+         if (materialOp == null) {
+            materialOp = ColonizationService.findActiveForParent(level, village.getId().uuid());
+         }
+      }
+      boolean materialsMissing = materialOp != null && colonizationMaterialsMissing(level, materialOp);
       actions.add(new CivilizationVillageSnapshot.AllowedAction(
          CivilizationActionId.SUPPORT_COLONIZATION_MATERIALS,
-         hasColonization && hasNeed,
+         materialsMissing,
          CivilizationActionId.SUPPORT_COLONIZATION_MATERIALS.i18nKey(),
          !hasColonization
             ? "civilization.millenaire.action.blocked.no_colonization"
-            : !hasNeed ? "civilization.millenaire.action.blocked.no_need" : "",
-         hasNeed ? topNeed.needId() : null
+            : !materialsMissing ? "civilization.millenaire.action.blocked.materials_complete" : "",
+         hasColonization ? colonization.operationId().toString() : null
       ));
 
+      boolean resumable = materialOp != null && isColonizationResumable(materialOp);
+      String authorizeBlocked;
+      if (!controlled) {
+         authorizeBlocked = "civilization.millenaire.action.blocked.not_controller";
+      } else if (!hasColonization) {
+         authorizeBlocked = "civilization.millenaire.action.blocked.no_colonization";
+      } else if (!resumable) {
+         authorizeBlocked = "civilization.millenaire.action.blocked.not_resumable";
+      } else {
+         authorizeBlocked = "";
+      }
       actions.add(new CivilizationVillageSnapshot.AllowedAction(
          CivilizationActionId.AUTHORIZE_COLONIZATION,
-         controlled && foundingEnabled && hasColonization,
+         controlled && resumable,
          CivilizationActionId.AUTHORIZE_COLONIZATION.i18nKey(),
-         !controlled
-            ? "civilization.millenaire.action.blocked.not_controller"
-            : !foundingEnabled
-               ? "civilization.millenaire.action.blocked.colonization_off"
-               : !hasColonization ? "civilization.millenaire.action.blocked.no_colonization" : "",
+         authorizeBlocked,
          hasColonization ? colonization.operationId().toString() : null
       ));
 
@@ -466,6 +778,84 @@ public final class CivilizationPresentationService {
       ));
 
       return actions;
+   }
+
+   private static boolean isColonizationResumable(@Nullable ColonizationOperation op) {
+      if (op == null || !op.isActive()) {
+         return false;
+      }
+      return switch (op.status()) {
+         case PLANNED, AWAITING_CHUNKS, LAYOUT, RESERVED, MATERIALIZING, ACTIVATED, MIGRATING -> true;
+         default -> false;
+      };
+   }
+
+   private static boolean colonizationMaterialsMissing(ServerLevel level, ColonizationOperation op) {
+      if (op == null || op.costsConsumed() || op.isTerminal()) {
+         return false;
+      }
+      SettlementPlan plan = SettlementPlanSavedData.get(level).getPlan(op.planId());
+      if (plan == null) {
+         return false;
+      }
+      Map<ResourceLocation, Integer> costs = computeFoundingCosts(plan);
+      Map<ResourceLocation, Integer> already = countItemStacks(op.reservedStacks());
+      for (Entry<ResourceLocation, Integer> e : costs.entrySet()) {
+         int have = already.getOrDefault(e.getKey(), 0);
+         if (AnywoodHelper.isAnywood(e.getKey())) {
+            have = countAnywood(op.reservedStacks());
+         }
+         if (Math.max(0, e.getValue() - have) > 0) {
+            return true;
+         }
+      }
+      return false;
+   }
+
+   private static Map<ResourceLocation, Integer> computeFoundingCosts(SettlementPlan plan) {
+      Map<ResourceLocation, Integer> costs = new LinkedHashMap<>();
+      for (PlannedBuilding building : plan.buildings()) {
+         if (building.planSetId() == null) {
+            continue;
+         }
+         BuildingPlanSet set = ModCultures.getBuildingPlanSet(building.planSetId());
+         if (set == null) {
+            continue;
+         }
+         BuildingPlanSet.LevelDef level0 = set.getLevel(building.variant(), Math.max(0, building.level()));
+         if (level0 == null || level0.requiredResources() == null) {
+            continue;
+         }
+         for (Entry<ResourceLocation, Integer> e : level0.requiredResources().entrySet()) {
+            costs.merge(e.getKey(), e.getValue(), Integer::sum);
+         }
+      }
+      if (costs.isEmpty()) {
+         costs.put(AnywoodHelper.ANYWOOD_LOG, 32);
+         costs.put(BuiltInRegistries.ITEM.getKey(Items.COBBLESTONE), 32);
+      }
+      return costs;
+   }
+
+   private static Map<ResourceLocation, Integer> countItemStacks(List<ItemStack> stacks) {
+      Map<ResourceLocation, Integer> map = new LinkedHashMap<>();
+      for (ItemStack stack : stacks) {
+         if (stack == null || stack.isEmpty()) {
+            continue;
+         }
+         map.merge(BuiltInRegistries.ITEM.getKey(stack.getItem()), stack.getCount(), Integer::sum);
+      }
+      return map;
+   }
+
+   private static int countAnywood(List<ItemStack> stacks) {
+      int n = 0;
+      for (ItemStack stack : stacks) {
+         if (stack != null && !stack.isEmpty() && stack.is(AnywoodHelper.LOGS_TAG)) {
+            n += stack.getCount();
+         }
+      }
+      return n;
    }
 
    @Nullable

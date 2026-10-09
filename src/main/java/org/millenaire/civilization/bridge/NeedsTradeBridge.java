@@ -42,6 +42,8 @@ public final class NeedsTradeBridge {
    }
 
    public static void syncNeedsToEconomy(ServerLevel level, CivilizationSavedData state) {
+      // Outstanding compensation always runs — independent of new auto-trade proposals.
+      SettlementTradeExecutor.processOutstanding(level, state);
       if (!Boolean.TRUE.equals(MillenaireServerConfig.SERVER.civilizationAutoTradeEnabled.get())) {
          return;
       }
