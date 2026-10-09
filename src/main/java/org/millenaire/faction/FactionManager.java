@@ -309,6 +309,45 @@ public final class FactionManager {
    }
 
    /**
+    * Bounded membership repair for one faction: drop missing settlements and re-index villages
+    * that claim this faction id. Does not create new factions.
+    */
+   public void reconcileSettlements(ServerLevel level, Faction faction) {
+      Objects.requireNonNull(level, "level");
+      Objects.requireNonNull(faction, "faction");
+      VillageManager villageManager = VillageSavedData.get(level).getVillageManager();
+      boolean dirty = false;
+      List<VillageId> known = new ArrayList<>(faction.getSettlementIds());
+      for (VillageId settlementId : known) {
+         Village village = villageManager.getVillage(settlementId);
+         if (village == null) {
+            if (faction.removeSettlement(settlementId)) {
+               dirty = true;
+            }
+            continue;
+         }
+         FactionId claimed = village.getFactionId();
+         if (claimed == null) {
+            village.setFactionId(faction.getId());
+            dirty = true;
+         } else if (!claimed.equals(faction.getId())) {
+            if (faction.removeSettlement(settlementId)) {
+               dirty = true;
+            }
+         }
+      }
+      for (Village village : villageManager.getAllVillages()) {
+         if (faction.getId().equals(village.getFactionId()) && !faction.hasSettlement(village.getId())) {
+            faction.addSettlement(village.getId());
+            dirty = true;
+         }
+      }
+      if (dirty) {
+         this.markDirty.run();
+      }
+   }
+
+   /**
     * Rebuilds membership indexes from village data (authoritative for settlement → faction),
     * repairs missing factions, and assigns default culture factions to unassigned settlements.
     * Safe for new worlds and pre-faction existing worlds.

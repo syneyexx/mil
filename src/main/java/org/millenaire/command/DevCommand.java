@@ -41,6 +41,7 @@ public final class DevCommand {
       HireDevCommand.registerUnder(dev);
       NpcChatDevCommand.registerUnder(dev);
       org.millenaire.living.command.LivingDevCommand.registerUnder(dev);
+      org.millenaire.civilization.command.CivilizationCommand.registerUnder(dev);
       dispatcher.register((LiteralArgumentBuilder)Commands.literal("millenaire").then(dev));
    }
 }

@@ -3,6 +3,7 @@ package org.millenaire.living.context;
 import java.util.Map.Entry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import org.millenaire.civilization.bridge.CivilizationContextProvider;
 import org.millenaire.living.LivingVillagesService;
 import org.millenaire.living.behavior.VillageActivityCoordinator;
 import org.millenaire.living.events.LivingEvent;
@@ -55,5 +56,6 @@ public final class VillageContextProvider {
       for (LivingEvent event : LivingEventService.recentPublic(level, village.getId(), 4)) {
          ctx.addVerified("recentEvent=" + event.eventType().name() + ":" + event.details());
       }
+      CivilizationContextProvider.appendVerified(level, village, ctx);
    }
 }

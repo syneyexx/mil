@@ -11,6 +11,9 @@ import org.millenaire.culture.BrickColourTheme;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillageType;
 import org.millenaire.faction.FactionLifecycle;
+import org.millenaire.living.events.LivingEventService;
+import org.millenaire.living.events.LivingEventSource;
+import org.millenaire.living.events.LivingEventType;
 import org.millenaire.worldgen.WorldgenMetrics;
 import org.millenaire.village.BuildingFinalizer;
 import org.millenaire.village.SubBuildingHelper;
@@ -192,15 +195,19 @@ public final class SettlementActivator {
 
    private static void emitOptionalPhase3Event(ServerLevel level, Village village) {
       try {
-         Class<?> events = Class.forName("org.millenaire.living.VillageEventService");
-         Object service = events.getMethod("get", ServerLevel.class).invoke(null, level);
-         if (service != null) {
-            events.getMethod("emitSettlementFounded", Village.class).invoke(service, village);
-         }
-      } catch (ClassNotFoundException ignored) {
-         // Phase 3 not present on this branch
-      } catch (ReflectiveOperationException e) {
-         LOGGER.debug("[Millenaire] Phase 3 settlement-founded hook unavailable: {}", e.getMessage());
+         LivingEventService.emit(
+            level,
+            LivingEventType.VILLAGE_FOUNDED,
+            LivingEventSource.SYSTEM,
+            village,
+            null,
+            null,
+            "worldgen_activation",
+            "public",
+            "founded:" + village.getId().uuid()
+         );
+      } catch (Exception e) {
+         LOGGER.debug("[Millenaire] Living event settlement-founded hook failed: {}", e.toString());
       }
    }
 }

@@ -114,6 +114,17 @@ public final class MillenaireServerConfig {
    public final IntValue npcReactionProcessingBudget;
    public final BooleanValue npcDialogueActionSuggestionsEnabled;
    public final BooleanValue livingVillagesDebugLogging;
+   public final BooleanValue civilizationEvolutionEnabled;
+   public final BooleanValue civilizationAutoTradeEnabled;
+   public final BooleanValue civilizationOffscreenEnabled;
+   public final BooleanValue civilizationNpcContextEnabled;
+   public final BooleanValue civilizationAutonomousFoundingEnabled;
+   public final BooleanValue civilizationMetricsLogging;
+   public final IntValue civilizationFactionBudget;
+   public final IntValue civilizationTradeOpsBudget;
+   public final IntValue civilizationEventPublishBudget;
+   public final IntValue civilizationMigrationBudget;
+   public final IntValue civilizationCatchupDays;
 
    public static int getDefaultClearMargin() {
       try {
@@ -562,6 +573,54 @@ public final class MillenaireServerConfig {
       this.livingVillagesDebugLogging = builder.comment("Verbose Living Villages debug logging")
          .translation("millenaire.config.livingVillages.debugLogging")
          .define("livingVillagesDebugLogging", false);
+      builder.pop();
+      builder.comment(
+            new String[]{
+               "Phase 5 civilization evolution — orchestration across factions, economy, politics,",
+               "diplomacy, military and demographics. When disabled, FactionLifecycle ticks managers",
+               "directly as before. Disabling civilization does NOT disable villages, Phase 3 Living",
+               "Villages, Phase 4 worldgen, trading, quests or NPC chat."
+            }
+         )
+         .push("civilization");
+      this.civilizationEvolutionEnabled = builder.comment("Master switch for CivilizationOrchestrator staged updates")
+         .translation("millenaire.config.civilization.evolutionEnabled")
+         .define("civilizationEvolutionEnabled", true);
+      this.civilizationAutoTradeEnabled = builder.comment("Allow conserved settlement-to-settlement trade when needs/deficits exist")
+         .translation("millenaire.config.civilization.autoTradeEnabled")
+         .define("civilizationAutoTradeEnabled", true);
+      this.civilizationOffscreenEnabled = builder.comment("Bounded coarse catch-up for inactive settlements (never force-loads chunks)")
+         .translation("millenaire.config.civilization.offscreenEnabled")
+         .define("civilizationOffscreenEnabled", true);
+      this.civilizationNpcContextEnabled = builder.comment("Inject verified faction/civilization facts into NPC dialogue context")
+         .translation("millenaire.config.civilization.npcContextEnabled")
+         .define("civilizationNpcContextEnabled", true);
+      this.civilizationAutonomousFoundingEnabled = builder.comment(
+            new String[]{
+               "Reserved: autonomous live-world colonization. Disabled until safe live founding is fully supported.",
+               "When false, factions do not create new settlements outside Phase 4 worldgen / existing spawn paths."
+            }
+         )
+         .translation("millenaire.config.civilization.autonomousFoundingEnabled")
+         .define("civilizationAutonomousFoundingEnabled", false);
+      this.civilizationMetricsLogging = builder.comment("Occasional civilization orchestration metrics in logs (opt-in)")
+         .translation("millenaire.config.civilization.metricsLogging")
+         .define("civilizationMetricsLogging", false);
+      this.civilizationFactionBudget = builder.comment("Max factions processed per orchestration stage pass")
+         .translation("millenaire.config.civilization.factionBudget")
+         .defineInRange("civilizationFactionBudget", 8, 1, 64);
+      this.civilizationTradeOpsBudget = builder.comment("Max conserved trade operations per economy stage")
+         .translation("millenaire.config.civilization.tradeOpsBudget")
+         .defineInRange("civilizationTradeOpsBudget", 4, 0, 32);
+      this.civilizationEventPublishBudget = builder.comment("Max civilization chronicle events published per tick")
+         .translation("millenaire.config.civilization.eventPublishBudget")
+         .defineInRange("civilizationEventPublishBudget", 12, 1, 64);
+      this.civilizationMigrationBudget = builder.comment("Max migration transactions per demographics stage (reserved)")
+         .translation("millenaire.config.civilization.migrationBudget")
+         .defineInRange("civilizationMigrationBudget", 2, 0, 16);
+      this.civilizationCatchupDays = builder.comment("Max Minecraft days of offscreen catch-up after long inactivity")
+         .translation("millenaire.config.civilization.catchupDays")
+         .defineInRange("civilizationCatchupDays", 7, 1, 30);
       builder.pop();
    }
 

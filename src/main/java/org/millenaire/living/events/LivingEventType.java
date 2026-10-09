@@ -25,7 +25,15 @@ public enum LivingEventType {
    TRADE_CHANGED,
    SOCIAL_INTERACTION,
    KNOWLEDGE_SHARED,
-   MOOD_REACTION;
+   MOOD_REACTION,
+   /** Phase 5 civilization chronicle events — verified faction outcomes only. */
+   LEADERSHIP_CHANGED,
+   TREATY_SIGNED,
+   TREATY_ENDED,
+   WAR_DECLARED,
+   PEACE_SIGNED,
+   TRADE_COMPLETED,
+   SETTLEMENT_DEVELOPMENT;
 
    public String i18nKey() {
       return "living.millenaire.event." + this.name().toLowerCase(Locale.ROOT);
@@ -33,7 +41,18 @@ public enum LivingEventType {
 
    public boolean isSignificantForChronicle() {
       return switch (this) {
-         case ASSISTANCE_REQUEST_COMPLETED, PLAYER_DELIVERY_VERIFIED, MATERIAL_SHORTAGE_RESOLVED, ATTACK_STARTED, ATTACK_ENDED -> true;
+         case ASSISTANCE_REQUEST_COMPLETED,
+            PLAYER_DELIVERY_VERIFIED,
+            MATERIAL_SHORTAGE_RESOLVED,
+            ATTACK_STARTED,
+            ATTACK_ENDED,
+            LEADERSHIP_CHANGED,
+            TREATY_SIGNED,
+            TREATY_ENDED,
+            WAR_DECLARED,
+            PEACE_SIGNED,
+            TRADE_COMPLETED,
+            VILLAGE_FOUNDED -> true;
          default -> false;
       };
    }
