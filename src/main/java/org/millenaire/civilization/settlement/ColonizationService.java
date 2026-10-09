@@ -260,10 +260,15 @@ public final class ColonizationService {
          ColonizationMaterializationGate.bindPlan(plan, op, level);
 
          if (!reserveExactCosts(level, parent, op, store)) {
-            op.setStatus(ColonizationOperation.Status.FAILED);
-            op.setReason(op.refundOutstanding().isEmpty() ? "insufficient_resources" : "insufficient_resources;refund_outstanding");
-            store.put(op);
-            // Plan stays linked to FAILED op — worldgen gate blocks physical mutation.
+            // failOp: refund/founder release; plan stays linked so the shared gate blocks mutation.
+            failOp(
+               level,
+               store,
+               op,
+               op.refundOutstanding().isEmpty() ? "insufficient_resources" : "insufficient_resources;refund_outstanding"
+            );
+            plan.progressFor(new ChunkPos(plan.center()).toLong()).setBlockReason("colonization_unpaid_or_blocked");
+            SettlementPlanSavedData.get(level).markDirtyPlan();
             stateBlock(level, parent, "insufficient_resources");
             return null;
          }

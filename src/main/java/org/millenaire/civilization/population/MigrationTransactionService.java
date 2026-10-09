@@ -185,8 +185,14 @@ public final class MigrationTransactionService {
          }
 
          origin.transferVillagerPermanently(level, villagerRecordId, destination, destBuilding);
-         op.trySetStatus(MigrationOperation.Status.REMOVED_FROM_ORIGIN);
-         op.trySetStatus(MigrationOperation.Status.ADDED_TO_DESTINATION);
+         boolean removed = op.trySetStatus(MigrationOperation.Status.REMOVED_FROM_ORIGIN);
+         boolean added = op.trySetStatus(MigrationOperation.Status.ADDED_TO_DESTINATION);
+         if (!removed || !added) {
+            // Physical transfer may already have succeeded — do not invent rollback; mark for reconcile.
+            op.markNeedsRecovery(true);
+            civ.putMigration(op);
+            data.setDirty();
+         }
 
          VillagerRecord moved = destination.getVillagerRecords().get(villagerRecordId);
          if (moved == null) {
@@ -231,7 +237,22 @@ public final class MigrationTransactionService {
          destination.markDirty();
          data.setDirty();
 
-         op.trySetStatus(MigrationOperation.Status.COMPLETE);
+         // Prefer normal COMPLETE; fall back to reconcile when intermediate status write lagged.
+         if (!op.trySetStatus(MigrationOperation.Status.COMPLETE) && !op.reconcileStatus(MigrationOperation.Status.COMPLETE)) {
+            op.markNeedsRecovery(true);
+            civ.putMigration(op);
+            return MigrationResult.of(
+               opId,
+               MigrationResult.Outcome.RECOVERY_REQUIRED,
+               false,
+               true,
+               "status_complete_failed",
+               originId.uuid(),
+               destinationId.uuid(),
+               destBuilding.uuid()
+            );
+         }
+         op.markNeedsRecovery(false);
          civ.putMigration(op);
          CivilizationMetrics.MIGRATIONS.incrementAndGet();
 
