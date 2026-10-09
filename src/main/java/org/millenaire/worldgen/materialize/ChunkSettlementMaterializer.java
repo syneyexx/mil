@@ -172,7 +172,7 @@ public final class ChunkSettlementMaterializer {
             refreshBuildingCompletion(plan);
             refreshWallCompletion(plan);
             maybeCompleteRoads(plan);
-            if (plan.allBuildingsMaterialized() && wallsDone(plan) && roadsDone(plan)) {
+            if (plan.isPhysicallyComplete()) {
                plan.trySetStatus(SettlementPlanStatus.PHYSICAL_COMPLETE);
                if (plan.status() != SettlementPlanStatus.PHYSICAL_COMPLETE) {
                   plan.forceStatus(SettlementPlanStatus.PHYSICAL_COMPLETE);
@@ -239,30 +239,6 @@ public final class ChunkSettlementMaterializer {
             if (!road.materialized() && !progress.isRoadComplete(road.roadId())) {
                return false;
             }
-         }
-      }
-      return true;
-   }
-
-   private static boolean wallsDone(SettlementPlan plan) {
-      if (!Boolean.TRUE.equals(MillenaireServerConfig.SERVER.worldgenGenerateStartingWalls.get())) {
-         return true;
-      }
-      for (PlannedWall w : plan.walls()) {
-         if (!w.materialized()) {
-            return false;
-         }
-      }
-      return true;
-   }
-
-   private static boolean roadsDone(SettlementPlan plan) {
-      if (!Boolean.TRUE.equals(MillenaireServerConfig.SERVER.worldgenGenerateInitialRoads.get())) {
-         return true;
-      }
-      for (PlannedRoad r : plan.roads()) {
-         if (!r.materialized()) {
-            return false;
          }
       }
       return true;

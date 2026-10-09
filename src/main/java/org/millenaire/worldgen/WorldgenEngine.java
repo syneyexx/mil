@@ -86,7 +86,7 @@ public final class WorldgenEngine {
       List<SettlementPlan> candidates = new ArrayList<>();
       for (SettlementPlan plan : store.allPlans()) {
          if (plan.status() == SettlementPlanStatus.PHYSICAL_COMPLETE || plan.status() == SettlementPlanStatus.ACTIVATING) {
-            if (plan.allBuildingsMaterialized()) {
+            if (plan.isPhysicallyComplete()) {
                candidates.add(plan);
             }
          }
@@ -209,7 +209,7 @@ public final class WorldgenEngine {
    }
 
    private static void maybeQueueActivation(ServerLevel level, SettlementPlan plan) {
-      if (!plan.allBuildingsMaterialized()) {
+      if (!plan.isPhysicallyComplete()) {
          return;
       }
       if (plan.status() != SettlementPlanStatus.MATERIALIZING && plan.status() != SettlementPlanStatus.PHYSICAL_COMPLETE) {

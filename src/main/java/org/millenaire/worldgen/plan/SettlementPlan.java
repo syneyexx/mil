@@ -303,6 +303,35 @@ public final class SettlementPlan {
       return true;
    }
 
+   /**
+    * True when buildings and (when configured) walls/roads are all materialized.
+    * Used for PHYSICAL_COMPLETE / activation gates so walls and roads cannot be skipped.
+    */
+   public boolean isPhysicallyComplete() {
+      if (!allBuildingsMaterialized()) {
+         return false;
+      }
+      try {
+         if (Boolean.TRUE.equals(org.millenaire.config.MillenaireServerConfig.SERVER.worldgenGenerateStartingWalls.get())) {
+            for (PlannedWall wall : this.walls) {
+               if (!wall.materialized()) {
+                  return false;
+               }
+            }
+         }
+         if (Boolean.TRUE.equals(org.millenaire.config.MillenaireServerConfig.SERVER.worldgenGenerateInitialRoads.get())) {
+            for (PlannedRoad road : this.roads) {
+               if (!road.materialized()) {
+                  return false;
+               }
+            }
+         }
+      } catch (IllegalStateException e) {
+         // Config not loaded yet — require buildings only.
+      }
+      return true;
+   }
+
    public boolean hasMandatoryCentre() {
       for (PlannedBuilding b : this.buildings) {
          String role = b.role();
