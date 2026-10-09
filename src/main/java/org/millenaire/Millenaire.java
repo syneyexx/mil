@@ -146,6 +146,8 @@ import org.millenaire.village.VillageSavedData;
 import org.millenaire.world.BiomeTagDisjointnessValidator;
 import org.millenaire.world.ModProcessors;
 import org.millenaire.world.VillageSpawnQueue;
+import org.millenaire.worldgen.WorldgenEngine;
+import org.millenaire.worldgen.command.WorldgenDiagCommand;
 import org.slf4j.Logger;
 
 @Mod("millenaire")
@@ -412,6 +414,7 @@ public class Millenaire {
          TestCommand.register(event.getDispatcher());
          DevCommand.register(event.getDispatcher());
          TpCommand.register(event.getDispatcher());
+         WorldgenDiagCommand.register(event.getDispatcher());
          org.millenaire.command.NpcChatModelCommand.register(event);
       });
       NeoForge.EVENT_BUS.addListener(ServerStoppingEvent.class, event -> {
@@ -460,7 +463,9 @@ public class Millenaire {
          if (overworld != null) {
             VillageSavedData.get(overworld).getVillageManager().tick(overworld);
             FactionLifecycle.onServerTick(overworld);
-            if (!naturalSpawnSuppressed) {
+            if (WorldgenEngine.isEnabled()) {
+               WorldgenEngine.onServerTick(overworld);
+            } else if (!naturalSpawnSuppressed) {
                spawnQueue.trySpawnNext(overworld);
             }
          }
@@ -479,21 +484,29 @@ public class Millenaire {
          }
       });
       NeoForge.EVENT_BUS.addListener(ChunkEvent.Load.class, event -> {
-         if (!naturalSpawnSuppressed) {
-            if (event.getLevel() instanceof ServerLevel serverLevel && serverLevel.dimension() == Level.OVERWORLD) {
-               ChunkPos chunkPos = event.getChunk().getPos();
-               boolean isNewChunk = event.isNewChunk();
-               serverLevel.getServer().execute(() -> {
+         if (naturalSpawnSuppressed) {
+            return;
+         }
+         if (event.getLevel() instanceof ServerLevel serverLevel && serverLevel.dimension() == Level.OVERWORLD) {
+            ChunkPos chunkPos = event.getChunk().getPos();
+            boolean isNewChunk = event.isNewChunk();
+            serverLevel.getServer().execute(() -> {
+               if (WorldgenEngine.isEnabled()) {
                   spawnQueue.markResolved(chunkPos);
                   if (isNewChunk) {
-                     BlockPos biomeSamplePos = chunkPos.getMiddleBlockPosition(serverLevel.getMaxBuildHeight() - 1);
-                     Holder<Biome> centerBiome = serverLevel.getBiome(biomeSamplePos);
-                     if (VillageSpawnQueue.couldHostAnyVillage(ModCultures.getAllVillageTypes().values(), tag -> centerBiome.is(tag))) {
-                        spawnQueue.enqueue(chunkPos.getMiddleBlockPosition(64));
-                     }
+                     WorldgenEngine.onNewChunk(serverLevel, chunkPos);
                   }
-               });
-            }
+                  return;
+               }
+               spawnQueue.markResolved(chunkPos);
+               if (isNewChunk) {
+                  BlockPos biomeSamplePos = chunkPos.getMiddleBlockPosition(serverLevel.getMaxBuildHeight() - 1);
+                  Holder<Biome> centerBiome = serverLevel.getBiome(biomeSamplePos);
+                  if (VillageSpawnQueue.couldHostAnyVillage(ModCultures.getAllVillageTypes().values(), tag -> centerBiome.is(tag))) {
+                     spawnQueue.enqueue(chunkPos.getMiddleBlockPosition(64));
+                  }
+               }
+            });
          }
       });
       NeoForge.EVENT_BUS
@@ -515,6 +528,7 @@ public class Millenaire {
                   VillagerConfig.load();
                   goalRegistryInstance.resetToBuiltins();
                   CultureLoader.loadAll();
+                  WorldgenEngine.onContentLoaded();
                   if (spawnQueueInstance != null) {
                      spawnQueueInstance.invalidateBiomeIndex();
                   }
