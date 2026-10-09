@@ -59,6 +59,16 @@ Build and run Minecraft 1.21.1 + NeoForge 21.1.256 with this branch. Configure `
 | A7 | Rapid repeated sends | Rate-limit system line; UI unlocks |
 | A8 | Close UI before reply arrives | Stale reply does not appear later |
 
+## LM Studio
+
+| # | Test | Expected |
+|---|------|----------|
+| LMS1 | `baseUrl=http://localhost:1234/v1`, exactly one LLM loaded, empty/irrelevant model id | Chat works without manual model name |
+| LMS2 | No LLM loaded | Clear `no_loaded` message; UI unlocks |
+| LMS3 | Two+ LLMs loaded, no selection | Clear `choose_model` message; `/millenaire npcchat model select <id>` works |
+| LMS4 | Unload/load different single model | Next refresh/chat uses the newly loaded model |
+| LMS5 | Remote x.ai/OpenAI URL | Configured model name still used; LM Studio commands report not applicable |
+
 ## Lifecycle
 
 | # | Test | Expected |
