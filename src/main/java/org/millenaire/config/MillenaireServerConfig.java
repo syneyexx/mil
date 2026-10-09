@@ -65,6 +65,28 @@ public final class MillenaireServerConfig {
    public final IntValue npcChatMaxStoredMinds;
    public final ConfigValue<String> npcChatEntityAllowList;
    public final ConfigValue<String> npcChatEntityDenyList;
+   public final BooleanValue livingVillagesEnabled;
+   public final BooleanValue villageNeedsEnabled;
+   public final IntValue villageNeedsEvaluationInterval;
+   public final IntValue villageNeedsGlobalBudget;
+   public final BooleanValue npcSocialEnabled;
+   public final IntValue npcSocialInteractionCooldown;
+   public final IntValue npcRelationshipRetention;
+   public final BooleanValue npcPersonalityEnabled;
+   public final IntValue npcMoodDecayInterval;
+   public final BooleanValue npcEventMemoryEnabled;
+   public final IntValue npcEventRetentionLimit;
+   public final IntValue npcKnowledgeRetentionLimit;
+   public final BooleanValue villageRequestsEnabled;
+   public final IntValue villageRequestMaxPerPlayer;
+   public final IntValue villageRequestMaxPerVillage;
+   public final IntValue villageRequestExpiryDays;
+   public final IntValue villageRequestMaximumDeliveryQuantity;
+   public final net.neoforged.neoforge.common.ModConfigSpec.DoubleValue villageRequestReputationMultiplier;
+   public final BooleanValue npcWorldReactionsEnabled;
+   public final IntValue npcReactionProcessingBudget;
+   public final BooleanValue npcDialogueActionSuggestionsEnabled;
+   public final BooleanValue livingVillagesDebugLogging;
 
    public static int getDefaultClearMargin() {
       try {
@@ -349,6 +371,75 @@ public final class MillenaireServerConfig {
       this.npcChatEntityDenyList = builder.comment("Comma-separated entity type ids denied from the generic adapter")
          .translation("millenaire.config.npcChat.entityDenyList")
          .define("entityDenyList", "");
+      builder.pop();
+      builder.comment("Living Villages 2.0 — needs, social simulation, assistance requests (does not disable core Millénaire when off)")
+         .push("livingVillages");
+      this.livingVillagesEnabled = builder.comment("Master switch for Living Villages systems")
+         .translation("millenaire.config.livingVillages.enabled")
+         .define("livingVillagesEnabled", true);
+      this.villageNeedsEnabled = builder.comment("Derive village needs from authoritative inventories and projects")
+         .translation("millenaire.config.livingVillages.villageNeedsEnabled")
+         .define("villageNeedsEnabled", true);
+      this.villageNeedsEvaluationInterval = builder.comment("Ticks between need evaluations per village")
+         .translation("millenaire.config.livingVillages.villageNeedsEvaluationInterval")
+         .defineInRange("villageNeedsEvaluationInterval", 200, 40, 4000);
+      this.villageNeedsGlobalBudget = builder.comment("Max village need evaluations per server tick")
+         .translation("millenaire.config.livingVillages.villageNeedsGlobalBudget")
+         .defineInRange("villageNeedsGlobalBudget", 4, 1, 32);
+      this.npcSocialEnabled = builder.comment("NPC-to-NPC social relationship updates from ChatGoal")
+         .translation("millenaire.config.livingVillages.npcSocialEnabled")
+         .define("npcSocialEnabled", true);
+      this.npcSocialInteractionCooldown = builder.comment("Minimum ticks between social updates for the same NPC pair side")
+         .translation("millenaire.config.livingVillages.npcSocialInteractionCooldown")
+         .defineInRange("npcSocialInteractionCooldown", 1200, 200, 24000);
+      this.npcRelationshipRetention = builder.comment("Soft max relationships retained per NPC")
+         .translation("millenaire.config.livingVillages.npcRelationshipRetention")
+         .defineInRange("npcRelationshipRetention", 24, 8, 128);
+      this.npcPersonalityEnabled = builder.comment("Persistent NPC personality traits and mood reactions")
+         .translation("millenaire.config.livingVillages.npcPersonalityEnabled")
+         .define("npcPersonalityEnabled", true);
+      this.npcMoodDecayInterval = builder.comment("Ticks between mood decay checks")
+         .translation("millenaire.config.livingVillages.npcMoodDecayInterval")
+         .defineInRange("npcMoodDecayInterval", 6000, 200, 24000);
+      this.npcEventMemoryEnabled = builder.comment("Persist Living Villages event journal entries")
+         .translation("millenaire.config.livingVillages.npcEventMemoryEnabled")
+         .define("npcEventMemoryEnabled", true);
+      this.npcEventRetentionLimit = builder.comment("Max detailed living events retained per village")
+         .translation("millenaire.config.livingVillages.npcEventRetentionLimit")
+         .defineInRange("npcEventRetentionLimit", 128, 32, 512);
+      this.npcKnowledgeRetentionLimit = builder.comment("Max knowledge items retained per NPC")
+         .translation("millenaire.config.livingVillages.npcKnowledgeRetentionLimit")
+         .defineInRange("npcKnowledgeRetentionLimit", 24, 8, 128);
+      this.villageRequestsEnabled = builder.comment("Dynamic village assistance requests and deliveries")
+         .translation("millenaire.config.livingVillages.villageRequestsEnabled")
+         .define("villageRequestsEnabled", true);
+      this.villageRequestMaxPerPlayer = builder.comment("Max active assistance requests per player")
+         .translation("millenaire.config.livingVillages.villageRequestMaxPerPlayer")
+         .defineInRange("villageRequestMaxPerPlayer", 3, 1, 16);
+      this.villageRequestMaxPerVillage = builder.comment("Max active assistance requests per village")
+         .translation("millenaire.config.livingVillages.villageRequestMaxPerVillage")
+         .defineInRange("villageRequestMaxPerVillage", 6, 1, 32);
+      this.villageRequestExpiryDays = builder.comment("Minecraft days before an assistance request expires")
+         .translation("millenaire.config.livingVillages.villageRequestExpiryDays")
+         .defineInRange("villageRequestExpiryDays", 7, 1, 60);
+      this.villageRequestMaximumDeliveryQuantity = builder.comment("Max quantity of one item requested per assistance offer")
+         .translation("millenaire.config.livingVillages.villageRequestMaximumDeliveryQuantity")
+         .defineInRange("villageRequestMaximumDeliveryQuantity", 64, 8, 256);
+      this.villageRequestReputationMultiplier = builder.comment("Multiplier applied to reputation rewards for completed assistance")
+         .translation("millenaire.config.livingVillages.villageRequestReputationMultiplier")
+         .defineInRange("villageRequestReputationMultiplier", 1.0D, 0.0D, 5.0D);
+      this.npcWorldReactionsEnabled = builder.comment("Seed NPC knowledge from living events")
+         .translation("millenaire.config.livingVillages.npcWorldReactionsEnabled")
+         .define("npcWorldReactionsEnabled", true);
+      this.npcReactionProcessingBudget = builder.comment("Max reaction/event knowledge operations per reaction pass")
+         .translation("millenaire.config.livingVillages.npcReactionProcessingBudget")
+         .defineInRange("npcReactionProcessingBudget", 16, 1, 64);
+      this.npcDialogueActionSuggestionsEnabled = builder.comment("Show contextual Living Villages action buttons in NPC chat")
+         .translation("millenaire.config.livingVillages.npcDialogueActionSuggestionsEnabled")
+         .define("npcDialogueActionSuggestionsEnabled", true);
+      this.livingVillagesDebugLogging = builder.comment("Verbose Living Villages debug logging")
+         .translation("millenaire.config.livingVillages.debugLogging")
+         .define("livingVillagesDebugLogging", false);
       builder.pop();
    }
 

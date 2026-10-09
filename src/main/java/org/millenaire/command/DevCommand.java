@@ -40,6 +40,7 @@ public final class DevCommand {
       GrantCultureControlCommand.registerUnder(dev);
       HireDevCommand.registerUnder(dev);
       NpcChatDevCommand.registerUnder(dev);
+      org.millenaire.living.command.LivingDevCommand.registerUnder(dev);
       dispatcher.register((LiteralArgumentBuilder)Commands.literal("millenaire").then(dev));
    }
 }

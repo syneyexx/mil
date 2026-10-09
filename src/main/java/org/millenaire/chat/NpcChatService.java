@@ -201,6 +201,7 @@ public final class NpcChatService {
          new NpcChatOpenPayload(entityId, preview.displayName(), preview.roleLine(), preview.reputationLabel(), history),
          new CustomPacketPayload[0]
       );
+      org.millenaire.living.context.LivingDialogueSupport.sendActionChoices(player, entityId);
    }
 
    public static void handleClose(ServerPlayer player, int entityId) {

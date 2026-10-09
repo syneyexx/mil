@@ -414,8 +414,10 @@ public class Millenaire {
          TpCommand.register(event.getDispatcher());
          org.millenaire.command.NpcChatModelCommand.register(event);
       });
+      org.millenaire.living.LivingVillagesLifecycle.bootstrap();
       NeoForge.EVENT_BUS.addListener(ServerStoppingEvent.class, event -> {
          org.millenaire.chat.NpcChatService.onServerStopping();
+         org.millenaire.living.LivingVillagesLifecycle.onServerStopping();
          TestPlayerManager.onServerStopping();
          TravelBookNavigationState.clearAll();
          ConvertAddonCommand.onServerStopping(event);
@@ -433,6 +435,7 @@ public class Millenaire {
             TravelBookNavigationState.clear(serverPlayer.getUUID());
             PlanPreviewRequestPayload.clearPrePicked(serverPlayer.getUUID());
             org.millenaire.chat.NpcChatService.onPlayerLogout(serverPlayer);
+            org.millenaire.living.LivingVillagesLifecycle.onPlayerLogout(serverPlayer);
          }
       });
       NeoForge.EVENT_BUS.addListener(PlayerLoggedInEvent.class, event -> {

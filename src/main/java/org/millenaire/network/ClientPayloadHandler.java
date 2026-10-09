@@ -66,6 +66,14 @@ public final class ClientPayloadHandler {
       context.enqueueWork(() -> NpcChatScreen.handleClosed(payload));
    }
 
+   public static void handleLivingActionChoices(org.millenaire.living.net.LivingActionChoicesPayload payload, IPayloadContext context) {
+      context.enqueueWork(() -> NpcChatScreen.handleLivingActions(payload));
+   }
+
+   public static void handleLivingActionFeedback(org.millenaire.living.net.LivingActionFeedbackPayload payload, IPayloadContext context) {
+      context.enqueueWork(() -> NpcChatScreen.handleLivingFeedback(payload));
+   }
+
    public static void handleUnlockingToast(UnlockingToastPayload payload, IPayloadContext context) {
       context.enqueueWork(
          () -> {

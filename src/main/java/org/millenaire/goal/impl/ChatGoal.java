@@ -386,7 +386,7 @@ public class ChatGoal implements VillagerGoal {
                   if (this.companionTask != null) {
                      this.companionTask.markDone();
                   }
-
+                  this.notifySocialCompletion();
                   this.phase = ChatGoal.ChatTask.Phase.DONE;
                } else {
                   this.showCurrentLine();
@@ -429,6 +429,24 @@ public class ChatGoal implements VillagerGoal {
 
                this.lineTimer = base * 2;
             }
+         }
+      }
+
+      private void notifySocialCompletion() {
+         if (this.partner == null || !this.partner.isAlive()) {
+            return;
+         }
+         if (!(this.self.level() instanceof ServerLevel level)) {
+            return;
+         }
+         Village village = this.self.getVillageId() != null ? Village.resolve(level, this.self.getVillageId()) : null;
+         if (village == null) {
+            return;
+         }
+         var recA = village.getVillagerRecords().get(this.self.getUUID());
+         var recB = village.getVillagerRecords().get(this.partner.getUUID());
+         if (recA != null && recB != null) {
+            org.millenaire.living.LivingVillagesLifecycle.onChatCompleted(level, village, recA, recB);
          }
       }
 
