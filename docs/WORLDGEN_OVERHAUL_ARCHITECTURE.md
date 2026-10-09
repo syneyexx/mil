@@ -55,6 +55,7 @@ Set `worldgenEngineEnabled=false` to restore the legacy post-load queue.
 - Walls planned via existing `VillageWallGenerator` location math; materialized chunk-locally.
 - Hamlets stored on parent plan and expanded to child plans with parent UUID link.
 - Regional connectors: `RegionalRoadPlanner` + `RegionalRoadMaterializer` (off by default). Bridges via `worldgenGenerateBridges`.
+- Placement permission: `RoadPlacementGuard` (shared by local roads, regional roads, and bridges). Only natural suitable terrain / clearable vegetation / bridge water routes may be overwritten; ordinary building blocks, containers, village footprints, planned buildings, and structure conflicts block placement. Slope continuity uses persisted `lastPlaced*` after resume. Detours must remain continuous route segments. A bridge is not `COMPLETE` while passage above the deck stays blocked.
 
 ## Activation
 

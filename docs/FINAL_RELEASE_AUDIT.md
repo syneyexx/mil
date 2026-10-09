@@ -18,6 +18,16 @@
 | W-10 | Regional roads/bridges cosmetic | Implemented materializer + bridge strategy; config meaningful |
 | W-11 | Missing README / .gitignore; caches tracked | Added; caches untracked |
 
+## Civilization usability + integrity pass (post-#6)
+
+| ID | Finding | Resolution |
+|----|---------|------------|
+| C-01 | `isSafeToOverwrite` accepted ordinary building blocks | Confirmed; `RoadPlacementGuard` intent-aware natural-terrain rules for path/bridge/passage; local+regional callers wired |
+| C-02 | Colonization advance starved later ops; unbounded terminal refunds | Confirmed; persisted `advanceCursor` / `refundCursor` with independent budgets |
+| C-03 | Sticky intended founders without exclusive reservation | Confirmed; founder slots + exclusive reservation index; replacement of permanently unsuitable candidates |
+| C-04 | “Exact” cost reserve used Item+count reconstruction | Confirmed; `removeByItemExact` / `removeByTagExact` + persistent stack encode; incomplete rollback → `refundOutstanding` |
+| C-05 | Civilization facts hard to act on in UI | Confirmed; shared snapshots → village book Civilization section + `NpcActionType` civilization actions |
+
 ## Remaining limits (honest)
 
 | ID | Notes |
@@ -27,8 +37,10 @@
 | L-03 | Cross-SavedData crash consistency is best-effort with recovery flags |
 | L-04 | Bridge placement is procedural, not template-pack based |
 | L-05 | Runtime performance and gameplay balance unverified |
+| L-06 | Player-block provenance incomplete — road guard is conservative, not omniscient |
+| L-07 | Authorize-colonization never enables the master switch; founding stays default-off |
 
 ## Security (static)
 
-- Civilization / worldgen / migration / trade paths do not call LLM APIs to authorize mutations.
-- NPC dialogue remains descriptive of verified facts only.
+- Civilization / worldgen / migration / trade / colonization cost paths do not call LLM APIs to authorize mutations.
+- NPC dialogue uses the same presentation facts as UI and only points at server-owned action proposals.

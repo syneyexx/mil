@@ -1,92 +1,207 @@
 package org.millenaire.civilization.bridge;
 
 import javax.annotation.Nullable;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
-import org.millenaire.civilization.CivilizationSavedData;
-import org.millenaire.civilization.population.PopulationSnapshot;
+import org.millenaire.civilization.presentation.CivilizationFactionSnapshot;
+import org.millenaire.civilization.presentation.CivilizationPresentationService;
+import org.millenaire.civilization.presentation.CivilizationVillageSnapshot;
 import org.millenaire.config.MillenaireServerConfig;
+import org.millenaire.culture.ModCultures;
+import org.millenaire.culture.VillagerType;
 import org.millenaire.faction.FactionId;
-import org.millenaire.faction.diplomacy.AgreementStatus;
-import org.millenaire.faction.diplomacy.DiplomacySavedData;
-import org.millenaire.faction.diplomacy.DiplomaticAgreement;
-import org.millenaire.faction.economy.EconomySavedData;
-import org.millenaire.faction.economy.FactionEconomicProfile;
-import org.millenaire.faction.politics.PoliticalLeader;
-import org.millenaire.faction.politics.PoliticsQueries;
-import org.millenaire.faction.war.War;
-import org.millenaire.faction.war.WarSavedData;
-import org.millenaire.faction.war.WarState;
 import org.millenaire.living.context.DialogueGameplayContext;
 import org.millenaire.village.Village;
+import org.millenaire.village.VillagerRecord;
 
 /**
  * Appends verified, role-safe civilization facts to NPC dialogue / panel context.
- * Never invents resources, treaties or wars — only reads authoritative managers.
+ * Uses the same server-derived presentation snapshots as UI — never invents resources,
+ * treaties, colonies or wars. LLM text may describe these facts and point at server
+ * action buttons; it never authorizes mutations.
  */
 public final class CivilizationContextProvider {
    private CivilizationContextProvider() {
    }
 
    public static void appendVerified(ServerLevel level, @Nullable Village village, DialogueGameplayContext ctx) {
+      appendVerified(level, village, ctx, null);
+   }
+
+   public static void appendVerified(
+      ServerLevel level,
+      @Nullable Village village,
+      DialogueGameplayContext ctx,
+      @Nullable VillagerRecord speaker
+   ) {
       if (level == null || village == null || ctx == null || !enabled()) {
          return;
       }
-      FactionId factionId = village.getFactionId();
-      if (factionId == null) {
+      CivilizationVillageSnapshot snap = CivilizationPresentationService.villageSnapshot(level, village, null);
+      RoleScope scope = resolveScope(speaker);
+
+      if (snap.factionId() == null) {
          ctx.addVerified("factionAffiliation=independent");
-         return;
-      }
-      ctx.addVerified("factionId=" + factionId.asString());
-
-      PoliticalLeader leader = PoliticsQueries.leader(level, factionId);
-      if (leader != null && leader.getDisplayName() != null && !leader.getDisplayName().isBlank()) {
-         ctx.addVerified("factionLeader=" + leader.getDisplayName());
-      }
-      if (PoliticsQueries.successionPending(level, factionId)) {
-         ctx.addVerified("successionPending=true");
+      } else {
+         String factionLabel = snap.factionDisplayName().isBlank() ? "unnamed_faction" : snap.factionDisplayName();
+         ctx.addVerified("factionDisplayName=" + factionLabel);
+         ctx.addVerified("settlementDevelopment=" + snap.developmentCode());
       }
 
-      FactionEconomicProfile profile = EconomySavedData.get(level).getTradeManager().getProfile(factionId);
-      if (profile != null) {
-         ctx.addVerified("economyBalance=" + profile.getBalanceLevel().name());
+      ctx.addVerified("residents=" + snap.residents());
+      ctx.addVerified("housingCapacity=" + snap.housingCapacity());
+      if (snap.overcrowded()) {
+         ctx.addVerified("housingPressure=overcrowded");
+      }
+      if (!snap.inventoryKnown()) {
+         ctx.addVerified("inventoryAvailability=unknown_chunks_unloaded");
       }
 
-      String development = CivilizationSavedData.get(level).getDevelopmentLabel(village.getId().uuid());
-      if (development != null) {
-         ctx.addVerified("settlementDevelopment=" + development);
+      if (scope.includesLocalNeeds() && !snap.topNeeds().isEmpty()) {
+         CivilizationVillageSnapshot.NeedLine need = snap.topNeeds().getFirst();
+         ctx.addVerified("topNeed=" + need.detail() + " shortage=" + need.shortage());
       }
 
-      CompoundTag popTag = CivilizationSavedData.get(level).getPopulationSnapshot(factionId.asString());
-      if (popTag != null) {
-         PopulationSnapshot pop = PopulationSnapshot.load(popTag);
-         ctx.addVerified("factionResidents=" + pop.residents());
+      if (scope.includesProjects() && snap.currentProject() != null) {
+         ctx.addVerified(
+            "currentProject=" + snap.currentProject().nameKeyOrLiteral()
+               + " status=" + snap.currentProject().statusCode()
+         );
       }
 
-      int activeTreaties = 0;
-      for (DiplomaticAgreement agreement : DiplomacySavedData.get(level).getDiplomaticManager().getAllAgreements()) {
-         if (agreement.getStatus() != AgreementStatus.ACTIVE) {
-            continue;
+      if (scope.includesTrade()) {
+         if (snap.tradeSummary() != null) {
+            ctx.addVerified(
+               "activeSupportRequest=" + snap.tradeSummary().itemLabel()
+                  + " status=" + snap.tradeSummary().statusCode()
+            );
          }
-         if (factionId.equals(agreement.getPrimaryFactionId()) || factionId.equals(agreement.getSecondaryFactionId())) {
-            activeTreaties++;
-            if (activeTreaties <= 3) {
-               ctx.addVerified("treaty=" + agreement.getType().name() + ":" + agreement.getStatus().name());
+         if (snap.connection() != null) {
+            ctx.addVerified(
+               "regionalConnection=" + snap.connection().endpointName()
+                  + " status=" + snap.connection().statusCode()
+                  + (snap.connection().reasonCode() == null || snap.connection().reasonCode().isBlank() || "none".equals(snap.connection().reasonCode())
+                     ? ""
+                     : " reason=" + snap.connection().reasonCode())
+            );
+         }
+      }
+
+      if (scope.includesColonization() && snap.colonization() != null) {
+         CivilizationVillageSnapshot.ColonizationLine c = snap.colonization();
+         ctx.addVerified(
+            "colonizationStatus=" + c.statusCode()
+               + " founders=" + c.migratedFounders() + "/" + c.founderTarget()
+               + " reason=" + c.reasonCode()
+         );
+         if (c.refundOutstanding()) {
+            ctx.addVerified("colonizationRefundOutstanding=true");
+         }
+      }
+
+      if (scope.includesMigration() && snap.migration() != null) {
+         ctx.addVerified(
+            "migration=" + snap.migration().migrated() + "/" + snap.migration().target()
+               + " to=" + snap.migration().destinationName()
+               + " reason=" + snap.migration().reasonCode()
+         );
+      }
+
+      if (scope.includesFactionWide() && snap.factionId() != null) {
+         FactionId factionId = FactionId.tryParse(snap.factionId());
+         if (factionId != null) {
+            CivilizationFactionSnapshot faction = CivilizationPresentationService.factionSnapshot(level, factionId);
+            if (faction.leaderName() != null) {
+               ctx.addVerified("factionLeader=" + faction.leaderName());
+            }
+            ctx.addVerified("factionSettlements=" + faction.settlementCount());
+            ctx.addVerified("factionResidents=" + faction.residents());
+            if (faction.atWar()) {
+               ctx.addVerified("warState=active");
+            }
+            if (faction.activeTreaties() > 0) {
+               ctx.addVerified("activeTreaties=" + faction.activeTreaties());
             }
          }
       }
-      if (activeTreaties > 3) {
-         ctx.addVerified("additionalTreaties=" + (activeTreaties - 3));
+
+      if (scope.includesLocalHistory()) {
+         int n = 0;
+         for (CivilizationVillageSnapshot.HistoryLine h : snap.recentHistory()) {
+            if (n >= 3) {
+               break;
+            }
+            ctx.addVerified("recentEvent=" + h.summary());
+            n++;
+         }
       }
 
-      for (War war : WarSavedData.get(level).getWarManager().getAllWars()) {
-         if (war.getState() == WarState.ENDED) {
+      // Point at available server-owned actions — never invent proposal ids.
+      int actionHints = 0;
+      for (CivilizationVillageSnapshot.AllowedAction action : snap.allowedActions()) {
+         if (!action.enabled() || actionHints >= 3) {
             continue;
          }
-         if (factionId.equals(war.getInitiatorFactionId()) || factionId.equals(war.getPrimaryTargetFactionId())) {
-            ctx.addVerified("warState=" + war.getState().name());
-            break;
-         }
+         ctx.addVerified("availablePlayerAction=" + action.actionId().name().toLowerCase());
+         actionHints++;
+      }
+
+      ctx.addVerified("promptRule=no_invented_migrants_colonies_or_trades");
+      ctx.addVerified("promptRule=no_mutation_authority_from_dialogue");
+   }
+
+   private static RoleScope resolveScope(@Nullable VillagerRecord speaker) {
+      if (speaker == null || speaker.getVillagerTypeId() == null) {
+         return RoleScope.RESIDENT;
+      }
+      VillagerType type = ModCultures.getVillagerType(speaker.getVillagerTypeId());
+      if (type == null || type.id() == null) {
+         return RoleScope.RESIDENT;
+      }
+      String path = type.id().getPath();
+      if (path.contains("chief") || path.contains("leader") || path.contains("headman") || path.contains("seneschal")) {
+         return RoleScope.CHIEF;
+      }
+      if (path.contains("merchant") || path.contains("trader") || path.contains("innkeeper") || path.contains("seller")) {
+         return RoleScope.MERCHANT;
+      }
+      if (path.contains("builder") || path.contains("mason") || path.contains("carpenter") || path.contains("architect")) {
+         return RoleScope.BUILDER;
+      }
+      return RoleScope.RESIDENT;
+   }
+
+   private enum RoleScope {
+      CHIEF,
+      MERCHANT,
+      BUILDER,
+      RESIDENT;
+
+      boolean includesLocalNeeds() {
+         return this == CHIEF || this == MERCHANT || this == BUILDER;
+      }
+
+      boolean includesProjects() {
+         return this == CHIEF || this == BUILDER;
+      }
+
+      boolean includesTrade() {
+         return this == CHIEF || this == MERCHANT;
+      }
+
+      boolean includesColonization() {
+         return this == CHIEF;
+      }
+
+      boolean includesMigration() {
+         return this == CHIEF || this == RESIDENT;
+      }
+
+      boolean includesFactionWide() {
+         return this == CHIEF;
+      }
+
+      boolean includesLocalHistory() {
+         return true; // all roles get bounded local events; count capped above
       }
    }
 

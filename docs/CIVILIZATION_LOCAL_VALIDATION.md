@@ -131,3 +131,23 @@ Diagnostics: `/millenaire dev civilization status|metrics|stages`, `/millenaire 
 - **Setup:** Overcrowded village; lowest UUID on cooldown; another eligible resident present.
 - **Expected:** Alternate resident migrates; failed attempt does not apply full success cooldown.
 - **Result:** ☐ PASS ☐ FAIL
+
+## 24. Safe road overwrite
+- **Setup:** Regional or local road path crosses player-built planks/stone near a village footprint.
+- **Expected:** Placement blocks with a concrete reason; route becomes blocked/detoured — not CONNECTED through the building.
+- **Result:** ☐ PASS ☐ FAIL
+
+## 25. Fair colonization advance
+- **Setup:** Multiple active colonization ops; first op waiting on unloaded chunks.
+- **Expected:** Later ops still advance within budget; refunds drain even when autonomous founding is toggled off.
+- **Result:** ☐ PASS ☐ FAIL
+
+## 26. Founder replacement
+- **Setup:** Colony reserved with intended founders; kill/hire one before migration completes; another eligible adult exists.
+- **Expected:** Unsuitable founder released; replacement reserved; already-migrated founders kept; ordinary migration cannot steal reserved founders.
+- **Result:** ☐ PASS ☐ FAIL
+
+## 27. Civilization UI actions
+- **Setup:** Controlled village with shortage + queued residential project; optional active colonization proposal.
+- **Expected:** Village book Civilization section shows localized status; NPC action buttons support need / prioritize housing / view colonization; visitor cannot authorize colonization or reorder projects.
+- **Result:** ☐ PASS ☐ FAIL

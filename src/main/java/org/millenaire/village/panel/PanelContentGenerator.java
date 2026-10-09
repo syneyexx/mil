@@ -72,6 +72,7 @@ public final class PanelContentGenerator {
          case MARVEL_RESOURCES -> MarvelPanelGenerator.generateMarvelResources(village, level);
          case HALL_OF_FAME -> new PanelContent(PanelType.HALL_OF_FAME, "panel.millenaire.panel_type.hall_of_fame", List.of(), true, null);
          case CHRONICLE -> VillageOverviewPanelGenerator.generateChronicle(village);
+         case CIVILIZATION -> VillageOverviewPanelGenerator.generateCivilization(village, level, player);
       };
    }
 
@@ -442,6 +443,10 @@ public final class PanelContentGenerator {
       switch (type) {
          case VILLAGE_SUMMARY:
             VillageOverviewPanelGenerator.addSummary3D(data, village);
+            break;
+         case CIVILIZATION:
+            VillageOverviewPanelGenerator.addSummary3D(data, village);
+            data.addCenteredTranslatable("panel.millenaire.panel_type.civilization");
             break;
          case POPULATION:
             VillageOverviewPanelGenerator.addPopulation3D(data, village);

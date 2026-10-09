@@ -39,7 +39,48 @@ public final class NpcActionExecutor {
          case OPEN_EXISTING_TRADE_INTERACTION -> openTrade(ctx);
          case VIEW_VILLAGE_STATUS -> viewStatus(ctx);
          case REPORT_WORLD_EVENT -> NpcActionResult.fail("living.millenaire.action.error.report_not_from_dialogue");
+         case SUPPORT_VILLAGE_NEED -> civilizationAction(
+            ctx, proposal, org.millenaire.civilization.presentation.CivilizationActionId.SUPPORT_NEED
+         );
+         case PRIORITIZE_HOUSING_PROJECT -> civilizationAction(
+            ctx, proposal, org.millenaire.civilization.presentation.CivilizationActionId.PRIORITIZE_HOUSING
+         );
+         case VIEW_COLONIZATION_PROPOSAL -> civilizationAction(
+            ctx, proposal, org.millenaire.civilization.presentation.CivilizationActionId.VIEW_COLONIZATION
+         );
+         case SUPPORT_COLONIZATION_MATERIALS -> civilizationAction(
+            ctx, proposal, org.millenaire.civilization.presentation.CivilizationActionId.SUPPORT_COLONIZATION_MATERIALS
+         );
+         case AUTHORIZE_COLONIZATION_PROPOSAL -> civilizationAction(
+            ctx, proposal, org.millenaire.civilization.presentation.CivilizationActionId.AUTHORIZE_COLONIZATION
+         );
+         case VIEW_INTERRUPTED_OPERATION -> civilizationAction(
+            ctx, proposal, org.millenaire.civilization.presentation.CivilizationActionId.VIEW_INTERRUPTED_OPERATION
+         );
       };
+   }
+
+   private static NpcActionResult civilizationAction(
+      NpcActionContext ctx,
+      NpcActionProposal proposal,
+      org.millenaire.civilization.presentation.CivilizationActionId actionId
+   ) {
+      if (ctx.village() == null) {
+         return NpcActionResult.fail("living.millenaire.action.error.no_village");
+      }
+      org.millenaire.civilization.presentation.CivilizationActionService.ActionResult result =
+         org.millenaire.civilization.presentation.CivilizationActionService.execute(
+            ctx.level(),
+            ctx.player(),
+            ctx.village(),
+            actionId,
+            proposal.targetId(),
+            ctx.npcId()
+         );
+      result.notify(ctx.player());
+      return result.success()
+         ? NpcActionResult.ok(result.messageKey(), result.detail() == null ? "" : result.detail())
+         : NpcActionResult.fail(result.messageKey());
    }
 
    private static NpcActionResult viewNeeds(NpcActionContext ctx) {

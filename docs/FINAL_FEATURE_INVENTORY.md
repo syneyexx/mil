@@ -16,13 +16,18 @@ Legend: **IMPLEMENTED_UNVERIFIED** = source complete, runtime not verified by ag
 | Politics/diplomacy/war chronicle bridges | IMPLEMENTED_UNVERIFIED | `CivilizationEventBridge` |
 | Settlement development labels | IMPLEMENTED_UNVERIFIED | `SettlementDevelopmentClassifier` (fair cursor) |
 | Offscreen economy **profile refresh** | IMPLEMENTED_UNVERIFIED | `OffscreenReconciler` |
-| Autonomous founding | IMPLEMENTED_UNVERIFIED | `ColonizationService` full lifecycle (default **off**) |
+| Autonomous founding | IMPLEMENTED_UNVERIFIED | `ColonizationService` full lifecycle (default **off**); fair advance/refund cursors; exclusive founders |
+| Exact founding cost stacks | IMPLEMENTED_UNVERIFIED | `BuildingInventory.removeBy*Exact` + `ColonizationOperation` stack persistence |
+| Safe road/bridge overwrite | IMPLEMENTED_UNVERIFIED | `RoadPlacementGuard` + regional slope/detour persistence |
+| Civilization presentation snapshots | IMPLEMENTED_UNVERIFIED | `CivilizationPresentationService` (derived, not persisted) |
+| Village book Civilization section | IMPLEMENTED_UNVERIFIED | `VillageBookService` + `VillageOverviewPanelGenerator.generateCivilization` |
+| Civilization player actions | IMPLEMENTED_UNVERIFIED | `CivilizationActionService` via `NpcActionType` (need / housing / colonization / interrupted) |
 | Resumable worldgen materialization | IMPLEMENTED_UNVERIFIED | Per-unit cursors in `ChunkMaterializationProgress` (schema v3) |
 | Regional roads + bridges | IMPLEMENTED_UNVERIFIED | Continuous routes + resumable bridges; `CONNECTED` only when finished |
 | Living request live need caps | IMPLEMENTED_UNVERIFIED | Live need required; exact-stack delivery; unsafe overload disabled |
 | Living event types (civ) | IMPLEMENTED_UNVERIFIED | `LivingEventType` |
 | Worldgen founded event | IMPLEMENTED_UNVERIFIED | `SettlementActivator` → `LivingEventService` |
-| NPC civ dialogue context | IMPLEMENTED_UNVERIFIED | `CivilizationContextProvider` |
+| NPC civ dialogue context | IMPLEMENTED_UNVERIFIED | `CivilizationContextProvider` (role-scoped shared snapshots) |
 | Dev command | IMPLEMENTED_UNVERIFIED | `/millenaire dev civilization` |
 | en_us / nl_nl strings | IMPLEMENTED_UNVERIFIED | lang JSON |
 | Abstract→physical free items | UNSUPPORTED | forbidden by design |

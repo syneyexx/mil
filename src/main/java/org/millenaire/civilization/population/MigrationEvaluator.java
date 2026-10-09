@@ -129,6 +129,10 @@ public final class MigrationEvaluator {
             continue;
          }
          UUID id = record.getUuid();
+         // Colonization founder reservations are exclusive against ordinary migration.
+         if (org.millenaire.civilization.settlement.ColonizationService.isReservedFounder(level, id)) {
+            continue;
+         }
          if (state.isPublished("mig-cd:" + id, level.getGameTime(), SUCCESS_COOLDOWN)) {
             continue;
          }

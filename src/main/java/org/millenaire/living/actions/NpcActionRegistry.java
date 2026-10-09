@@ -66,6 +66,24 @@ public final class NpcActionRegistry {
       out.add(NpcActionType.DISCUSS_EXISTING_QUEST);
       out.add(NpcActionType.OPEN_EXISTING_QUEST_INTERACTION);
       out.add(NpcActionType.OPEN_EXISTING_TRADE_INTERACTION);
+      // Civilization actions — availability from shared presentation snapshot.
+      org.millenaire.civilization.presentation.CivilizationVillageSnapshot civ =
+         org.millenaire.civilization.presentation.CivilizationPresentationService.villageSnapshot(
+            ctx.level(), ctx.village(), ctx.player()
+         );
+      for (org.millenaire.civilization.presentation.CivilizationVillageSnapshot.AllowedAction action : civ.allowedActions()) {
+         if (!action.enabled()) {
+            continue;
+         }
+         switch (action.actionId()) {
+            case SUPPORT_NEED -> out.add(NpcActionType.SUPPORT_VILLAGE_NEED);
+            case PRIORITIZE_HOUSING -> out.add(NpcActionType.PRIORITIZE_HOUSING_PROJECT);
+            case VIEW_COLONIZATION -> out.add(NpcActionType.VIEW_COLONIZATION_PROPOSAL);
+            case SUPPORT_COLONIZATION_MATERIALS -> out.add(NpcActionType.SUPPORT_COLONIZATION_MATERIALS);
+            case AUTHORIZE_COLONIZATION -> out.add(NpcActionType.AUTHORIZE_COLONIZATION_PROPOSAL);
+            case VIEW_INTERRUPTED_OPERATION -> out.add(NpcActionType.VIEW_INTERRUPTED_OPERATION);
+         }
+      }
       return out;
    }
 
@@ -91,6 +109,28 @@ public final class NpcActionRegistry {
          VillageRequest active = findActiveRequest(ctx);
          if (active != null) {
             targetId = active.requestId();
+            params.putString("target", targetId);
+         }
+      }
+      if ((type == NpcActionType.SUPPORT_VILLAGE_NEED || type == NpcActionType.SUPPORT_COLONIZATION_MATERIALS)
+         && (targetId == null || targetId.isBlank())
+         && ctx.village() != null) {
+         VillageNeedsSnapshot snap = LivingVillagesService.get().needsEngine().evaluate(ctx.level(), ctx.village(), true);
+         VillageNeed need = snap.mostSevere().orElse(null);
+         if (need != null) {
+            targetId = need.needId();
+            params.putString("target", targetId);
+         }
+      }
+      if ((type == NpcActionType.VIEW_COLONIZATION_PROPOSAL
+         || type == NpcActionType.AUTHORIZE_COLONIZATION_PROPOSAL
+         || type == NpcActionType.VIEW_INTERRUPTED_OPERATION)
+         && (targetId == null || targetId.isBlank())
+         && ctx.village() != null) {
+         org.millenaire.civilization.settlement.ColonizationOperation op =
+            org.millenaire.civilization.settlement.ColonizationService.findActiveForParent(ctx.level(), ctx.village().getId().uuid());
+         if (op != null) {
+            targetId = op.operationId().toString();
             params.putString("target", targetId);
          }
       }

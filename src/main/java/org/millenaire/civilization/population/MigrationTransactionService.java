@@ -73,6 +73,11 @@ public final class MigrationTransactionService {
          return MigrationResult.rejected("not_eligible", originId.uuid(), destinationId.uuid());
       }
 
+      // Exclusive founder reservation: only the matching colony destination may migrate this villager.
+      if (!founderReservationAllows(level, record.getUuid(), destinationId)) {
+         return MigrationResult.rejected("founder_reserved", originId.uuid(), destinationId.uuid());
+      }
+
       if (!factionAllowsMigration(origin, destination)) {
          return MigrationResult.rejected("faction_blocked", originId.uuid(), destinationId.uuid());
       }
@@ -355,6 +360,32 @@ public final class MigrationTransactionService {
          }
       }
       return true;
+   }
+
+   /**
+    * Reserved founders may only migrate into their colonization destination village.
+    * Unreserved villagers always pass this check.
+    */
+   public static boolean founderReservationAllows(ServerLevel level, UUID villagerId, VillageId destinationId) {
+      if (level == null || villagerId == null || destinationId == null) {
+         return true;
+      }
+      UUID holder = org.millenaire.civilization.settlement.ColonizationSavedData.get(level).reservationHolder(villagerId);
+      if (holder == null) {
+         return true;
+      }
+      org.millenaire.civilization.settlement.ColonizationOperation op =
+         org.millenaire.civilization.settlement.ColonizationSavedData.get(level).get(holder);
+      if (op == null || !op.isActive()) {
+         return true;
+      }
+      org.millenaire.worldgen.plan.SettlementPlan plan =
+         org.millenaire.worldgen.plan.SettlementPlanSavedData.get(level).getPlan(op.planId());
+      if (plan == null || plan.villageUuid() == null) {
+         // Colony village not activated yet — block ordinary migration away.
+         return false;
+      }
+      return destinationId.uuid().equals(plan.villageUuid());
    }
 
    /**
