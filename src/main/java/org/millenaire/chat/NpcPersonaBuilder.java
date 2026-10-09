@@ -140,7 +140,11 @@ public final class NpcPersonaBuilder {
       );
    }
 
-   private static List<String> buildRumorLines(NpcMind mind, NpcMindSavedData data, @Nullable Village village, ServerLevel level) {
+   public static List<String> buildRumorLinesPublic(NpcMind mind, NpcMindSavedData data, @Nullable Village village) {
+      return buildRumorLines(mind, data, village, null);
+   }
+
+   private static List<String> buildRumorLines(NpcMind mind, NpcMindSavedData data, @Nullable Village village, @Nullable ServerLevel level) {
       List<NpcRumorKnowledge> known = new ArrayList<>(mind.getKnowledge());
       known.sort(
          Comparator.comparingDouble(NpcRumorKnowledge::confidence)

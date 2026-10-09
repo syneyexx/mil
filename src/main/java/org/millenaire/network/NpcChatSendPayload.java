@@ -1,13 +1,16 @@
 package org.millenaire.network;
 
 import io.netty.buffer.ByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+import org.millenaire.chat.NpcChatLinePayload;
 import org.millenaire.chat.NpcChatRateLimiter;
 import org.millenaire.chat.NpcChatSanitize;
 import org.millenaire.chat.NpcChatService;
@@ -50,12 +53,21 @@ public record NpcChatSendPayload(int entityId, String text, String languageCode)
             lastConfigured = configured;
          }
          if (!rateLimiter.acquire(player.getUUID())) {
+            reject(player, payload.entityId(), "gui.millenaire.npcchat.rate_limited");
             return;
          }
          if (payload.text().isEmpty() || !NpcChatSanitize.isValidLanguageCode(payload.languageCode())) {
+            reject(player, payload.entityId(), "gui.millenaire.npcchat.invalid");
             return;
          }
          NpcChatService.handleSend(player, payload.entityId(), payload.text(), payload.languageCode());
       });
+   }
+
+   private static void reject(ServerPlayer player, int entityId, String key) {
+      String text = Component.translatable(key).getString();
+      PacketDistributor.sendToPlayer(
+         player, new NpcChatLinePayload(entityId, NpcChatService.SPEAKER_SYSTEM, text, false), new CustomPacketPayload[0]
+      );
    }
 }

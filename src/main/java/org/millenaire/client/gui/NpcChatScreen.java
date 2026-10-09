@@ -21,6 +21,7 @@ public class NpcChatScreen extends AbstractMillenaireScreen {
    private static final int PARCHMENT_WIDTH = 280;
    private static final int PARCHMENT_HEIGHT = 220;
    private static final int MAX_LINES = 100;
+   private static final int LINE_HEIGHT = 11;
    private static NpcChatScreen active;
 
    private final int entityId;
@@ -32,6 +33,8 @@ public class NpcChatScreen extends AbstractMillenaireScreen {
    private Button sendButton;
    private boolean awaitingReply;
    private int scroll;
+   /** Visual wrapped line count for scroll bounds (not entry count). */
+   private int wrappedLineCount;
 
    public NpcChatScreen(NpcChatOpenPayload payload) {
       super(Component.literal(payload.villagerName()));
@@ -65,11 +68,18 @@ public class NpcChatScreen extends AbstractMillenaireScreen {
          if (payload.reasonKey() != null && !payload.reasonKey().isBlank()) {
             active.appendLine(NpcChatService.SPEAKER_SYSTEM, Component.translatable(payload.reasonKey()).getString(), false);
          }
+         active.awaitingReply = false;
+         active.updateInputState();
          Minecraft mc = Minecraft.getInstance();
          if (mc.screen == active) {
             mc.setScreen(null);
          }
          active = null;
+      } else if (active == null && payload.reasonKey() != null && !payload.reasonKey().isBlank()) {
+         Minecraft mc = Minecraft.getInstance();
+         if (mc.player != null) {
+            mc.player.displayClientMessage(Component.translatable(payload.reasonKey()), true);
+         }
       }
    }
 
@@ -104,19 +114,39 @@ public class NpcChatScreen extends AbstractMillenaireScreen {
       y += 14;
       graphics.fill(parchX + 16, y, parchX + PARCHMENT_WIDTH - 16, y + 1, -5601178);
       y += 6;
+      int transcriptTop = y;
       int transcriptBottom = parchY + PARCHMENT_HEIGHT - 48;
-      int maxVisible = Math.max(1, (transcriptBottom - y) / 11);
-      int start = Math.max(0, this.lines.size() - maxVisible - this.scroll);
-      int end = Math.min(this.lines.size(), start + maxVisible);
+      int maxVisible = Math.max(1, (transcriptBottom - transcriptTop) / LINE_HEIGHT);
+
+      List<RenderedLine> rendered = this.buildRenderedLines();
+      this.wrappedLineCount = rendered.size();
+      int maxScroll = Math.max(0, rendered.size() - maxVisible);
+      this.scroll = Math.min(this.scroll, maxScroll);
+      int start = Math.max(0, rendered.size() - maxVisible - this.scroll);
+      int end = Math.min(rendered.size(), start + maxVisible);
+      int drawY = transcriptTop;
       for (int i = start; i < end; i++) {
-         Line line = this.lines.get(i);
+         RenderedLine rl = rendered.get(i);
+         graphics.drawString(this.font, rl.text, parchX + 16, drawY, rl.color, false);
+         drawY += LINE_HEIGHT;
+         if (drawY + LINE_HEIGHT > transcriptBottom) {
+            break;
+         }
+      }
+      super.render(graphics, mouseX, mouseY, partialTick);
+   }
+
+   private List<RenderedLine> buildRenderedLines() {
+      List<RenderedLine> out = new ArrayList<>();
+      int width = textWidth(PARCHMENT_WIDTH);
+      for (Line line : this.lines) {
          int color = switch (line.speaker) {
             case NpcChatService.SPEAKER_PLAYER -> -14018560;
             case NpcChatService.SPEAKER_SYSTEM -> -10066330;
             default -> -12254976;
          };
          String prefix = switch (line.speaker) {
-            case NpcChatService.SPEAKER_PLAYER -> "You: ";
+            case NpcChatService.SPEAKER_PLAYER -> Component.translatable("gui.millenaire.npcchat.you_prefix").getString();
             case NpcChatService.SPEAKER_SYSTEM -> "";
             default -> this.villagerName + ": ";
          };
@@ -124,16 +154,12 @@ public class NpcChatScreen extends AbstractMillenaireScreen {
          if (line.pending) {
             text = "§o" + text;
          }
-         List<PanelLine> wrapped = PanelRenderHelper.wrapLines(List.of(PanelLine.text(text)), this.font, textWidth(PARCHMENT_WIDTH));
+         List<PanelLine> wrapped = PanelRenderHelper.wrapLines(List.of(PanelLine.text(text)), this.font, width);
          for (PanelLine pl : wrapped) {
-            if (y + 11 > transcriptBottom) {
-               break;
-            }
-            graphics.drawString(this.font, pl.text(), parchX + 16, y, color, false);
-            y += 11;
+            out.add(new RenderedLine(pl.text(), color));
          }
       }
-      super.render(graphics, mouseX, mouseY, partialTick);
+      return out;
    }
 
    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
@@ -149,8 +175,9 @@ public class NpcChatScreen extends AbstractMillenaireScreen {
    }
 
    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+      int maxScroll = Math.max(0, this.wrappedLineCount - 1);
       if (scrollY > 0) {
-         this.scroll = Math.min(this.scroll + 1, Math.max(0, this.lines.size() - 1));
+         this.scroll = Math.min(this.scroll + 1, maxScroll);
       } else if (scrollY < 0) {
          this.scroll = Math.max(0, this.scroll - 1);
       }
@@ -159,6 +186,7 @@ public class NpcChatScreen extends AbstractMillenaireScreen {
 
    public void onClose() {
       PacketDistributor.sendToServer(new NpcChatCloseRequestPayload(this.entityId), new CustomPacketPayload[0]);
+      this.awaitingReply = false;
       if (active == this) {
          active = null;
       }
@@ -188,9 +216,8 @@ public class NpcChatScreen extends AbstractMillenaireScreen {
       this.lines.removeIf(l -> l.pending);
       if (pending) {
          this.awaitingReply = true;
-      } else if (speaker == NpcChatService.SPEAKER_NPC) {
-         this.awaitingReply = false;
-      } else if (speaker == NpcChatService.SPEAKER_SYSTEM) {
+      } else if (speaker == NpcChatService.SPEAKER_NPC || speaker == NpcChatService.SPEAKER_SYSTEM) {
+         // NPC replies and system rejects/errors unlock input; player echo must not.
          this.awaitingReply = false;
       }
       this.lines.add(new Line(speaker, text, pending));
@@ -219,6 +246,16 @@ public class NpcChatScreen extends AbstractMillenaireScreen {
          this.speaker = speaker;
          this.text = text;
          this.pending = pending;
+      }
+   }
+
+   private static final class RenderedLine {
+      private final String text;
+      private final int color;
+
+      private RenderedLine(String text, int color) {
+         this.text = text;
+         this.color = color;
       }
    }
 }

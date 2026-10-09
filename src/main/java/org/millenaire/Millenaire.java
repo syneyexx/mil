@@ -414,6 +414,7 @@ public class Millenaire {
          TpCommand.register(event.getDispatcher());
       });
       NeoForge.EVENT_BUS.addListener(ServerStoppingEvent.class, event -> {
+         org.millenaire.chat.NpcChatService.onServerStopping();
          TestPlayerManager.onServerStopping();
          TravelBookNavigationState.clearAll();
          ConvertAddonCommand.onServerStopping(event);
@@ -501,6 +502,7 @@ public class Millenaire {
             ServerStartedEvent.class,
             event -> {
                try {
+                  org.millenaire.chat.NpcChatService.bootstrap();
                   ContentDirectoryManager.init(event.getServer());
                   ExportTransaction.reclaimStaging(BuildingExporter.getExportedRoot(event.getServer().getServerDirectory()));
                   ContentIssueLog.startCapture();

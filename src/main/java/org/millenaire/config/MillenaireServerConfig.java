@@ -54,6 +54,16 @@ public final class MillenaireServerConfig {
    public final IntValue npcChatLeaveRange;
    public final BooleanValue npcChatGossip;
    public final IntValue npcChatGossipExpiryDays;
+   public final BooleanValue npcChatMillenaire;
+   public final BooleanValue npcChatVanilla;
+   public final BooleanValue npcChatModded;
+   public final BooleanValue npcChatGenericLiving;
+   public final BooleanValue npcChatNonverbal;
+   public final BooleanValue npcChatRequireLineOfSight;
+   public final IntValue npcChatTransientRetentionDays;
+   public final IntValue npcChatMaxStoredMinds;
+   public final ConfigValue<String> npcChatEntityAllowList;
+   public final ConfigValue<String> npcChatEntityDenyList;
 
    public static int getDefaultClearMargin() {
       try {
@@ -283,6 +293,38 @@ public final class MillenaireServerConfig {
       this.npcChatGossipExpiryDays = builder.comment("Days before an inactive rumor expires")
          .translation("millenaire.config.npcChat.gossipExpiryDays")
          .defineInRange("gossipExpiryDays", 30, 7, 120);
+      this.npcChatMillenaire = builder.comment("Allow dialogue with Millénaire villagers")
+         .translation("millenaire.config.npcChat.millenaire")
+         .define("millenaire", true);
+      this.npcChatVanilla = builder.comment("Allow dialogue with vanilla villagers, traders, illagers, piglins, golems, allays, hostiles and animals")
+         .translation("millenaire.config.npcChat.vanilla")
+         .define("vanilla", true);
+      this.npcChatModded = builder.comment("Allow dialogue with living entities from other mods via the generic adapter")
+         .translation("millenaire.config.npcChat.modded")
+         .define("modded", true);
+      this.npcChatGenericLiving = builder.comment("Generic LivingEntity fallback for types without a dedicated adapter")
+         .translation("millenaire.config.npcChat.genericLiving")
+         .define("genericLiving", true);
+      this.npcChatNonverbal = builder.comment("Allow nonverbal / atmospheric dialogue for animals and monsters")
+         .translation("millenaire.config.npcChat.nonverbal")
+         .define("nonverbal", true);
+      this.npcChatRequireLineOfSight = builder.comment("Require clear line of sight to open or continue dialogue")
+         .translation("millenaire.config.npcChat.requireLineOfSight")
+         .define("requireLineOfSight", true);
+      this.npcChatTransientRetentionDays = builder.comment("Days to retain minds for transient NPCs after last talk")
+         .translation("millenaire.config.npcChat.transientRetentionDays")
+         .defineInRange("transientRetentionDays", 7, 1, 60);
+      this.npcChatMaxStoredMinds = builder.comment("Soft cap on stored NPC minds; excess transient minds are pruned first")
+         .translation("millenaire.config.npcChat.maxStoredMinds")
+         .defineInRange("maxStoredMinds", 2000, 100, 20000);
+      this.npcChatEntityAllowList = builder.comment(
+            "Optional comma-separated entity type ids (namespace:path or path) for extra documentation; empty = no allow-list restriction"
+         )
+         .translation("millenaire.config.npcChat.entityAllowList")
+         .define("entityAllowList", "");
+      this.npcChatEntityDenyList = builder.comment("Comma-separated entity type ids denied from the generic adapter")
+         .translation("millenaire.config.npcChat.entityDenyList")
+         .define("entityDenyList", "");
       builder.pop();
    }
 

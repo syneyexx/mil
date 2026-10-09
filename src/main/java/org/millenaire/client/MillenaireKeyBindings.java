@@ -7,7 +7,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.phys.AABB;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.neoforged.api.distmarker.Dist;
@@ -18,14 +19,12 @@ import net.neoforged.neoforge.client.event.ClientTickEvent.Post;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.millenaire.config.MillenaireServerConfig;
-import org.millenaire.entity.MillVillager;
 import org.millenaire.network.InfoPanelRequestPayload;
 import org.millenaire.network.NpcChatOpenRequestPayload;
 import org.millenaire.network.ToggleStancePayload;
 
 @EventBusSubscriber(modid = "millenaire", value = Dist.CLIENT)
 public final class MillenaireKeyBindings {
-   private static final String CATEGORY = "key.categories.millenaire";
    public static final KeyMapping KEY_VILLAGES = new KeyMapping("key.millenaire.villages", Type.KEYSYM, 86, "key.categories.millenaire");
    public static final KeyMapping KEY_INFO_PANEL = new KeyMapping("key.millenaire.info_panel", Type.KEYSYM, 77, "key.categories.millenaire");
    public static final KeyMapping KEY_STANCE = new KeyMapping("key.millenaire.escorts", Type.KEYSYM, 71, "key.categories.millenaire");
@@ -65,9 +64,11 @@ public final class MillenaireKeyBindings {
          }
 
          while (KEY_TALK.consumeClick()) {
-            MillVillager target = findTalkTarget(mc);
+            LivingEntity target = findTalkTarget(mc);
             if (target != null) {
                PacketDistributor.sendToServer(new NpcChatOpenRequestPayload(target.getId()), new CustomPacketPayload[0]);
+            } else {
+               mc.player.displayClientMessage(Component.translatable("hint.millenaire.talk.no_target"), true);
             }
          }
 
@@ -79,7 +80,7 @@ public final class MillenaireKeyBindings {
    }
 
    private static void updateTalkHint(Minecraft mc) {
-      MillVillager underCrosshair = findCrosshairVillager(mc);
+      LivingEntity underCrosshair = findCrosshairNpc(mc);
       int chatRange = 4;
       try {
          chatRange = MillenaireServerConfig.SERVER.npcChatChatRange.getAsInt();
@@ -105,35 +106,29 @@ public final class MillenaireKeyBindings {
       }
    }
 
-   private static MillVillager findTalkTarget(Minecraft mc) {
+   /**
+    * Crosshair-only targeting. Never silently picks a different nearby NPC.
+    * Server independently validates eligibility and distance.
+    */
+   private static LivingEntity findTalkTarget(Minecraft mc) {
       int chatRange = 4;
       try {
          chatRange = MillenaireServerConfig.SERVER.npcChatChatRange.getAsInt();
       } catch (Exception ignored) {
       }
-      MillVillager under = findCrosshairVillager(mc);
+      LivingEntity under = findCrosshairNpc(mc);
       if (under != null && mc.player.distanceTo(under) <= chatRange) {
          return under;
       }
-      AABB box = mc.player.getBoundingBox().inflate(chatRange);
-      MillVillager best = null;
-      double bestDist = Double.MAX_VALUE;
-      for (MillVillager v : mc.level.getEntitiesOfClass(MillVillager.class, box)) {
-         double d = mc.player.distanceToSqr(v);
-         if (d < bestDist && d <= (double)chatRange * chatRange) {
-            bestDist = d;
-            best = v;
-         }
-      }
-      return best;
+      return null;
    }
 
-   private static MillVillager findCrosshairVillager(Minecraft mc) {
+   private static LivingEntity findCrosshairNpc(Minecraft mc) {
       HitResult hit = mc.hitResult;
       if (hit instanceof EntityHitResult entityHit) {
          Entity entity = entityHit.getEntity();
-         if (entity instanceof MillVillager villager) {
-            return villager;
+         if (entity instanceof LivingEntity living && !(living instanceof Player)) {
+            return living;
          }
       }
       return null;

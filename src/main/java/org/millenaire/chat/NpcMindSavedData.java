@@ -118,6 +118,31 @@ public class NpcMindSavedData extends SavedData {
       this.setDirty();
    }
 
+   /**
+    * Drop transient NPC minds that have not been touched recently, and cap total mind count.
+    * Persistent Millénaire minds (transientMind=false) are never removed here.
+    */
+   public void pruneTransientMinds(long nowGameTime) {
+      int retentionDays = org.millenaire.config.MillenaireServerConfig.SERVER.npcChatTransientRetentionDays.getAsInt();
+      long retentionTicks = Math.max(1L, retentionDays) * 24000L;
+      int maxMinds = org.millenaire.config.MillenaireServerConfig.SERVER.npcChatMaxStoredMinds.getAsInt();
+      this.minds.entrySet().removeIf(e -> e.getValue().isTransientExpired(nowGameTime, retentionTicks));
+      if (this.minds.size() > maxMinds) {
+         List<Map.Entry<UUID, NpcMind>> transients = new ArrayList<>();
+         for (Map.Entry<UUID, NpcMind> e : this.minds.entrySet()) {
+            if (e.getValue().isTransientMind()) {
+               transients.add(e);
+            }
+         }
+         transients.sort(java.util.Comparator.comparingLong(e -> e.getValue().lastTransientTouchGameTime()));
+         int toRemove = this.minds.size() - maxMinds;
+         for (int i = 0; i < toRemove && i < transients.size(); i++) {
+            this.minds.remove(transients.get(i).getKey());
+         }
+      }
+      this.setDirty();
+   }
+
    public CompoundTag save(CompoundTag root, Provider registries) {
       ListTag mindsList = new ListTag();
       for (Map.Entry<UUID, NpcMind> entry : this.minds.entrySet()) {
@@ -171,6 +196,8 @@ public class NpcMindSavedData extends SavedData {
       tag.putString("summary", mind.getSummary());
       tag.putLong("nextFactId", mind.getNextFactId());
       tag.putLong("nextQuoteId", mind.getNextQuoteId());
+      tag.putBoolean("transientMind", mind.isTransientMind());
+      tag.putLong("lastTransientTouch", mind.lastTransientTouchGameTime());
 
       ListTag facts = new ListTag();
       for (NpcFact fact : mind.getFacts()) {
@@ -265,6 +292,8 @@ public class NpcMindSavedData extends SavedData {
       mind.setSummary(tag.getString("summary"));
       mind.setNextFactId(tag.contains("nextFactId") ? tag.getLong("nextFactId") : 1L);
       mind.setNextQuoteId(tag.contains("nextQuoteId") ? tag.getLong("nextQuoteId") : 1L);
+      mind.setTransientMind(tag.contains("transientMind") && tag.getBoolean("transientMind"));
+      mind.setLastTransientTouchGameTime(tag.contains("lastTransientTouch") ? tag.getLong("lastTransientTouch") : 0L);
 
       ListTag facts = tag.getList("facts", 10);
       for (int i = 0; i < facts.size(); i++) {
