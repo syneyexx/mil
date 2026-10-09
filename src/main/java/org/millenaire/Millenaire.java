@@ -465,7 +465,11 @@ public class Millenaire {
          ServerLevel overworld = event.getServer().getLevel(Level.OVERWORLD);
          if (overworld != null) {
             VillageSavedData.get(overworld).getVillageManager().tick(overworld);
-            FactionLifecycle.onServerTick(overworld);
+            if (org.millenaire.civilization.CivilizationOrchestrator.isEnabled()) {
+               org.millenaire.civilization.CivilizationOrchestrator.onServerTick(overworld);
+            } else {
+               FactionLifecycle.onServerTick(overworld);
+            }
             if (WorldgenEngine.isEnabled()) {
                WorldgenEngine.onServerTick(overworld);
             } else if (!naturalSpawnSuppressed) {

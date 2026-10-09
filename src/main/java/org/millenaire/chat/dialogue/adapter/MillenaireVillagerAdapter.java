@@ -108,7 +108,11 @@ public final class MillenaireVillagerAdapter implements NpcDialogueAdapter {
          .cultureId(persona.cultureId())
          .cultureDisplayName(persona.cultureDisplayName())
          .settlementName(persona.villageName())
-         .faction(persona.cultureId())
+         .faction(
+            village != null && village.getFactionId() != null
+               ? village.getFactionId().asString()
+               : persona.cultureId()
+         )
          .ageCategory(persona.child() ? "child" : "adult")
          .gender(persona.gender())
          .child(persona.child())

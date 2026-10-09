@@ -2,6 +2,7 @@ package org.millenaire.living.context;
 
 import java.util.Locale;
 import net.minecraft.server.level.ServerLevel;
+import org.millenaire.civilization.bridge.CivilizationContextProvider;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillagerType;
 import org.millenaire.living.LivingVillagesService;
@@ -44,6 +45,11 @@ public final class NpcWorldKnowledgeProvider {
             ctx.addFirsthand("asChiefYouKnow=" + focus);
          }
          ctx.addActionHint("You may mention verified village needs and that the player can offer assistance through the game UI.");
+      } else if (trader) {
+         CivilizationContextProvider.appendVerified(level, village, ctx);
+         snap.firstOfType(VillageNeedType.TRADE_DISRUPTION).ifPresent(n -> ctx.addFirsthand("tradeIssue=" + n.summaryDetail()));
+         snap.firstOfType(VillageNeedType.MERCHANT_OR_SUPPLY_UNAVAILABLE).ifPresent(n -> ctx.addFirsthand("supplyIssue=" + n.summaryDetail()));
+         ctx.addUnknown("construction resource tallies unless told");
       } else if (builder) {
          String line = VillageActivityCoordinator.builderFocusLine(snap);
          if (line != null) {
@@ -61,10 +67,6 @@ public final class NpcWorldKnowledgeProvider {
       } else if (farmer) {
          snap.firstOfType(VillageNeedType.VILLAGE_FOOD_SHORTAGE).ifPresent(n -> ctx.addFirsthand("foodPressure=" + n.severity().name()));
          ctx.addUnknown("distant construction details");
-      } else if (trader) {
-         snap.firstOfType(VillageNeedType.TRADE_DISRUPTION).ifPresent(n -> ctx.addFirsthand("tradeIssue=" + n.summaryDetail()));
-         snap.firstOfType(VillageNeedType.MERCHANT_OR_SUPPLY_UNAVAILABLE).ifPresent(n -> ctx.addFirsthand("supplyIssue=" + n.summaryDetail()));
-         ctx.addUnknown("construction resource tallies unless told");
       } else if (child) {
          ctx.addFirsthand("familyFocus=true");
          ctx.addUnknown("village administration and exact resource counts");

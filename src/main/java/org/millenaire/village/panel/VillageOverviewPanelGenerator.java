@@ -12,11 +12,18 @@ import net.minecraft.server.level.ServerLevel;
 import org.millenaire.DisplayUtils;
 import org.millenaire.building.BuildingInstance;
 import org.millenaire.building.BuildingPlanSet;
+import org.millenaire.civilization.CivilizationSavedData;
 import org.millenaire.culture.Gender;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillageType;
 import org.millenaire.culture.VillagerType;
 import org.millenaire.entity.MillVillager;
+import org.millenaire.faction.FactionId;
+import org.millenaire.faction.economy.EconomySavedData;
+import org.millenaire.faction.economy.FactionEconomicProfile;
+import org.millenaire.faction.politics.PoliticalLeader;
+import org.millenaire.faction.politics.PoliticsQueries;
+import org.millenaire.faction.war.WarSavedData;
 import org.millenaire.language.BuildingNameHelper;
 import org.millenaire.village.Village;
 import org.millenaire.village.VillageEvent;
@@ -48,6 +55,7 @@ public final class VillageOverviewPanelGenerator {
             "panel.millenaire.adults_value", String.valueOf(population.adults()), String.valueOf(population.men()), String.valueOf(population.women())
          )
       );
+      appendCivilizationLines(lines, village, level);
       if (population.children() > 0) {
          lines.add(PanelLine.translatableWithArgs("panel.millenaire.children_value", String.valueOf(population.children())));
       }
@@ -175,6 +183,35 @@ public final class VillageOverviewPanelGenerator {
 
       appendChronicleLines(lines, village);
       return new PanelContent(PanelType.VILLAGE_SUMMARY, titleKey, lines, true, titleArgs);
+   }
+
+   private static void appendCivilizationLines(List<PanelLine> lines, Village village, @Nullable ServerLevel level) {
+      if (level == null) {
+         return;
+      }
+      FactionId factionId = village.getFactionId();
+      lines.add(PanelLine.separator());
+      lines.add(PanelLine.translatable("panel.millenaire.civilization"));
+      if (factionId == null) {
+         lines.add(PanelLine.translatable("panel.millenaire.civilization_independent"));
+         return;
+      }
+      lines.add(PanelLine.translatableWithArgs("panel.millenaire.civilization_faction", factionId.asString()));
+      PoliticalLeader leader = PoliticsQueries.leader(level, factionId);
+      if (leader != null && leader.getDisplayName() != null && !leader.getDisplayName().isBlank()) {
+         lines.add(PanelLine.translatableWithArgs("panel.millenaire.civilization_leader", leader.getDisplayName()));
+      }
+      FactionEconomicProfile profile = EconomySavedData.get(level).getTradeManager().getProfile(factionId);
+      if (profile != null) {
+         lines.add(PanelLine.translatableWithArgs("panel.millenaire.civilization_economy", profile.getBalanceLevel().name()));
+      }
+      if (WarSavedData.get(level).getWarManager().isAtWar(factionId)) {
+         lines.add(PanelLine.translatable("panel.millenaire.civilization_at_war"));
+      }
+      String development = CivilizationSavedData.get(level).getDevelopmentLabel(village.getId().uuid());
+      if (development != null) {
+         lines.add(PanelLine.translatableWithArgs("panel.millenaire.civilization_development", development));
+      }
    }
 
    public static PanelContent generatePopulation(Village village, @Nullable ServerLevel level) {
