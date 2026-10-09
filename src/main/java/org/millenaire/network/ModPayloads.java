@@ -52,7 +52,9 @@ public final class ModPayloads {
       new ModPayloads.ClientboundDef(ProjectCancelPromptPayload.TYPE, ProjectCancelPromptPayload.STREAM_CODEC),
       new ModPayloads.ClientboundDef(org.millenaire.chat.NpcChatOpenPayload.TYPE, org.millenaire.chat.NpcChatOpenPayload.STREAM_CODEC),
       new ModPayloads.ClientboundDef(org.millenaire.chat.NpcChatLinePayload.TYPE, org.millenaire.chat.NpcChatLinePayload.STREAM_CODEC),
-      new ModPayloads.ClientboundDef(org.millenaire.chat.NpcChatClosedPayload.TYPE, org.millenaire.chat.NpcChatClosedPayload.STREAM_CODEC)
+      new ModPayloads.ClientboundDef(org.millenaire.chat.NpcChatClosedPayload.TYPE, org.millenaire.chat.NpcChatClosedPayload.STREAM_CODEC),
+      new ModPayloads.ClientboundDef(org.millenaire.living.net.LivingActionChoicesPayload.TYPE, org.millenaire.living.net.LivingActionChoicesPayload.STREAM_CODEC),
+      new ModPayloads.ClientboundDef(org.millenaire.living.net.LivingActionFeedbackPayload.TYPE, org.millenaire.living.net.LivingActionFeedbackPayload.STREAM_CODEC)
    );
 
    private ModPayloads() {
@@ -129,6 +131,11 @@ public final class ModPayloads {
       registrar.playToServer(NpcChatOpenRequestPayload.TYPE, NpcChatOpenRequestPayload.STREAM_CODEC, NpcChatOpenRequestPayload::handleOnServer);
       registrar.playToServer(NpcChatSendPayload.TYPE, NpcChatSendPayload.STREAM_CODEC, NpcChatSendPayload::handleOnServer);
       registrar.playToServer(NpcChatCloseRequestPayload.TYPE, NpcChatCloseRequestPayload.STREAM_CODEC, NpcChatCloseRequestPayload::handleOnServer);
+      registrar.playToServer(
+         org.millenaire.living.net.LivingActionRequestPayload.TYPE,
+         org.millenaire.living.net.LivingActionRequestPayload.STREAM_CODEC,
+         org.millenaire.living.net.LivingActionRequestPayload::handleOnServer
+      );
    }
 
    private static <T extends CustomPacketPayload> void registerNoop(PayloadRegistrar registrar, ModPayloads.ClientboundDef<T> def) {
@@ -180,6 +187,8 @@ public final class ModPayloads {
          put(map, org.millenaire.chat.NpcChatOpenPayload.TYPE, ClientPayloadHandler::handleNpcChatOpen);
          put(map, org.millenaire.chat.NpcChatLinePayload.TYPE, ClientPayloadHandler::handleNpcChatLine);
          put(map, org.millenaire.chat.NpcChatClosedPayload.TYPE, ClientPayloadHandler::handleNpcChatClosed);
+         put(map, org.millenaire.living.net.LivingActionChoicesPayload.TYPE, ClientPayloadHandler::handleLivingActionChoices);
+         put(map, org.millenaire.living.net.LivingActionFeedbackPayload.TYPE, ClientPayloadHandler::handleLivingActionFeedback);
          return map;
       }
 

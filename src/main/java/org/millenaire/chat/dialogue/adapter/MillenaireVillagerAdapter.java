@@ -24,6 +24,8 @@ import org.millenaire.culture.VillagerType;
 import org.millenaire.dialogue.SentenceLoader;
 import org.millenaire.entity.MillVillager;
 import org.millenaire.entity.VillagerInteraction;
+import org.millenaire.living.context.DialogueGameplayContext;
+import org.millenaire.living.context.LivingDialogueSupport;
 import org.millenaire.network.SpeechChatPayload;
 import org.millenaire.village.Village;
 
@@ -92,6 +94,11 @@ public final class MillenaireVillagerAdapter implements NpcDialogueAdapter {
       if (!persona.villageName().isBlank()) {
          roleLine = roleLine + " — " + persona.villageName();
       }
+      DialogueGameplayContext living = LivingDialogueSupport.buildForMillenaire(player.serverLevel(), player, villager, village);
+      String instructions = LivingDialogueSupport.appendToInstructions(
+         "Natural spoken conversation matching culture, profession, memory and circumstances. Prefer VERIFIED GAME STATE over guesses.",
+         living
+      );
       return NpcDialogueContext.builder()
          .displayName(persona.name().isBlank() ? villager.getVillagerDisplayName() : persona.name())
          .roleLine(roleLine)
@@ -116,7 +123,7 @@ public final class MillenaireVillagerAdapter implements NpcDialogueAdapter {
          .reputation(persona.reputation())
          .languageAside(persona.languageAside())
          .hiredByPlayer(persona.hiredByPlayer())
-         .communicationInstructions("Natural spoken conversation matching culture, profession, memory and circumstances.")
+         .communicationInstructions(instructions)
          .fallbackLine(fallbackLine(villager, language))
          .systemPromptOverride(NpcPromptBuilder.SYSTEM_PROMPT)
          .build();

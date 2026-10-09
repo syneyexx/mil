@@ -13,13 +13,16 @@ import org.millenaire.chat.NpcChatClosedPayload;
 import org.millenaire.chat.NpcChatLinePayload;
 import org.millenaire.chat.NpcChatOpenPayload;
 import org.millenaire.chat.NpcChatService;
+import org.millenaire.living.net.LivingActionChoicesPayload;
+import org.millenaire.living.net.LivingActionFeedbackPayload;
+import org.millenaire.living.net.LivingActionRequestPayload;
 import org.millenaire.network.NpcChatCloseRequestPayload;
 import org.millenaire.network.NpcChatSendPayload;
 import org.millenaire.village.panel.PanelLine;
 
 public class NpcChatScreen extends AbstractMillenaireScreen {
    private static final int PARCHMENT_WIDTH = 280;
-   private static final int PARCHMENT_HEIGHT = 220;
+   private static final int PARCHMENT_HEIGHT = 248;
    private static final int MAX_LINES = 100;
    private static final int LINE_HEIGHT = 11;
    private static NpcChatScreen active;
@@ -29,6 +32,8 @@ public class NpcChatScreen extends AbstractMillenaireScreen {
    private final String roleLine;
    private final String reputationLabel;
    private final List<Line> lines = new ArrayList<>();
+   private final List<String> livingActions = new ArrayList<>();
+   private String activeRequestId = "";
    private EditBox input;
    private Button sendButton;
    private boolean awaitingReply;
@@ -83,6 +88,29 @@ public class NpcChatScreen extends AbstractMillenaireScreen {
       }
    }
 
+   public static void handleLivingActions(LivingActionChoicesPayload payload) {
+      if (active == null || active.entityId != payload.entityId()) {
+         return;
+      }
+      active.livingActions.clear();
+      active.livingActions.addAll(payload.actionTypes());
+      active.activeRequestId = payload.activeRequestId() == null ? "" : payload.activeRequestId();
+      if (Minecraft.getInstance().screen == active) {
+         active.rebuildWidgets();
+      }
+   }
+
+   public static void handleLivingFeedback(LivingActionFeedbackPayload payload) {
+      if (active == null || active.entityId != payload.entityId()) {
+         return;
+      }
+      String text = Component.translatable(payload.messageKey()).getString();
+      if (payload.detail() != null && !payload.detail().isBlank()) {
+         text = text + " — " + payload.detail();
+      }
+      active.appendLine(NpcChatService.SPEAKER_SYSTEM, text, false);
+   }
+
    protected void init() {
       super.init();
       int parchX = (this.width - PARCHMENT_WIDTH) / 2;
@@ -96,8 +124,37 @@ public class NpcChatScreen extends AbstractMillenaireScreen {
          .bounds(parchX + PARCHMENT_WIDTH - 70, fieldY, 54, 20)
          .build();
       this.addRenderableWidget(this.sendButton);
+      this.rebuildActionButtons();
       this.setInitialFocus(this.input);
       this.updateInputState();
+   }
+
+   private void rebuildActionButtons() {
+      int parchX = (this.width - PARCHMENT_WIDTH) / 2;
+      int parchY = (this.height - PARCHMENT_HEIGHT) / 2;
+      int y = parchY + PARCHMENT_HEIGHT - 68;
+      int x = parchX + 16;
+      int shown = 0;
+      for (String action : this.livingActions) {
+         if (shown >= 4) {
+            break;
+         }
+         String key = "living.millenaire.action." + action.toLowerCase();
+         Button button = Button.builder(Component.translatable(key), btn -> this.sendLivingAction(action))
+            .bounds(x, y, 60, 16)
+            .build();
+         this.addRenderableWidget(button);
+         x += 64;
+         shown++;
+      }
+   }
+
+   private void sendLivingAction(String actionType) {
+      if (this.awaitingReply) {
+         return;
+      }
+      String target = this.activeRequestId == null ? "" : this.activeRequestId;
+      PacketDistributor.sendToServer(new LivingActionRequestPayload(this.entityId, actionType, target), new CustomPacketPayload[0]);
    }
 
    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
