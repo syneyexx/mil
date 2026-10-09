@@ -4,6 +4,7 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 import net.neoforged.neoforge.common.ModConfigSpec.BooleanValue;
 import net.neoforged.neoforge.common.ModConfigSpec.Builder;
 import net.neoforged.neoforge.common.ModConfigSpec.ConfigValue;
+import net.neoforged.neoforge.common.ModConfigSpec.DoubleValue;
 import net.neoforged.neoforge.common.ModConfigSpec.EnumValue;
 import net.neoforged.neoforge.common.ModConfigSpec.IntValue;
 import org.apache.commons.lang3.tuple.Pair;
@@ -23,6 +24,32 @@ public final class MillenaireServerConfig {
    public final IntValue completionMinDistance;
    public final IntValue completionMaxDistance;
    public final BooleanValue logSpawnAttempts;
+   public final BooleanValue worldgenEngineEnabled;
+   public final IntValue worldgenRegionSizeChunks;
+   public final DoubleValue worldgenSettlementDensity;
+   public final DoubleValue worldgenLoneBuildingDensity;
+   public final DoubleValue worldgenHamletDensity;
+   public final IntValue worldgenMinimumSettlementSpacing;
+   public final IntValue worldgenProtectedSpawnRadius;
+   public final IntValue worldgenMaximumSettlementFootprint;
+   public final BooleanValue worldgenAllowHillyTerrain;
+   public final IntValue worldgenMaximumTerrainSlope;
+   public final IntValue worldgenMaximumFoundationDepth;
+   public final IntValue worldgenMaximumTerrainModification;
+   public final BooleanValue worldgenUseNativeStructures;
+   public final BooleanValue worldgenGenerateInitialRoads;
+   public final BooleanValue worldgenGenerateRegionalRoads;
+   public final BooleanValue worldgenGenerateBridges;
+   public final BooleanValue worldgenGenerateStartingWalls;
+   public final BooleanValue worldgenPreserveVanillaStructures;
+   public final BooleanValue worldgenPreserveModdedStructures;
+   public final IntValue worldgenStructureSafetyMargin;
+   public final BooleanValue worldgenEnableSettlementVariation;
+   public final BooleanValue worldgenAllowPartialInitialCompletion;
+   public final IntValue worldgenPlanningCacheSize;
+   public final IntValue worldgenMaterializationBudget;
+   public final IntValue worldgenActivationBudget;
+   public final BooleanValue worldgenDetailedDiagnostics;
    public final BooleanValue forceLoadVillages;
    public final IntValue keepActiveRadius;
    public final IntValue villageRadiusOverride;
@@ -135,6 +162,101 @@ public final class MillenaireServerConfig {
       this.completionMaxDistance = builder.comment("Distance from spawn where max initial progress is reached (blocks)")
          .translation("millenaire.config.completionMaxDistance")
          .defineInRange("maxDistance", 10000, 0, 100000);
+      builder.pop();
+      builder.comment(
+            new String[]{
+               "Phase 4 deterministic worldgen engine. When enabled, natural settlements are planned from",
+               "the world seed + region grid and materialized per new chunk. Legacy VillageSpawnQueue",
+               "enqueue for natural spawns is suppressed. Manual /millenaire spawn commands still use",
+               "VillageSpawner. Legacy density keys (generateVillages, minVillageDistance, etc.) remain",
+               "authoritative minimums; worldgen* keys refine planner behaviour without renaming old keys."
+            }
+         )
+         .push("worldgen");
+      this.worldgenEngineEnabled = builder.comment("Enable Phase 4 deterministic settlement worldgen engine")
+         .translation("millenaire.config.worldgenEngineEnabled")
+         .define("worldgenEngineEnabled", true);
+      this.worldgenRegionSizeChunks = builder.comment("Region grid size in chunks for candidate distribution (independent of village radius)")
+         .translation("millenaire.config.worldgenRegionSizeChunks")
+         .defineInRange("worldgenRegionSizeChunks", 32, 8, 128);
+      this.worldgenSettlementDensity = builder.comment("Probability a region attempts a full village (0-1)")
+         .translation("millenaire.config.worldgenSettlementDensity")
+         .defineInRange("worldgenSettlementDensity", 0.35D, 0.0D, 1.0D);
+      this.worldgenLoneBuildingDensity = builder.comment("Probability a region attempts a lone building when no village is selected (0-1)")
+         .translation("millenaire.config.worldgenLoneBuildingDensity")
+         .defineInRange("worldgenLoneBuildingDensity", 0.15D, 0.0D, 1.0D);
+      this.worldgenHamletDensity = builder.comment("Reserved density weight for hamlet satellite planning (0-1)")
+         .translation("millenaire.config.worldgenHamletDensity")
+         .defineInRange("worldgenHamletDensity", 0.5D, 0.0D, 1.0D);
+      this.worldgenMinimumSettlementSpacing = builder.comment(
+            "Minimum spacing between planned settlements (blocks). Effective spacing is max(this, minVillageDistance)."
+         )
+         .translation("millenaire.config.worldgenMinimumSettlementSpacing")
+         .defineInRange("worldgenMinimumSettlementSpacing", 500, 200, 2000);
+      this.worldgenProtectedSpawnRadius = builder.comment(
+            "Additional protected radius around world spawn (blocks). Effective protection is max(this, spawnProtectionRadius)."
+         )
+         .translation("millenaire.config.worldgenProtectedSpawnRadius")
+         .defineInRange("worldgenProtectedSpawnRadius", 250, 0, 1000);
+      this.worldgenMaximumSettlementFootprint = builder.comment("Soft cap on planned settlement radius used for reservation (blocks)")
+         .translation("millenaire.config.worldgenMaximumSettlementFootprint")
+         .defineInRange("worldgenMaximumSettlementFootprint", 120, 32, 256);
+      this.worldgenAllowHillyTerrain = builder.comment("Allow settlements on rolling/hilly terrain within slope limits")
+         .translation("millenaire.config.worldgenAllowHillyTerrain")
+         .define("worldgenAllowHillyTerrain", true);
+      this.worldgenMaximumTerrainSlope = builder.comment("Maximum average sample step slope (blocks) accepted for natural settlements")
+         .translation("millenaire.config.worldgenMaximumTerrainSlope")
+         .defineInRange("worldgenMaximumTerrainSlope", 4, 1, 16);
+      this.worldgenMaximumFoundationDepth = builder.comment("Maximum foundation depth adjustment (blocks)")
+         .translation("millenaire.config.worldgenMaximumFoundationDepth")
+         .defineInRange("worldgenMaximumFoundationDepth", 8, 1, 32);
+      this.worldgenMaximumTerrainModification = builder.comment("Maximum height difference terraformed under a building footprint (blocks)")
+         .translation("millenaire.config.worldgenMaximumTerrainModification")
+         .defineInRange("worldgenMaximumTerrainModification", 6, 1, 24);
+      this.worldgenUseNativeStructures = builder.comment(
+            "Reserved: register settlements as native Structure features when fully supported. Currently plans use chunk-load materialization."
+         )
+         .translation("millenaire.config.worldgenUseNativeStructures")
+         .define("worldgenUseNativeStructures", false);
+      this.worldgenGenerateInitialRoads = builder.comment("Plan and materialize initial internal roads during worldgen")
+         .translation("millenaire.config.worldgenGenerateInitialRoads")
+         .define("worldgenGenerateInitialRoads", true);
+      this.worldgenGenerateRegionalRoads = builder.comment("Plan bounded regional connectors between nearby settlements (foundation)")
+         .translation("millenaire.config.worldgenGenerateRegionalRoads")
+         .define("worldgenGenerateRegionalRoads", false);
+      this.worldgenGenerateBridges = builder.comment("Allow short bridge/raised-path segments where road policy supports them")
+         .translation("millenaire.config.worldgenGenerateBridges")
+         .define("worldgenGenerateBridges", true);
+      this.worldgenGenerateStartingWalls = builder.comment("Plan and materialize starting walls/gates when village type defines them")
+         .translation("millenaire.config.worldgenGenerateStartingWalls")
+         .define("worldgenGenerateStartingWalls", true);
+      this.worldgenPreserveVanillaStructures = builder.comment("Reject settlement candidates that conflict with protected vanilla structures")
+         .translation("millenaire.config.worldgenPreserveVanillaStructures")
+         .define("worldgenPreserveVanillaStructures", true);
+      this.worldgenPreserveModdedStructures = builder.comment("Reserved: respect other mods' registered structures when metadata is available")
+         .translation("millenaire.config.worldgenPreserveModdedStructures")
+         .define("worldgenPreserveModdedStructures", true);
+      this.worldgenStructureSafetyMargin = builder.comment("Extra margin around protected structures (blocks)")
+         .translation("millenaire.config.worldgenStructureSafetyMargin")
+         .defineInRange("worldgenStructureSafetyMargin", 3, 0, 32);
+      this.worldgenEnableSettlementVariation = builder.comment("Enable deterministic orientation/variant/decoration variation")
+         .translation("millenaire.config.worldgenEnableSettlementVariation")
+         .define("worldgenEnableSettlementVariation", true);
+      this.worldgenAllowPartialInitialCompletion = builder.comment("Allow distant settlements a deterministic non-zero initial completion percent")
+         .translation("millenaire.config.worldgenAllowPartialInitialCompletion")
+         .define("worldgenAllowPartialInitialCompletion", true);
+      this.worldgenPlanningCacheSize = builder.comment("Soft cap on in-memory plan index hints (plans remain persisted in SavedData)")
+         .translation("millenaire.config.worldgenPlanningCacheSize")
+         .defineInRange("worldgenPlanningCacheSize", 2048, 64, 16384);
+      this.worldgenMaterializationBudget = builder.comment("Max block placement operations per chunk materialization pass")
+         .translation("millenaire.config.worldgenMaterializationBudget")
+         .defineInRange("worldgenMaterializationBudget", 8000, 500, 50000);
+      this.worldgenActivationBudget = builder.comment("Max settlement activations per server tick")
+         .translation("millenaire.config.worldgenActivationBudget")
+         .defineInRange("worldgenActivationBudget", 1, 1, 8);
+      this.worldgenDetailedDiagnostics = builder.comment("Verbose worldgen planning/materialization logs (opt-in)")
+         .translation("millenaire.config.worldgenDetailedDiagnostics")
+         .define("worldgenDetailedDiagnostics", false);
       builder.pop();
       builder.pop();
       builder.comment("Debug and logging settings").push("debug");
