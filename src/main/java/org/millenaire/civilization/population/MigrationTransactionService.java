@@ -185,8 +185,14 @@ public final class MigrationTransactionService {
          }
 
          origin.transferVillagerPermanently(level, villagerRecordId, destination, destBuilding);
-         op.trySetStatus(MigrationOperation.Status.REMOVED_FROM_ORIGIN);
-         op.trySetStatus(MigrationOperation.Status.ADDED_TO_DESTINATION);
+         boolean removed = op.trySetStatus(MigrationOperation.Status.REMOVED_FROM_ORIGIN);
+         boolean added = op.trySetStatus(MigrationOperation.Status.ADDED_TO_DESTINATION);
+         if (!removed || !added) {
+            // Physical transfer may already have succeeded — do not invent rollback; mark for reconcile.
+            op.markNeedsRecovery(true);
+            civ.putMigration(op);
+            data.setDirty();
+         }
 
          VillagerRecord moved = destination.getVillagerRecords().get(villagerRecordId);
          if (moved == null) {
@@ -231,7 +237,22 @@ public final class MigrationTransactionService {
          destination.markDirty();
          data.setDirty();
 
-         op.trySetStatus(MigrationOperation.Status.COMPLETE);
+         // Prefer normal COMPLETE; fall back to reconcile when intermediate status write lagged.
+         if (!op.trySetStatus(MigrationOperation.Status.COMPLETE) && !op.reconcileStatus(MigrationOperation.Status.COMPLETE)) {
+            op.markNeedsRecovery(true);
+            civ.putMigration(op);
+            return MigrationResult.of(
+               opId,
+               MigrationResult.Outcome.RECOVERY_REQUIRED,
+               false,
+               true,
+               "status_complete_failed",
+               originId.uuid(),
+               destinationId.uuid(),
+               destBuilding.uuid()
+            );
+         }
+         op.markNeedsRecovery(false);
          civ.putMigration(op);
          CivilizationMetrics.MIGRATIONS.incrementAndGet();
 
@@ -277,6 +298,8 @@ public final class MigrationTransactionService {
 
    /**
     * Bounded recovery for half-finished migration operations.
+    * Outcomes follow physical village records — never invent a resident.
+    * {@code needsRecovery} clears only after postconditions and status transition succeed.
     */
    public static int recoverPending(ServerLevel level, CivilizationSavedData civ) {
       if (level == null || civ == null) {
@@ -288,48 +311,168 @@ public final class MigrationTransactionService {
          if (fixed >= MAX_RECOVERY_PER_TICK) {
             break;
          }
-         if (!op.needsRecovery() && op.status() != MigrationOperation.Status.REMOVED_FROM_ORIGIN
-            && op.status() != MigrationOperation.Status.ADDED_TO_DESTINATION) {
+         if (!isRecoveryCandidate(op)) {
             continue;
          }
+         // Terminal COMPLETE without recovery flag is a no-op.
+         if (op.status() == MigrationOperation.Status.COMPLETE && !op.needsRecovery()) {
+            continue;
+         }
+
+         op.incrementRecoveryAttempts();
          Village origin = data.getVillageManager().getVillage(new VillageId(op.originVillageId()));
          Village destination = data.getVillageManager().getVillage(new VillageId(op.destinationVillageId()));
          UUID villagerId = op.villagerId();
-         boolean inOrigin = origin != null && origin.getVillagerRecords().containsKey(villagerId);
-         boolean inDest = destination != null && destination.getVillagerRecords().containsKey(villagerId);
+         boolean originPresent = origin != null;
+         boolean destPresent = destination != null;
+         boolean inOrigin = originPresent && origin.getVillagerRecords().containsKey(villagerId);
+         boolean inDest = destPresent && destination.getVillagerRecords().containsKey(villagerId);
 
-         if (inDest && !inOrigin) {
-            op.trySetStatus(MigrationOperation.Status.COMPLETE);
-            op.markNeedsRecovery(false);
+         if (!originPresent || !destPresent) {
+            // Missing village — keep unresolved evidence; do not invent records or clear recovery.
+            if (!op.needsRecovery()) {
+               op.markNeedsRecovery(true);
+            }
+            if (op.failureReason().isEmpty()) {
+               op.fail(originPresent ? "recovery_destination_village_missing" : "recovery_origin_village_missing");
+               // fail() sets FAILED; restore recovery flag intentionally.
+               op.markNeedsRecovery(true);
+            }
             civ.putMigration(op);
             fixed++;
             continue;
          }
+
+         if (inDest && !inOrigin) {
+            if (!ensureDestinationHomeAndEntity(level, destination, villagerId, op)) {
+               op.markNeedsRecovery(true);
+               civ.putMigration(op);
+               fixed++;
+               continue;
+            }
+            if (!op.reconcileStatus(MigrationOperation.Status.COMPLETE)) {
+               op.markNeedsRecovery(true);
+               civ.putMigration(op);
+               fixed++;
+               continue;
+            }
+            op.markNeedsRecovery(false);
+            destination.markDirty();
+            data.setDirty();
+            civ.putMigration(op);
+            fixed++;
+            continue;
+         }
+
          if (inOrigin && !inDest) {
-            // Transfer never finished — clear recovery and mark failed so a new day op can retry.
+            // Transfer never finished — safe failed/rollback so a later day may retry.
+            if (!op.reconcileStatus(MigrationOperation.Status.FAILED)) {
+               op.markNeedsRecovery(true);
+               civ.putMigration(op);
+               fixed++;
+               continue;
+            }
             op.fail("recovery_still_in_origin");
             op.markNeedsRecovery(false);
             civ.putMigration(op);
             fixed++;
             continue;
          }
+
          if (inOrigin && inDest) {
-            // Duplicate — authoritative location is destination; remove origin copy.
-            origin.getVillagerRecords().remove(villagerId);
+            // Duplicate — destination wins; clean origin via village helper (not raw map only).
+            if (!ensureDestinationHomeAndEntity(level, destination, villagerId, op)) {
+               op.markNeedsRecovery(true);
+               civ.putMigration(op);
+               fixed++;
+               continue;
+            }
+            origin.removeVillagerRecord(villagerId);
             origin.markDirty();
+            destination.markDirty();
             data.setDirty();
-            op.trySetStatus(MigrationOperation.Status.COMPLETE);
+            if (!op.reconcileStatus(MigrationOperation.Status.COMPLETE)) {
+               op.markNeedsRecovery(true);
+               civ.putMigration(op);
+               fixed++;
+               continue;
+            }
             op.markNeedsRecovery(false);
             civ.putMigration(op);
             fixed++;
             continue;
          }
-         op.fail("recovery_unresolvable");
-         op.markNeedsRecovery(false);
+
+         // Neither village has the record — keep evidence; do not invent a resident.
+         op.fail("recovery_unresolvable_no_record");
+         op.markNeedsRecovery(true);
          civ.putMigration(op);
          fixed++;
       }
       return fixed;
+   }
+
+   private static boolean isRecoveryCandidate(MigrationOperation op) {
+      if (op == null) {
+         return false;
+      }
+      if (op.needsRecovery()) {
+         return true;
+      }
+      return switch (op.status()) {
+         case RESERVED, REMOVED_FROM_ORIGIN, ADDED_TO_DESTINATION -> true;
+         case FAILED -> false; // only when needsRecovery (handled above)
+         case COMPLETE, ROLLED_BACK -> false;
+      };
+   }
+
+   /**
+    * Ensure destination home building is still suitable and the live entity (if any) matches.
+    * An old destinationBuildingId is not automatic proof the building still exists/fits.
+    */
+   private static boolean ensureDestinationHomeAndEntity(
+      ServerLevel level,
+      Village destination,
+      UUID villagerId,
+      MigrationOperation op
+   ) {
+      VillagerRecord record = destination.getVillagerRecords().get(villagerId);
+      if (record == null || record.isKilled()) {
+         return false;
+      }
+      BuildingId home = record.getHomeBuilding();
+      BuildingId desired = op.destinationBuildingId() != null ? new BuildingId(op.destinationBuildingId()) : null;
+      BuildingInstance homeBuilding = home != null ? destination.getBuilding(home) : null;
+      if (homeBuilding == null || !homeBuilding.isOperational()) {
+         BuildingId selected = selectDestinationHome(destination, record);
+         if (selected == null) {
+            op.fail("recovery_no_matching_home");
+            op.markNeedsRecovery(true);
+            return false;
+         }
+         record.setHomeBuilding(selected);
+         op.setDestinationBuilding(selected.uuid());
+         home = selected;
+      } else if (desired != null && !desired.equals(home)) {
+         BuildingInstance desiredBuilding = destination.getBuilding(desired);
+         if (desiredBuilding != null && desiredBuilding.isOperational()) {
+            // Prefer persisted destination when still valid.
+            record.setHomeBuilding(desired);
+            home = desired;
+         } else {
+            op.setDestinationBuilding(home.uuid());
+         }
+      } else if (home != null) {
+         op.setDestinationBuilding(home.uuid());
+      }
+
+      if (level.getEntity(villagerId) instanceof MillVillager villager) {
+         villager.setVillageId(destination.getId());
+         if (home != null) {
+            villager.setHomeBuilding(home);
+         }
+      }
+      return true;
    }
 
    public static boolean isEligibleForPermanentMigration(ServerLevel level, Village origin, VillagerRecord record) {

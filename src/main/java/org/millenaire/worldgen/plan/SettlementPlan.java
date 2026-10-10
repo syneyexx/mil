@@ -66,6 +66,9 @@ public final class SettlementPlan {
    private FoundingMode foundingMode = FoundingMode.NATURAL;
    @Nullable
    private String foundingFactionId;
+   /** Parent colonization operation — required for paid founding gates; not a culture/faction match. */
+   @Nullable
+   private UUID colonizationOperationId;
 
    public SettlementPlan(
       UUID planId,
@@ -219,6 +222,15 @@ public final class SettlementPlan {
 
    public void setFoundingFactionId(@Nullable String factionId) {
       this.foundingFactionId = factionId == null || factionId.isBlank() ? null : factionId;
+   }
+
+   @Nullable
+   public UUID colonizationOperationId() {
+      return this.colonizationOperationId;
+   }
+
+   public void setColonizationOperationId(@Nullable UUID operationId) {
+      this.colonizationOperationId = operationId;
    }
 
    public List<PlannedBuilding> buildings() {
@@ -409,6 +421,9 @@ public final class SettlementPlan {
       if (this.foundingFactionId != null) {
          tag.putString("foundingFaction", this.foundingFactionId);
       }
+      if (this.colonizationOperationId != null) {
+         tag.putUUID("colonizationOp", this.colonizationOperationId);
+      }
 
       ListTag buildingsTag = new ListTag();
       for (PlannedBuilding b : this.buildings) {
@@ -497,6 +512,9 @@ public final class SettlementPlan {
          }
          if (tag.contains("foundingFaction")) {
             plan.foundingFactionId = tag.getString("foundingFaction");
+         }
+         if (tag.hasUUID("colonizationOp")) {
+            plan.colonizationOperationId = tag.getUUID("colonizationOp");
          }
 
          ListTag buildingsTag = tag.getList("buildings", Tag.TAG_COMPOUND);

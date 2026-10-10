@@ -19,6 +19,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
+import org.millenaire.civilization.settlement.ColonizationMaterializationGate;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.worldgen.materialize.BridgeColumnProgress;
 import org.millenaire.worldgen.materialize.BridgePlacementHelper;
@@ -280,6 +281,9 @@ public final class RegionalRoadMaterializer {
    private static boolean ensurePlans(ServerLevel level, SettlementPlanSavedData store, RegionalRoadSavedData roads) {
       List<SettlementPlan> active = new ArrayList<>();
       for (SettlementPlan plan : store.allPlans()) {
+         if (!ColonizationMaterializationGate.allowPhysicalMutation(level, plan)) {
+            continue;
+         }
          if (plan.status() == SettlementPlanStatus.ACTIVE
             || plan.status() == SettlementPlanStatus.PHYSICAL_COMPLETE
             || plan.status() == SettlementPlanStatus.MATERIALIZING) {
@@ -351,9 +355,17 @@ public final class RegionalRoadMaterializer {
          route.blockReason = "endpoint_removed";
          return;
       }
+      SettlementPlan fromPlan = store.getPlan(route.fromPlanId);
+      SettlementPlan toPlan = store.getPlan(route.toPlanId);
+      // Colonization endpoints must be paid before regional road/bridge blocks are written.
+      if (!ColonizationMaterializationGate.allowPhysicalMutation(level, fromPlan)
+         || !ColonizationMaterializationGate.allowPhysicalMutation(level, toPlan)) {
+         route.status = RouteStatus.WAITING_CHUNKS;
+         route.blockReason = "colonization_unpaid_or_blocked";
+         return;
+      }
       boolean bridges = Boolean.TRUE.equals(MillenaireServerConfig.SERVER.worldgenGenerateBridges.get());
       BlockState path = Blocks.DIRT_PATH.defaultBlockState();
-      SettlementPlan fromPlan = store.getPlan(route.fromPlanId);
       int scanned = 0;
       boolean waitingChunk = false;
       boolean any = false;

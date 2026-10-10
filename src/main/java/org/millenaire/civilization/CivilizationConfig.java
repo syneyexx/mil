@@ -7,7 +7,8 @@ import org.millenaire.TickConstants;
  * Runtime toggles live in MillenaireServerConfig; these are stable algorithm constants.
  */
 public final class CivilizationConfig {
-   public static final int SCHEMA_VERSION = 3;
+   /** Schema 4: trade ops carry unresolved stack evidence + finalization-aware recovery. */
+   public static final int SCHEMA_VERSION = 4;
    public static final int TRADE_OPERATION_RETENTION = 256;
    public static final long STAGE_MIGRATION_INTERVAL = 2400L;
    public static final long STAGE_COLONIZATION_INTERVAL = 6000L;

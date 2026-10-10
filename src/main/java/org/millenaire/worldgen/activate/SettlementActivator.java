@@ -7,6 +7,7 @@ import org.millenaire.building.BuildingId;
 import org.millenaire.building.BuildingInstance;
 import org.millenaire.building.BuildingPlan;
 import org.millenaire.building.BuildingPlanSet;
+import org.millenaire.civilization.settlement.ColonizationMaterializationGate;
 import org.millenaire.culture.BrickColourTheme;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillageType;
@@ -53,6 +54,9 @@ public final class SettlementActivator {
       }
       // Refuse activation until buildings/walls/roads are actually complete (not merely status-flagged).
       if (!plan.isPhysicallyComplete()) {
+         return false;
+      }
+      if (!ColonizationMaterializationGate.allowActivation(level, plan)) {
          return false;
       }
       if (!plan.hasMandatoryCentre() && !plan.loneBuilding()) {

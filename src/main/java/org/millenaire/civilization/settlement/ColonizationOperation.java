@@ -5,7 +5,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
@@ -16,8 +15,8 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import org.millenaire.util.ExactStackCodec;
 
 /**
  * Lifecycle for autonomous founding:
@@ -141,6 +140,9 @@ public final class ColonizationOperation {
    private final List<ItemStack> reservedStacks = new ArrayList<>();
    /** Remainder that could not be refunded on a prior attempt. */
    private final List<ItemStack> refundOutstanding = new ArrayList<>();
+   private final List<CompoundTag> unresolvedReservedStacks = new ArrayList<>();
+   private final List<CompoundTag> unresolvedRefundOutstanding = new ArrayList<>();
+   private boolean decodeUnresolved;
    private final List<FounderSlot> founderSlots = new ArrayList<>();
    private final List<UUID> migratedFounders = new ArrayList<>();
    private int founderTarget = 2;
@@ -230,6 +232,18 @@ public final class ColonizationOperation {
 
    public List<ItemStack> refundOutstanding() {
       return this.refundOutstanding;
+   }
+
+   public List<CompoundTag> unresolvedReservedStacks() {
+      return this.unresolvedReservedStacks;
+   }
+
+   public List<CompoundTag> unresolvedRefundOutstanding() {
+      return this.unresolvedRefundOutstanding;
+   }
+
+   public boolean decodeUnresolved() {
+      return this.decodeUnresolved;
    }
 
    public void setReservedStacks(List<ItemStack> stacks) {
@@ -384,8 +398,9 @@ public final class ColonizationOperation {
       tag.putBoolean("reservedEvent", this.reservedEventPublished);
       tag.putInt("founderTarget", this.founderTarget);
       tag.putInt("refundStackCursor", this.refundStackCursor);
-      tag.put("reservedStacks", stackList(this.reservedStacks, registries));
-      tag.put("refundOutstanding", stackList(this.refundOutstanding, registries));
+      tag.putBoolean("decodeUnresolved", this.decodeUnresolved);
+      tag.put("reservedStacks", ExactStackCodec.encode(this.reservedStacks, this.unresolvedReservedStacks, registries));
+      tag.put("refundOutstanding", ExactStackCodec.encode(this.refundOutstanding, this.unresolvedRefundOutstanding, registries));
       ListTag slots = new ListTag();
       for (FounderSlot slot : this.founderSlots) {
          slots.add(slot.save());
@@ -429,8 +444,16 @@ public final class ColonizationOperation {
             op.founderTarget = Math.max(1, tag.getInt("founderTarget"));
          }
          op.refundStackCursor = tag.getInt("refundStackCursor");
-         readStacks(tag.getList("reservedStacks", Tag.TAG_COMPOUND), op.reservedStacks, registries);
-         readStacks(tag.getList("refundOutstanding", Tag.TAG_COMPOUND), op.refundOutstanding, registries);
+         op.decodeUnresolved = tag.getBoolean("decodeUnresolved");
+         ExactStackCodec.DecodeResult reserved = ExactStackCodec.decode(tag.getList("reservedStacks", Tag.TAG_COMPOUND), registries);
+         op.reservedStacks.addAll(reserved.stacks());
+         op.unresolvedReservedStacks.addAll(reserved.unresolvedRaw());
+         ExactStackCodec.DecodeResult refund = ExactStackCodec.decode(tag.getList("refundOutstanding", Tag.TAG_COMPOUND), registries);
+         op.refundOutstanding.addAll(refund.stacks());
+         op.unresolvedRefundOutstanding.addAll(refund.unresolvedRaw());
+         if (reserved.hasUnresolved() || refund.hasUnresolved()) {
+            op.decodeUnresolved = true;
+         }
          ListTag slots = tag.getList("founderSlots", Tag.TAG_COMPOUND);
          if (!slots.isEmpty()) {
             for (int i = 0; i < slots.size(); i++) {
@@ -480,62 +503,6 @@ public final class ColonizationOperation {
    @Nullable
    public static ColonizationOperation load(CompoundTag tag) {
       return load(tag, null);
-   }
-
-   private static ListTag stackList(List<ItemStack> stacks, @Nullable Provider registries) {
-      ListTag list = new ListTag();
-      for (ItemStack stack : stacks) {
-         if (stack == null || stack.isEmpty()) {
-            continue;
-         }
-         CompoundTag st = new CompoundTag();
-         if (registries != null) {
-            try {
-               Tag encoded = stack.save(registries);
-               if (encoded instanceof CompoundTag compound) {
-                  st.put("Item", compound);
-               } else {
-                  st.put("Item", encoded);
-               }
-            } catch (Exception ignored) {
-               // Fall through to id/count.
-            }
-         }
-         if (!st.contains("Item")) {
-            ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
-            st.putString("id", id.toString());
-            st.putInt("Count", stack.getCount());
-         }
-         list.add(st);
-      }
-      return list;
-   }
-
-   private static void readStacks(ListTag list, List<ItemStack> dest, @Nullable Provider registries) {
-      for (int i = 0; i < list.size(); i++) {
-         CompoundTag st = list.getCompound(i);
-         ItemStack stack = ItemStack.EMPTY;
-         if (st.contains("Item") && registries != null) {
-            try {
-               Tag itemTag = st.get("Item");
-               Optional<ItemStack> parsed = ItemStack.parse(registries, itemTag);
-               if (parsed.isPresent()) {
-                  stack = parsed.get();
-               }
-            } catch (Exception ignored) {
-            }
-         }
-         if (stack.isEmpty() && st.contains("id")) {
-            ResourceLocation id = ResourceLocation.tryParse(st.getString("id"));
-            Item item = id == null ? null : BuiltInRegistries.ITEM.get(id);
-            if (item != null) {
-               stack = new ItemStack(item, Math.max(1, st.getInt("Count")));
-            }
-         }
-         if (!stack.isEmpty()) {
-            dest.add(stack);
-         }
-      }
    }
 
    private static ListTag uuidList(List<UUID> ids) {

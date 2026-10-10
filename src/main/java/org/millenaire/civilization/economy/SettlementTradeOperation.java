@@ -3,35 +3,35 @@ package org.millenaire.civilization.economy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import net.minecraft.core.HolderLookup.Provider;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import org.millenaire.util.ExactStackCodec;
 
 /**
  * Persistent settlement-to-settlement physical transfer.
  * Holds concrete stacks so retries never recreate generic type+count replacements.
+ * Schema 4: unresolved stack evidence + finalization-aware recovery.
  */
 public final class SettlementTradeOperation {
+   public static final int SCHEMA = 4;
+
    public enum Status {
       /** Goods still in source inventories — not yet reserved. */
       PENDING_WITHDRAW,
       /** Goods removed from source; delivery / compensation in progress. */
       IN_TRANSIT,
-      /** Destination accepted all remaining stacks. */
+      /** Destination accepted all remaining stacks; booking/events may still be pending. */
       DELIVERED,
       /** Undelivered remainder must return to source. */
       COMPENSATING,
       /** Successful conserved commit (delivery + booking done). */
       COMPLETE,
-      /** Ambiguous or unrecoverable; hold concrete stacks, do not invent goods. */
+      /** Ambiguous or unrecoverable; hold concrete stacks / unresolved evidence. */
       RECOVERY_REQUIRED,
       /** Legacy marker without reconstructible stacks. */
       LEGACY_UNRECOVERABLE,
@@ -47,6 +47,7 @@ public final class SettlementTradeOperation {
       CHUNK_UNAVAILABLE,
       BUDGET,
       LEGACY_INSUFFICIENT_EVIDENCE,
+      DECODE_UNRESOLVED,
       AMBIGUOUS
    }
 
@@ -60,6 +61,9 @@ public final class SettlementTradeOperation {
    private final List<ItemStack> withdrawnStacks = new ArrayList<>();
    private final List<ItemStack> pendingDelivery = new ArrayList<>();
    private final List<ItemStack> pendingCompensation = new ArrayList<>();
+   private final List<CompoundTag> unresolvedWithdrawn = new ArrayList<>();
+   private final List<CompoundTag> unresolvedPendingDelivery = new ArrayList<>();
+   private final List<CompoundTag> unresolvedPendingCompensation = new ArrayList<>();
    private int deliveredCount;
    private int compensatedCount;
    private boolean economyBooked;
@@ -67,6 +71,9 @@ public final class SettlementTradeOperation {
    private boolean sameFactionLogistics;
    private long lastChangeGameTime;
    private int refundCursor;
+   private int recoveryAttempts;
+   private int schemaVersion = SCHEMA;
+   private boolean decodeUnresolved;
 
    public SettlementTradeOperation(
       UUID operationId,
@@ -106,6 +113,11 @@ public final class SettlementTradeOperation {
       return this.createdAtGameTime;
    }
 
+   /** Stable day key from creation time — never rewrite during recovery on a later day. */
+   public long createdDayKey() {
+      return this.createdAtGameTime / 24000L;
+   }
+
    public Status status() {
       return this.status;
    }
@@ -132,6 +144,18 @@ public final class SettlementTradeOperation {
 
    public List<ItemStack> pendingCompensation() {
       return this.pendingCompensation;
+   }
+
+   public List<CompoundTag> unresolvedWithdrawn() {
+      return this.unresolvedWithdrawn;
+   }
+
+   public List<CompoundTag> unresolvedPendingDelivery() {
+      return this.unresolvedPendingDelivery;
+   }
+
+   public List<CompoundTag> unresolvedPendingCompensation() {
+      return this.unresolvedPendingCompensation;
    }
 
    public int deliveredCount() {
@@ -186,19 +210,85 @@ public final class SettlementTradeOperation {
       this.refundCursor = Math.max(0, cursor);
    }
 
+   public int recoveryAttempts() {
+      return this.recoveryAttempts;
+   }
+
+   public void incrementRecoveryAttempts() {
+      this.recoveryAttempts++;
+   }
+
+   public boolean decodeUnresolved() {
+      return this.decodeUnresolved;
+   }
+
+   public int schemaVersion() {
+      return this.schemaVersion;
+   }
+
+   /** Stable effects / booking / event key for this operation (not UI keymap). */
+   public String effectsKey() {
+      return "trade-fx:" + this.operationId;
+   }
+
+   /** Logical day success key for preventing a second withdrawal of the same lane. */
+   public String daySuccessKey() {
+      return "trade-ok:"
+         + this.exporterVillageId
+         + ":"
+         + this.importerVillageId
+         + ":"
+         + this.resourceId
+         + ":"
+         + createdDayKey();
+   }
+
+   public boolean needsFinalization() {
+      if (this.status == Status.COMPLETE || this.status == Status.FAILED || this.status == Status.LEGACY_UNRECOVERABLE) {
+         return false;
+      }
+      if (this.decodeUnresolved) {
+         return false;
+      }
+      return this.deliveredCount > 0
+         && this.pendingDelivery.isEmpty()
+         && this.pendingCompensation.isEmpty()
+         && (!this.economyBooked || !this.completionEventPublished);
+   }
+
    public boolean needsWork() {
+      if (this.decodeUnresolved || this.status == Status.RECOVERY_REQUIRED) {
+         return !this.pendingDelivery.isEmpty()
+            || !this.pendingCompensation.isEmpty()
+            || needsFinalization()
+            || (!this.unresolvedPendingDelivery.isEmpty() || !this.unresolvedPendingCompensation.isEmpty());
+      }
       return switch (this.status) {
-         case IN_TRANSIT, COMPENSATING, RECOVERY_REQUIRED ->
-            !this.pendingDelivery.isEmpty() || !this.pendingCompensation.isEmpty();
-         case LEGACY_UNRECOVERABLE -> false;
+         case IN_TRANSIT, COMPENSATING, DELIVERED ->
+            !this.pendingDelivery.isEmpty() || !this.pendingCompensation.isEmpty() || needsFinalization();
+         case LEGACY_UNRECOVERABLE, COMPLETE, FAILED, PENDING_WITHDRAW -> false;
          default -> false;
       };
    }
 
    public boolean isActive() {
+      if (this.decodeUnresolved) {
+         return true;
+      }
       return this.status != Status.COMPLETE
          && this.status != Status.FAILED
          && this.status != Status.LEGACY_UNRECOVERABLE;
+   }
+
+   /** Unfinished escrow / evidence that must survive retention pruning. */
+   public boolean holdsEscrowOrEvidence() {
+      return isActive()
+         || !this.pendingDelivery.isEmpty()
+         || !this.pendingCompensation.isEmpty()
+         || !this.unresolvedWithdrawn.isEmpty()
+         || !this.unresolvedPendingDelivery.isEmpty()
+         || !this.unresolvedPendingCompensation.isEmpty()
+         || this.decodeUnresolved;
    }
 
    public String statusCode() {
@@ -226,6 +316,7 @@ public final class SettlementTradeOperation {
 
    public CompoundTag save(@Nullable Provider registries) {
       CompoundTag tag = new CompoundTag();
+      tag.putInt("schema", this.schemaVersion);
       tag.putUUID("id", this.operationId);
       tag.putUUID("exporter", this.exporterVillageId);
       tag.putUUID("importer", this.importerVillageId);
@@ -240,9 +331,11 @@ public final class SettlementTradeOperation {
       tag.putBoolean("logistics", this.sameFactionLogistics);
       tag.putLong("lastChange", this.lastChangeGameTime);
       tag.putInt("refundCursor", this.refundCursor);
-      tag.put("withdrawn", stackList(this.withdrawnStacks, registries));
-      tag.put("pendingDelivery", stackList(this.pendingDelivery, registries));
-      tag.put("pendingCompensation", stackList(this.pendingCompensation, registries));
+      tag.putInt("recoveryAttempts", this.recoveryAttempts);
+      tag.putBoolean("decodeUnresolved", this.decodeUnresolved);
+      tag.put("withdrawn", ExactStackCodec.encode(this.withdrawnStacks, this.unresolvedWithdrawn, registries));
+      tag.put("pendingDelivery", ExactStackCodec.encode(this.pendingDelivery, this.unresolvedPendingDelivery, registries));
+      tag.put("pendingCompensation", ExactStackCodec.encode(this.pendingCompensation, this.unresolvedPendingCompensation, registries));
       return tag;
    }
 
@@ -260,6 +353,7 @@ public final class SettlementTradeOperation {
             tag.getLong("at"),
             tag.getBoolean("logistics")
          );
+         op.schemaVersion = tag.contains("schema") ? tag.getInt("schema") : 3;
          try {
             op.status = Status.valueOf(tag.getString("status"));
          } catch (Exception ignored) {
@@ -274,12 +368,41 @@ public final class SettlementTradeOperation {
          op.completionEventPublished = tag.getBoolean("eventPublished");
          op.lastChangeGameTime = tag.contains("lastChange") ? tag.getLong("lastChange") : op.createdAtGameTime;
          op.refundCursor = tag.getInt("refundCursor");
-         readStacks(tag.getList("withdrawn", Tag.TAG_COMPOUND), op.withdrawnStacks, registries);
-         readStacks(tag.getList("pendingDelivery", Tag.TAG_COMPOUND), op.pendingDelivery, registries);
-         readStacks(tag.getList("pendingCompensation", Tag.TAG_COMPOUND), op.pendingCompensation, registries);
+         op.recoveryAttempts = tag.getInt("recoveryAttempts");
+         op.decodeUnresolved = tag.getBoolean("decodeUnresolved");
+
+         applyStackList(tag.getList("withdrawn", Tag.TAG_COMPOUND), op.withdrawnStacks, op.unresolvedWithdrawn, registries, op);
+         applyStackList(tag.getList("pendingDelivery", Tag.TAG_COMPOUND), op.pendingDelivery, op.unresolvedPendingDelivery, registries, op);
+         applyStackList(tag.getList("pendingCompensation", Tag.TAG_COMPOUND), op.pendingCompensation, op.unresolvedPendingCompensation, registries, op);
+
+         // Schema-3 → 4: keep status, but mark decode-unresolved ops for recovery diagnosis.
+         if (op.schemaVersion < SCHEMA) {
+            op.schemaVersion = SCHEMA;
+         }
+         if (op.decodeUnresolved && op.status != Status.COMPLETE && op.status != Status.FAILED && op.status != Status.LEGACY_UNRECOVERABLE) {
+            op.status = Status.RECOVERY_REQUIRED;
+            op.blockReason = BlockReason.DECODE_UNRESOLVED;
+         }
          return op;
       } catch (Exception e) {
          return null;
+      }
+   }
+
+   private static void applyStackList(
+      ListTag list,
+      List<ItemStack> dest,
+      List<CompoundTag> unresolvedDest,
+      @Nullable Provider registries,
+      SettlementTradeOperation op
+   ) {
+      ExactStackCodec.DecodeResult decoded = ExactStackCodec.decode(list, registries);
+      dest.clear();
+      dest.addAll(decoded.stacks());
+      unresolvedDest.clear();
+      unresolvedDest.addAll(decoded.unresolvedRaw());
+      if (decoded.hasUnresolved()) {
+         op.decodeUnresolved = true;
       }
    }
 
@@ -302,62 +425,7 @@ public final class SettlementTradeOperation {
       op.blockReason = BlockReason.LEGACY_INSUFFICIENT_EVIDENCE;
       op.deliveredCount = 0;
       op.compensatedCount = 0;
-      // Do not invent stacks from a count-only marker.
       op.touch(gameTime);
       return op;
-   }
-
-   private static ListTag stackList(List<ItemStack> stacks, @Nullable Provider registries) {
-      ListTag list = new ListTag();
-      for (ItemStack stack : stacks) {
-         if (stack == null || stack.isEmpty()) {
-            continue;
-         }
-         CompoundTag st = new CompoundTag();
-         if (registries != null) {
-            try {
-               Tag encoded = stack.save(registries);
-               if (encoded instanceof CompoundTag compound) {
-                  st.put("Item", compound);
-               } else {
-                  st.put("Item", encoded);
-               }
-            } catch (Exception ignored) {
-            }
-         }
-         if (!st.contains("Item")) {
-            ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
-            st.putString("id", id.toString());
-            st.putInt("Count", stack.getCount());
-         }
-         list.add(st);
-      }
-      return list;
-   }
-
-   private static void readStacks(ListTag list, List<ItemStack> dest, @Nullable Provider registries) {
-      for (int i = 0; i < list.size(); i++) {
-         CompoundTag st = list.getCompound(i);
-         ItemStack stack = ItemStack.EMPTY;
-         if (st.contains("Item") && registries != null) {
-            try {
-               Optional<ItemStack> parsed = ItemStack.parse(registries, st.get("Item"));
-               if (parsed.isPresent()) {
-                  stack = parsed.get();
-               }
-            } catch (Exception ignored) {
-            }
-         }
-         if (stack.isEmpty() && st.contains("id")) {
-            ResourceLocation id = ResourceLocation.tryParse(st.getString("id"));
-            Item item = id == null ? null : BuiltInRegistries.ITEM.get(id);
-            if (item != null) {
-               stack = new ItemStack(item, Math.max(1, st.getInt("Count")));
-            }
-         }
-         if (!stack.isEmpty()) {
-            dest.add(stack);
-         }
-      }
    }
 }

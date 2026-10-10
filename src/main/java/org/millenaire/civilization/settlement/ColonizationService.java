@@ -5,24 +5,17 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ChunkPos;
 import org.millenaire.building.AnywoodHelper;
 import org.millenaire.building.BuildingInventory;
-import org.millenaire.building.BuildingPlanSet;
 import org.millenaire.civilization.CivilizationConfig;
 import org.millenaire.civilization.CivilizationSavedData;
 import org.millenaire.civilization.population.MigrationResult;
@@ -32,7 +25,6 @@ import org.millenaire.civilization.population.PopulationSnapshot;
 import org.millenaire.civilization.settlement.ColonizationOperation.FounderSlot;
 import org.millenaire.civilization.settlement.ColonizationOperation.FounderState;
 import org.millenaire.config.MillenaireServerConfig;
-import org.millenaire.culture.ModCultures;
 import org.millenaire.faction.Faction;
 import org.millenaire.faction.FactionId;
 import org.millenaire.faction.FactionSavedData;
@@ -46,7 +38,6 @@ import org.millenaire.village.VillageId;
 import org.millenaire.village.VillageSavedData;
 import org.millenaire.village.VillagerRecord;
 import org.millenaire.worldgen.WorldgenEngine;
-import org.millenaire.worldgen.plan.PlannedBuilding;
 import org.millenaire.worldgen.plan.SettlementLayoutPlanner;
 import org.millenaire.worldgen.plan.SettlementPlan;
 import org.millenaire.worldgen.plan.SettlementPlanSavedData;
@@ -266,12 +257,18 @@ public final class ColonizationService {
          op.setStatus(ColonizationOperation.Status.LAYOUT);
          // Persist before cost take so incomplete rollback cannot vanish with a false return.
          store.put(op);
+         ColonizationMaterializationGate.bindPlan(plan, op, level);
 
-         Map<ResourceLocation, Integer> costs = computeFoundingCosts(plan);
-         if (!reserveExactCosts(level, parent, op, costs, store)) {
-            op.setStatus(ColonizationOperation.Status.FAILED);
-            op.setReason(op.refundOutstanding().isEmpty() ? "insufficient_resources" : "insufficient_resources;refund_outstanding");
-            store.put(op);
+         if (!reserveExactCosts(level, parent, op, store)) {
+            // failOp: refund/founder release; plan stays linked so the shared gate blocks mutation.
+            failOp(
+               level,
+               store,
+               op,
+               op.refundOutstanding().isEmpty() ? "insufficient_resources" : "insufficient_resources;refund_outstanding"
+            );
+            plan.progressFor(new ChunkPos(plan.center()).toLong()).setBlockReason("colonization_unpaid_or_blocked");
+            SettlementPlanSavedData.get(level).markDirtyPlan();
             stateBlock(level, parent, "insufficient_resources");
             return null;
          }
@@ -279,8 +276,13 @@ public final class ColonizationService {
          revalidateAndReserveFounders(level, parent, op, store, null);
          publishTransition(level, parent, op, LivingEventType.SETTLEMENT_DEVELOPMENT, "proposal_reserved", "colonize-reserved:" + op.operationId());
 
-         WorldgenEngine.kickPlanExecution(level, plan);
-         op.setStatus(ColonizationOperation.Status.MATERIALIZING);
+         // Kick only when full coverage is proven; gate re-checks at mutation entry.
+         if (FoundingCostService.isOperationFullyCovered(level, op, plan)) {
+            WorldgenEngine.kickPlanExecution(level, plan);
+            if (op.costsConsumed()) {
+               op.setStatus(ColonizationOperation.Status.MATERIALIZING);
+            }
+         }
          store.put(op);
 
          CivilizationSavedData.get(level).tryMarkPublished(
@@ -352,11 +354,7 @@ public final class ColonizationService {
          return true;
       }
 
-      if (!plan.isColonizationFounding()) {
-         plan.setFoundingMode(SettlementPlan.FoundingMode.COLONIZATION);
-         plan.setFoundingFactionId(op.factionId());
-         SettlementPlanSavedData.get(level).markDirtyPlan();
-      }
+      ColonizationMaterializationGate.bindPlan(plan, op, level);
 
       String priorReason = op.reason();
       boolean mutated = false;
@@ -369,9 +367,9 @@ public final class ColonizationService {
             maybePublishReasonChange(level, parent, op, priorReason);
             return false;
          }
-         if (!op.resourcesReserved() || op.reservedStacks().isEmpty()) {
-            Map<ResourceLocation, Integer> costs = computeFoundingCosts(plan);
-            if (!reserveExactCosts(level, parent, op, costs, store)) {
+         // Recompute full coverage — do not trust resourcesReserved boolean or a non-empty list.
+         if (!FoundingCostService.isOperationFullyCovered(level, op, plan)) {
+            if (!reserveExactCosts(level, parent, op, store)) {
                failOp(level, store, op, op.refundOutstanding().isEmpty() ? "insufficient_resources" : "insufficient_resources;refund_outstanding");
                return true;
             }
@@ -391,23 +389,26 @@ public final class ColonizationService {
             maybePublishReasonChange(level, parent, op, priorReason);
             return mutated;
          }
+         if (!FoundingCostService.isOperationFullyCovered(level, op, plan) && !op.costsConsumed()) {
+            setWaitingReason(op, "awaiting_materials");
+            maybePublishReasonChange(level, parent, op, priorReason);
+            return mutated;
+         }
          if (allowWorldgenKick) {
             WorldgenEngine.kickPlanExecution(level, plan);
          }
-         if (plan.status() == SettlementPlanStatus.MATERIALIZING
+         // costsConsumed is set by the materializer on first real block mutation — not by plan status alone.
+         if (op.costsConsumed()
             || plan.status() == SettlementPlanStatus.PHYSICAL_COMPLETE
-            || plan.status() == SettlementPlanStatus.ACTIVATING) {
+            || plan.status() == SettlementPlanStatus.ACTIVATING
+            || plan.status() == SettlementPlanStatus.ACTIVE) {
             op.setStatus(ColonizationOperation.Status.MATERIALIZING);
-            if (!op.costsConsumed()) {
-               // Levy is consumed when physical build actually starts — not merely on RESERVED.
-               op.setCostsConsumed(true);
-               op.reservedStacks().clear();
-               op.setResourcesReserved(false);
-            }
             mutated = true;
          }
-         if (plan.status() == SettlementPlanStatus.MATERIALIZING) {
+         if (plan.status() == SettlementPlanStatus.MATERIALIZING && op.costsConsumed()) {
             setWaitingReason(op, "materializing");
+         } else if (!op.costsConsumed()) {
+            setWaitingReason(op, "awaiting_physical_start");
          }
       }
 
@@ -772,119 +773,59 @@ public final class ColonizationService {
       return allowOperationId == null || !holder.equals(allowOperationId);
    }
 
-   private static Map<ResourceLocation, Integer> computeFoundingCosts(SettlementPlan plan) {
-      Map<ResourceLocation, Integer> costs = new LinkedHashMap<>();
-      for (PlannedBuilding building : plan.buildings()) {
-         if (building.planSetId() == null) {
-            continue;
-         }
-         BuildingPlanSet set = ModCultures.getBuildingPlanSet(building.planSetId());
-         if (set == null) {
-            continue;
-         }
-         BuildingPlanSet.LevelDef level0 = set.getLevel(building.variant(), Math.max(0, building.level()));
-         if (level0 == null || level0.requiredResources() == null) {
-            continue;
-         }
-         for (Entry<ResourceLocation, Integer> e : level0.requiredResources().entrySet()) {
-            costs.merge(e.getKey(), e.getValue(), Integer::sum);
-         }
-      }
-      if (costs.isEmpty()) {
-         costs.put(AnywoodHelper.ANYWOOD_LOG, FALLBACK_WOOD_COST);
-         costs.put(BuiltInRegistries.ITEM.getKey(Items.COBBLESTONE), FALLBACK_COBBLE_COST);
-      }
-      return costs;
-   }
-
    /**
-    * Authoritative exact-stack reservation. On partial failure, all taken stacks are rolled back;
-    * any leftover that cannot be reinserted is persisted on the operation as refundOutstanding
-    * (operation must already be in the store).
+    * Authoritative exact-stack reservation via {@link FoundingCostService}.
+    * Credits existing partial escrow; pulls only the deficit. On failure, keeps prior escrow
+    * and persists any rollback leftovers as refundOutstanding — never drops contributed stacks.
     */
    private static boolean reserveExactCosts(
       ServerLevel level,
       Village parent,
       ColonizationOperation op,
-      Map<ResourceLocation, Integer> costs,
       ColonizationSavedData store
    ) {
-      if (op.resourcesReserved() && !op.reservedStacks().isEmpty()) {
+      SettlementPlan plan = SettlementPlanSavedData.get(level).getPlan(op.planId());
+      if (plan == null) {
+         op.setReason("plan_missing");
+         store.put(op);
+         return false;
+      }
+      if (FoundingCostService.isOperationFullyCovered(level, op, plan)) {
+         op.setResourcesReserved(true);
+         store.put(op);
          return true;
       }
-      List<ItemStack> taken = new ArrayList<>();
-      for (Entry<ResourceLocation, Integer> e : costs.entrySet()) {
-         if (e.getValue() <= 0) {
-            continue;
-         }
-         int need = e.getValue();
-         BuildingInventory.RemoveStacksResult result;
-         if (AnywoodHelper.isAnywood(e.getKey()) || e.getKey().equals(BuiltInRegistries.ITEM.getKey(Items.OAK_LOG))) {
-            result = removeAnyLogsExact(level, parent, need);
-         } else {
-            Item item = BuiltInRegistries.ITEM.get(e.getKey());
-            if (item == null || item == Items.AIR) {
-               continue;
-            }
-            result = removeItemExact(level, parent, item, need);
-         }
-         taken.addAll(result.stacks());
-         if (!result.fullySatisfied()) {
-            List<ItemStack> leftover = rollbackStacksExact(level, parent, taken);
-            op.reservedStacks().clear();
-            if (!leftover.isEmpty()) {
-               op.refundOutstanding().addAll(leftover);
-               op.setResourcesReserved(true);
-               op.setReason("insufficient_resources;refund_outstanding");
-            } else {
-               op.setResourcesReserved(false);
-            }
-            store.put(op);
-            return false;
+      List<ItemStack> existing = new ArrayList<>();
+      for (ItemStack stack : op.reservedStacks()) {
+         if (stack != null && !stack.isEmpty()) {
+            existing.add(stack.copy());
          }
       }
-      op.setReservedStacks(taken);
+      FoundingCostService.ReserveResult result = FoundingCostService.reserveDeficitFromVillage(level, parent, plan, existing);
+      if (!result.fullyCovered()) {
+         // Preserve prior escrow; attach rollback leftovers that could not be reinserted.
+         if (!result.rollbackLeftover().isEmpty()) {
+            op.refundOutstanding().addAll(result.rollbackLeftover());
+            op.setResourcesReserved(true);
+            op.setReason((result.reason() == null ? "insufficient_resources" : result.reason()) + ";refund_outstanding");
+         } else {
+            // Partial escrow remains visible; not full payment.
+            if (!op.reservedStacks().isEmpty()) {
+               op.setResourcesReserved(true);
+            }
+            op.setReason(result.reason() == null ? "insufficient_resources" : result.reason());
+         }
+         store.put(op);
+         return false;
+      }
+      for (ItemStack stack : result.taken()) {
+         if (stack != null && !stack.isEmpty()) {
+            op.reservedStacks().add(stack.copy());
+         }
+      }
       op.setResourcesReserved(true);
       store.put(op);
       return true;
-   }
-
-   private static BuildingInventory.RemoveStacksResult removeAnyLogsExact(ServerLevel level, Village village, int amount) {
-      List<ItemStack> taken = new ArrayList<>();
-      int left = amount;
-      for (var building : village.getBuildings()) {
-         if (left <= 0) {
-            break;
-         }
-         BuildingInventory inv = building.getInventory();
-         if (inv == null) {
-            continue;
-         }
-         BuildingInventory.RemoveStacksResult part = inv.removeByTagExact(level, AnywoodHelper.LOGS_TAG, left, Set.of());
-         taken.addAll(part.stacks());
-         left = part.unsatisfied();
-      }
-      int removed = taken.stream().mapToInt(ItemStack::getCount).sum();
-      return new BuildingInventory.RemoveStacksResult(removed, Math.max(0, amount - removed), taken);
-   }
-
-   private static BuildingInventory.RemoveStacksResult removeItemExact(ServerLevel level, Village village, Item item, int amount) {
-      List<ItemStack> taken = new ArrayList<>();
-      int left = amount;
-      for (var building : village.getBuildings()) {
-         if (left <= 0) {
-            break;
-         }
-         BuildingInventory inv = building.getInventory();
-         if (inv == null) {
-            continue;
-         }
-         BuildingInventory.RemoveStacksResult part = inv.removeByItemExact(level, item, left);
-         taken.addAll(part.stacks());
-         left = part.unsatisfied();
-      }
-      int removed = taken.stream().mapToInt(ItemStack::getCount).sum();
-      return new BuildingInventory.RemoveStacksResult(removed, Math.max(0, amount - removed), taken);
    }
 
    private static void failOp(ServerLevel level, ColonizationSavedData store, ColonizationOperation op, String reason) {
@@ -975,20 +916,6 @@ public final class ColonizationService {
       }
       store.put(op);
       return Math.max(1, attempts);
-   }
-
-   /** @return stacks that could not be reinserted */
-   private static List<ItemStack> rollbackStacksExact(ServerLevel level, Village village, List<ItemStack> stacks) {
-      List<ItemStack> leftover = new ArrayList<>();
-      for (ItemStack stack : stacks) {
-         int left = addExactStack(level, village, stack.copy());
-         if (left > 0) {
-            ItemStack rem = stack.copy();
-            rem.setCount(left);
-            leftover.add(rem);
-         }
-      }
-      return leftover;
    }
 
    /** @return remaining count that did not fit */
