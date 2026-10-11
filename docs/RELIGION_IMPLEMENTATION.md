@@ -58,6 +58,7 @@ Owner performs local validation — see `docs/RELIGION_LOCAL_VALIDATION.md`.
 - Religious visit goals remain valid daily/location selectors; religion layer adds effects on completion and ceremony coordination.
 - `tend_sacrifices.json` still uses legacy `goalKey: "gopray"` for speech/label compatibility; content id path remains `tend_sacrifices`.
 - `perform_pujas` / `meditate` use tag `pujas`; `tend_sacrifices` uses `sacrifices` — both wired as daily-compatible location tags for matching traditions.
+- **Fixed:** Mayan `shaman.json` previously listed Indian `perform_pujas` / `be_puja_performer` (tag `pujas`) but Mayan buildings only have `sacrifices` / `praying`. Goals are now `tend_sacrifices`, `pray`, `hold_service`.
 - Cultures without `religion.json` infer traditions from tradition `cultures` lists; `outlawz` sets `no_organized_religion`.
 
 ---
