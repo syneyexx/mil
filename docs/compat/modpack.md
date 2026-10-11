@@ -43,7 +43,7 @@ Structure avoidance: `#millenaire:avoid_settlement` (Waystones, Dungeons Arise, 
 
 ## Equipment (Phase 4)
 
-`CompatEquipmentRegistry` soft-loads Epic Knights (`magistuarmory`), Immersive Armors, Fantasy Armor, Armor of the Ages, Exotic Armory into soldier/guard kits (~65% chance on spawn). Spell Engine / TaCZ appear as rare shop trophies only.
+`CompatEquipmentRegistry` soft-loads Epic Knights (`magistuarmory`), Immersive Armors, Fantasy Armor, Armor of the Ages, Exotic Armory into soldier/guard kits (~65% chance on spawn). Gabbers, Outlawz, Illagers, and bandit kits also soft-load **TaCZ** gun item IDs when the mod is present (`TaczWeaponCompat`). Combat uses TacZ when available and falls back to a fast projectile so NPCs still shoot without the mod API. Spell Engine / TaCZ ammo boxes and guns also appear as rare shop goods. All foreign IDs soft-fail when the mod is absent.
 
 ## Map — Xaero (optional)
 
@@ -74,7 +74,11 @@ Structure avoidance: `#millenaire:avoid_settlement` (Waystones, Dungeons Arise, 
 
 | Key | Default | Notes |
 |-----|---------|-------|
-| `worldgenSettlementDensity` | `0.42` | Slightly higher for dense biome packs |
+| `worldgenSettlementDensity` | `0.72` | Denser natural villages |
+| `worldgenLoneBuildingDensity` | `0.40` | More lone buildings / bandit camps |
+| `generateHamlets` | `true` | Parent+hamlet city clusters |
+| `raidingRate` | `35` | Night raid attempts |
+| `starterSettlementEnabled` | `true` | Gabbers Koninkrijk at spawn |
 | `worldgenUntaggedBiomeFallback` | `true` | Climate culture pool when biome_tags miss |
 | `worldgenPreserveModdedStructures` | `true` | Avoid tagged mod structures |
 | `placeVillageWaystones` | `true` | Requires Waystones |

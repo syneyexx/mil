@@ -102,7 +102,63 @@ public final class CompatEquipmentRegistry {
             EquipmentSlot.CHEST,
             ids("armorpp:leather_chestplate", "immersive_armors:bone_chestplate"),
             EquipmentSlot.MAINHAND,
-            ids("magistuarmory:shortsword", "minecraft:iron_sword")
+            ids(
+               "tacz:modern_kinetic_gun",
+               "tacz:glock_17",
+               "tacz:uzi",
+               "magistuarmory:shortsword",
+               "minecraft:iron_sword"
+            )
+         )
+      );
+      registerCulture(
+         "outlawz",
+         Map.of(
+            EquipmentSlot.HEAD,
+            ids("armorpp:leather_helmet", "immersive_armors:bone_helmet"),
+            EquipmentSlot.CHEST,
+            ids("armorpp:leather_chestplate", "immersive_armors:bone_chestplate"),
+            EquipmentSlot.MAINHAND,
+            ids(
+               "tacz:modern_kinetic_gun",
+               "tacz:ak47",
+               "tacz:db_short",
+               "tacz:glock_17",
+               "minecraft:iron_sword",
+               "minecraft:bow"
+            )
+         )
+      );
+      registerCulture(
+         "gabbers",
+         Map.of(
+            EquipmentSlot.HEAD,
+            ids("magistuarmory:kettlehat", "immersive_armors:heavy_helmet", "minecraft:iron_helmet"),
+            EquipmentSlot.CHEST,
+            ids("magistuarmory:halfarmor", "immersive_armors:heavy_chestplate", "minecraft:iron_chestplate"),
+            EquipmentSlot.LEGS,
+            ids("immersive_armors:heavy_leggings", "minecraft:iron_leggings"),
+            EquipmentSlot.FEET,
+            ids("immersive_armors:heavy_boots", "minecraft:iron_boots"),
+            EquipmentSlot.MAINHAND,
+            ids(
+               "tacz:modern_kinetic_gun",
+               "tacz:m4a1",
+               "tacz:glock_17",
+               "magistuarmory:arming_sword",
+               "minecraft:iron_sword"
+            )
+         )
+      );
+      registerCulture(
+         "illagers",
+         Map.of(
+            EquipmentSlot.HEAD,
+            ids("minecraft:iron_helmet", "immersive_armors:bone_helmet"),
+            EquipmentSlot.CHEST,
+            ids("minecraft:iron_chestplate", "immersive_armors:bone_chestplate"),
+            EquipmentSlot.MAINHAND,
+            ids("tacz:modern_kinetic_gun", "tacz:ak47", "minecraft:crossbow", "minecraft:iron_sword")
          )
       );
       int resolved = 0;
@@ -156,7 +212,7 @@ public final class CompatEquipmentRegistry {
       }
       String key = culturePath.toLowerCase(Locale.ROOT);
       Map<EquipmentSlot, List<ResourceLocation>> slots = BY_CULTURE.get(key);
-      if (slots == null && key.contains("bandit")) {
+      if (slots == null && (key.contains("bandit") || "outlawz".equals(key))) {
          slots = BY_CULTURE.get("bandit");
       }
       if (slots == null) {
@@ -166,9 +222,22 @@ public final class CompatEquipmentRegistry {
       if (options == null || options.isEmpty()) {
          return null;
       }
+      // Prefer a soft TacZ gun for MAINHAND when the mod is present and listed.
+      if (slot == EquipmentSlot.MAINHAND && org.millenaire.compat.tacz.TaczWeaponCompat.isLoaded() && random.nextFloat() < 0.55F) {
+         ItemStack gun = org.millenaire.compat.tacz.TaczWeaponCompat.createRandomGunStack(random);
+         if (!gun.isEmpty()) {
+            return gun;
+         }
+      }
       ResourceLocation chosen = options.get(random.nextInt(options.size()));
       Item item = BuiltInRegistries.ITEM.getOptional(chosen).orElse(null);
-      return item == null ? null : new ItemStack(item);
+      if (item == null) {
+         return null;
+      }
+      if (org.millenaire.compat.tacz.TaczWeaponCompat.isGunItem(item)) {
+         return org.millenaire.compat.tacz.TaczWeaponCompat.createGunStack(item);
+      }
+      return new ItemStack(item);
    }
 
    public static void applyRandomKit(String culturePath, LivingEntity entity, RandomSource random, float chance) {
@@ -183,6 +252,9 @@ public final class CompatEquipmentRegistry {
          ItemStack stack = pick(culturePath, slot, random);
          if (stack != null && !stack.isEmpty()) {
             entity.setItemSlot(slot, stack);
+            if (slot == EquipmentSlot.MAINHAND && entity instanceof org.millenaire.entity.MillVillager villager) {
+               villager.getInventory().add(stack.getItem(), 1);
+            }
          }
       }
    }

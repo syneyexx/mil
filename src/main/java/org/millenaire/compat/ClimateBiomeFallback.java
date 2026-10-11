@@ -178,7 +178,7 @@ public final class ClimateBiomeFallback {
       if (temp > 0.9F) {
          return cultures(ClimateBand.SAVANNA, "seljuk", "indian", "mayan");
       }
-      return cultures(ClimateBand.TEMPERATE, "norman", "byzantines", "japanese", "gabbers", "illagers");
+      return cultures(ClimateBand.TEMPERATE, "norman", "byzantines", "japanese", "gabbers", "outlawz", "illagers");
    }
 
    private static Classification cultures(ClimateBand band, String... paths) {

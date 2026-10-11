@@ -161,7 +161,9 @@ final class VillageTypeLoader {
          boolean keyLoneBuilding = GsonHelper.getAsBoolean(json, "key_lone_building", false);
          String keyLoneBuildingGenerateTag = json.has("key_lone_building_generate_tag") ? GsonHelper.getAsString(json, "key_lone_building_generate_tag") : null;
          boolean generatedForPlayer = GsonHelper.getAsBoolean(json, "generated_for_player", false);
-         boolean spawnableLB = GsonHelper.getAsBoolean(json, "spawnable", !loneBuilding);
+         // Default true for both villages and lone buildings so Phase 4 natural gen includes
+         // bandit camps / inns. Content may still set "spawnable": false explicitly.
+         boolean spawnableLB = GsonHelper.getAsBoolean(json, "spawnable", true);
          boolean showTownHallSigns = GsonHelper.getAsBoolean(json, "show_town_hall_signs", !loneBuilding);
          String nameListVal;
          if (json.has("name_list")) {

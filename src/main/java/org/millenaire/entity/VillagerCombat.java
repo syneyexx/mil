@@ -100,11 +100,22 @@ public final class VillagerCombat {
          return ItemStack.EMPTY;
       }
 
+      boolean combatRole = vt.isArcher() || vt.isHelpInAttacks() || vt.isRaider();
+      if (combatRole && !this.isTargetWithinMeleeRange()) {
+         Item ownedGun = org.millenaire.compat.tacz.TaczWeaponCompat.findOwnedGun(this.villager.getInventory());
+         if (ownedGun != null) {
+            return org.millenaire.compat.tacz.TaczWeaponCompat.createGunStack(ownedGun);
+         }
+      }
+
       if (vt.isArcher() && !this.isTargetWithinMeleeRange()) {
          ToolCategory ranged = ToolCategoryRegistry.get("weaponsranged");
          if (ranged != null) {
             ToolCategory.ToolEntry best = ranged.getBestOwned(item -> this.villager.getInventory().getCount(item) > 0);
             if (best != null && best.item() != null) {
+               if (org.millenaire.compat.tacz.TaczWeaponCompat.isGunItem(best.item())) {
+                  return org.millenaire.compat.tacz.TaczWeaponCompat.createGunStack(best.item());
+               }
                return new ItemStack(best.item());
             }
          }
@@ -164,17 +175,37 @@ public final class VillagerCombat {
    public boolean performAttack(LivingEntity target) {
       VillagerType vt = ModCultures.getVillagerType(this.villager.getVillagerTypeId());
       boolean isArcher = vt != null && vt.isArcher();
-      boolean hasBow = this.villager.getMainHandItem().getItem() instanceof BowItem;
+      boolean combatRole = vt != null && (vt.isArcher() || vt.isHelpInAttacks() || vt.isRaider());
+      ItemStack main = this.villager.getMainHandItem();
+      boolean hasGun = org.millenaire.compat.tacz.TaczWeaponCompat.isGun(main);
+      boolean hasBow = main.getItem() instanceof BowItem;
       double distance = Math.sqrt(this.villager.distanceToSqr(target));
       boolean verticalOverlap = target.getBoundingBox().maxY > this.villager.getBoundingBox().minY
          && target.getBoundingBox().minY < this.villager.getBoundingBox().maxY;
-      CombatHelper.AttackType type = CombatHelper.decideAttack(distance, isArcher, hasBow, this.getAttackCooldown(), verticalOverlap);
+
+      if (combatRole && hasGun && distance > 5.0 && distance < 32.0 && this.getAttackCooldown() <= 0) {
+         this.villager.swing(InteractionHand.MAIN_HAND);
+         if (org.millenaire.compat.tacz.TaczWeaponCompat.tryFire(this.villager, target)) {
+            this.setAttackCooldown(40);
+            this.pursuitTicks = 0;
+            return true;
+         }
+      }
+
+      CombatHelper.AttackType type = CombatHelper.decideAttack(
+         distance, isArcher, hasBow || hasGun, this.getAttackCooldown(), verticalOverlap
+      );
       switch (type) {
          case RANGED:
             float df = (float)Math.min(1.0, Math.max(0.1, distance / 20.0));
             this.villager.swing(InteractionHand.MAIN_HAND);
-            this.performRangedAttack(target, df);
-            this.setAttackCooldown(100);
+            if (hasGun) {
+               org.millenaire.compat.tacz.TaczWeaponCompat.tryFire(this.villager, target);
+               this.setAttackCooldown(40);
+            } else {
+               this.performRangedAttack(target, df);
+               this.setAttackCooldown(100);
+            }
             this.pursuitTicks = 0;
             return true;
          case MELEE:

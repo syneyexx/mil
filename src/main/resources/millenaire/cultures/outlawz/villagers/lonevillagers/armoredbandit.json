@@ -31,6 +31,7 @@
   "tags": [
     "heavydrinker",
     "hostile",
+    "archer",
     "raider",
     "noteleport",
     "helpInAttacks"
@@ -40,7 +41,9 @@
     "minecraft:iron_chestplate": 1,
     "minecraft:iron_helmet": 1,
     "minecraft:iron_leggings": 1,
-    "minecraft:iron_boots": 1
+    "minecraft:iron_boots": 1,
+    "tacz:modern_kinetic_gun": 1,
+    "tacz:ammo_box": 1
   },
   "gender": "male",
   "first_name_list": "men_names",
