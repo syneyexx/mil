@@ -1,0 +1,44 @@
+{
+  "id": "millenaire:angakkuq_way",
+  "name_key": "religion.millenaire.angakkuq_way.name",
+  "description_key": "religion.millenaire.angakkuq_way.desc",
+  "cultures": [
+    "inuits"
+  ],
+  "location_tags": [
+    "praying"
+  ],
+  "primary_clergy_role": "shaman",
+  "default_devotion": 44,
+  "roles": [
+    {
+      "id": "shaman",
+      "type_path_contains": [
+        "shaman"
+      ],
+      "clergy": true,
+      "can_lead_ceremony": true
+    }
+  ],
+  "daily_rituals": [
+    "millenaire:inuit_daily_propitiation"
+  ],
+  "service_rituals": [
+    "millenaire:inuit_community_kashim"
+  ],
+  "feast_rituals": [
+    "millenaire:inuit_community_kashim"
+  ],
+  "memorial_rituals": [
+    "millenaire:inuit_memorial"
+  ],
+  "family_rituals": [
+    "millenaire:generic_family_blessing"
+  ],
+  "consecration_rituals": [
+    "millenaire:norman_consecration"
+  ],
+  "pilgrimage_rituals": [
+    "millenaire:generic_pilgrimage"
+  ]
+}

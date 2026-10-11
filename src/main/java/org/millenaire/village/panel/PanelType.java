@@ -24,6 +24,7 @@ public enum PanelType {
    HALL_OF_FAME,
    CHRONICLE,
    CIVILIZATION,
+   RELIGION,
    BUILDING_DEFAULT;
 
    public static PanelType fromName(String name) {

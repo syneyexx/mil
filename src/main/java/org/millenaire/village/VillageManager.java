@@ -220,6 +220,7 @@ public class VillageManager {
 
       org.millenaire.chat.NpcGossipScheduler.tick(level);
       org.millenaire.living.LivingVillagesLifecycle.onVillageManagerTick(level);
+      org.millenaire.religion.ReligionLifecycle.onVillageManagerTick(level);
    }
 
    private void tickVillageActivation(ServerLevel level, Village v) {

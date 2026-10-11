@@ -1,0 +1,28 @@
+{
+  "kind": "service",
+  "tradition": "millenaire:sunni_islam",
+  "location_tags": [
+    "mosque"
+  ],
+  "required_leader_roles": [
+    "imam"
+  ],
+  "requires_leader": true,
+  "supplies": [
+    {
+      "item": "minecraft:carpet",
+      "count": 2,
+      "optional": true
+    }
+  ],
+  "min_participants": 4,
+  "cooldown_days": 7,
+  "day_modulo": 7,
+  "priority": 80,
+  "minimum_hour": 5000,
+  "maximum_hour": 9000,
+  "effects_profile": "default_communal",
+  "id": "millenaire:seljuk_jumuah",
+  "name_key": "ritual.millenaire.seljuk_jumuah.name",
+  "description_key": "ritual.millenaire.seljuk_jumuah.desc"
+}

@@ -1,0 +1,21 @@
+{
+  "kind": "daily",
+  "tradition": "millenaire:nihon_way",
+  "location_tags": [
+    "praying"
+  ],
+  "requires_leader": false,
+  "min_participants": 1,
+  "priority": 14,
+  "supplies": [
+    {
+      "item": "millenaire:rice",
+      "count": 1,
+      "optional": true
+    }
+  ],
+  "effects_profile": "daily_quiet",
+  "id": "millenaire:japanese_kami_offering",
+  "name_key": "ritual.millenaire.japanese_kami_offering.name",
+  "description_key": "ritual.millenaire.japanese_kami_offering.desc"
+}

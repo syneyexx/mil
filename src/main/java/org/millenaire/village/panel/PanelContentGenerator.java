@@ -73,6 +73,9 @@ public final class PanelContentGenerator {
          case HALL_OF_FAME -> new PanelContent(PanelType.HALL_OF_FAME, "panel.millenaire.panel_type.hall_of_fame", List.of(), true, null);
          case CHRONICLE -> VillageOverviewPanelGenerator.generateChronicle(village);
          case CIVILIZATION -> VillageOverviewPanelGenerator.generateCivilization(village, level, player);
+         case RELIGION -> level != null
+            ? org.millenaire.religion.ReligionService.get().presentation().villageBookSection(level, village, player)
+            : new PanelContent(PanelType.RELIGION, "panel.millenaire.panel_type.religion", List.of(PanelLine.translatable("religion.millenaire.book.degraded")), true, null);
       };
    }
 

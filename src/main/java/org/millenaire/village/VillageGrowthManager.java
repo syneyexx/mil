@@ -452,6 +452,7 @@ public final class VillageGrowthManager {
       }
 
       village.recordChronicleEvent(level, VillageEventType.BUILDING_COMPLETED, chronicleName, null);
+      org.millenaire.religion.ReligionLifecycle.onReligiousBuildingCompleted(level, village, building);
       BuildingFinalizer.applyCompletionEffects(level, village, building);
       BuildingPlacer.spawnWallDecorations(level, building.getResolvedPoints());
       BuildingFinalizer.applyVillageUpdates(level, village, building);

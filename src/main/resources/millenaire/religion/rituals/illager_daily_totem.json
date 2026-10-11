@@ -1,0 +1,17 @@
+{
+  "kind": "daily",
+  "tradition": "millenaire:totem_shadow",
+  "location_tags": [
+    "praying"
+  ],
+  "requires_leader": false,
+  "min_participants": 1,
+  "priority": 10,
+  "held_items": [
+    "minecraft:totem_of_undying"
+  ],
+  "effects_profile": "daily_quiet",
+  "id": "millenaire:illager_daily_totem",
+  "name_key": "ritual.millenaire.illager_daily_totem.name",
+  "description_key": "ritual.millenaire.illager_daily_totem.desc"
+}

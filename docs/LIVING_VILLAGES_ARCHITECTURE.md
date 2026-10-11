@@ -132,6 +132,7 @@ Living requests are a dedicated system. Existing quests open through `VillagerIn
 - Living Villages does **not** replace goal priorities.
 - `NpcReactionPolicy` only influences dialogue/context priority bands.
 - Social updates attach to existing `ChatGoal` completion.
+- Religion (`org.millenaire.religion`) similarly reuses GoalScheduler (`AttendCeremonyGoal` + visit goals) and applies bounded mood/relationship deltas through `NpcSocialService` on verified ceremony outcomes — see `docs/RELIGION_ARCHITECTURE.md`.
 
 ---
 

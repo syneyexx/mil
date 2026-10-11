@@ -1,0 +1,31 @@
+{
+  "kind": "feast",
+  "tradition": "millenaire:nihon_way",
+  "location_tags": [
+    "praying",
+    "pujas"
+  ],
+  "required_leader_roles": [
+    "monk"
+  ],
+  "requires_leader": true,
+  "supplies": [
+    {
+      "item": "minecraft:lantern",
+      "count": 4
+    },
+    {
+      "item": "minecraft:cooked_salmon",
+      "count": 8
+    }
+  ],
+  "min_participants": 5,
+  "cooldown_days": 28,
+  "day_modulo": 28,
+  "align_with_festival": true,
+  "priority": 88,
+  "effects_profile": "memorial",
+  "id": "millenaire:japanese_obon",
+  "name_key": "ritual.millenaire.japanese_obon.name",
+  "description_key": "ritual.millenaire.japanese_obon.desc"
+}

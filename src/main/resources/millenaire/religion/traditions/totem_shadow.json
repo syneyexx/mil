@@ -1,0 +1,47 @@
+{
+  "id": "millenaire:totem_shadow",
+  "name_key": "religion.millenaire.totem_shadow.name",
+  "description_key": "religion.millenaire.totem_shadow.desc",
+  "cultures": [
+    "illagers"
+  ],
+  "location_tags": [
+    "praying"
+  ],
+  "primary_clergy_role": "totemseer",
+  "default_devotion": 25,
+  "roles": [
+    {
+      "id": "totemseer",
+      "type_path_contains": [
+        "evoker",
+        "illusioner",
+        "witch",
+        "chief"
+      ],
+      "clergy": true,
+      "can_lead_ceremony": true
+    }
+  ],
+  "daily_rituals": [
+    "millenaire:illager_daily_totem"
+  ],
+  "service_rituals": [
+    "millenaire:illager_shadow_gathering"
+  ],
+  "feast_rituals": [
+    "millenaire:illager_shadow_gathering"
+  ],
+  "memorial_rituals": [
+    "millenaire:mayan_memorial"
+  ],
+  "family_rituals": [
+    "millenaire:generic_family_blessing"
+  ],
+  "consecration_rituals": [
+    "millenaire:norman_consecration"
+  ],
+  "pilgrimage_rituals": [
+    "millenaire:generic_pilgrimage"
+  ]
+}

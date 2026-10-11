@@ -38,6 +38,14 @@ public final class LivingDialogueSupport {
       if (village != null && record != null) {
          NpcWorldKnowledgeProvider.appendRoleKnowledge(level, village, record, ctx);
          NpcSocialContextProvider.appendSocial(level, record, player, ctx);
+         try {
+            if (MillenaireServerConfig.SERVER.religionEnabled.get()) {
+               for (String line : org.millenaire.religion.ReligionService.get().presentation().dialogueContextLines(level, village, record)) {
+                  ctx.addVerified("religion: " + line);
+               }
+            }
+         } catch (IllegalStateException ignored) {
+         }
       } else if (village != null) {
          VillageContextProvider.appendVerifiedVillageState(level, village, ctx);
       }

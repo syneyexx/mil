@@ -1,0 +1,29 @@
+{
+  "kind": "service",
+  "tradition": "millenaire:angakkuq_way",
+  "location_tags": [
+    "praying"
+  ],
+  "required_leader_roles": [
+    "shaman"
+  ],
+  "requires_leader": true,
+  "supplies": [
+    {
+      "item": "minecraft:cod",
+      "count": 8
+    },
+    {
+      "item": "minecraft:snowball",
+      "count": 4,
+      "optional": true
+    }
+  ],
+  "min_participants": 3,
+  "cooldown_days": 6,
+  "priority": 66,
+  "effects_profile": "default_communal",
+  "id": "millenaire:inuit_community_kashim",
+  "name_key": "ritual.millenaire.inuit_community_kashim.name",
+  "description_key": "ritual.millenaire.inuit_community_kashim.desc"
+}

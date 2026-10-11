@@ -1,0 +1,54 @@
+{
+  "id": "millenaire:sanatana_dharma",
+  "name_key": "religion.millenaire.sanatana_dharma.name",
+  "description_key": "religion.millenaire.sanatana_dharma.desc",
+  "cultures": [
+    "indian"
+  ],
+  "location_tags": [
+    "pujas"
+  ],
+  "primary_clergy_role": "pandit",
+  "default_devotion": 48,
+  "roles": [
+    {
+      "id": "pandit",
+      "type_path_contains": [
+        "pandit",
+        "priest"
+      ],
+      "clergy": true,
+      "can_lead_ceremony": true
+    },
+    {
+      "id": "sadhu",
+      "type_path_contains": [
+        "sadhu"
+      ],
+      "clergy": true,
+      "can_lead_ceremony": true
+    }
+  ],
+  "daily_rituals": [
+    "millenaire:indian_daily_puja",
+    "millenaire:indian_meditation"
+  ],
+  "service_rituals": [
+    "millenaire:indian_communal_puja"
+  ],
+  "feast_rituals": [
+    "millenaire:indian_festival_diwali"
+  ],
+  "memorial_rituals": [
+    "millenaire:mayan_memorial"
+  ],
+  "family_rituals": [
+    "millenaire:generic_family_blessing"
+  ],
+  "consecration_rituals": [
+    "millenaire:norman_consecration"
+  ],
+  "pilgrimage_rituals": [
+    "millenaire:generic_pilgrimage"
+  ]
+}

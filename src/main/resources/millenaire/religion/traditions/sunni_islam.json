@@ -1,0 +1,45 @@
+{
+  "id": "millenaire:sunni_islam",
+  "name_key": "religion.millenaire.sunni_islam.name",
+  "description_key": "religion.millenaire.sunni_islam.desc",
+  "cultures": [
+    "seljuk"
+  ],
+  "location_tags": [
+    "mosque",
+    "mosquefemaleside"
+  ],
+  "primary_clergy_role": "imam",
+  "default_devotion": 55,
+  "roles": [
+    {
+      "id": "imam",
+      "type_path_contains": [
+        "imam"
+      ],
+      "clergy": true,
+      "can_lead_ceremony": true
+    }
+  ],
+  "daily_rituals": [
+    "millenaire:seljuk_daily_salah"
+  ],
+  "service_rituals": [
+    "millenaire:seljuk_jumuah"
+  ],
+  "feast_rituals": [
+    "millenaire:seljuk_eid"
+  ],
+  "memorial_rituals": [
+    "millenaire:norman_memorial"
+  ],
+  "family_rituals": [
+    "millenaire:generic_family_blessing"
+  ],
+  "consecration_rituals": [
+    "millenaire:norman_consecration"
+  ],
+  "pilgrimage_rituals": [
+    "millenaire:generic_pilgrimage"
+  ]
+}

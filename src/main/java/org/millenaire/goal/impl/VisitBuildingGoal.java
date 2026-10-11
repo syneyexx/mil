@@ -205,6 +205,7 @@ public class VisitBuildingGoal implements VillagerGoal {
 
       VisitBuildingGoal.TargetInfo target = this.findTarget(context);
       return new VisitBuildingGoal.VisitTask(
+         this,
          target != null ? target.pos() : null,
          target != null ? target.building() : null,
          this.durationTicks,
@@ -306,6 +307,7 @@ public class VisitBuildingGoal implements VillagerGoal {
    }
 
    static class VisitTask extends WalkAndWaitTask {
+      private final VisitBuildingGoal ownerGoal;
       @Nullable
       final BuildingInstance targetBuilding;
       private final boolean randomMovesEnabled;
@@ -314,6 +316,7 @@ public class VisitBuildingGoal implements VillagerGoal {
       private final List<ItemStack> destHeldItems;
 
       VisitTask(
+         VisitBuildingGoal ownerGoal,
          @Nullable BlockPos target,
          @Nullable BuildingInstance targetBuilding,
          int maxWaitTicks,
@@ -323,6 +326,7 @@ public class VisitBuildingGoal implements VillagerGoal {
          @Nullable List<String> heldItemsDestination
       ) {
          super(target, maxWaitTicks);
+         this.ownerGoal = ownerGoal;
          this.targetBuilding = targetBuilding;
          this.randomMovesEnabled = allowRandomMoves;
          this.goalKey = goalKey;
@@ -366,6 +370,27 @@ public class VisitBuildingGoal implements VillagerGoal {
       @Override
       public Component getGoalLabel() {
          return TaskLabels.labelForPhase(this.arrived, this.goalKey);
+      }
+
+      @Override
+      public void stop(GoalContext ctx, org.millenaire.goal.StopReason reason) {
+         super.stop(ctx, reason);
+         if (ctx == null || reason != org.millenaire.goal.StopReason.COMPLETED || this.ownerGoal == null) {
+            return;
+         }
+         try {
+            org.millenaire.village.VillagerRecord record = ctx.village().getVillagerRecords().get(ctx.villager().getUUID());
+            if (record != null) {
+               org.millenaire.religion.ReligionLifecycle.onVisitCompleted(
+                  ctx.level(),
+                  ctx.village(),
+                  record,
+                  this.ownerGoal,
+                  reason
+               );
+            }
+         } catch (Exception ignored) {
+         }
       }
    }
 }

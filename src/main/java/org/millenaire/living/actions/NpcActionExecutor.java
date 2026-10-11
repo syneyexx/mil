@@ -57,7 +57,25 @@ public final class NpcActionExecutor {
          case VIEW_INTERRUPTED_OPERATION -> civilizationAction(
             ctx, proposal, org.millenaire.civilization.presentation.CivilizationActionId.VIEW_INTERRUPTED_OPERATION
          );
+         case VIEW_RELIGION_STATUS -> religionAction(ctx, org.millenaire.religion.actions.ReligionActionType.VIEW_RELIGION_STATUS);
+         case HELP_PREPARE_CEREMONY -> religionAction(ctx, org.millenaire.religion.actions.ReligionActionType.HELP_PREPARE_CEREMONY);
+         case DELIVER_RITUAL_SUPPLIES -> religionAction(ctx, org.millenaire.religion.actions.ReligionActionType.DELIVER_RITUAL_SUPPLIES);
+         case JOIN_CEREMONY -> religionAction(ctx, org.millenaire.religion.actions.ReligionActionType.JOIN_CEREMONY);
+         case SUPPORT_AFTER_ATTACK -> religionAction(ctx, org.millenaire.religion.actions.ReligionActionType.SUPPORT_AFTER_ATTACK);
       };
+   }
+
+   private static NpcActionResult religionAction(
+      NpcActionContext ctx, org.millenaire.religion.actions.ReligionActionType type
+   ) {
+      if (ctx.village() == null) {
+         return NpcActionResult.fail("living.millenaire.action.error.no_village");
+      }
+      org.millenaire.religion.actions.ReligionActionService.ActionResult result =
+         org.millenaire.religion.ReligionService.get().actions().execute(ctx.level(), ctx.village(), ctx.player(), type, null);
+      return result.success()
+         ? NpcActionResult.ok(result.messageKey())
+         : NpcActionResult.fail(result.messageKey());
    }
 
    private static NpcActionResult civilizationAction(
