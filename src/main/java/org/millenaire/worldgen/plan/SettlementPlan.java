@@ -63,6 +63,9 @@ public final class SettlementPlan {
    private String failureDetail;
    private boolean activated;
    private boolean inventoriesInitialized;
+   /** Index into {@link #buildings} for resumable activation; -1 = not started. */
+   private int activationBuildingIndex;
+   private boolean activationPathsPending;
    private FoundingMode foundingMode = FoundingMode.NATURAL;
    @Nullable
    private String foundingFactionId;
@@ -215,6 +218,12 @@ public final class SettlementPlan {
       return foundingMode() == FoundingMode.COLONIZATION;
    }
 
+   /** Colonization or player MANUAL founding — empty shell (no free occupants/goods). */
+   public boolean isEmptyFounding() {
+      FoundingMode mode = foundingMode();
+      return mode == FoundingMode.COLONIZATION || mode == FoundingMode.MANUAL;
+   }
+
    @Nullable
    public String foundingFactionId() {
       return this.foundingFactionId;
@@ -299,6 +308,22 @@ public final class SettlementPlan {
 
    public void setInventoriesInitialized(boolean v) {
       this.inventoriesInitialized = v;
+   }
+
+   public int activationBuildingIndex() {
+      return this.activationBuildingIndex;
+   }
+
+   public void setActivationBuildingIndex(int index) {
+      this.activationBuildingIndex = Math.max(0, index);
+   }
+
+   public boolean activationPathsPending() {
+      return this.activationPathsPending;
+   }
+
+   public void setActivationPathsPending(boolean pending) {
+      this.activationPathsPending = pending;
    }
 
    public Set<Long> reservedChunks() {
@@ -417,6 +442,8 @@ public final class SettlementPlan {
       tag.putString("failDetail", this.failureDetail);
       tag.putBoolean("activated", this.activated);
       tag.putBoolean("inventories", this.inventoriesInitialized);
+      tag.putInt("actBldgIdx", this.activationBuildingIndex);
+      tag.putBoolean("actPathsPending", this.activationPathsPending);
       tag.putString("foundingMode", this.foundingMode.name());
       if (this.foundingFactionId != null) {
          tag.putString("foundingFaction", this.foundingFactionId);
@@ -503,6 +530,8 @@ public final class SettlementPlan {
          plan.failureDetail = tag.getString("failDetail");
          plan.activated = tag.getBoolean("activated");
          plan.inventoriesInitialized = tag.getBoolean("inventories");
+         plan.activationBuildingIndex = tag.contains("actBldgIdx") ? tag.getInt("actBldgIdx") : 0;
+         plan.activationPathsPending = tag.getBoolean("actPathsPending");
          if (tag.contains("foundingMode")) {
             try {
                plan.foundingMode = FoundingMode.valueOf(tag.getString("foundingMode"));

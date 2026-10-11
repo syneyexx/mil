@@ -215,6 +215,15 @@ public class VillageSavedData extends SavedData {
             buildingTag.putBoolean("player_chosen", true);
          }
 
+         if (b.isPlayerDesignated() && b.getPurpose() != null) {
+            buildingTag.putBoolean("player_designated", true);
+            buildingTag.putString("designation_purpose", b.getPurpose().id());
+            buildingTag.putInt("designated_width", b.getDesignatedWidth());
+            buildingTag.putInt("designated_depth", b.getDesignatedDepth());
+            buildingTag.putInt("designated_height", b.getDesignatedHeight());
+            buildingTag.putBoolean("designation_features_valid", b.isDesignationFeaturesValid());
+         }
+
          if (b.getBrickColourMapping() != null) {
             CompoundTag brickTag = new CompoundTag();
 
@@ -517,6 +526,23 @@ public class VillageSavedData extends SavedData {
 
                   if (buildingTag.getBoolean("player_chosen")) {
                      building.setPlayerChosen(true);
+                  }
+
+                  if (buildingTag.getBoolean("player_designated")) {
+                     org.millenaire.building.BuildingPurpose purpose = org.millenaire.building.BuildingPurpose.fromId(
+                        buildingTag.getString("designation_purpose")
+                     );
+                     if (purpose != null) {
+                        building.setDesignation(
+                           purpose,
+                           buildingTag.getInt("designated_width"),
+                           buildingTag.getInt("designated_depth"),
+                           Math.max(1, buildingTag.getInt("designated_height"))
+                        );
+                        if (buildingTag.contains("designation_features_valid")) {
+                           building.setDesignationFeaturesValid(buildingTag.getBoolean("designation_features_valid"));
+                        }
+                     }
                   }
 
                   if (buildingTag.contains("brick_colours")) {

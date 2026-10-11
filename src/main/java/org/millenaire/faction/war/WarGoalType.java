@@ -15,7 +15,13 @@ public enum WarGoalType {
    /** Capture/occupy a settlement; permanent transfer only via Phase 7 peace. */
    CONQUER_SETTLEMENT,
    /** Liberate occupied friendly territory. */
-   LIBERATE_SETTLEMENT;
+   LIBERATE_SETTLEMENT,
+   /** Raid for spoils without lasting annexation. */
+   PLUNDER,
+   /** Force a public concession / prestige loss. */
+   HUMILIATION,
+   /** Compel a trade agreement as peace terms. */
+   FORCE_TRADE;
 
    @Nullable
    public static WarGoalType tryParse(@Nullable String raw) {

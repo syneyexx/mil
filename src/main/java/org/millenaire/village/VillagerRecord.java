@@ -48,6 +48,9 @@ public class VillagerRecord {
    private UUID hiredBy;
    private long hiredUntil;
    private boolean aggressiveStance;
+   private boolean playerAssignedGuard;
+   @Nullable
+   private ResourceLocation previousVillagerTypeId;
    private final List<String> questTags = new ArrayList<>();
 
    public VillagerRecord(UUID uuid, ResourceLocation villagerTypeId, @Nullable BuildingId homeBuilding) {
@@ -236,6 +239,23 @@ public class VillagerRecord {
       this.aggressiveStance = aggressive;
    }
 
+   public boolean isPlayerAssignedGuard() {
+      return this.playerAssignedGuard;
+   }
+
+   public void setPlayerAssignedGuard(boolean playerAssignedGuard) {
+      this.playerAssignedGuard = playerAssignedGuard;
+   }
+
+   @Nullable
+   public ResourceLocation getPreviousVillagerTypeId() {
+      return this.previousVillagerTypeId;
+   }
+
+   public void setPreviousVillagerTypeId(@Nullable ResourceLocation previousVillagerTypeId) {
+      this.previousVillagerTypeId = previousVillagerTypeId;
+   }
+
    public void setHireState(@Nullable UUID owner, long until) {
       this.hiredBy = owner;
       this.hiredUntil = until;
@@ -388,6 +408,12 @@ public class VillagerRecord {
 
       tag.putBoolean("away_hired", this.awayHired);
       tag.putBoolean("hire_stance", this.aggressiveStance);
+      if (this.playerAssignedGuard) {
+         tag.putBoolean("player_assigned_guard", true);
+      }
+      if (this.previousVillagerTypeId != null) {
+         tag.putString("previous_villager_type", this.previousVillagerTypeId.toString());
+      }
       if (this.hiredBy != null) {
          tag.putUUID("hired_by", this.hiredBy);
          tag.putLong("hired_until", this.hiredUntil);
@@ -435,6 +461,10 @@ public class VillagerRecord {
          record.raiderSpawn = tag.getLong("raider_spawn");
          record.awayHired = tag.getBoolean("away_hired");
          record.aggressiveStance = tag.getBoolean("hire_stance");
+         record.playerAssignedGuard = tag.getBoolean("player_assigned_guard");
+         if (tag.contains("previous_villager_type")) {
+            record.previousVillagerTypeId = ResourceLocation.tryParse(tag.getString("previous_villager_type"));
+         }
          if (tag.hasUUID("hired_by")) {
             record.hiredBy = tag.getUUID("hired_by");
             record.hiredUntil = tag.getLong("hired_until");

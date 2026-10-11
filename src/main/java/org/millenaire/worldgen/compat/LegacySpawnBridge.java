@@ -11,10 +11,18 @@ public final class LegacySpawnBridge {
    }
 
    /**
-    * Natural enqueue into VillageSpawnQueue should be skipped when the Phase 4 engine owns generation.
+    * Natural enqueue into VillageSpawnQueue should be skipped when the Phase 4 engine owns generation
+    * and legacy fallback is disabled.
     */
    public static boolean suppressLegacyNaturalEnqueue() {
-      return WorldgenEngine.isEnabled();
+      if (!WorldgenEngine.isEnabled()) {
+         return false;
+      }
+      try {
+         return !Boolean.TRUE.equals(MillenaireServerConfig.SERVER.worldgenLegacyFallback.get());
+      } catch (IllegalStateException e) {
+         return false;
+      }
    }
 
    /**

@@ -12,7 +12,7 @@ import org.millenaire.chat.NpcChatRateLimiter;
 import org.millenaire.chat.NpcChatService;
 
 public record NpcChatOpenRequestPayload(int entityId) implements CustomPacketPayload {
-   public static final Type<NpcChatOpenRequestPayload> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("millenaire", "npc_chat_open"));
+   public static final Type<NpcChatOpenRequestPayload> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("millenaire", "npc_chat_open_request"));
    public static final StreamCodec<ByteBuf, NpcChatOpenRequestPayload> STREAM_CODEC = StreamCodec.of(
       NpcChatOpenRequestPayload::encode, NpcChatOpenRequestPayload::decode
    );

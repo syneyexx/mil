@@ -279,6 +279,10 @@ public final class NpcChatService {
       NpcDialogueContext ctx = target.adapter().buildContext(player, target.entity(), mind, data, sanitized, languageCode);
 
       if (!NpcModelClient.isConfigured()) {
+         String why = NpcModelClient.notConfiguredMessageKey();
+         if (why != null) {
+            sendSystemLine(player, entityId, why, false);
+         }
          String fallback = ctx.fallbackLine().isBlank()
             ? Component.translatable("gui.millenaire.npcchat.no_model").getString()
             : ctx.fallbackLine();

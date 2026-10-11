@@ -140,6 +140,8 @@
   "path_materials": [
     "pathdirt",
     "pathgravel",
+    "mcw_gravel_path",
+    "mcw_andesite_path",
     "pathslabs"
   ],
   "player_buildings": [

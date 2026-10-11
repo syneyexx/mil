@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
+import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.RandomSource;
@@ -28,6 +29,8 @@ import org.slf4j.Logger;
 public final class WorldgenContentSnapshot {
    private static final Logger LOGGER = LogUtils.getLogger();
    private static final AtomicReference<WorldgenContentSnapshot> CURRENT = new AtomicReference<>();
+   /** Set true only after CultureLoader has populated ModCultures and {@link #rebuildFromLoadedCultures()} ran. */
+   private static volatile boolean contentReady;
 
    private final int plannerVersion;
    private final Map<ResourceLocation, VillageTypeWorldgenEntry> villageTypes;
@@ -63,6 +66,22 @@ public final class WorldgenContentSnapshot {
          out.put(e.getKey(), List.copyOf(e.getValue()));
       }
       return Collections.unmodifiableMap(out);
+   }
+
+   public static boolean isReady() {
+      return contentReady && CURRENT.get() != null;
+   }
+
+   /**
+    * Mark content ready after a successful CultureLoader + rebuild. Call only from
+    * {@link org.millenaire.worldgen.WorldgenEngine#onContentLoaded()}.
+    */
+   public static void markReady() {
+      contentReady = true;
+   }
+
+   public static void clearReady() {
+      contentReady = false;
    }
 
    public static void rebuildFromLoadedCultures() {
@@ -248,6 +267,11 @@ public final class WorldgenContentSnapshot {
       return snap;
    }
 
+   /** True when the snapshot has at least one natural village or lone-building type. */
+   public boolean hasNaturalContent() {
+      return !this.naturalVillages.isEmpty() || !this.naturalLoneBuildings.isEmpty();
+   }
+
    public int plannerVersion() {
       return this.plannerVersion;
    }
@@ -285,10 +309,27 @@ public final class WorldgenContentSnapshot {
       return match(this.naturalLoneBuildings, biomeMatcher);
    }
 
+   /**
+    * Tag/key match first; if empty and fallback is enabled, culture pool from {@link org.millenaire.compat.ClimateBiomeFallback}.
+    */
+   public BiomeMatchResult matchingVillagesForBiome(Holder<Biome> biome) {
+      return matchForBiome(this.naturalVillages, biome);
+   }
+
+   public BiomeMatchResult matchingLoneBuildingsForBiome(Holder<Biome> biome) {
+      return matchForBiome(this.naturalLoneBuildings, biome);
+   }
+
+   public record BiomeMatchResult(List<VillageTypeWorldgenEntry> entries, boolean usedFallback) {
+      public boolean isEmpty() {
+         return this.entries.isEmpty();
+      }
+   }
+
    private static List<VillageTypeWorldgenEntry> match(List<VillageTypeWorldgenEntry> pool, java.util.function.Predicate<TagKey<Biome>> biomeMatcher) {
       List<VillageTypeWorldgenEntry> out = new ArrayList<>();
       for (VillageTypeWorldgenEntry e : pool) {
-         if (e.biomeTags().isEmpty()) {
+         if (!e.hasBiomeConstraints()) {
             out.add(e);
             continue;
          }
@@ -300,6 +341,34 @@ public final class WorldgenContentSnapshot {
          }
       }
       return out;
+   }
+
+   private static BiomeMatchResult matchForBiome(List<VillageTypeWorldgenEntry> pool, Holder<Biome> biome) {
+      List<VillageTypeWorldgenEntry> direct = new ArrayList<>();
+      for (VillageTypeWorldgenEntry e : pool) {
+         if (e.matchesBiome(biome)) {
+            direct.add(e);
+         }
+      }
+      if (!direct.isEmpty()) {
+         return new BiomeMatchResult(direct, false);
+      }
+      if (!org.millenaire.compat.ClimateBiomeFallback.isFallbackEnabled()) {
+         return new BiomeMatchResult(List.of(), false);
+      }
+      org.millenaire.compat.ClimateBiomeFallback.Classification climate =
+         org.millenaire.compat.ClimateBiomeFallback.classify(biome);
+      if (!climate.surfaceEligible() || climate.culturePaths().isEmpty()) {
+         return new BiomeMatchResult(List.of(), false);
+      }
+      List<VillageTypeWorldgenEntry> fallback = new ArrayList<>();
+      for (VillageTypeWorldgenEntry e : pool) {
+         String culturePath = e.cultureId() != null ? e.cultureId().getPath() : "";
+         if (climate.culturePaths().contains(culturePath)) {
+            fallback.add(e);
+         }
+      }
+      return new BiomeMatchResult(List.copyOf(fallback), !fallback.isEmpty());
    }
 
    @Nullable

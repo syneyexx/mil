@@ -1,0 +1,33 @@
+{
+  "handler": "crafting",
+  "priority": 30,
+  "scanRadius": 32,
+  "batchRadius": 8,
+  "maxActionsPerTask": 4,
+  "actionCooldown": 120,
+  "townhallLimit": {
+    "create:cogwheel": 32
+  },
+  "handlerParams": {
+    "inputs": [
+      {
+        "item": "create:andesite_alloy",
+        "count": 1
+      },
+      {
+        "item": "minecraft:oak_planks",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "create:cogwheel",
+        "count": 1
+      }
+    ]
+  },
+  "heldItems": [
+    "create:andesite_alloy",
+    "create:cogwheel"
+  ]
+}

@@ -106,6 +106,9 @@ public class VillageSpawnQueue {
    public static boolean couldHostAnyVillage(Collection<VillageType> types, Predicate<TagKey<Biome>> biomeTagMatcher) {
       for (VillageType vt : types) {
          if (vt.weight() > 0) {
+            if (vt.biomeTags().isEmpty() && vt.biomeKeys().isEmpty()) {
+               return true;
+            }
             for (TagKey<Biome> tag : vt.biomeTags()) {
                if (biomeTagMatcher.test(tag)) {
                   return true;
@@ -114,6 +117,36 @@ public class VillageSpawnQueue {
          }
       }
 
+      return false;
+   }
+
+   /** Tag match, exact biome keys, or climate fallback for surface biomes. */
+   public static boolean couldHostAnyVillage(Collection<VillageType> types, Holder<Biome> biome) {
+      if (biome == null) {
+         return false;
+      }
+      for (VillageType vt : types) {
+         if (vt.weight() > 0 && vt.matchesBiome(biome)) {
+            return true;
+         }
+      }
+      if (!org.millenaire.compat.ClimateBiomeFallback.isFallbackEnabled()) {
+         return false;
+      }
+      org.millenaire.compat.ClimateBiomeFallback.Classification climate =
+         org.millenaire.compat.ClimateBiomeFallback.classify(biome);
+      if (!climate.surfaceEligible()) {
+         return false;
+      }
+      for (VillageType vt : types) {
+         if (vt.weight() <= 0) {
+            continue;
+         }
+         String path = vt.culture() != null ? vt.culture().getPath() : "";
+         if (climate.culturePaths().contains(path)) {
+            return true;
+         }
+      }
       return false;
    }
 
@@ -142,7 +175,7 @@ public class VillageSpawnQueue {
       int cheapChecked = 0;
       int expensiveBudget = computeExpensiveBudget(this.candidates.size());
       int expensiveUsed = 0;
-      long spawnProtRadius = MillenaireServerConfig.SERVER.spawnProtectionRadius.getAsInt();
+      long spawnProtRadius = effectiveSpawnProtectionRadius();
 
       while (cheapChecked < 10) {
          BlockPos candidate = this.candidates.poll();
@@ -152,7 +185,7 @@ public class VillageSpawnQueue {
 
          cheapChecked++;
          double distToSpawnSq = candidate.distSqr(level.getSharedSpawnPos());
-         if (distToSpawnSq < spawnProtRadius * spawnProtRadius) {
+         if (spawnProtRadius > 0L && distToSpawnSq < spawnProtRadius * spawnProtRadius) {
             if (log) {
                LOGGER.info(
                   "[Millenaire spawn] {} rejected: within spawn protection ({} < {})",
@@ -384,13 +417,35 @@ public class VillageSpawnQueue {
             biomeCandidates.addAll(entry.getValue());
          }
       }
+      // Exact biome ResourceKeys from village JSON (bare IDs).
+      for (VillageType vt : ModCultures.getAllVillageTypes().values()) {
+         if (vt.weight() > 0 && vt.loneBuilding() == loneBuilding && vt.matchesBiome(biome)) {
+            biomeCandidates.add(vt);
+         }
+      }
+      // Climate fallback when tags miss entirely for this surface biome.
+      if (biomeCandidates.isEmpty() && org.millenaire.compat.ClimateBiomeFallback.isFallbackEnabled()) {
+         org.millenaire.compat.ClimateBiomeFallback.Classification climate =
+            org.millenaire.compat.ClimateBiomeFallback.classify(biome);
+         if (climate.surfaceEligible()) {
+            for (VillageType vt : ModCultures.getAllVillageTypes().values()) {
+               if (vt.weight() <= 0 || vt.loneBuilding() != loneBuilding) {
+                  continue;
+               }
+               String path = vt.culture() != null ? vt.culture().getPath() : "";
+               if (climate.culturePaths().contains(path)) {
+                  biomeCandidates.add(vt);
+               }
+            }
+         }
+      }
 
       if (keyOnly) {
          biomeCandidates.removeIf(vtx -> !vtx.keyLoneBuilding());
       }
 
       boolean hamletConfigEnabled = (Boolean)MillenaireServerConfig.SERVER.generateHamlets.get();
-      int spawnProtRadius = MillenaireServerConfig.SERVER.spawnProtectionRadius.getAsInt();
+      int spawnProtRadius = effectiveSpawnProtectionRadius();
       List<VillageType> compatible = new ArrayList<>();
       Map<Integer, List<VillageType>> byRadius = new LinkedHashMap<>();
       int filteredByHamlets = 0;
@@ -418,10 +473,10 @@ public class VillageSpawnQueue {
                }
             }
 
-            long combinedDist = spawnProtRadius + vt.radius();
-            if (distToSpawnSq < (double)combinedDist * combinedDist) {
+            long combinedDist = (long)spawnProtRadius + vt.radius();
+            if (spawnProtRadius > 0 && distToSpawnSq < (double)combinedDist * combinedDist) {
                filteredBySpawnDist++;
-            } else if (vt.biomeTags().isEmpty()) {
+            } else if (vt.biomeTags().isEmpty() && vt.biomeKeys().isEmpty()) {
                compatible.add(vt);
             } else {
                int sampleRadius = Math.min(vt.radius(), 64);
@@ -449,8 +504,18 @@ public class VillageSpawnQueue {
          for (VillageType vt : types) {
             int validCount = 0;
 
+            // Climate-fallback candidates: don't require tag coverage on mosaic mod biomes.
+            boolean climateFallbackCandidate = !vt.matchesBiome(biome)
+               && org.millenaire.compat.ClimateBiomeFallback.isFallbackEnabled()
+               && org.millenaire.compat.ClimateBiomeFallback.classify(biome)
+                  .culturePaths()
+                  .contains(vt.culture() != null ? vt.culture().getPath() : "");
             for (Holder<Biome> sample : samples) {
-               if (matchesAnyTag(sample, vt.biomeTags())) {
+               if (climateFallbackCandidate) {
+                  if (org.millenaire.compat.ClimateBiomeFallback.isSurfaceEligible(sample)) {
+                     validCount++;
+                  }
+               } else if (matchesBiomeConstraints(sample, vt)) {
                   validCount++;
                }
             }
@@ -458,6 +523,9 @@ public class VillageSpawnQueue {
             float validPerc = (float)validCount / totalCount;
             float requiredValidity = vt.minimumBiomeValidity();
             requiredValidity += SiteValidator.radiusRelaxation(vt.radius()) * (0.2F - requiredValidity);
+            if (climateFallbackCandidate || org.millenaire.compat.ClimateBiomeFallback.isModpackBiome(biome)) {
+               requiredValidity = Math.max(BIOME_VALIDITY_FLOOR, requiredValidity * 0.55F);
+            }
             if (validPerc < requiredValidity) {
                filteredByBiomeValidity++;
                if (log && validCount > 0) {
@@ -631,6 +699,29 @@ public class VillageSpawnQueue {
       }
 
       return false;
+   }
+
+   private static boolean matchesBiomeConstraints(Holder<Biome> sample, VillageType vt) {
+      if (vt.biomeTags().isEmpty() && vt.biomeKeys().isEmpty()) {
+         return true;
+      }
+      if (matchesAnyTag(sample, vt.biomeTags())) {
+         return true;
+      }
+      for (net.minecraft.resources.ResourceKey<Biome> key : vt.biomeKeys()) {
+         if (sample.is(key)) {
+            return true;
+         }
+      }
+      return false;
+   }
+
+   /** Matches Phase 4: effective exclusion is max(spawnProtectionRadius, worldgenProtectedSpawnRadius). */
+   private static int effectiveSpawnProtectionRadius() {
+      return Math.max(
+         MillenaireServerConfig.SERVER.spawnProtectionRadius.getAsInt(),
+         MillenaireServerConfig.SERVER.worldgenProtectedSpawnRadius.getAsInt()
+      );
    }
 
    record LBCandidate(BlockPos pos, double distToSpawnSq, long enqueuedTick, long retryAfterTick) {

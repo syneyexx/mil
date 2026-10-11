@@ -11,10 +11,14 @@ import net.minecraft.world.item.Item;
 import org.millenaire.civilization.CivilizationConfig;
 import org.millenaire.civilization.CivilizationSavedData;
 import org.millenaire.civilization.economy.SettlementTradeExecutor;
+import org.millenaire.civilization.interaction.InteractionConfig;
+import org.millenaire.civilization.interaction.TradeCorridorService;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.faction.Faction;
 import org.millenaire.faction.FactionId;
 import org.millenaire.faction.FactionSavedData;
+import org.millenaire.faction.FactionType;
+import org.millenaire.faction.TradePolicy;
 import org.millenaire.faction.diplomacy.DiplomacySavedData;
 import org.millenaire.faction.diplomacy.DiplomaticManager;
 import org.millenaire.faction.economy.EconomicResourceId;
@@ -62,6 +66,9 @@ public final class NeedsTradeBridge {
 
       for (int fi = 0; fi < n && ops < maxOps && scans < maxScans; fi++) {
          Faction importerFaction = factions.get((start + fi) % n);
+         if (importerFaction.getType() == FactionType.PLAYER && !importerFaction.getTradePolicy().allowsImport()) {
+            continue;
+         }
          FactionEconomicProfile profile = trade.getProfile(importerFaction.getId());
          List<Village> importerVillages = villagesOf(level, importerFaction);
          if (importerVillages.isEmpty()) {
@@ -89,6 +96,11 @@ public final class NeedsTradeBridge {
                );
                if (ok) {
                   ops++;
+                  if (exporterVillage.getFactionId() != null
+                     && importerVillage.getFactionId() != null
+                     && !exporterVillage.getFactionId().equals(importerVillage.getFactionId())) {
+                     TradeCorridorService.recordSuccess(level, exporterVillage, importerVillage);
+                  }
                }
             }
          }
@@ -156,6 +168,9 @@ public final class NeedsTradeBridge {
                continue;
             }
          }
+         if (candidateFaction.getType() == FactionType.PLAYER && !candidateFaction.getTradePolicy().allowsExport()) {
+            continue;
+         }
          for (Village exporter : villagesOf(level, candidateFaction)) {
             if (exporter.getId().equals(importerVillage.getId())) {
                continue;
@@ -169,6 +184,8 @@ public final class NeedsTradeBridge {
             int score = available * 10 - (int)Math.min(Integer.MAX_VALUE / 4, distSq / 256);
             if (sameFaction) {
                score += 1000;
+            } else if (TradeCorridorService.hasRecognizedCorridor(level, candidateFaction.getId(), importerFactionId)) {
+               score += InteractionConfig.CORRIDOR_EXPORTER_SCORE_BONUS;
             }
             candidates.add(new Candidate(exporter, available, score, sameFaction));
          }

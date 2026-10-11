@@ -129,6 +129,23 @@ public final class LocalMerchantHelper {
       ServerLevel level, Village srcVillage, BuildingInstance srcInn, VillagerRecord merchant, Village destVillage, BuildingInstance destInn
    ) {
       transferGoods(level, srcVillage, srcInn, destVillage, destInn);
+      if (org.millenaire.worldgen.highway.travel.RoadJourneyScheduler.tryStartMerchantJourney(
+         level, srcVillage, destVillage, merchant.getVillagerTypeId(), merchant.getUuid()
+      )) {
+         // Discard so transferVillagerPermanently rehomes the record without teleporting.
+         if (level.getEntity(merchant.getUuid()) instanceof org.millenaire.entity.MillVillager live) {
+            live.discard();
+         }
+         srcVillage.transferVillagerPermanently(level, merchant.getUuid(), destVillage, destInn.getId());
+         String merchantName = merchant.getFirstName() + " " + merchant.getFamilyName();
+         srcInn.addVisitorLog(
+            "panels.merchantmovedout;" + merchantName + ";" + merchant.getRoleName() + ";" + destVillage.getVillageName() + ";" + srcInn.getNbNightsMerchant()
+         );
+         destInn.addVisitorLog("panels.merchantarrived;" + merchantName + ";" + merchant.getRoleName() + ";" + srcVillage.getVillageName());
+         merchant.setInnTradingAnnounced(true);
+         srcInn.resetMerchantNights();
+         return;
+      }
       srcVillage.transferVillagerPermanently(level, merchant.getUuid(), destVillage, destInn.getId());
       String merchantName = merchant.getFirstName() + " " + merchant.getFamilyName();
       srcInn.addVisitorLog(

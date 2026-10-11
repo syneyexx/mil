@@ -217,7 +217,7 @@ public final class BuildingPlacer {
       return type.specialPointSubtype() != null;
    }
 
-   static boolean isNoOpAirStep(BlockGetter level, BlockPos origin, PlacementStep step, int groundLevel) {
+   public static boolean isNoOpAirStep(BlockGetter level, BlockPos origin, PlacementStep step, int groundLevel) {
       if (step.phase() == PlacementPhase.DELETION && step.blockState().isAir()) {
          return step.relativePos().getY() + groundLevel < 0 ? false : level.getBlockState(origin.offset(step.relativePos())).isAir();
       } else {
@@ -299,7 +299,20 @@ public final class BuildingPlacer {
       return true;
    }
 
+   /**
+    * Compile placement steps for immediate use. World-dependent no-op air filtering is NOT
+    * applied so resumable cursors remain stable; callers must skip no-ops at execution via
+    * {@link #isNoOpAirStep}.
+    */
    public static List<PlacementStep> compilePlacementSteps(ServerLevel level, BuildingPlan plan, BlockPos origin, Rotation rotation) {
+      List<PlacementStep> nbtSteps = compileTemplateStepsStable(level, plan, rotation);
+      return mergePreserveGround(level, plan, origin, rotation, nbtSteps);
+   }
+
+   /**
+    * Template-derived steps only (no preserve-ground world samples, no isNoOpAirStep). Safe to cache.
+    */
+   public static List<PlacementStep> compileTemplateStepsStable(ServerLevel level, BuildingPlan plan, Rotation rotation) {
       Optional<StructureTemplate> opt = TemplateLoader.load(plan, level, TemplateLoader.cultureFsFor(plan));
       if (opt.isEmpty()) {
          LOGGER.warn("Template introuvable : {}", plan.nbtPath());
@@ -315,7 +328,6 @@ public final class BuildingPlacer {
             && s.blockState().getValue(DoorBlock.HALF) == DoubleBlockHalf.UPPER
       );
       steps.removeIf(BuildingPlacer::isPreserveGroundStep);
-      steps.removeIf(s -> isNoOpAirStep(level, origin, s, plan.groundLevel()));
       int groundLevel = plan.groundLevel();
       steps.sort(
          Comparator.<PlacementStep>comparingInt(s -> s.phase().ordinal())
@@ -323,20 +335,31 @@ public final class BuildingPlacer {
             .thenComparingInt(s -> subSurfaceYKey(s, groundLevel))
             .thenComparing(sPatternXZComparator())
       );
+      // Strip deletion steps that coincide with preserve_ground markers (count/order stable).
+      HashSet<BlockPos> preserveGroundPositions = new HashSet<>();
+      StructurePlaceSettings rotSettings = new StructurePlaceSettings().setRotation(rotation);
+      for (SpecialPoint sp : plan.specialPoints()) {
+         if (sp.isType("preserve_ground")) {
+            preserveGroundPositions.add(StructureTemplate.calculateRelativePosition(rotSettings, sp.pos()));
+         }
+      }
+      if (!preserveGroundPositions.isEmpty()) {
+         steps.removeIf(s -> s.phase() == PlacementPhase.DELETION && preserveGroundPositions.contains(s.relativePos()));
+      }
+      return steps;
+   }
+
+   public static List<PlacementStep> mergePreserveGround(
+      ServerLevel level, BuildingPlan plan, BlockPos origin, Rotation rotation, List<PlacementStep> nbtSteps
+   ) {
       List<PlacementStep> groundSteps = compilePreserveGroundSteps(level, plan, origin, rotation);
       if (groundSteps.isEmpty()) {
-         return steps;
+         return nbtSteps;
       }
-
-      HashSet<BlockPos> preserveGroundPositions = new HashSet<>();
-
-      for (PlacementStep gs : groundSteps) {
-         preserveGroundPositions.add(gs.relativePos());
-      }
-
-      steps.removeIf(s -> s.phase() == PlacementPhase.DELETION && preserveGroundPositions.contains(s.relativePos()));
-      groundSteps.addAll(steps);
-      return groundSteps;
+      List<PlacementStep> merged = new ArrayList<>(groundSteps.size() + nbtSteps.size());
+      merged.addAll(groundSteps);
+      merged.addAll(nbtSteps);
+      return merged;
    }
 
    public static List<PlacementStep> compilePreviewSteps(ServerLevel level, BuildingPlan plan) {

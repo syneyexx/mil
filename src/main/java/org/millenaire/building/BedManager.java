@@ -48,6 +48,10 @@ public class BedManager {
       return this.bedPositions.size();
    }
 
+   public List<BlockPos> getBedPositions() {
+      return List.copyOf(this.bedPositions);
+   }
+
    public boolean claimBed(BlockPos footPos, UUID villagerUuid) {
       if (!this.bedPositions.contains(footPos)) {
          return false;

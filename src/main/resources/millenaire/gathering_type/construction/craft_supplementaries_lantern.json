@@ -1,0 +1,33 @@
+{
+  "handler": "crafting",
+  "priority": 30,
+  "scanRadius": 32,
+  "batchRadius": 8,
+  "maxActionsPerTask": 5,
+  "actionCooldown": 100,
+  "townhallLimit": {
+    "supplementaries:copper_lantern": 64
+  },
+  "handlerParams": {
+    "inputs": [
+      {
+        "item": "minecraft:copper_ingot",
+        "count": 1
+      },
+      {
+        "item": "minecraft:torch",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "supplementaries:copper_lantern",
+        "count": 1
+      }
+    ]
+  },
+  "heldItems": [
+    "minecraft:torch",
+    "supplementaries:copper_lantern"
+  ]
+}

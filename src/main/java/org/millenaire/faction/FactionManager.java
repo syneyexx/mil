@@ -117,12 +117,41 @@ public final class FactionManager {
    }
 
    /**
-    * Creates a player faction with a fresh UUID-based id. Phase 1 exposes the API only; no
-    * automatic player-settlement creation is performed here.
+    * Creates a player faction with a fresh UUID-based id.
     */
    @Nullable
    public Faction createPlayerFaction(String displayName, @Nullable ResourceLocation cultureId, long createdAtGameTime) {
-      return this.createFaction(FactionIds.playerFaction(UUID.randomUUID()), displayName, FactionType.PLAYER, cultureId, createdAtGameTime);
+      return this.createPlayerFaction(displayName, cultureId, createdAtGameTime, null);
+   }
+
+   /**
+    * Creates a sovereign player faction owned by {@code sovereignOwnerUuid}.
+    */
+   @Nullable
+   public Faction createPlayerFaction(
+      String displayName, @Nullable ResourceLocation cultureId, long createdAtGameTime, @Nullable UUID sovereignOwnerUuid
+   ) {
+      Faction faction = this.createFaction(FactionIds.playerFaction(UUID.randomUUID()), displayName, FactionType.PLAYER, cultureId, createdAtGameTime);
+      if (faction != null && sovereignOwnerUuid != null) {
+         faction.setSovereignOwnerUuid(sovereignOwnerUuid);
+         faction.setImmigrationPolicy(ImmigrationPolicy.OPEN);
+         faction.setTradePolicy(TradePolicy.INBOUND_ONLY);
+         this.markDirty.run();
+      }
+      return faction;
+   }
+
+   @Nullable
+   public Faction findSovereignFaction(UUID playerId) {
+      if (playerId == null) {
+         return null;
+      }
+      for (Faction faction : this.factions.values()) {
+         if (faction.getType() == FactionType.PLAYER && faction.isSovereignOwnedBy(playerId)) {
+            return faction;
+         }
+      }
+      return null;
    }
 
    /**
@@ -207,7 +236,9 @@ public final class FactionManager {
 
    /**
     * Ensures {@code village} has a valid owning faction, creating a default culture faction when needed.
+    * Missing PLAYER faction ids are detached (never rewritten onto a culture faction).
     */
+   @Nullable
    public Faction ensureVillageFaction(ServerLevel level, Village village) {
       Objects.requireNonNull(level, "level");
       Objects.requireNonNull(village, "village");
@@ -222,6 +253,17 @@ public final class FactionManager {
 
             MilitarySavedData.get(level).getMilitaryManager().getOrCreateOrganization(current.getId());
             return current;
+         }
+
+         if (FactionIds.isPlayerFactionId(currentId)) {
+            LOGGER.error(
+               "[Millenaire] Village {} references missing PLAYER faction {} — detaching (will not absorb into culture faction)",
+               village.getId().uuid(),
+               currentId
+            );
+            village.setFactionId(null);
+            this.markDirty.run();
+            return null;
          }
 
          LOGGER.warn(
@@ -384,6 +426,16 @@ public final class FactionManager {
 
          Faction faction = this.factions.get(storedId);
          if (faction == null) {
+            if (FactionIds.isPlayerFactionId(storedId)) {
+               LOGGER.error(
+                  "[Millenaire] Village {} referenced missing PLAYER faction {} — detaching during bootstrap",
+                  village.getId().uuid(),
+                  storedId
+               );
+               village.setFactionId(null);
+               dirty = true;
+               continue;
+            }
             LOGGER.warn(
                "[Millenaire] Village {} referenced missing faction {} — creating default culture faction for {}",
                village.getId().uuid(),

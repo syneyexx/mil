@@ -441,6 +441,8 @@ public final class VillageRequestService {
       long now = level.getGameTime();
       VillageRequestSavedData data = VillageRequestSavedData.get(level);
       boolean dirty = false;
+      boolean runRecovery = now % 100L == 0L;
+      int recoveryBudget = runRecovery ? 4 : 0;
       for (VillageRequest request : List.copyOf(data.all().values())) {
          if (VillageRequestState.activeStates().contains(request.state()) && now > request.expiryGameTime()) {
             request.forceState(VillageRequestState.EXPIRED, now);
@@ -450,6 +452,13 @@ public final class VillageRequestService {
          if (VillageRequestState.activeStates().contains(request.state()) && village == null) {
             request.forceState(VillageRequestState.CANCELLED, now);
             dirty = true;
+         }
+         // Drain overdelivery recovery ledger while destination chests are loadable.
+         if (recoveryBudget > 0 && request.hasRecoveryOutstanding()) {
+            recoveryBudget--;
+            if (VillageDeliveryService.tryRecoverOutstanding(level, request) > 0) {
+               dirty = true;
+            }
          }
       }
       if (now % 24000L == 0L) {

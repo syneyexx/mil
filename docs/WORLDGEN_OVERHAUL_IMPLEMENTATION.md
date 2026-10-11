@@ -38,9 +38,17 @@ Unfinished plans whose old `materializedChunks` may have been marked after mid-b
 - Water crossings: deterministic stone supports + plank deck when bridges enabled (no invented template files)
 - A partial route is never described as connected
 
+## Sand highways
+
+- `HighwayEngine` + discovery (`HighwayDiscoveryService`), graph (`HighwayGraphPlanner`), materializer (4-wide sand, bridges, tunnels), travelers (`RoadJourneyScheduler`)
+- Master switch: `worldgenSandHighways` (default false). When on, `RegionalRoadMaterializer` is skipped
+- Tag: `#millenaire:highway_endpoint`
+- Commands: `/millenaire highway status|audit`
+
 ## Known limitations
 
 1. Native Structure datapack registration remains optional (`worldgenUseNativeStructures`)
 2. Bridge strategy is procedural, not content-pack templates
 3. Regional roads default off
-4. Runtime visual quality unverified until owner-run validation
+4. Sand highways default off until owner validation
+5. Runtime visual quality unverified until owner-run validation

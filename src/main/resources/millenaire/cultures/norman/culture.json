@@ -42,5 +42,15 @@
       "weapons": "travelbook.category.weapons",
       "playeritem": "travelbook.category.playeritem"
     }
+  },
+  "temperament": {
+    "mercantile": 45,
+    "martial": 80,
+    "isolation": 35,
+    "expansive": 55,
+    "honor": 85,
+    "hospitality": 50,
+    "grudge": 55,
+    "festival_affinity": 60
   }
 }

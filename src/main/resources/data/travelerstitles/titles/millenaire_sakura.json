@@ -1,0 +1,15 @@
+{
+  "type": "biome",
+  "matches": [
+    {"id": "biomeswevegone:sakura_grove", "required": false},
+    {"id": "natures_spirit:sugi_forest", "required": false},
+    {"id": "natures_spirit:wisteria_forest", "required": false},
+    {"id": "biomesoplenty:snowblossom_grove", "required": false}
+  ],
+  "title": {
+    "translate": "millenaire.title.sakura"
+  },
+  "subtitle": {
+    "translate": "millenaire.title.sakura.sub"
+  }
+}

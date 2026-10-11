@@ -33,7 +33,11 @@
     "millenaire:harvest_wheat_home",
     "millenaire:plant_wheat_home",
     "millenaire:harvest_carrot_home",
-    "millenaire:plant_carrot_home"
+    "millenaire:plant_carrot_home",
+    "millenaire:plant_fd_cabbage",
+    "millenaire:plant_fd_tomato",
+    "millenaire:harvest_fd_cabbage",
+    "millenaire:cook_fd_rice"
   ],
   "tags": [
     "helpInAttacks"

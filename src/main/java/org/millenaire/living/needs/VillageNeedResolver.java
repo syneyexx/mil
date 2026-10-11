@@ -11,7 +11,7 @@ import org.millenaire.building.AnywoodHelper;
 import org.millenaire.building.BuildingInstance;
 import org.millenaire.building.BuildingInventory;
 import org.millenaire.building.ConstructionTask;
-import org.millenaire.culture.BuildingPlanSet;
+import org.millenaire.building.BuildingPlanSet;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.item.ItemHelper;
 import org.millenaire.village.ControlledQueuedProject;

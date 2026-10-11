@@ -1,7 +1,9 @@
 {
   "culture": "millenaire:seljuk",
   "biome_tags": [
-    "#c:is_desert"
+    "#c:is_desert",
+    "#millenaire:is_mediterranean",
+    "#millenaire:is_volcanic"
   ],
   "name": "Yıkık Hamam",
   "weight": 5,

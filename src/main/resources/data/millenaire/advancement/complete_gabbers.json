@@ -1,0 +1,14 @@
+{
+  "parent": "millenaire:leader_gabbers",
+  "display": {
+    "icon": { "item": "minecraft:netherite_helmet" },
+    "title": { "translate": "advancement.millenaire.complete_gabbers" },
+    "description": { "translate": "advancement.millenaire.complete_gabbers.desc" },
+    "frame": "challenge"
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

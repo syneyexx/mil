@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerLevel;
 import org.millenaire.building.BuildingId;
 import org.millenaire.building.BuildingInstance;
 import org.millenaire.building.BuildingPlanSet;
+import org.millenaire.building.BuildingPurpose;
 import org.millenaire.civilization.CivilizationMetrics;
 import org.millenaire.civilization.CivilizationSavedData;
 import org.millenaire.culture.Gender;
@@ -41,6 +42,17 @@ public final class MigrationTransactionService {
    }
 
    public static MigrationResult migrate(ServerLevel level, VillageId originId, VillageId destinationId, UUID villagerRecordId) {
+      return migrate(level, originId, destinationId, villagerRecordId, false);
+   }
+
+   /** Cross-faction immigration into a PLAYER destination (diplomacy checked by caller). */
+   public static MigrationResult migrateForImmigration(ServerLevel level, VillageId originId, VillageId destinationId, UUID villagerRecordId) {
+      return migrate(level, originId, destinationId, villagerRecordId, true);
+   }
+
+   public static MigrationResult migrate(
+      ServerLevel level, VillageId originId, VillageId destinationId, UUID villagerRecordId, boolean allowPlayerImmigration
+   ) {
       if (level == null || originId == null || destinationId == null || villagerRecordId == null || originId.equals(destinationId)) {
          return MigrationResult.rejected("invalid_args");
       }
@@ -78,7 +90,8 @@ public final class MigrationTransactionService {
          return MigrationResult.rejected("founder_reserved", originId.uuid(), destinationId.uuid());
       }
 
-      if (!factionAllowsMigration(origin, destination)) {
+      boolean factionOk = factionAllowsMigration(origin, destination);
+      if (!factionOk && !(allowPlayerImmigration && immigrationAllows(level, origin, destination))) {
          return MigrationResult.rejected("faction_blocked", originId.uuid(), destinationId.uuid());
       }
 
@@ -547,6 +560,27 @@ public final class MigrationTransactionService {
       return o.equals(d);
    }
 
+   /** Destination must be a PLAYER faction that is not CLOSED; culture must match. */
+   public static boolean immigrationAllows(ServerLevel level, Village origin, Village destination) {
+      if (level == null || origin == null || destination == null) {
+         return false;
+      }
+      if (origin.getCultureId() == null || !origin.getCultureId().equals(destination.getCultureId())) {
+         return false;
+      }
+      if (destination.getFactionId() == null) {
+         return false;
+      }
+      var faction = org.millenaire.faction.FactionSavedData.get(level).getFactionManager().getFaction(destination.getFactionId());
+      if (faction == null || faction.getType() != org.millenaire.faction.FactionType.PLAYER) {
+         return false;
+      }
+      if (faction.getImmigrationPolicy() == org.millenaire.faction.ImmigrationPolicy.CLOSED) {
+         return false;
+      }
+      return true;
+   }
+
    @Nullable
    public static BuildingId selectDestinationHome(Village destination, VillagerRecord record) {
       Map<UUID, VillagerRecord> residents = destination.getVillagerRecords();
@@ -561,6 +595,22 @@ public final class MigrationTransactionService {
          if (!building.isOperational()) {
             continue;
          }
+         // Player-designated immigrant housing uses bed count, not plan-set resident declarations.
+         // KING_HOUSE and other bed purposes are excluded via providesImmigrantHousing().
+         if (building.isPlayerDesignated()
+            && building.getPurpose() != null
+            && building.getPurpose().providesImmigrantHousing()) {
+            int beds = building.hasBedManager() ? building.getBedManager().getBedCount() : 0;
+            if (beds <= 0) {
+               continue;
+            }
+            int occupied = countResidentsIn(building, residents);
+            if (occupied < beds) {
+               homes.add(building);
+            }
+            continue;
+         }
+
          BuildingPlanSet planSet = building.getPlanSetId() != null ? ModCultures.getBuildingPlanSet(building.getPlanSetId()) : null;
          if (planSet == null || !planSet.isResidential()) {
             continue;
@@ -628,5 +678,15 @@ public final class MigrationTransactionService {
       }
       homes.sort(Comparator.comparing(b -> b.getId().uuid()));
       return homes.getFirst().getId();
+   }
+
+   private static int countResidentsIn(BuildingInstance building, Map<UUID, VillagerRecord> residents) {
+      int occupied = 0;
+      for (VillagerRecord r : residents.values()) {
+         if (r != null && !r.isKilled() && building.getId().equals(r.getHomeBuilding())) {
+            occupied++;
+         }
+      }
+      return occupied;
    }
 }

@@ -3,6 +3,8 @@ package org.millenaire.worldgen.content;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
+import net.minecraft.core.Holder;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.biome.Biome;
@@ -16,6 +18,7 @@ public final class VillageTypeWorldgenEntry {
    private final ResourceLocation cultureId;
    private final int weight;
    private final List<TagKey<Biome>> biomeTags;
+   private final List<ResourceKey<Biome>> biomeKeys;
    private final float minimumBiomeValidity;
    private final int radius;
    private final boolean loneBuilding;
@@ -38,6 +41,7 @@ public final class VillageTypeWorldgenEntry {
       this.cultureId = source.culture();
       this.weight = source.weight();
       this.biomeTags = List.copyOf(source.biomeTags());
+      this.biomeKeys = List.copyOf(source.biomeKeys());
       this.minimumBiomeValidity = source.minimumBiomeValidity();
       this.radius = source.radius();
       this.loneBuilding = source.loneBuilding();
@@ -82,6 +86,10 @@ public final class VillageTypeWorldgenEntry {
 
    public List<TagKey<Biome>> biomeTags() {
       return this.biomeTags;
+   }
+
+   public List<ResourceKey<Biome>> biomeKeys() {
+      return this.biomeKeys;
    }
 
    public float minimumBiomeValidity() {
@@ -154,6 +162,30 @@ public final class VillageTypeWorldgenEntry {
 
    public boolean isHamlet() {
       return "hameau".equals(this.specialType);
+   }
+
+   public boolean matchesBiome(Holder<Biome> biome) {
+      if (biome == null) {
+         return false;
+      }
+      if (this.biomeTags.isEmpty() && this.biomeKeys.isEmpty()) {
+         return true;
+      }
+      for (TagKey<Biome> tag : this.biomeTags) {
+         if (biome.is(tag)) {
+            return true;
+         }
+      }
+      for (ResourceKey<Biome> key : this.biomeKeys) {
+         if (biome.is(key)) {
+            return true;
+         }
+      }
+      return false;
+   }
+
+   public boolean hasBiomeConstraints() {
+      return !this.biomeTags.isEmpty() || !this.biomeKeys.isEmpty();
    }
 
    public record LayoutSlotRef(

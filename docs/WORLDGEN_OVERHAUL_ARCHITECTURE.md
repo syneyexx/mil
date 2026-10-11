@@ -8,9 +8,10 @@
 
 Primary path: **deterministic region plans + resumable per-chunk materialization**.
 
-- New chunks: `ChunkEvent.Load(isNewChunk)` → `WorldgenEngine.onNewChunk`
-- Existing chunks with unfinished work: `onChunkAvailable` + tick `MaterializationResumeQueue` (never force-load)
-- Shared per-tick `MaterializationTickBudget` across all chunk-load and resume work
+- New/existing chunks: `ChunkEvent.Load` → `WorldgenEngine.offerChunkWork` (enqueue only)
+- Server tick drains `WorldgenPlanningQueue` + `MaterializationResumeQueue` under shared op + time budgets (never force-load)
+- Planning uses loaded-chunk-only reads (`getChunkNow`); missing columns are WAITING, not INVALID
+- Terrain layout scans are resumable; placement steps are cached without world-dependent filtering
 - `LivingEventService` is called directly on activation (Living Villages is integrated; not a separate PR hook)
 
 Native Structure JSON registration is reserved (`worldgenUseNativeStructures`) but not required.
@@ -41,9 +42,11 @@ Statuses: `CANDIDATE → PLANNED → RESERVED → MATERIALIZING → PHYSICAL_COM
 
 ## Legacy bridge
 
-When `worldgenEngineEnabled=true`, natural `VillageSpawnQueue.enqueue` / `trySpawnNext` are suppressed. Manual `SpawnVillageCommand` / `VillageSpawner.spawnVillage` remain live-world APIs.
+When `worldgenEngineEnabled=true` and `worldgenLegacyFallback=false` (default), natural `VillageSpawnQueue.enqueue` / `trySpawnNext` are suppressed. Manual `SpawnVillageCommand` / `VillageSpawner.spawnVillage` remain live-world APIs.
 
-Set `worldgenEngineEnabled=false` to restore the legacy post-load queue.
+Set `worldgenLegacyFallback=true` to also run the legacy post-load queue alongside Phase 4 (temporary rescue). Set `worldgenEngineEnabled=false` to use legacy only.
+
+Planning waits until culture content is loaded (`WorldgenContentSnapshot.isReady()`). Start-region chunks before that are queued as WAITING, not sticky INVALID rejects. On content load, premature `no_candidates` rejects for `millenaire:none` are cleared so those regions re-plan.
 
 ## Content snapshot
 
@@ -55,7 +58,8 @@ Set `worldgenEngineEnabled=false` to restore the legacy post-load queue.
 - Walls planned via existing `VillageWallGenerator` location math; materialized chunk-locally.
 - Hamlets stored on parent plan and expanded to child plans with parent UUID link.
 - Regional connectors: `RegionalRoadPlanner` + `RegionalRoadMaterializer` (off by default). Bridges via `worldgenGenerateBridges`.
-- Placement permission: `RoadPlacementGuard` (shared by local roads, regional roads, and bridges). Only natural suitable terrain / clearable vegetation / bridge water routes may be overwritten; ordinary building blocks, containers, village footprints, planned buildings, and structure conflicts block placement. Slope continuity uses persisted `lastPlaced*` after resume. Detours must remain continuous route segments. A bridge is not `COMPLETE` while passage above the deck stays blocked.
+- **Sand highways** (`worldgenSandHighways`, default off): discovery-driven 4-wide `path_sandstone` / Macaw sand network via `HighwayEngine` — Millenaire villages/plans, vanilla `#minecraft:village`, and `#millenaire:highway_endpoint` mod structures. Enqueue on chunk load; plan/materialize/travelers on server tick. When enabled, regional dirt connectors are skipped (single inter-settlement pipeline). Bridges reuse `BridgePlacementHelper` (4-wide band); tunnels via `TunnelPlacementHelper` + `TUNNEL_*` guard intents. Travelers: logical `RoadJourney` + near-player `MillVillager` materialization (`/millenaire highway status|audit`).
+- Placement permission: `RoadPlacementGuard` (shared by local roads, regional roads, highways, and bridges). Only natural suitable terrain / clearable vegetation / bridge water routes may be overwritten; ordinary building blocks, containers, village footprints, planned buildings, and structure conflicts block placement. Slope continuity uses persisted `lastPlaced*` after resume. Detours must remain continuous route segments. A bridge is not `COMPLETE` while passage above the deck stays blocked.
 
 ## Activation
 

@@ -22,11 +22,13 @@ import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.network.InfoPanelRequestPayload;
 import org.millenaire.network.NpcChatOpenRequestPayload;
 import org.millenaire.network.ToggleStancePayload;
+import org.millenaire.network.WorldStatusRequestPayload;
 
 @EventBusSubscriber(modid = "millenaire", value = Dist.CLIENT)
 public final class MillenaireKeyBindings {
    public static final KeyMapping KEY_VILLAGES = new KeyMapping("key.millenaire.villages", Type.KEYSYM, 86, "key.categories.millenaire");
    public static final KeyMapping KEY_INFO_PANEL = new KeyMapping("key.millenaire.info_panel", Type.KEYSYM, 77, "key.categories.millenaire");
+   public static final KeyMapping KEY_WORLD_STATUS = new KeyMapping("key.millenaire.world_status", Type.KEYSYM, 67, "key.categories.millenaire");
    public static final KeyMapping KEY_STANCE = new KeyMapping("key.millenaire.escorts", Type.KEYSYM, 71, "key.categories.millenaire");
    public static final KeyMapping KEY_TALK = new KeyMapping("key.millenaire.talk", Type.KEYSYM, 72, "key.categories.millenaire");
    private static int lastHintEntityId = Integer.MIN_VALUE;
@@ -39,6 +41,7 @@ public final class MillenaireKeyBindings {
    public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
       event.register(KEY_VILLAGES);
       event.register(KEY_INFO_PANEL);
+      event.register(KEY_WORLD_STATUS);
       event.register(KEY_STANCE);
       event.register(KEY_TALK);
       NeoForge.EVENT_BUS.addListener(MillenaireKeyBindings::onClientTick);
@@ -56,6 +59,10 @@ public final class MillenaireKeyBindings {
 
          while (KEY_INFO_PANEL.consumeClick()) {
             PacketDistributor.sendToServer(new InfoPanelRequestPayload(), new CustomPacketPayload[0]);
+         }
+
+         while (KEY_WORLD_STATUS.consumeClick()) {
+            PacketDistributor.sendToServer(new WorldStatusRequestPayload(), new CustomPacketPayload[0]);
          }
 
          while (KEY_STANCE.consumeClick()) {

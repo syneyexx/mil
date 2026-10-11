@@ -51,8 +51,15 @@ public final class ModCreativeTabs {
             output.accept((ItemLike)ModItems.PURSE.get());
             output.accept((ItemLike)ModItems.SUMMONING_WAND.get());
             output.accept((ItemLike)ModItems.NEGATION_WAND.get());
+            output.accept((ItemLike)ModItems.CITY_ADMIN_WAND.get());
             output.accept((ItemLike)ModItems.VILLAGE_SCROLL.get());
             output.accept((ItemLike)ModItems.TRAVEL_BOOK.get());
+            output.accept((ItemLike)ModItems.NETHER_WRAITH_SPAWN_EGG.get());
+            output.accept((ItemLike)ModItems.INFERNAL_HARROW_SPAWN_EGG.get());
+            output.accept((ItemLike)ModItems.INFERNAL_HELLHOUND_SPAWN_EGG.get());
+            output.accept((ItemLike)ModItems.ANTICHRIST_PRIEST_SPAWN_EGG.get());
+            output.accept((ItemLike)ModItems.INFERNAL_CULTIST_SPAWN_EGG.get());
+            output.accept((ItemLike)ModItems.BOUNTY_HUNTER_SPAWN_EGG.get());
             output.accept((ItemLike)ModItems.NORMAN_SWORD.get());
             output.accept((ItemLike)ModItems.NORMAN_PICKAXE.get());
             output.accept((ItemLike)ModItems.NORMAN_AXE.get());
@@ -62,6 +69,10 @@ public final class ModCreativeTabs {
             output.accept((ItemLike)ModItems.NORMAN_CHESTPLATE.get());
             output.accept((ItemLike)ModItems.NORMAN_LEGGINGS.get());
             output.accept((ItemLike)ModItems.NORMAN_BOOTS.get());
+            output.accept((ItemLike)ModItems.BOUNTY_HUNTER_HELMET.get());
+            output.accept((ItemLike)ModItems.BOUNTY_HUNTER_CHESTPLATE.get());
+            output.accept((ItemLike)ModItems.BOUNTY_HUNTER_LEGGINGS.get());
+            output.accept((ItemLike)ModItems.BOUNTY_HUNTER_BOOTS.get());
             output.accept((ItemLike)ModBlocks.TIMBER_FRAME_PLAIN.get());
             output.accept((ItemLike)ModBlocks.TIMBER_FRAME_CROSS.get());
             output.accept((ItemLike)ModBlocks.THATCH.get());

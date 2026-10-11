@@ -1346,6 +1346,45 @@
       "item": "minecraft:arrow",
       "foreign_merchant_price": 6,
       "category": "foreigntrade"
+    },
+    {
+      "id": "fd_noodle_soup",
+      "item": "farmersdelight:noodle_soup",
+      "selling_price": 12,
+      "category": "food",
+      "target_quantity": 8
+    },
+    {
+      "id": "mcw_spruce_roof",
+      "item": "mcwroofs:spruce_roof",
+      "selling_price": 8,
+      "category": "construction",
+      "buying_price": 2,
+      "target_quantity": 24
+    },
+    {
+      "id": "supp_sconce",
+      "item": "supplementaries:sconce",
+      "selling_price": 8,
+      "category": "decoration",
+      "buying_price": 2,
+      "target_quantity": 12
+    },
+    {
+      "id": "create_water_wheel",
+      "item": "create:water_wheel",
+      "selling_price": 40,
+      "category": "construction",
+      "buying_price": 15,
+      "target_quantity": 2
+    },
+    {
+      "id": "ek_estoc",
+      "item": "magistuarmory:estoc",
+      "selling_price": 70,
+      "category": "weapon",
+      "buying_price": 25,
+      "target_quantity": 3
     }
   ]
 }

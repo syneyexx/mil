@@ -10,6 +10,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import org.millenaire.village.Village;
+import org.millenaire.village.VillageRenameService;
 import org.millenaire.village.VillageSavedData;
 
 public final class RenameVillageCommand {
@@ -30,12 +31,17 @@ public final class RenameVillageCommand {
       if (village == null) {
          src.sendFailure(Component.translatable("command.millenaire.error.no_village_radius", new Object[]{5000}));
          return 0;
-      } else {
-         String oldName = village.getVillageName();
-         village.setVillageName(newName);
-         village.markDirty();
-         src.sendSuccess(() -> Component.translatable("command.millenaire.renamevillage.success", new Object[]{oldName, newName}), true);
+      }
+      if (player == null) {
+         src.sendFailure(Component.translatable("command.millenaire.error.player_required"));
+         return 0;
+      }
+      VillageRenameService.RenameResult result = VillageRenameService.rename(level, player, village, newName);
+      if (result.success()) {
+         src.sendSuccess(() -> result.message(), true);
          return 1;
       }
+      src.sendFailure(result.message());
+      return 0;
    }
 }

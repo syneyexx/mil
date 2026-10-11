@@ -3,7 +3,7 @@ package org.millenaire.content;
 import java.util.List;
 
 public final class BuiltInCultures {
-   public static final List<String> IDS = List.of("norman", "indian", "mayan", "byzantines", "japanese", "seljuk", "inuits");
+   public static final List<String> IDS = List.of("norman", "indian", "mayan", "byzantines", "japanese", "seljuk", "inuits", "gabbers", "outlawz", "illagers");
 
    private BuiltInCultures() {
    }

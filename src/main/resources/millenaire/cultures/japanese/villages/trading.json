@@ -3,7 +3,8 @@
   "biome_tags": [
     "#c:is_taiga",
     "#c:is_hill",
-    "#millenaire:is_meadow"
+    "#millenaire:is_meadow",
+    "#millenaire:is_cherry_grove"
   ],
   "name": "Bouekigyou Mura",
   "weight": 10,
@@ -91,6 +92,8 @@
   "carries_raid": true,
   "path_materials": [
     "pathdirt",
+    "mcw_stone_path",
+    "mcw_gravel_path",
     "pathgravel",
     "pathgravelslabs"
   ],

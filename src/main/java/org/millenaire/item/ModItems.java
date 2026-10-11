@@ -29,10 +29,12 @@ import net.minecraft.world.item.Item.Properties;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BannerPattern;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.DeferredRegister.Items;
 import org.millenaire.block.ModBlocks;
+import org.millenaire.entity.ModEntities;
 import org.millenaire.entity.WallDecorationType;
 
 public final class ModItems {
@@ -42,9 +44,34 @@ public final class ModItems {
    public static final DeferredItem<CoinItem> DENIER_OR = ITEMS.registerItem("denier_or", props -> new CoinItem(props.stacksTo(64)));
    public static final DeferredItem<SummoningWandItem> SUMMONING_WAND = ITEMS.registerItem("summoning_wand", props -> new SummoningWandItem(props.stacksTo(1)));
    public static final DeferredItem<NegationWandItem> NEGATION_WAND = ITEMS.registerItem("negation_wand", props -> new NegationWandItem(props.stacksTo(1)));
+   public static final DeferredItem<CityAdminWandItem> CITY_ADMIN_WAND = ITEMS.registerItem("city_admin_wand", props -> new CityAdminWandItem(props.stacksTo(1)));
    public static final DeferredItem<PurseItem> PURSE = ITEMS.registerItem("purse", props -> new PurseItem(props.stacksTo(1)));
    public static final DeferredItem<VillageBookItem> VILLAGE_SCROLL = ITEMS.registerItem("village_scroll", props -> new VillageBookItem(props.stacksTo(1)));
    public static final DeferredItem<TravelBookItem> TRAVEL_BOOK = ITEMS.registerItem("travel_book", props -> new TravelBookItem(props.stacksTo(1)));
+   public static final DeferredItem<DeferredSpawnEggItem> NETHER_WRAITH_SPAWN_EGG = ITEMS.registerItem(
+      "nether_wraith_spawn_egg",
+      props -> new DeferredSpawnEggItem(ModEntities.NETHER_WRAITH, 0x1A1214, 0xE0141B, props)
+   );
+   public static final DeferredItem<DeferredSpawnEggItem> INFERNAL_HARROW_SPAWN_EGG = ITEMS.registerItem(
+      "infernal_harrow_spawn_egg",
+      props -> new DeferredSpawnEggItem(ModEntities.INFERNAL_HARROW, 0x1A1010, 0xE02820, props)
+   );
+   public static final DeferredItem<DeferredSpawnEggItem> INFERNAL_HELLHOUND_SPAWN_EGG = ITEMS.registerItem(
+      "infernal_hellhound_spawn_egg",
+      props -> new DeferredSpawnEggItem(ModEntities.INFERNAL_HELLHOUND, 0x141010, 0xD82218, props)
+   );
+   public static final DeferredItem<DeferredSpawnEggItem> ANTICHRIST_PRIEST_SPAWN_EGG = ITEMS.registerItem(
+      "antichrist_priest_spawn_egg",
+      props -> new DeferredSpawnEggItem(ModEntities.ANTICHRIST_PRIEST, 0x121010, 0xC81820, props)
+   );
+   public static final DeferredItem<DeferredSpawnEggItem> INFERNAL_CULTIST_SPAWN_EGG = ITEMS.registerItem(
+      "infernal_cultist_spawn_egg",
+      props -> new DeferredSpawnEggItem(ModEntities.INFERNAL_CULTIST, 0x161212, 0xB8181C, props)
+   );
+   public static final DeferredItem<DeferredSpawnEggItem> BOUNTY_HUNTER_SPAWN_EGG = ITEMS.registerItem(
+      "bounty_hunter_spawn_egg",
+      props -> new DeferredSpawnEggItem(ModEntities.BOUNTY_HUNTER, 0x2A1D15, 0xFF9E1B, props)
+   );
    public static final DeferredItem<PickaxeItem> NORMAN_PICKAXE = ITEMS.registerItem(
       "norman_pickaxe",
       props -> new PickaxeItem(NormanMaterials.NORMAN_TOOL, props.attributes(DiggerItem.createAttributes(NormanMaterials.NORMAN_TOOL, 1.0F, -2.8F)))
@@ -74,6 +101,18 @@ public final class ModItems {
    );
    public static final DeferredItem<ArmorItem> NORMAN_BOOTS = ITEMS.registerItem(
       "norman_boots", props -> new ArmorItem(NormanMaterials.NORMAN_ARMOR, Type.BOOTS, props.durability(Type.BOOTS.getDurability(66)))
+   );
+   public static final DeferredItem<BountyHunterArmorItem> BOUNTY_HUNTER_HELMET = ITEMS.registerItem(
+      "bounty_hunter_helmet", props -> new BountyHunterArmorItem(Type.HELMET, props)
+   );
+   public static final DeferredItem<BountyHunterArmorItem> BOUNTY_HUNTER_CHESTPLATE = ITEMS.registerItem(
+      "bounty_hunter_chestplate", props -> new BountyHunterArmorItem(Type.CHESTPLATE, props)
+   );
+   public static final DeferredItem<BountyHunterArmorItem> BOUNTY_HUNTER_LEGGINGS = ITEMS.registerItem(
+      "bounty_hunter_leggings", props -> new BountyHunterArmorItem(Type.LEGGINGS, props)
+   );
+   public static final DeferredItem<BountyHunterArmorItem> BOUNTY_HUNTER_BOOTS = ITEMS.registerItem(
+      "bounty_hunter_boots", props -> new BountyHunterArmorItem(Type.BOOTS, props)
    );
    public static final DeferredItem<MillFoodItem> CIDERAPPLE = ITEMS.registerItem(
       "cider_apple", props -> new MillFoodItem(props.stacksTo(64), 1, 0.05F, 0, 0, 0, false)

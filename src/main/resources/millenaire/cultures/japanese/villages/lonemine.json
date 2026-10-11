@@ -1,7 +1,8 @@
 {
   "culture": "millenaire:japanese",
   "biome_tags": [
-    "#c:is_taiga"
+    "#c:is_taiga",
+    "#millenaire:is_cherry_grove"
   ],
   "name": "Kouku",
   "weight": 10,

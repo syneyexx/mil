@@ -82,6 +82,10 @@ public final class AdjustModeController {
    }
 
    public static void arm(BuildingProjectListPayload ctx, BuildingProjectListPayload.BuildingEntry entry) {
+      if (DesignateModeController.isActive()) {
+         DesignateModeController.disarm();
+      }
+
       villageUuid = ctx.villageUuid();
       planSetId = entry.planSetId();
       width = Math.max(1, entry.width());

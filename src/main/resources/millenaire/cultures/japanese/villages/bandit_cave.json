@@ -13,7 +13,8 @@
     "minecraft:dark_forest",
     "minecraft:jagged_peaks",
     "#c:is_plains",
-    "#c:is_jungle"
+    "#c:is_jungle",
+    "#millenaire:is_cherry_grove"
   ],
   "layout": [
     {

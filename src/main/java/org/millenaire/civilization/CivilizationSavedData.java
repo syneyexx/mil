@@ -50,6 +50,7 @@ public class CivilizationSavedData extends SavedData {
    private int tradeCursor;
    private int tradeRecoveryCursor;
    private int migrationCursor;
+   private int immigrationCursor;
    private int colonizationCursor;
    private long lastOffscreenAttemptGameTime;
    private long lastOffscreenSuccessGameTime;
@@ -195,6 +196,14 @@ public class CivilizationSavedData extends SavedData {
 
    public void setMigrationCursor(int cursor) {
       this.migrationCursor = Math.max(0, cursor);
+   }
+
+   public int immigrationCursor() {
+      return this.immigrationCursor;
+   }
+
+   public void setImmigrationCursor(int cursor) {
+      this.immigrationCursor = Math.max(0, cursor);
    }
 
    public int colonizationCursor() {
@@ -394,6 +403,7 @@ public class CivilizationSavedData extends SavedData {
       root.putInt("tradeCursor", this.tradeCursor);
       root.putInt("tradeRecoveryCursor", this.tradeRecoveryCursor);
       root.putInt("migrationCursor", this.migrationCursor);
+      root.putInt("immigrationCursor", this.immigrationCursor);
       root.putInt("colonizationCursor", this.colonizationCursor);
       root.putLong("offscreenAttempt", this.lastOffscreenAttemptGameTime);
       root.putLong("offscreenSuccess", this.lastOffscreenSuccessGameTime);
@@ -473,6 +483,7 @@ public class CivilizationSavedData extends SavedData {
       data.tradeCursor = tag.getInt("tradeCursor");
       data.tradeRecoveryCursor = tag.getInt("tradeRecoveryCursor");
       data.migrationCursor = tag.getInt("migrationCursor");
+      data.immigrationCursor = tag.getInt("immigrationCursor");
       data.colonizationCursor = tag.getInt("colonizationCursor");
       data.lastOffscreenAttemptGameTime = tag.getLong("offscreenAttempt");
       data.lastOffscreenSuccessGameTime = tag.getLong("offscreenSuccess");

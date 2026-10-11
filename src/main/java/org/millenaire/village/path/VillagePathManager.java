@@ -48,6 +48,8 @@ import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillageType;
 import org.millenaire.item.BlockHelper;
+import org.millenaire.perf.compute.ComputeOffload;
+import org.millenaire.perf.compute.MillenaireComputePool;
 import org.millenaire.village.Village;
 import org.millenaire.world.TerrainPreparer;
 import org.slf4j.Logger;
@@ -79,6 +81,8 @@ public class VillagePathManager {
    private transient BlockPos pendingThPosForDiag;
    private int pathRecheckFailNights = 0;
    private boolean pathsDirty = false;
+   private long pathComputeGeneration = 0L;
+   private int outstandingPathJobs = 0;
    private static final int MAX_FOOTPRINT_PROBE = 16;
    static final int CLEAR_CELL_SIZE = 8;
 
@@ -303,7 +307,6 @@ public class VillagePathManager {
                this.clearOldPaths(level, village, newPositions);
             } else {
                this.pendingRoutes.clear();
-               this.pendingRoutes.addAll(routes);
                this.pathsToBuild.clear();
                this.buildRouteIds.clear();
                this.buildPathIndex = 0;
@@ -314,9 +317,49 @@ public class VillagePathManager {
                this.pathLevelByPos.clear();
                this.pathLevelByColumn.clear();
                this.currentRecalcSurfaceColumns.clear();
+               this.outstandingPathJobs = 0;
+               this.pathComputeGeneration++;
+               long generation = this.pathComputeGeneration;
+               if (ComputeOffload.villagePaths() && !routes.isEmpty()) {
+                  Map<Long, Integer> floors = computeBuildingFloors(village);
+                  Set<Long> borders = computeBorderCells(village);
+                  Set<Long> affinity = new HashSet<>(this.previousSurfaceColumns);
+                  affinity.addAll(this.currentRecalcSurfaceColumns);
+                  PathTerrainSnapshot snapshot = PathTerrainSnapshot.capture(level, village, routes, floors, borders, affinity);
+                  for (PathRoute route : routes) {
+                     PathRoute routeCapture = route;
+                     boolean submitted = MillenaireComputePool.submit(() -> {
+                        VillagePathManager.TraceResult tr = snapshot.searchTrace(routeCapture);
+                        return new PathTraceComputeResult(village.getId(), generation, routeCapture, tr);
+                     });
+                     if (submitted) {
+                        this.outstandingPathJobs++;
+                     } else {
+                        this.pendingRoutes.add(route);
+                     }
+                  }
+               } else {
+                  this.pendingRoutes.addAll(routes);
+               }
             }
          }
       }
+   }
+
+   /**
+    * Apply one offloaded A* result on the server thread. Returns false when stale.
+    */
+   public boolean acceptAsyncTrace(
+      ServerLevel level, Village village, long generation, PathRoute route, VillagePathManager.TraceResult tr
+   ) {
+      if (generation != this.pathComputeGeneration) {
+         return false;
+      }
+      if (this.outstandingPathJobs > 0) {
+         this.outstandingPathJobs--;
+      }
+      this.placeTracedRoute(level, village, route, tr);
+      return true;
    }
 
    public void tick(ServerLevel level, Village village) {
@@ -325,61 +368,66 @@ public class VillagePathManager {
          Map<Long, Integer> buildingFloors = computeBuildingFloors(village);
          Set<Long> borderCells = computeBorderCells(village);
          VillagePathManager.TraceResult tr = findTraceWithFallbackDetailed(level, village, route, buildingFloors, borderCells, this.surfaceAffinity());
-         List<BlockPos> trace = tr.trace();
-         BlockPos thPosSnap = this.pendingThPosForDiag != null ? this.pendingThPosForDiag : village.getCenter();
-         if (trace == null) {
-            this.recordDiagnostic(route, tr, this.pendingDiagSources, thPosSnap, 0);
-            this.checkRoutesComplete(level, village);
-         } else {
-            PathMaterials.MaterialPair mat = PathMaterials.resolve(route.material());
-            if (mat == null) {
-               LOGGER.warn("Unknown path material: {}", route.material());
-               this.recordDiagnosticExplicit(route, this.pendingDiagSources, thPosSnap, trace.size(), 0, PathFailureReason.UNKNOWN_MATERIAL, tr.detail());
-               this.checkRoutesComplete(level, village);
-            } else {
-               int routePathLevel = route.pathLevel();
-               BuildingId routeSourceIdT = route.sourceId();
-               BuildingId routeDestIdT = route.destinationId();
-               BuildingId thIdSnapT = this.thBuildingId;
-               List<PathEntry> entries = PathBlockPlacer.buildPath(
-                  trace,
-                  mat.fullBlock(),
-                  mat.slabBlock(),
-                  route.width(),
-                  routePathLevel,
-                  pos -> isProtectedFromPathBuilding(level, village, pos) || isInsideForeignFootprint(village, pos, routeSourceIdT, routeDestIdT, thIdSnapT),
-                  pos -> isHardProtectedFromPath(level, village, pos),
-                  pos -> isReplaceableForPath(level, pos) && !isSurfaceLiquid(level, pos),
-                  pos -> this.pathLevelByColumn.getOrDefault(packXZ(pos.getX(), pos.getZ()), -1),
-                  pos -> hasHeadroom(level, pos),
-                  (x, z) -> groundForPathing(level, buildingFloors, x, z, true),
-                  pos -> canFillBelowPath(level, pos),
-                  pos -> canCutForHeadroom(level, pos),
-                  (x, z) -> lockedSurfaceHalfYAt(buildingFloors, x, z),
-                  pos -> footprintIdAt(village, pos),
-                  pos -> isOnStablePath(level, pos),
-                  pos -> headroomClearableAt(level, pos)
-               );
-               if (!entries.isEmpty()) {
-                  this.pathsToBuild.add(entries);
-                  this.buildRouteIds.add(new VillagePathManager.RouteIds(route.sourceId(), route.destinationId()));
+         this.placeTracedRoute(level, village, route, tr);
+      }
+   }
 
-                  for (PathEntry e : entries) {
-                     this.allNewPathPositions.add(e.pos());
-                     this.pathLevelByPos.put(e.pos(), routePathLevel);
-                     if (isSurfaceState(e.state())) {
-                        long col = packXZ(e.pos().getX(), e.pos().getZ());
-                        this.currentRecalcSurfaceColumns.add(col);
-                        this.pathLevelByColumn.merge(col, routePathLevel, Math::max);
-                     }
-                  }
-               }
+   private void placeTracedRoute(ServerLevel level, Village village, PathRoute route, VillagePathManager.TraceResult tr) {
+      List<BlockPos> trace = tr.trace();
+      BlockPos thPosSnap = this.pendingThPosForDiag != null ? this.pendingThPosForDiag : village.getCenter();
+      if (trace == null) {
+         this.recordDiagnostic(route, tr, this.pendingDiagSources, thPosSnap, 0);
+         this.checkRoutesComplete(level, village);
+         return;
+      }
+      PathMaterials.MaterialPair mat = PathMaterials.resolve(route.material());
+      if (mat == null) {
+         LOGGER.warn("Unknown path material: {}", route.material());
+         this.recordDiagnosticExplicit(route, this.pendingDiagSources, thPosSnap, trace.size(), 0, PathFailureReason.UNKNOWN_MATERIAL, tr.detail());
+         this.checkRoutesComplete(level, village);
+         return;
+      }
+      Map<Long, Integer> buildingFloors = computeBuildingFloors(village);
+      int routePathLevel = route.pathLevel();
+      BuildingId routeSourceIdT = route.sourceId();
+      BuildingId routeDestIdT = route.destinationId();
+      BuildingId thIdSnapT = this.thBuildingId;
+      List<PathEntry> entries = PathBlockPlacer.buildPath(
+         trace,
+         mat.fullBlock(),
+         mat.slabBlock(),
+         route.width(),
+         routePathLevel,
+         pos -> isProtectedFromPathBuilding(level, village, pos) || isInsideForeignFootprint(village, pos, routeSourceIdT, routeDestIdT, thIdSnapT),
+         pos -> isHardProtectedFromPath(level, village, pos),
+         pos -> isReplaceableForPath(level, pos) && !isSurfaceLiquid(level, pos),
+         pos -> this.pathLevelByColumn.getOrDefault(packXZ(pos.getX(), pos.getZ()), -1),
+         pos -> hasHeadroom(level, pos),
+         (x, z) -> groundForPathing(level, buildingFloors, x, z, true),
+         pos -> canFillBelowPath(level, pos),
+         pos -> canCutForHeadroom(level, pos),
+         (x, z) -> lockedSurfaceHalfYAt(buildingFloors, x, z),
+         pos -> footprintIdAt(village, pos),
+         pos -> isOnStablePath(level, pos),
+         pos -> headroomClearableAt(level, pos)
+      );
+      if (!entries.isEmpty()) {
+         this.pathsToBuild.add(entries);
+         this.buildRouteIds.add(new VillagePathManager.RouteIds(route.sourceId(), route.destinationId()));
 
-               this.recordDiagnostic(route, tr, this.pendingDiagSources, thPosSnap, entries.size());
-               this.checkRoutesComplete(level, village);
+         for (PathEntry e : entries) {
+            this.allNewPathPositions.add(e.pos());
+            this.pathLevelByPos.put(e.pos(), routePathLevel);
+            if (isSurfaceState(e.state())) {
+               long col = packXZ(e.pos().getX(), e.pos().getZ());
+               this.currentRecalcSurfaceColumns.add(col);
+               this.pathLevelByColumn.merge(col, routePathLevel, Math::max);
             }
          }
       }
+
+      this.recordDiagnostic(route, tr, this.pendingDiagSources, thPosSnap, entries.size());
+      this.checkRoutesComplete(level, village);
    }
 
    @Nullable
@@ -876,7 +924,7 @@ public class VillagePathManager {
    }
 
    private void checkRoutesComplete(ServerLevel level, Village village) {
-      if (this.pendingRoutes.isEmpty()) {
+      if (this.pendingRoutes.isEmpty() && this.outstandingPathJobs <= 0) {
          this.snapshotSurfaceColumns();
          this.pathsToClear = this.scanExistingPaths(level, village, this.allNewPathPositions);
          this.clearIndex = 0;
@@ -1500,7 +1548,7 @@ public class VillagePathManager {
 
    public void nightlyRecheck(ServerLevel level, Village village) {
       if ((Boolean)MillenaireServerConfig.SERVER.buildPaths.get()) {
-         if (this.pendingRoutes.isEmpty() && !this.hasPathsToBuild() && !this.hasPathsToClear()) {
+         if (this.pendingRoutes.isEmpty() && this.outstandingPathJobs <= 0 && !this.hasPathsToBuild() && !this.hasPathsToClear()) {
             boolean allOk = this.verifyInvariantAll(level, village);
             if (allOk) {
                if (this.pathRecheckFailNights != 0) {
@@ -1524,7 +1572,7 @@ public class VillagePathManager {
 
    public void startRecalcIfDirty(ServerLevel level, Village village) {
       if (this.pathsDirty) {
-         if (this.pendingRoutes.isEmpty() && !this.hasPathsToBuild() && !this.hasPathsToClear()) {
+         if (this.pendingRoutes.isEmpty() && this.outstandingPathJobs <= 0 && !this.hasPathsToBuild() && !this.hasPathsToClear()) {
             this.pathsDirty = false;
             this.recalculatePaths(level, village, false);
             village.markDirty();
@@ -1992,6 +2040,6 @@ public class VillagePathManager {
       GROUND;
    }
 
-   private record TraceResult(@Nullable List<BlockPos> trace, AStarFailureDetail detail, @Nullable PathFailureReason failure) {
+   public record TraceResult(@Nullable List<BlockPos> trace, AStarFailureDetail detail, @Nullable PathFailureReason failure) {
    }
 }

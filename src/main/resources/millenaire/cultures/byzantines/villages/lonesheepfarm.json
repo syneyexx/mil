@@ -2,7 +2,9 @@
   "culture": "millenaire:byzantines",
   "biome_tags": [
     "#c:is_plains",
-    "#c:is_savanna"
+    "#c:is_savanna",
+    "#millenaire:is_mediterranean",
+    "#millenaire:is_lavender"
   ],
   "name": "Monachikó próvato",
   "weight": 10,

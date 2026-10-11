@@ -73,6 +73,15 @@ public final class MaterializationResumeQueue {
       this.roundRobinCursor = 0;
    }
 
+   public int removePlan(UUID planId) {
+      if (planId == null) {
+         return 0;
+      }
+      int before = this.pending.size();
+      this.pending.removeIf(item -> planId.equals(item.planId()));
+      return before - this.pending.size();
+   }
+
    /**
     * Round-robin drain of up to {@code limit} unique items without removing them.
     * Caller removes completed items explicitly.

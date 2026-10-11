@@ -2,6 +2,7 @@ package org.millenaire.faction;
 
 import java.util.Objects;
 import java.util.UUID;
+import javax.annotation.Nullable;
 import net.minecraft.resources.ResourceLocation;
 import org.millenaire.Millenaire;
 
@@ -51,5 +52,10 @@ public final class FactionIds {
 
    public static boolean isDefaultCultureFactionId(FactionId factionId, ResourceLocation cultureId) {
       return factionId != null && cultureId != null && factionId.equals(defaultCultureFaction(cultureId));
+   }
+
+   /** True when the id path uses the player-faction prefix (even if the faction record is missing). */
+   public static boolean isPlayerFactionId(@Nullable FactionId factionId) {
+      return factionId != null && factionId.id().getPath().startsWith(PLAYER_FACTION_PREFIX);
    }
 }

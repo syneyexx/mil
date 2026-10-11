@@ -31,6 +31,8 @@ public class SettlementPlanSavedData extends SavedData {
    private final Map<UUID, SettlementPlan> plansById = new HashMap<>();
    private final Map<Long, UUID> regionIndex = new HashMap<>();
    private final Map<Long, List<UUID>> chunkIndex = new HashMap<>();
+   /** Reverse index: planId → chunk keys currently listed in {@link #chunkIndex}. */
+   private final Map<UUID, List<Long>> planChunkKeys = new HashMap<>();
    private final MaterializationResumeQueue resumeQueue = new MaterializationResumeQueue();
    private int schemaVersion = SCHEMA;
    private int progressSchemaVersion = SettlementPlan.PROGRESS_SCHEMA_VERSION;
@@ -48,6 +50,15 @@ public class SettlementPlanSavedData extends SavedData {
 
    public Collection<SettlementPlan> allPlans() {
       return List.copyOf(this.plansById.values());
+   }
+
+   /** Unmodifiable live view — callers must not mutate the collection. Prefer over {@link #allPlans()} on hot paths. */
+   public Collection<SettlementPlan> plansView() {
+      return java.util.Collections.unmodifiableCollection(this.plansById.values());
+   }
+
+   public int planCount() {
+      return this.plansById.size();
    }
 
    @Nullable
@@ -83,6 +94,69 @@ public class SettlementPlanSavedData extends SavedData {
       this.setDirty();
    }
 
+   /**
+    * Removes INVALID placeholder rejects that used village type {@code millenaire:none} with
+    * {@code no_candidates} — typically created when the content snapshot was still empty.
+    *
+    * @return number of plans removed
+    */
+   public int clearPrematureEmptyRejects() {
+      List<UUID> toRemove = new ArrayList<>();
+      for (SettlementPlan plan : this.plansById.values()) {
+         if (plan.status() != SettlementPlanStatus.INVALID) {
+            continue;
+         }
+         if (plan.failureReason() != SettlementFailureReason.NO_COMPATIBLE_BIOME) {
+            continue;
+         }
+         if (!"no_candidates".equals(plan.failureDetail())) {
+            continue;
+         }
+         if (plan.villageTypeId() == null || !"none".equals(plan.villageTypeId().getPath())) {
+            continue;
+         }
+         toRemove.add(plan.planId());
+      }
+      for (UUID id : toRemove) {
+         removePlan(id);
+      }
+      return toRemove.size();
+   }
+
+   /**
+    * Removes INVALID rejects caused by spawn protection so regions can re-plan after the radius
+    * is lowered (including the default change from 250 → 0). Does not touch ACTIVE villages.
+    *
+    * @return number of plans removed
+    */
+   public int clearSpawnProtectionRejects() {
+      List<UUID> toRemove = new ArrayList<>();
+      for (SettlementPlan plan : this.plansById.values()) {
+         if (plan.status() != SettlementPlanStatus.INVALID) {
+            continue;
+         }
+         if (!"spawn_protection".equals(plan.failureDetail())) {
+            continue;
+         }
+         toRemove.add(plan.planId());
+      }
+      for (UUID id : toRemove) {
+         removePlan(id);
+      }
+      return toRemove.size();
+   }
+
+   public void removePlan(UUID planId) {
+      SettlementPlan plan = this.plansById.remove(planId);
+      if (plan == null) {
+         return;
+      }
+      this.regionIndex.remove(plan.region().packed(), planId);
+      clearPlanFromChunkIndex(planId);
+      this.resumeQueue.removePlan(planId);
+      this.setDirty();
+   }
+
    public void markDirtyPlan() {
       this.setDirty();
    }
@@ -95,11 +169,32 @@ public class SettlementPlanSavedData extends SavedData {
       return this.progressSchemaVersion;
    }
 
+   private void clearPlanFromChunkIndex(UUID planId) {
+      List<Long> keys = this.planChunkKeys.remove(planId);
+      if (keys == null) {
+         return;
+      }
+      for (Long key : keys) {
+         List<UUID> list = this.chunkIndex.get(key);
+         if (list == null) {
+            continue;
+         }
+         list.removeIf(id -> id.equals(planId));
+         if (list.isEmpty()) {
+            this.chunkIndex.remove(key);
+         }
+      }
+   }
+
    public void reindexChunks(SettlementPlan plan) {
-      long planIdBits = plan.planId().getMostSignificantBits() ^ plan.planId().getLeastSignificantBits();
-      this.chunkIndex.values().forEach(list -> list.removeIf(id -> id.equals(plan.planId())));
+      clearPlanFromChunkIndex(plan.planId());
+      List<Long> keys = new ArrayList<>();
       for (Long packed : plan.reservedChunks()) {
-         this.chunkIndex.computeIfAbsent(packed, k -> new ArrayList<>()).add(plan.planId());
+         List<UUID> list = this.chunkIndex.computeIfAbsent(packed, k -> new ArrayList<>());
+         if (!list.contains(plan.planId())) {
+            list.add(plan.planId());
+         }
+         keys.add(packed);
       }
       for (PlannedBuilding b : plan.buildings()) {
          int minCx = b.minChunkX();
@@ -113,10 +208,13 @@ public class SettlementPlanSavedData extends SavedData {
                if (!list.contains(plan.planId())) {
                   list.add(plan.planId());
                }
+               keys.add(key);
             }
          }
       }
-      // touch planIdBits to silence unused if optimizer complains in some builds
+      this.planChunkKeys.put(plan.planId(), keys);
+      // legacy touch kept for binary compatibility with prior comment site
+      long planIdBits = plan.planId().getMostSignificantBits() ^ plan.planId().getLeastSignificantBits();
       if (planIdBits == Long.MIN_VALUE) {
          LOGGER.trace("sentinel");
       }

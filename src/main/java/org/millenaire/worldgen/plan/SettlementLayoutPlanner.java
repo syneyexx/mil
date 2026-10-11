@@ -25,21 +25,30 @@ import org.millenaire.world.VillageTerrainMap;
 import org.millenaire.world.VillageWallGenerator;
 import org.millenaire.worldgen.content.VillageTypeWorldgenEntry;
 import org.millenaire.worldgen.content.WorldgenContentSnapshot;
+import org.millenaire.worldgen.materialize.MaterializationTickBudget;
 
 /**
  * Stage A continued — deterministic building/road/wall/hamlet layout. Mutates plan records only.
+ * Placement is time-sliced across server ticks under {@link MaterializationTickBudget}.
  */
 public final class SettlementLayoutPlanner {
    private static final Rotation[] ROTATIONS = {Rotation.NONE, Rotation.CLOCKWISE_90, Rotation.CLOCKWISE_180, Rotation.COUNTERCLOCKWISE_90};
+   /** Max starter buildings placed per ensureLayout call when the time budget still has room. */
+   private static final int STARTERS_PER_SLICE = 2;
 
    private SettlementLayoutPlanner() {
    }
 
+   /**
+    * Ensure layout exists. Terrain scanning and building placement are resumable across ticks;
+    * returns false while waiting for budget/chunks. Missing chunks are WAITING, not INVALID.
+    */
    public static boolean ensureLayout(ServerLevel level, SettlementPlan plan) {
       if (plan.status().isTerminalFailure() || plan.status() == SettlementPlanStatus.ACTIVE) {
          return false;
       }
       if (!plan.buildings().isEmpty() && plan.status().ordinal() >= SettlementPlanStatus.RESERVED.ordinal()) {
+         WorldgenLayoutSessions.remove(plan.planId());
          return true;
       }
       if (plan.villageTypeId() == null || "none".equals(plan.villageTypeId().getPath())) {
@@ -51,18 +60,189 @@ public final class SettlementLayoutPlanner {
       VillageType villageType = ModCultures.getVillageType(plan.villageTypeId());
       if (entry == null || villageType == null) {
          plan.markFailed(SettlementFailureReason.MISSING_MANDATORY_BUILDING, "village_type_missing");
+         WorldgenLayoutSessions.remove(plan.planId());
          return false;
       }
 
-      RandomSource layoutRng = WorldgenSeeds.stream(plan.worldSeed(), WorldgenSeeds.SALT_LAYOUT, plan.region());
-      RandomSource variantRng = WorldgenSeeds.stream(plan.worldSeed(), WorldgenSeeds.SALT_VARIANT, plan.region());
+      WorldgenLayoutSessions.Session session = WorldgenLayoutSessions.getOrCreate(plan.planId());
+      if (session.phase == WorldgenLayoutSessions.Phase.TERRAIN_SCAN) {
+         if (session.terrainScan == null) {
+            session.terrainScan = VillageTerrainMap.beginScan(
+               plan.center(), villageType.radius(), level.getMinBuildHeight(), level.getMaxBuildHeight()
+            );
+         }
+         int columns = MillenaireServerConfig.SERVER.worldgenTerrainColumnsPerTick.getAsInt();
+         // Soft deadline: share the tick's MaterializationTickBudget deadline (no fresh budget).
+         if (!MaterializationTickBudget.hasTime()) {
+            return false;
+         }
+         long deadline = MaterializationTickBudget.deadlineNanos();
+         VillageTerrainMap.ScanSession.Status scanStatus = session.terrainScan.advance(level, columns, deadline, false);
+         if (scanStatus == VillageTerrainMap.ScanSession.Status.WAITING_CHUNKS
+            || scanStatus == VillageTerrainMap.ScanSession.Status.IN_PROGRESS) {
+            return false;
+         }
+         session.terrainMap = session.terrainScan.result();
+         if (session.terrainMap == null) {
+            plan.markFailed(SettlementFailureReason.INVALID_TERRAIN, "terrain_scan_empty");
+            WorldgenLayoutSessions.remove(plan.planId());
+            return false;
+         }
+         session.phase = WorldgenLayoutSessions.Phase.PLACE_CENTRE;
+      }
 
-      VillageTerrainMap terrainMap = VillageTerrainMap.compute(level, plan.center(), villageType.radius());
-      TerrainReachability reachability = TerrainReachability.compute(terrainMap, plan.center());
+      return advanceLayoutPlacement(level, plan, entry, villageType, session);
+   }
 
-      plan.buildings().clear();
-      List<BuildingInstance> existing = new ArrayList<>();
+   /**
+    * Advances one or more layout phases under the shared time budget. Returns true when layout is
+    * fully reserved; false when more ticks are needed or the plan failed.
+    */
+   private static boolean advanceLayoutPlacement(
+      ServerLevel level,
+      SettlementPlan plan,
+      VillageTypeWorldgenEntry entry,
+      VillageType villageType,
+      WorldgenLayoutSessions.Session session
+   ) {
+      VillageTerrainMap terrainMap = session.terrainMap;
+      if (terrainMap == null) {
+         session.phase = WorldgenLayoutSessions.Phase.TERRAIN_SCAN;
+         session.terrainScan = null;
+         return false;
+      }
 
+      if (session.phase == WorldgenLayoutSessions.Phase.PLACE_CENTRE) {
+         if (!MaterializationTickBudget.hasTime()) {
+            return false;
+         }
+         RandomSource layoutRng = WorldgenSeeds.stream(plan.worldSeed(), WorldgenSeeds.SALT_LAYOUT, plan.region());
+         RandomSource variantRng = WorldgenSeeds.stream(plan.worldSeed(), WorldgenSeeds.SALT_VARIANT, plan.region());
+         if (!prepareCentreAndStarters(plan, entry, session, terrainMap, layoutRng)) {
+            WorldgenLayoutSessions.remove(plan.planId());
+            return false;
+         }
+         PlannedBuilding centreBuilding = placeCentre(
+            level, plan, session.centreSlot, terrainMap, session.reachability, session.existing, variantRng
+         );
+         if (centreBuilding == null) {
+            plan.markFailed(SettlementFailureReason.INVALID_TERRAIN, "centre_unreachable");
+            WorldgenLayoutSessions.remove(plan.planId());
+            return false;
+         }
+         plan.buildings().clear();
+         plan.buildings().add(centreBuilding);
+         session.existing.clear();
+         session.existing.add(
+            new BuildingInstance(
+               BuildingId.random(),
+               centreBuilding.planId(),
+               centreBuilding.origin(),
+               centreBuilding.rotation(),
+               BuildingInstance.Status.PLANNED
+            )
+         );
+         session.reachability = TerrainReachability.compute(terrainMap, plan.center());
+         session.starterIndex = 0;
+         session.phase = WorldgenLayoutSessions.Phase.PLACE_STARTERS;
+         if (!MaterializationTickBudget.hasTime()) {
+            return false;
+         }
+      }
+
+      if (session.phase == WorldgenLayoutSessions.Phase.PLACE_STARTERS) {
+         List<VillageTypeWorldgenEntry.LayoutSlotRef> starters = session.starters;
+         if (starters == null) {
+            session.phase = WorldgenLayoutSessions.Phase.PLACE_CENTRE;
+            return false;
+         }
+         int placedThisSlice = 0;
+         while (session.starterIndex < starters.size()) {
+            if (!MaterializationTickBudget.hasTime() || placedThisSlice >= STARTERS_PER_SLICE) {
+               return false;
+            }
+            VillageTypeWorldgenEntry.LayoutSlotRef slot = starters.get(session.starterIndex);
+            // Per-index stream so resumed slices do not depend on prior draw counts.
+            int slotSalt = session.starterIndex + 1;
+            RandomSource slotLayoutRng = WorldgenSeeds.stream(
+               plan.worldSeed(), WorldgenSeeds.SALT_LAYOUT, plan.region().regionX(), plan.region().regionZ() ^ (slotSalt * 31)
+            );
+            RandomSource slotVariantRng = WorldgenSeeds.stream(
+               plan.worldSeed(), WorldgenSeeds.SALT_VARIANT, plan.region().regionX(), plan.region().regionZ() ^ (slotSalt * 17)
+            );
+            PlannedBuilding placed = placeSlot(
+               level, plan, slot, villageType, terrainMap, session.reachability, session.existing, slotLayoutRng, slotVariantRng
+            );
+            session.starterIndex++;
+            placedThisSlice++;
+            if (placed == null) {
+               if (slot.mandatory()) {
+                  plan.markFailed(SettlementFailureReason.MISSING_MANDATORY_BUILDING, String.valueOf(slot.planRef()));
+                  WorldgenLayoutSessions.remove(plan.planId());
+                  return false;
+               }
+               continue;
+            }
+            plan.buildings().add(placed);
+            session.existing.add(
+               new BuildingInstance(BuildingId.random(), placed.planId(), placed.origin(), placed.rotation(), BuildingInstance.Status.PLANNED)
+            );
+            session.reachability = TerrainReachability.compute(terrainMap, plan.center());
+         }
+         session.phase = WorldgenLayoutSessions.Phase.PLACE_WALLS;
+      }
+
+      if (session.phase == WorldgenLayoutSessions.Phase.PLACE_WALLS) {
+         if (!MaterializationTickBudget.hasTime()) {
+            return false;
+         }
+         if (Boolean.TRUE.equals(MillenaireServerConfig.SERVER.worldgenGenerateStartingWalls.get())) {
+            planWalls(level, plan, villageType, terrainMap, session.reachability);
+         }
+         session.phase = WorldgenLayoutSessions.Phase.PLACE_ROADS_HAMLETS;
+         if (!MaterializationTickBudget.hasTime()) {
+            return false;
+         }
+      }
+
+      if (session.phase == WorldgenLayoutSessions.Phase.PLACE_ROADS_HAMLETS) {
+         if (!MaterializationTickBudget.hasTime()) {
+            return false;
+         }
+         RandomSource roadRng = WorldgenSeeds.stream(plan.worldSeed(), WorldgenSeeds.SALT_ROAD, plan.region());
+         RandomSource hamletRng = WorldgenSeeds.stream(plan.worldSeed(), WorldgenSeeds.SALT_HAMLET, plan.region());
+         if (Boolean.TRUE.equals(MillenaireServerConfig.SERVER.worldgenGenerateInitialRoads.get())
+            && Boolean.TRUE.equals(MillenaireServerConfig.SERVER.buildPaths.get())) {
+            planRoads(plan, roadRng);
+         }
+         if (Boolean.TRUE.equals(MillenaireServerConfig.SERVER.generateHamlets.get()) && !entry.hamlets().isEmpty()) {
+            planHamlets(plan, entry, hamletRng);
+         }
+         session.phase = WorldgenLayoutSessions.Phase.FINALIZE;
+      }
+
+      if (session.phase == WorldgenLayoutSessions.Phase.FINALIZE) {
+         plan.reserveFootprintChunks();
+         if (!plan.trySetStatus(SettlementPlanStatus.RESERVED) && plan.status() == SettlementPlanStatus.PLANNED) {
+            plan.forceStatus(SettlementPlanStatus.RESERVED);
+         }
+         SettlementPlanSavedData.get(level).reindexChunks(plan);
+         SettlementPlanSavedData.get(level).markDirtyPlan();
+         session.phase = WorldgenLayoutSessions.Phase.DONE;
+         WorldgenLayoutSessions.remove(plan.planId());
+         return true;
+      }
+      return false;
+   }
+
+   private static boolean prepareCentreAndStarters(
+      SettlementPlan plan,
+      VillageTypeWorldgenEntry entry,
+      WorldgenLayoutSessions.Session session,
+      VillageTerrainMap terrainMap,
+      RandomSource layoutRng
+   ) {
+      session.reachability = TerrainReachability.compute(terrainMap, plan.center());
       VillageTypeWorldgenEntry.LayoutSlotRef centre = null;
       List<VillageTypeWorldgenEntry.LayoutSlotRef> starters = new ArrayList<>();
       for (VillageTypeWorldgenEntry.LayoutSlotRef slot : entry.layout()) {
@@ -78,15 +258,12 @@ public final class SettlementLayoutPlanner {
       }
       if (centre == null && plan.loneBuilding() && !entry.layout().isEmpty()) {
          centre = entry.layout().getFirst();
-         starters = List.of();
+         starters = new ArrayList<>();
       }
       if (centre == null) {
          plan.markFailed(SettlementFailureReason.MISSING_MANDATORY_BUILDING, "empty_layout");
          return false;
       }
-
-      // Deterministic starter order (no Collections.shuffle)
-      starters = new ArrayList<>(starters);
       starters.sort((a, b) -> {
          int c = Integer.compare(a.planRef().hashCode(), b.planRef().hashCode());
          if (c != 0) {
@@ -94,64 +271,17 @@ public final class SettlementLayoutPlanner {
          }
          return a.role().compareTo(b.role());
       });
-      // Stable Fisher-Yates with layoutRng
       for (int i = starters.size() - 1; i > 0; i--) {
          int j = layoutRng.nextInt(i + 1);
          VillageTypeWorldgenEntry.LayoutSlotRef tmp = starters.get(i);
          starters.set(i, starters.get(j));
          starters.set(j, tmp);
       }
-
-      PlannedBuilding centreBuilding = placeCentre(level, plan, centre, terrainMap, reachability, existing, variantRng);
-      if (centreBuilding == null) {
-         plan.markFailed(SettlementFailureReason.INVALID_TERRAIN, "centre_unreachable");
-         return false;
+      session.centreSlot = centre;
+      session.starters = starters;
+      if (session.existing == null) {
+         session.existing = new ArrayList<>();
       }
-      plan.buildings().add(centreBuilding);
-      existing.add(
-         new BuildingInstance(
-            BuildingId.random(),
-            centreBuilding.planId(),
-            centreBuilding.origin(),
-            centreBuilding.rotation(),
-            BuildingInstance.Status.PLANNED
-         )
-      );
-      reachability = TerrainReachability.compute(terrainMap, plan.center());
-
-      for (VillageTypeWorldgenEntry.LayoutSlotRef slot : starters) {
-         PlannedBuilding placed = placeSlot(level, plan, slot, villageType, terrainMap, reachability, existing, layoutRng, variantRng);
-         if (placed == null) {
-            if (slot.mandatory()) {
-               plan.markFailed(SettlementFailureReason.MISSING_MANDATORY_BUILDING, String.valueOf(slot.planRef()));
-               return false;
-            }
-            continue;
-         }
-         plan.buildings().add(placed);
-         existing.add(
-            new BuildingInstance(BuildingId.random(), placed.planId(), placed.origin(), placed.rotation(), BuildingInstance.Status.PLANNED)
-         );
-         reachability = TerrainReachability.compute(terrainMap, plan.center());
-      }
-
-      if (Boolean.TRUE.equals(MillenaireServerConfig.SERVER.worldgenGenerateStartingWalls.get())) {
-         planWalls(level, plan, villageType, terrainMap, reachability);
-      }
-      if (Boolean.TRUE.equals(MillenaireServerConfig.SERVER.worldgenGenerateInitialRoads.get())
-         && Boolean.TRUE.equals(MillenaireServerConfig.SERVER.buildPaths.get())) {
-         planRoads(plan, layoutRng);
-      }
-      if (Boolean.TRUE.equals(MillenaireServerConfig.SERVER.generateHamlets.get()) && !entry.hamlets().isEmpty()) {
-         planHamlets(plan, entry, layoutRng);
-      }
-
-      plan.reserveFootprintChunks();
-      if (!plan.trySetStatus(SettlementPlanStatus.RESERVED) && plan.status() == SettlementPlanStatus.PLANNED) {
-         plan.forceStatus(SettlementPlanStatus.RESERVED);
-      }
-      SettlementPlanSavedData.get(level).reindexChunks(plan);
-      SettlementPlanSavedData.get(level).markDirtyPlan();
       return true;
    }
 

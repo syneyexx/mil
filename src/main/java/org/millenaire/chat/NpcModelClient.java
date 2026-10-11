@@ -52,7 +52,30 @@ public final class NpcModelClient {
          // Local LM Studio does not require a non-empty API key for normal use.
          return true;
       }
+      // provider=auto with a non-LM URL still needs key+model; port 1234 is treated as LM Studio.
       return resolveApiKey() != null && hasManualModelConfigured();
+   }
+
+   /** Human-readable reason when {@link #isConfigured()} is false; null when configured. */
+   @Nullable
+   public static String notConfiguredMessageKey() {
+      if (!(Boolean)MillenaireServerConfig.SERVER.npcChatEnabled.get()) {
+         return "gui.millenaire.npcchat.disabled";
+      }
+      String baseUrl = MillenaireServerConfig.SERVER.npcChatBaseUrl.get();
+      if (baseUrl == null || baseUrl.isBlank()) {
+         return "gui.millenaire.npcchat.missing_base_url";
+      }
+      if (NpcModelResolver.usesLmStudio()) {
+         return null;
+      }
+      if (resolveApiKey() == null) {
+         return "gui.millenaire.npcchat.missing_api_key";
+      }
+      if (!hasManualModelConfigured()) {
+         return "gui.millenaire.npcchat.missing_manual_model";
+      }
+      return null;
    }
 
    private static boolean hasManualModelConfigured() {
@@ -195,6 +218,7 @@ public final class NpcModelClient {
       }
 
       HttpRequest request = requestBuilder.build();
+      LOGGER.info("NPC chat POST {} model={} target={}", baseUrl + "/chat/completions", model, targetId);
       return CLIENT.sendAsync(request, BodyHandlers.ofString()).handle((response, error) -> {
          if (error != null) {
             LOGGER.warn("NPC chat request failed for {}: {}", targetId, error.toString());
@@ -202,7 +226,11 @@ public final class NpcModelClient {
          }
          int status = response.statusCode();
          if (status < 200 || status >= 300) {
-            LOGGER.warn("NPC chat non-2xx for {}: {}", targetId, status);
+            String snippet = response.body() == null ? "" : response.body();
+            if (snippet.length() > 240) {
+               snippet = snippet.substring(0, 240);
+            }
+            LOGGER.warn("NPC chat non-2xx for {}: {} body={}", targetId, status, snippet);
             return Optional.empty();
          }
          String content = extractContent(response.body());

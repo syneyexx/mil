@@ -155,6 +155,8 @@ public class MillVillager extends PathfinderMob {
    private boolean inRicePaddy;
    private int sleepDebtTicks;
    private boolean guiPreviewMode;
+   private boolean roadShopTraveler;
+   private int roadShopTravelerTicks;
    @Nullable
    private BlockPos lastOutdoorPos;
    private final VillagerCombat combat = new VillagerCombat(this);
@@ -221,6 +223,14 @@ public class MillVillager extends PathfinderMob {
 
    public boolean isRaiderEntity() {
       return this.combat.isRaiderEntity();
+   }
+
+   public boolean isRoadShopTraveler() {
+      return this.roadShopTraveler;
+   }
+
+   public void setRoadShopTraveler(boolean roadShopTraveler) {
+      this.roadShopTraveler = roadShopTraveler;
    }
 
    public void setRaiderEntity(boolean raiderEntity) {
@@ -343,6 +353,10 @@ public class MillVillager extends PathfinderMob {
             }
 
             if (player.isShiftKeyDown()) {
+               if (player.getMainHandItem().isEmpty()
+                  && org.millenaire.faction.crime.PickpocketService.tryPickpocket(serverPlayer, this)) {
+                  return InteractionResult.SUCCESS;
+               }
                org.millenaire.chat.NpcChatService.handleOpen(serverPlayer, this.getId());
                return InteractionResult.SUCCESS;
             }
@@ -473,12 +487,17 @@ public class MillVillager extends PathfinderMob {
          }
       }
 
-      if (cause.getEntity() instanceof ServerPlayer killer && !killer.isCreative() && !killer.isSpectator()) {
+      if (cause.getEntity() instanceof ServerPlayer killer
+         && org.millenaire.combat.CombatHelper.isPlayerTargetable(killer)) {
          VillagerType vType = ModCultures.getVillagerType(this.getVillagerTypeId());
          if (vType != null && vType.hasTag("hostile")) {
             MillAdvancements.grant(killer, MillAdvancements.SELF_DEFENSE);
          } else {
             MillAdvancements.grant(killer, MillAdvancements.DARK_SIDE);
+            if (this.level() instanceof ServerLevel killLevel) {
+               Village killVillage = this.getVillageId() != null ? Village.resolve(killLevel, this.getVillageId()) : null;
+               org.millenaire.faction.crime.CrimeService.onVillagerMurder(killLevel, killer, this, killVillage);
+            }
          }
       }
 
@@ -1054,6 +1073,9 @@ public class MillVillager extends PathfinderMob {
       this.updateSwingTime();
       if (!this.level().isClientSide()) {
          this.combat.tickCombatMaintenance();
+         if (this.roadShopTraveler && ++this.roadShopTravelerTicks > 6000) {
+            this.discard();
+         }
       }
    }
 

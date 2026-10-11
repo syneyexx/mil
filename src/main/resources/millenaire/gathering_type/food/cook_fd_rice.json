@@ -1,0 +1,33 @@
+{
+  "handler": "smelting",
+  "priority": 50,
+  "scanRadius": 32,
+  "batchRadius": 8,
+  "maxActionsPerTask": 3,
+  "actionCooldown": 100,
+  "buildingLimit": {
+    "farmersdelight:cooked_rice": 60
+  },
+  "itemsBalance": {
+    "farmersdelight:rice": "farmersdelight:cooked_rice"
+  },
+  "handlerParams": {
+    "inputs": [
+      {
+        "item": "farmersdelight:rice",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "farmersdelight:cooked_rice",
+        "count": 1
+      }
+    ]
+  },
+  "sentenceKey": "cookrice",
+  "labelKey": "cookrice",
+  "heldItems": [
+    "farmersdelight:rice"
+  ]
+}

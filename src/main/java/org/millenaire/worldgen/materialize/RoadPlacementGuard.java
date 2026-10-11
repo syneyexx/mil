@@ -1,7 +1,7 @@
 package org.millenaire.worldgen.materialize;
 
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
@@ -33,7 +33,9 @@ public final class RoadPlacementGuard {
       BRIDGE_SUPPORT,
       BRIDGE_DECK,
       CLEAR_PASSAGE,
-      CONNECT_EXISTING_PATH
+      CONNECT_EXISTING_PATH,
+      TUNNEL_CARVE,
+      TUNNEL_FLOOR
    }
 
    public enum Decision {
@@ -138,14 +140,20 @@ public final class RoadPlacementGuard {
       boolean registered = isActuallyRegisteredRoad(level, pos);
       boolean matchesDesired = desiredPath != null && BridgePlacementHelper.statesMatch(state, desiredPath);
 
-      if (intent == Intent.CLEAR_PASSAGE) {
+      if (intent == Intent.CLEAR_PASSAGE || intent == Intent.TUNNEL_CARVE) {
          if (state.isAir() || state.canBeReplaced() || isClearableVegetation(state)) {
+            return Result.allow();
+         }
+         if (intent == Intent.TUNNEL_CARVE && isNaturalTerrain(state) && !isBuiltMaterial(state)) {
             return Result.allow();
          }
          return Result.blocked(Decision.BLOCKED_MATERIAL, "passage_blocked");
       }
 
-      if (intent == Intent.PATH_SURFACE || intent == Intent.CONNECT_EXISTING_PATH || intent == Intent.BRIDGE_DECK) {
+      if (intent == Intent.PATH_SURFACE
+         || intent == Intent.CONNECT_EXISTING_PATH
+         || intent == Intent.BRIDGE_DECK
+         || intent == Intent.TUNNEL_FLOOR) {
          if (registered || (matchesDesired && intent != Intent.BRIDGE_DECK)) {
             return Result.already();
          }
@@ -155,10 +163,10 @@ public final class RoadPlacementGuard {
       }
 
       return switch (intent) {
-         case PATH_SURFACE, PATH_SIDE, CONNECT_EXISTING_PATH -> evaluatePathSurface(state);
+         case PATH_SURFACE, PATH_SIDE, CONNECT_EXISTING_PATH, TUNNEL_FLOOR -> evaluatePathSurface(state);
          case BRIDGE_SUPPORT -> evaluateBridgeSupport(state);
          case BRIDGE_DECK -> evaluateBridgeDeck(state, desiredPath);
-         case CLEAR_PASSAGE -> Result.blocked(Decision.BLOCKED_UNKNOWN, "unreachable");
+         case CLEAR_PASSAGE, TUNNEL_CARVE -> Result.blocked(Decision.BLOCKED_UNKNOWN, "unreachable");
       };
    }
 
@@ -328,7 +336,7 @@ public final class RoadPlacementGuard {
       if (RegisteredRoadIndex.isRegistered(level, pos)) {
          return true;
       }
-      List<Village> villages = VillageSavedData.get(level).getVillageManager().getAllVillages();
+      Collection<Village> villages = VillageSavedData.get(level).getVillageManager().getAllVillages();
       long radiusSq = (long)NEARBY_SEARCH_RADIUS * NEARBY_SEARCH_RADIUS;
       for (Village village : villages) {
          if (village.getCenter() == null) {
@@ -376,7 +384,7 @@ public final class RoadPlacementGuard {
    }
 
    private static FootprintProbe intersectsVillageBuilding(ServerLevel level, BlockPos pos) {
-      List<Village> villages = VillageSavedData.get(level).getVillageManager().getAllVillages();
+      Collection<Village> villages = VillageSavedData.get(level).getVillageManager().getAllVillages();
       int scanned = 0;
       boolean anyNearbyUnscanned = false;
       for (Village village : villages) {

@@ -61,6 +61,19 @@ public final class MillenaireVillagerAdapter implements NpcDialogueAdapter {
       if (villager.getTarget() != null || village != null && village.isUnderAttack()) {
          return "gui.millenaire.npcchat.combat";
       }
+      ResourceLocation cultureId = village != null ? village.getCultureId() : null;
+      if (cultureId == null && villager.getVillagerTypeId() != null) {
+         VillagerType typed = ModCultures.getVillagerType(villager.getVillagerTypeId());
+         cultureId = typed != null ? typed.culture() : null;
+      }
+      if (cultureId != null) {
+         var bountyTier = org.millenaire.faction.crime.CultureBountySavedData.get(player.serverLevel())
+            .getManager()
+            .getTier(player.getUUID(), cultureId);
+         if (bountyTier.isAtLeast(org.millenaire.faction.crime.WantedTier.WANTED)) {
+            return "gui.millenaire.npcchat.wanted";
+         }
+      }
       VillagerType vType = villager.getVillagerTypeId() != null ? ModCultures.getVillagerType(villager.getVillagerTypeId()) : null;
       if (vType != null && vType.hasTag("hostile")) {
          boolean targetingPlayer = villager.getTarget() instanceof Player p && p.getUUID().equals(player.getUUID());

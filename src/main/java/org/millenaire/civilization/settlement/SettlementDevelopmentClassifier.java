@@ -45,6 +45,7 @@ public final class SettlementDevelopmentClassifier {
          }
          state.putDevelopmentLabel(village.getId().uuid(), label);
          mutated++;
+         org.millenaire.map.sync.SettlementMapSyncService.markDirty();
          if (previous != null && state.consumeEventBudget()) {
             String key = "dev:" + village.getId().uuid() + ":" + label;
             if (state.tryMarkPublished(key, level.getGameTime(), 24000L * 3L)) {

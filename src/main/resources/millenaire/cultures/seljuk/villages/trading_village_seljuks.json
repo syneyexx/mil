@@ -2,7 +2,9 @@
   "culture": "millenaire:seljuk",
   "biome_tags": [
     "#c:is_desert",
-    "#c:is_savanna"
+    "#c:is_savanna",
+    "#millenaire:is_mediterranean",
+    "#millenaire:is_volcanic"
   ],
   "name": "Ticari Köyü",
   "weight": 5,
@@ -143,6 +145,8 @@
   "ocean_qualifier": "Denizli",
   "path_materials": [
     "pathdirt",
+    "mcw_stone_path",
+    "mcw_gravel_path",
     "pathgravel",
     "pathgravelslabs"
   ],

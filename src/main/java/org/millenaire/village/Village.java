@@ -142,6 +142,8 @@ public class Village {
    private boolean forceActive = false;
    private Set<ChunkPos> loadedChunks = Set.of();
    private boolean chunksNeedRefresh = false;
+   @Nullable
+   private transient Set<ChunkPos> cachedVillageChunks;
    private boolean needsOrphanCleanup = false;
    public static final int CONTROLLED_QUEUE_CAP = 5;
    @Nullable
@@ -618,7 +620,11 @@ public class Village {
    }
 
    public ItemStack getBannerStack(RegistryAccess registryAccess) {
-      return this.bannerNbt == null ? ItemStack.EMPTY : VillageBannerService.parseLegacyBanner(this.bannerNbt, registryAccess);
+      if (this.bannerNbt == null || this.bannerNbt.isBlank()) {
+         return ItemStack.EMPTY;
+      }
+      ItemStack modern = VillageBannerService.parseStoredBanner(this.bannerNbt, registryAccess);
+      return modern.isEmpty() ? VillageBannerService.parseLegacyBanner(this.bannerNbt, registryAccess) : modern;
    }
 
    @Nullable
@@ -1230,9 +1236,15 @@ public class Village {
 
    public void setChunksNeedRefresh(boolean chunksNeedRefresh) {
       this.chunksNeedRefresh = chunksNeedRefresh;
+      if (chunksNeedRefresh) {
+         this.cachedVillageChunks = null;
+      }
    }
 
    public Set<ChunkPos> computeVillageChunks() {
+      if (this.cachedVillageChunks != null) {
+         return this.cachedVillageChunks;
+      }
       AABB bounds = this.computeBounds();
       int minCX = SectionPos.blockToSectionCoord((int)bounds.minX) - 1;
       int maxCX = SectionPos.blockToSectionCoord((int)bounds.maxX) + 1;
@@ -1246,7 +1258,8 @@ public class Village {
          }
       }
 
-      return chunks;
+      this.cachedVillageChunks = Set.copyOf(chunks);
+      return this.cachedVillageChunks;
    }
 
    public void syncRecords(ServerLevel level) {
@@ -1285,7 +1298,14 @@ public class Village {
 
    public void rebuildWaypointGraph(ServerLevel level) {
       this.waypointGraph.rebuild(this.buildings, this.center, level, this);
-      this.waypointRebuildThrottle.onRebuilt(level.getGameTime(), this.waypointGraph.structuralSignature());
+      // Sync rebuild publishes immediately; async rebuild calls onWaypointGraphAsyncPublished later.
+      if (!this.waypointGraph.isAsyncRebuildInFlight()) {
+         this.waypointRebuildThrottle.onRebuilt(level.getGameTime(), this.waypointGraph.structuralSignature());
+      }
+   }
+
+   public void onWaypointGraphAsyncPublished(long gameTime) {
+      this.waypointRebuildThrottle.onRebuilt(gameTime, this.waypointGraph.structuralSignature());
    }
 
    public void markWaypointGraphDirty() {
@@ -1400,7 +1420,11 @@ public class Village {
       }
 
       if (this.waypointRebuildThrottle.isDirty()) {
-         this.rebuildWaypointGraphIfStale(level, 60L);
+         // Defer heavy graph rebuild when the shared tick time budget is already spent.
+         org.millenaire.worldgen.materialize.MaterializationTickBudget.ensureTick(level.getGameTime());
+         if (org.millenaire.worldgen.materialize.MaterializationTickBudget.hasTime()) {
+            this.rebuildWaypointGraphIfStale(level, 60L);
+         }
       }
 
       if (this.integrityTickCounter == 599) {
@@ -1449,6 +1473,10 @@ public class Village {
 
       if (this.isPlayerControlled() && level.getGameTime() % 1000L == 0L) {
          this.placeNegationWandInChests(level);
+      }
+
+      if (this.isPlayerControlled() && level.getGameTime() % 200L == 40L) {
+         DesignatedBuildingService.refreshAll(level, this);
       }
 
       if (level.getGameTime() % 100L == 0L) {
@@ -1548,6 +1576,7 @@ public class Village {
       this.ownerUUID = uuid;
       this.ownerName = name;
       this.markDirty();
+      org.millenaire.map.sync.SettlementMapSyncService.markDirty();
    }
 
    /**

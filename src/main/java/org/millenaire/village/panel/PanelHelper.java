@@ -121,6 +121,10 @@ public final class PanelHelper {
    }
 
    static String getBuildingDisplayName(BuildingInstance building) {
+      if (building.isPlayerDesignated() && building.getPurpose() != null) {
+         return building.getPurpose().fallbackDisplayName();
+      }
+
       if (building.getPlanSetId() != null) {
          BuildingPlanSet planSet = ModCultures.getBuildingPlanSet(building.getPlanSetId());
          if (planSet != null) {

@@ -951,6 +951,44 @@
       "auto_generate": true,
       "min_reputation": 8192,
       "category": "crafting"
+    },
+    {
+      "id": "fd_cooked_rice",
+      "item": "farmersdelight:cooked_rice",
+      "selling_price": 5,
+      "category": "food",
+      "target_quantity": 24
+    },
+    {
+      "id": "fd_vegetable_noodles",
+      "item": "farmersdelight:vegetable_noodles",
+      "selling_price": 12,
+      "category": "food",
+      "target_quantity": 8
+    },
+    {
+      "id": "mcw_cherry_roof",
+      "item": "mcwroofs:cherry_roof",
+      "selling_price": 10,
+      "category": "construction",
+      "buying_price": 3,
+      "target_quantity": 16
+    },
+    {
+      "id": "mcw_paper_wall",
+      "item": "mcwwindows:paper_oak_window",
+      "selling_price": 14,
+      "category": "construction",
+      "buying_price": 4,
+      "target_quantity": 12
+    },
+    {
+      "id": "immersive_warrior_chest",
+      "item": "immersive_armors:warrior_chestplate",
+      "selling_price": 55,
+      "category": "armor",
+      "buying_price": 18,
+      "target_quantity": 2
     }
   ]
 }

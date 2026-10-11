@@ -152,6 +152,7 @@ public record VillagerType(
       if (isHelpInAttacks) {
          resolvedGoals = injectGoal(resolvedGoals, "hunt_monster");
          resolvedGoals = injectGoal(resolvedGoals, "defend_village");
+         resolvedGoals = injectGoal(resolvedGoals, "pursue_wanted");
       }
 
       if (isRaiderTag) {
@@ -160,6 +161,7 @@ public record VillagerType(
 
       if (!isHelpInAttacks && !isRaiderTag) {
          resolvedGoals = injectGoal(resolvedGoals, "hide");
+         resolvedGoals = injectGoal(resolvedGoals, "visit_shop");
       }
 
       if (this.tags.contains("hostile")) {

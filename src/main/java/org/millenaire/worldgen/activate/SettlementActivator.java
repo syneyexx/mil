@@ -28,6 +28,7 @@ import org.millenaire.village.VillageId;
 import org.millenaire.village.VillageManager;
 import org.millenaire.village.VillageSavedData;
 import org.millenaire.village.path.VillagePathManager;
+import org.millenaire.worldgen.materialize.MaterializationTickBudget;
 import org.millenaire.worldgen.plan.PlannedBuilding;
 import org.millenaire.worldgen.plan.SettlementFailureReason;
 import org.millenaire.worldgen.plan.SettlementPlan;
@@ -36,8 +37,8 @@ import org.millenaire.worldgen.plan.SettlementPlanStatus;
 import org.slf4j.Logger;
 
 /**
- * Stage C — server-thread gameplay activation. Idempotent.
- * Physical blocks must already be present (PHYSICAL_COMPLETE).
+ * Stage C — server-thread gameplay activation. Resumable across ticks with stable checkpoints
+ * so partial runs do not duplicate villagers, goods, or completion effects.
  */
 public final class SettlementActivator {
    private static final Logger LOGGER = LogUtils.getLogger();
@@ -45,6 +46,9 @@ public final class SettlementActivator {
    private SettlementActivator() {
    }
 
+   /**
+    * @return true when activation fully completed this call
+    */
    public static boolean tryActivate(ServerLevel level, SettlementPlan plan) {
       if (plan.activated() || plan.status() == SettlementPlanStatus.ACTIVE) {
          return true;
@@ -52,7 +56,6 @@ public final class SettlementActivator {
       if (plan.status() != SettlementPlanStatus.PHYSICAL_COMPLETE && plan.status() != SettlementPlanStatus.ACTIVATING) {
          return false;
       }
-      // Refuse activation until buildings/walls/roads are actually complete (not merely status-flagged).
       if (!plan.isPhysicallyComplete()) {
          return false;
       }
@@ -75,11 +78,9 @@ public final class SettlementActivator {
          VillageSavedData savedData = VillageSavedData.get(level);
          VillageManager manager = savedData.getVillageManager();
          VillageId villageId = new VillageId(plan.villageUuid());
-         Village existing = manager.getVillage(villageId);
-         if (existing != null) {
-            plan.setActivated(true);
-            plan.forceStatus(SettlementPlanStatus.ACTIVE);
-            SettlementPlanSavedData.get(level).markDirtyPlan();
+         Village village = manager.getVillage(villageId);
+         if (village != null && plan.activationBuildingIndex() >= plan.buildings().size() && !plan.activationPathsPending()) {
+            finishActive(level, plan);
             return true;
          }
 
@@ -90,64 +91,94 @@ public final class SettlementActivator {
             return false;
          }
 
-         Village village = new Village(villageId, plan.cultureId(), plan.villageTypeId(), plan.center());
-         String name = plan.plannedName();
-         if (name == null || name.isBlank()) {
-            name = villageType.name() != null ? villageType.name() : plan.villageTypeId().getPath();
-         }
-         village.setVillageName(name);
-
-         if (!villageType.brickColourThemes().isEmpty()) {
-            BrickColourTheme theme = villageType.brickColourThemes().getFirst();
-            village.setBrickTheme(theme);
-         }
-         if (!villageType.bannerJsons().isEmpty()) {
-            village.setBannerNbt(villageType.bannerJsons().getFirst());
-         }
-
-         for (PlannedBuilding pb : plan.buildings()) {
-            BuildingPlan bPlan = ModCultures.getBuildingPlan(pb.planId());
-            if (bPlan == null) {
-               continue;
+         if (village == null) {
+            village = new Village(villageId, plan.cultureId(), plan.villageTypeId(), plan.center());
+            String name = plan.plannedName();
+            if (name == null || name.isBlank()) {
+               name = villageType.name() != null ? villageType.name() : plan.villageTypeId().getPath();
             }
-            BuildingInstance instance = new BuildingInstance(
-               new BuildingId(pb.buildingId()),
-               pb.planId(),
-               pb.origin(),
-               pb.rotation(),
-               BuildingInstance.Status.COMPLETE,
-               pb.planSetId(),
-               pb.variant(),
-               pb.level()
-            );
-            if (village.getBrickTheme() != null) {
-               instance.initBrickColours(village.getBrickTheme(), level.getRandom());
+            village.setVillageName(name);
+            if (!villageType.brickColourThemes().isEmpty()) {
+               BrickColourTheme theme = villageType.brickColourThemes().getFirst();
+               village.setBrickTheme(theme);
             }
-            BuildingFinalizer.applyPostPlacement(level, village, instance, bPlan);
-            village.addBuilding(instance);
-            BuildingFinalizer.applyCompletionEffects(level, village, instance);
-            if (pb.planSetId() != null) {
-               BuildingPlanSet planSet = ModCultures.getBuildingPlanSet(pb.planSetId());
-               if (planSet != null) {
-                  SubBuildingHelper.spawnStartingSubBuildings(level, village, planSet, instance, true);
-                  BuildingPlanSet.LevelDef level0 = planSet.getLevel(pb.variant(), 0);
-                  if (level0 != null) {
-                     SubBuildingHelper.spawnUpgradeSubBuildings(level, village, planSet, level0, instance, false);
+            if (!villageType.bannerJsons().isEmpty()) {
+               village.setBannerNbt(villageType.bannerJsons().getFirst());
+            }
+            manager.addVillage(village);
+            if (plan.isEmptyFounding() && plan.foundingFactionId() != null) {
+               assignFoundingFaction(level, village, plan.foundingFactionId());
+            } else {
+               FactionLifecycle.onVillageRegistered(level, village);
+            }
+            if (plan.loneBuilding()) {
+               String culturePath = plan.cultureId() != null ? plan.cultureId().getPath() : "";
+               savedData.registerLoneBuilding(plan.center(), plan.villageTypeId(), culturePath, null);
+            }
+            if (plan.parentPlanId() != null) {
+               SettlementPlan parent = SettlementPlanSavedData.get(level).getPlan(plan.parentPlanId());
+               if (parent != null) {
+                  village.setParentVillageId(new VillageId(parent.villageUuid()));
+               }
+            }
+            savedData.setDirty();
+            SettlementPlanSavedData.get(level).markDirtyPlan();
+         }
+
+         // Register buildings in small steps under the shared time budget.
+         int index = plan.activationBuildingIndex();
+         while (index < plan.buildings().size()) {
+            if (!MaterializationTickBudget.hasTime()) {
+               plan.setActivationBuildingIndex(index);
+               SettlementPlanSavedData.get(level).markDirtyPlan();
+               return false;
+            }
+            PlannedBuilding pb = plan.buildings().get(index);
+            BuildingId bid = new BuildingId(pb.buildingId());
+            if (village.getBuilding(bid) == null) {
+               BuildingPlan bPlan = ModCultures.getBuildingPlan(pb.planId());
+               if (bPlan != null) {
+                  BuildingInstance instance = new BuildingInstance(
+                     bid,
+                     pb.planId(),
+                     pb.origin(),
+                     pb.rotation(),
+                     BuildingInstance.Status.COMPLETE,
+                     pb.planSetId(),
+                     pb.variant(),
+                     pb.level()
+                  );
+                  if (village.getBrickTheme() != null) {
+                     instance.initBrickColours(village.getBrickTheme(), level.getRandom());
                   }
-                  // Colonies receive founders via migration — never invent free natural residents.
-                  if (!plan.isColonizationFounding()) {
-                     VillageGrowthManager.spawnBuildingOccupants(level, village, planSet, instance);
+                  BuildingFinalizer.applyPostPlacement(level, village, instance, bPlan);
+                  village.addBuilding(instance);
+                  BuildingFinalizer.applyCompletionEffects(level, village, instance);
+                  if (pb.planSetId() != null) {
+                     BuildingPlanSet planSet = ModCultures.getBuildingPlanSet(pb.planSetId());
+                     if (planSet != null) {
+                        SubBuildingHelper.spawnStartingSubBuildings(level, village, planSet, instance, true);
+                        BuildingPlanSet.LevelDef level0 = planSet.getLevel(pb.variant(), 0);
+                        if (level0 != null) {
+                           SubBuildingHelper.spawnUpgradeSubBuildings(level, village, planSet, level0, instance, false);
+                        }
+                        if (!plan.isEmptyFounding()) {
+                           VillageGrowthManager.spawnBuildingOccupants(level, village, planSet, instance);
+                        }
+                     }
                   }
                }
             }
+            index++;
+            plan.setActivationBuildingIndex(index);
+            SettlementPlanSavedData.get(level).markDirtyPlan();
          }
 
          if (!plan.inventoriesInitialized()) {
             BuildingInstance centre = village.getBuildings().isEmpty() ? null : village.getBuildings().getFirst();
             if (centre != null && centre.getPlanSetId() != null) {
                BuildingPlanSet centrePlanSet = ModCultures.getBuildingPlanSet(centre.getPlanSetId());
-               // Colonization spends reserved parent goods; do not grant free starting stock.
-               if (!plan.isColonizationFounding()
+               if (!plan.isEmptyFounding()
                   && centrePlanSet != null
                   && !centrePlanSet.startingGoods().isEmpty()) {
                   village.fillStartingGoods(level, centre, centrePlanSet, true);
@@ -159,47 +190,33 @@ public final class SettlementActivator {
                }
             }
             plan.setInventoriesInitialized(true);
+            SettlementPlanSavedData.get(level).markDirtyPlan();
          }
-
-         if (plan.parentPlanId() != null) {
-            SettlementPlan parent = SettlementPlanSavedData.get(level).getPlan(plan.parentPlanId());
-            if (parent != null) {
-               village.setParentVillageId(new VillageId(parent.villageUuid()));
-            }
-         }
-
-         manager.addVillage(village);
-         if (plan.isColonizationFounding() && plan.foundingFactionId() != null) {
-            assignFoundingFaction(level, village, plan.foundingFactionId());
-         } else {
-            FactionLifecycle.onVillageRegistered(level, village);
-         }
-         if (plan.loneBuilding()) {
-            String culturePath = plan.cultureId() != null ? plan.cultureId().getPath() : "";
-            savedData.registerLoneBuilding(plan.center(), plan.villageTypeId(), culturePath, null);
-         }
-         savedData.setDirty();
 
          if (!plan.loneBuilding() && Boolean.TRUE.equals(org.millenaire.config.MillenaireServerConfig.SERVER.buildPaths.get())) {
+            // Mark dirty so VillagePathManager.startRecalcIfDirty drains A* across later ticks
+            // instead of blocking activation with a one-shot full recalculate.
             try {
                VillagePathManager pathManager = village.getPathManager();
                if (pathManager != null) {
-                  pathManager.recalculatePaths(level, village, true);
+                  pathManager.markPathsDirty();
                }
             } catch (Exception pathEx) {
-               LOGGER.warn("[Millenaire] Path activation deferred for {}: {}", plan.planId(), pathEx.getMessage());
+               LOGGER.warn("[Millenaire] Path activation mark deferred for {}: {}", plan.planId(), pathEx.getMessage());
             }
+            plan.setActivationPathsPending(false);
+            SettlementPlanSavedData.get(level).markDirtyPlan();
          }
 
-         // Colonization emits its own founding event after founders migrate successfully.
-         if (!plan.isColonizationFounding()) {
+         if (!plan.isEmptyFounding()) {
             emitOptionalPhase3Event(level, village);
+            if (!plan.loneBuilding()) {
+               org.millenaire.compat.WaystoneVillagePlacer.tryPlace(level, village);
+            }
+            org.millenaire.worldgen.highway.HighwayDiscoveryService.onVillageActivated(level, village);
          }
 
-         plan.setActivated(true);
-         plan.forceStatus(SettlementPlanStatus.ACTIVE);
-         SettlementPlanSavedData.get(level).markDirtyPlan();
-         WorldgenMetrics.ACTIVATIONS.incrementAndGet();
+         finishActive(level, plan);
          LOGGER.info(
             "[Millenaire] Activated worldgen settlement {} '{}' type={} at {}",
             plan.planId(),
@@ -215,6 +232,14 @@ public final class SettlementActivator {
          SettlementPlanSavedData.get(level).markDirtyPlan();
          return false;
       }
+   }
+
+   private static void finishActive(ServerLevel level, SettlementPlan plan) {
+      plan.setActivated(true);
+      plan.setActivationPathsPending(false);
+      plan.forceStatus(SettlementPlanStatus.ACTIVE);
+      SettlementPlanSavedData.get(level).markDirtyPlan();
+      WorldgenMetrics.ACTIVATIONS.incrementAndGet();
    }
 
    private static void assignFoundingFaction(ServerLevel level, Village village, String factionIdRaw) {

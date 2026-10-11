@@ -2,7 +2,9 @@
   "culture": "millenaire:byzantines",
   "biome_tags": [
     "#c:is_savanna",
-    "#c:is_hill"
+    "#c:is_hill",
+    "#millenaire:is_mediterranean",
+    "#millenaire:is_lavender"
   ],
   "name": "Archaíos Naós",
   "weight": 8,

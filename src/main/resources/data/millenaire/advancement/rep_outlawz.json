@@ -1,0 +1,13 @@
+{
+  "parent": "millenaire:friendindeed",
+  "display": {
+    "icon": { "item": "minecraft:skeleton_skull" },
+    "title": { "translate": "advancement.millenaire.rep_outlawz" },
+    "description": { "translate": "advancement.millenaire.rep_outlawz.desc" }
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

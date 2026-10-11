@@ -45,6 +45,7 @@ import org.millenaire.world.PlacementConstraints;
 import org.millenaire.world.TerrainPreparer;
 import org.millenaire.world.TerrainReachability;
 import org.millenaire.world.VillageTerrainMap;
+import org.millenaire.world.VillageTerrainMapCache;
 import org.slf4j.Logger;
 
 public final class VillageGrowthManager {
@@ -342,7 +343,11 @@ public final class VillageGrowthManager {
       long currentTick = level.getGameTime();
       VillageType vt = ModCultures.getVillageType(village.getVillageTypeId());
       int radius = vt != null ? vt.radius() : 90;
-      VillageTerrainMap terrainMap = VillageTerrainMap.compute(level, village.getCenter(), radius);
+      VillageTerrainMap terrainMap = VillageTerrainMapCache.obtain(level, village.getId().uuid(), village.getCenter(), radius);
+      if (terrainMap == null) {
+         // Terrain scan still in progress or waiting for loaded chunks — retry next growth tick.
+         return false;
+      }
       markExistingBuildingsOccupied(terrainMap, village);
       TerrainReachability reachability = TerrainReachability.compute(terrainMap, village.getCenter());
       PlacementConstraints constraints = PlacementConstraints.resolve(planSet, slot, radius);
@@ -357,6 +362,7 @@ public final class VillageGrowthManager {
       if (location == null) {
          LOGGER.warn("[Millenaire] Growth: no location found for {}, cooldown {}s", planSet.id(), 80L);
          addPlacementCooldown(village, planSet.id(), currentTick);
+         VillageTerrainMapCache.invalidate(village.getId().uuid());
          return false;
       }
 
@@ -656,7 +662,10 @@ public final class VillageGrowthManager {
       } else {
          VillageType vt = ModCultures.getVillageType(village.getVillageTypeId());
          int radius = vt != null ? vt.radius() : 90;
-         terrainMap = VillageTerrainMap.compute(level, village.getCenter(), radius);
+         terrainMap = VillageTerrainMapCache.obtain(level, village.getId().uuid(), village.getCenter(), radius);
+         if (terrainMap == null) {
+            return null;
+         }
          markExistingBuildingsOccupied(terrainMap, village);
       }
 
@@ -831,6 +840,10 @@ public final class VillageGrowthManager {
    }
 
    public static void spawnBuildingOccupants(ServerLevel level, Village village, BuildingPlanSet planSet, BuildingInstance building) {
+      if (org.millenaire.civilization.settlement.PlayerSettlementFoundingService.isSovereignPlayerSettlement(level, village)) {
+         // Sovereign settlements fill via immigration / births — never free occupants.
+         return;
+      }
       String sharedFamilyName = null;
       if (!planSet.maleResidents().isEmpty() && !planSet.femaleResidents().isEmpty()) {
          String culturePath = village.getCultureId().getPath();
@@ -868,6 +881,14 @@ public final class VillageGrowthManager {
       for (int i = 1; i < planSet.femaleResidents().size(); i++) {
          spawnOccupant(level, village, planSet.femaleResidents().get(i), building, sharedFamilyName);
       }
+   }
+
+   /** Public entry for traveler immigration into a free residential slot. */
+   @Nullable
+   public static MillVillager spawnImmigrantOccupant(
+      ServerLevel level, Village village, String villagerName, BuildingInstance building
+   ) {
+      return spawnOccupant(level, village, villagerName, building, null);
    }
 
    @Nullable
@@ -1281,7 +1302,24 @@ public final class VillageGrowthManager {
    ) {
       VillageType vt = ModCultures.getVillageType(village.getVillageTypeId());
       int radius = vt != null ? vt.radius() : 90;
-      VillageTerrainMap terrainMap = VillageTerrainMap.compute(level, village.getCenter(), radius);
+      VillageTerrainMap terrainMap = VillageTerrainMapCache.obtain(level, village.getId().uuid(), village.getCenter(), radius);
+      if (terrainMap == null) {
+         // Player-driven path: finish scan synchronously only for already-loaded columns.
+         VillageTerrainMap.ScanSession session = VillageTerrainMap.beginScan(
+            village.getCenter(), radius, level.getMinBuildHeight(), level.getMaxBuildHeight()
+         );
+         while (session.status() == VillageTerrainMap.ScanSession.Status.IN_PROGRESS
+            || session.status() == VillageTerrainMap.ScanSession.Status.WAITING_CHUNKS) {
+            if (session.advance(level, Integer.MAX_VALUE, Long.MAX_VALUE, false)
+               == VillageTerrainMap.ScanSession.Status.WAITING_CHUNKS) {
+               return null;
+            }
+         }
+         terrainMap = session.result();
+         if (terrainMap == null) {
+            return null;
+         }
+      }
       markExistingBuildingsOccupied(terrainMap, village);
       TerrainReachability reachability = TerrainReachability.compute(terrainMap, village.getCenter());
       PlacementConstraints constraints = PlacementConstraints.resolve(planSet, slot, radius);
@@ -1302,7 +1340,23 @@ public final class VillageGrowthManager {
    ) {
       VillageType vt = ModCultures.getVillageType(village.getVillageTypeId());
       int radius = vt != null ? vt.radius() : 90;
-      VillageTerrainMap terrainMap = VillageTerrainMap.compute(level, village.getCenter(), radius);
+      VillageTerrainMap terrainMap = VillageTerrainMapCache.obtain(level, village.getId().uuid(), village.getCenter(), radius);
+      if (terrainMap == null) {
+         VillageTerrainMap.ScanSession session = VillageTerrainMap.beginScan(
+            village.getCenter(), radius, level.getMinBuildHeight(), level.getMaxBuildHeight()
+         );
+         while (session.status() == VillageTerrainMap.ScanSession.Status.IN_PROGRESS
+            || session.status() == VillageTerrainMap.ScanSession.Status.WAITING_CHUNKS) {
+            if (session.advance(level, Integer.MAX_VALUE, Long.MAX_VALUE, false)
+               == VillageTerrainMap.ScanSession.Status.WAITING_CHUNKS) {
+               return new BuildingLocationFinder.AnchorEvaluation(null, BuildingLocationFinder.FailureReason.GENERIC, null);
+            }
+         }
+         terrainMap = session.result();
+         if (terrainMap == null) {
+            return new BuildingLocationFinder.AnchorEvaluation(null, BuildingLocationFinder.FailureReason.GENERIC, null);
+         }
+      }
       markExistingBuildingsOccupied(terrainMap, village);
       TerrainReachability reachability = TerrainReachability.compute(terrainMap, village.getCenter());
       PlacementConstraints constraints = PlacementConstraints.resolve(planSet, slot, radius);

@@ -49,7 +49,11 @@
     "millenaire:craft_timberframecrosspine",
     "millenaire:craft_timberframecrossjungle",
     "millenaire:craft_timberframecrossacacia",
-    "millenaire:craft_timberframecrossdarkoak"
+    "millenaire:craft_timberframecrossdarkoak",
+    "millenaire:craft_mcw_roof_oak",
+    "millenaire:craft_mcw_window_oak",
+    "millenaire:craft_supplementaries_lantern",
+    "millenaire:craft_create_cogwheel"
   ],
   "tags": [
     "helpInAttacks"

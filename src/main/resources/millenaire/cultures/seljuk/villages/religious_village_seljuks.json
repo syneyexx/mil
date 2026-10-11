@@ -3,7 +3,9 @@
   "biome_tags": [
     "#c:is_desert",
     "#c:is_badlands",
-    "#c:is_savanna"
+    "#c:is_savanna",
+    "#millenaire:is_mediterranean",
+    "#millenaire:is_volcanic"
   ],
   "name": "Dini Köy",
   "weight": 10,

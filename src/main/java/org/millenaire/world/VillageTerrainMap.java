@@ -1,5 +1,7 @@
 package org.millenaire.world;
 
+import java.util.Optional;
+import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
@@ -10,6 +12,7 @@ import net.minecraft.world.level.block.StainedGlassPaneBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import org.millenaire.building.ClearMargins;
 import org.millenaire.tag.ModTags;
+import org.millenaire.worldgen.terrain.WorldgenChunkAccess;
 
 public class VillageTerrainMap {
    private static final int ALTITUDE_TOLERANCE = 10;
@@ -119,108 +122,276 @@ public class VillageTerrainMap {
       }
    }
 
+   /**
+    * Full synchronous scan (may generate chunks via {@link ServerLevel#getBlockState}).
+    * Prefer {@link #beginScan} + {@link ScanSession#advance} on the worldgen tick path.
+    */
    public static VillageTerrainMap compute(ServerLevel level, BlockPos villageCenter, int radius) {
-      int size = 2 * radius + 1;
-      int originX = villageCenter.getX() - radius;
-      int originZ = villageCenter.getZ() - radius;
-      BlockPos origin = new BlockPos(originX, villageCenter.getY(), originZ);
-      int baseline = villageCenter.getY();
-      int miny = Math.max(baseline - 25, level.getMinBuildHeight());
-      int maxy = Math.min(baseline + 25, level.getMaxBuildHeight());
-      int[][] topGround = new int[size][size];
-      boolean[][] canBuild = new boolean[size][size];
-      boolean[][] danger = new boolean[size][size];
-      boolean[][] water = new boolean[size][size];
-      boolean[][] buildingForbidden = new boolean[size][size];
-      short[][] spaceAbove = new short[size][size];
+      ScanSession session = beginScan(villageCenter, radius, level.getMinBuildHeight(), level.getMaxBuildHeight());
+      while (session.status() == ScanSession.Status.IN_PROGRESS) {
+         session.advance(level, Integer.MAX_VALUE, Long.MAX_VALUE, true);
+      }
+      if (session.status() != ScanSession.Status.COMPLETE || session.result() == null) {
+         throw new IllegalStateException("VillageTerrainMap.compute failed: " + session.status());
+      }
+      return session.result();
+   }
 
-      for (int lx = 0; lx < size; lx++) {
-         for (int lz = 0; lz < size; lz++) {
-            int wx = originX + lx;
-            int wz = originZ + lz;
-            boolean hasForbidden = false;
-            int groundY = miny;
+   public static ScanSession beginScan(BlockPos villageCenter, int radius, int minBuildHeight, int maxBuildHeight) {
+      return new ScanSession(villageCenter, radius, minBuildHeight, maxBuildHeight);
+   }
 
-            for (int y = maxy; y >= miny; y--) {
-               BlockPos pos = new BlockPos(wx, y, wz);
-               BlockState state = level.getBlockState(pos);
-               if (isForbidden(level, pos, state)) {
-                  hasForbidden = true;
-               }
-
-               if (isGround(state)) {
-                  groundY = y;
-                  break;
-               }
-            }
-
-            boolean onGround = true;
-            int lastLiquid = groundY;
-            int surfaceY = groundY;
-
-            for (int y = groundY + 1; y <= maxy; surfaceY = y++) {
-               BlockState state = level.getBlockState(new BlockPos(wx, y, wz));
-               if (!state.getFluidState().isEmpty()) {
-                  onGround = false;
-                  lastLiquid = y;
-               } else {
-                  if (!state.canOcclude() || state.is(BlockTags.REPLACEABLE)) {
-                     surfaceY = y;
-                     break;
-                  }
-
-                  onGround = true;
-               }
-            }
-
-            if (!onGround) {
-               surfaceY = lastLiquid;
-            }
-
-            topGround[lx][lz] = surfaceY;
-            BlockState groundState = level.getBlockState(new BlockPos(wx, groundY, wz));
-            boolean hasDanger = isDangerous(groundState);
-            if (!hasDanger) {
-               BlockState surfaceState = level.getBlockState(new BlockPos(wx, surfaceY, wz));
-               hasDanger = isDangerous(surfaceState);
-            }
-
-            boolean hasWater = !level.getFluidState(new BlockPos(wx, surfaceY, wz)).isEmpty();
-
-            for (int y = surfaceY; y <= maxy; y++) {
-               BlockPos pos = new BlockPos(wx, y, wz);
-               BlockState state = level.getBlockState(pos);
-               if (isForbidden(level, pos, state)) {
-                  hasForbidden = true;
-               }
-
-               if (isDangerous(state)) {
-                  hasDanger = true;
-               }
-            }
-
-            short sa = 0;
-            boolean blocked = false;
-
-            for (int y = surfaceY; y < surfaceY + 3 && y <= maxy; y++) {
-               BlockState state = level.getBlockState(new BlockPos(wx, y, wz));
-               if (blocked || state.canOcclude() && !state.is(BlockTags.REPLACEABLE)) {
-                  blocked = true;
-               } else {
-                  sa++;
-               }
-            }
-
-            danger[lx][lz] = hasDanger;
-            water[lx][lz] = hasWater;
-            buildingForbidden[lx][lz] = hasForbidden;
-            spaceAbove[lx][lz] = sa;
-            boolean altitudeOk = surfaceY > baseline - 10 && surfaceY < baseline + 10;
-            canBuild[lx][lz] = altitudeOk && !hasDanger && !hasForbidden;
-         }
+   /**
+    * Resumable column scanner. Missing chunks yield {@link Status#WAITING_CHUNKS} when
+    * {@code allowGeneration} is false — never treated as invalid terrain.
+    */
+   public static final class ScanSession {
+      public enum Status {
+         IN_PROGRESS,
+         WAITING_CHUNKS,
+         COMPLETE
       }
 
-      return new VillageTerrainMap(origin, size, baseline, topGround, canBuild, danger, water, buildingForbidden, spaceAbove);
+      private final BlockPos origin;
+      private final int size;
+      private final int baseline;
+      private final int miny;
+      private final int maxy;
+      private final int[][] topGround;
+      private final boolean[][] canBuild;
+      private final boolean[][] danger;
+      private final boolean[][] water;
+      private final boolean[][] buildingForbidden;
+      private final short[][] spaceAbove;
+      private int cursorLx;
+      private int cursorLz;
+      private Status status = Status.IN_PROGRESS;
+      @Nullable
+      private VillageTerrainMap result;
+
+      private ScanSession(BlockPos villageCenter, int radius, int minBuildHeight, int maxBuildHeight) {
+         int size = 2 * radius + 1;
+         int originX = villageCenter.getX() - radius;
+         int originZ = villageCenter.getZ() - radius;
+         this.origin = new BlockPos(originX, villageCenter.getY(), originZ);
+         this.size = size;
+         this.baseline = villageCenter.getY();
+         this.miny = Math.max(this.baseline - 25, minBuildHeight);
+         this.maxy = Math.min(this.baseline + 25, maxBuildHeight);
+         this.topGround = new int[size][size];
+         this.canBuild = new boolean[size][size];
+         this.danger = new boolean[size][size];
+         this.water = new boolean[size][size];
+         this.buildingForbidden = new boolean[size][size];
+         this.spaceAbove = new short[size][size];
+      }
+
+      public Status status() {
+         return this.status;
+      }
+
+      @Nullable
+      public VillageTerrainMap result() {
+         return this.result;
+      }
+
+      public int cursorIndex() {
+         return this.cursorLx * this.size + this.cursorLz;
+      }
+
+      public int totalColumns() {
+         return this.size * this.size;
+      }
+
+      /**
+       * Scan up to {@code maxColumns} columns or until {@code deadlineNanos}.
+       * @param allowGeneration when false, only {@link WorldgenChunkAccess} reads are used
+       */
+      public Status advance(ServerLevel level, int maxColumns, long deadlineNanos, boolean allowGeneration) {
+         if (this.status == Status.COMPLETE) {
+            return this.status;
+         }
+         this.status = Status.IN_PROGRESS;
+         int scanned = 0;
+         while (this.cursorLx < this.size) {
+            if (scanned >= maxColumns || System.nanoTime() >= deadlineNanos) {
+               return this.status;
+            }
+            int wx = this.origin.getX() + this.cursorLx;
+            int wz = this.origin.getZ() + this.cursorLz;
+            int distSq = (wx - (this.origin.getX() + this.size / 2)) * (wx - (this.origin.getX() + this.size / 2))
+               + (wz - (this.origin.getZ() + this.size / 2)) * (wz - (this.origin.getZ() + this.size / 2));
+            // Core columns near the village centre must be loaded; peripheral AABB corners often
+            // sit outside the circular view-distance disc — mark those unbuildable and continue.
+            boolean coreColumn = distSq <= 32 * 32;
+            if (!allowGeneration && !WorldgenChunkAccess.isColumnLoaded(level, wx, wz)) {
+               if (coreColumn) {
+                  this.status = Status.WAITING_CHUNKS;
+                  return this.status;
+               }
+               markUnbuildable(this.cursorLx, this.cursorLz);
+               scanned++;
+               this.cursorLz++;
+               if (this.cursorLz >= this.size) {
+                  this.cursorLz = 0;
+                  this.cursorLx++;
+               }
+               continue;
+            }
+            if (!scanColumn(level, this.cursorLx, this.cursorLz, wx, wz, allowGeneration)) {
+               if (coreColumn) {
+                  this.status = Status.WAITING_CHUNKS;
+                  return this.status;
+               }
+               markUnbuildable(this.cursorLx, this.cursorLz);
+            }
+            scanned++;
+            this.cursorLz++;
+            if (this.cursorLz >= this.size) {
+               this.cursorLz = 0;
+               this.cursorLx++;
+            }
+         }
+         this.result = new VillageTerrainMap(
+            this.origin,
+            this.size,
+            this.baseline,
+            this.topGround,
+            this.canBuild,
+            this.danger,
+            this.water,
+            this.buildingForbidden,
+            this.spaceAbove
+         );
+         this.status = Status.COMPLETE;
+         return this.status;
+      }
+
+      private boolean scanColumn(ServerLevel level, int lx, int lz, int wx, int wz, boolean allowGeneration) {
+         boolean hasForbidden = false;
+         int groundY = this.miny;
+
+         for (int y = this.maxy; y >= this.miny; y--) {
+            BlockPos pos = new BlockPos(wx, y, wz);
+            Optional<BlockState> stateOpt = readState(level, pos, allowGeneration);
+            if (stateOpt.isEmpty()) {
+               return false;
+            }
+            BlockState state = stateOpt.get();
+            if (isForbidden(level, pos, state)) {
+               hasForbidden = true;
+            }
+            if (isGround(state)) {
+               groundY = y;
+               break;
+            }
+         }
+
+         boolean onGround = true;
+         int lastLiquid = groundY;
+         int surfaceY = groundY;
+
+         for (int y = groundY + 1; y <= this.maxy; surfaceY = y++) {
+            Optional<BlockState> stateOpt = readState(level, new BlockPos(wx, y, wz), allowGeneration);
+            if (stateOpt.isEmpty()) {
+               return false;
+            }
+            BlockState state = stateOpt.get();
+            if (!state.getFluidState().isEmpty()) {
+               onGround = false;
+               lastLiquid = y;
+            } else {
+               if (!state.canOcclude() || state.is(BlockTags.REPLACEABLE)) {
+                  surfaceY = y;
+                  break;
+               }
+               onGround = true;
+            }
+         }
+
+         if (!onGround) {
+            surfaceY = lastLiquid;
+         }
+
+         this.topGround[lx][lz] = surfaceY;
+         Optional<BlockState> groundStateOpt = readState(level, new BlockPos(wx, groundY, wz), allowGeneration);
+         if (groundStateOpt.isEmpty()) {
+            return false;
+         }
+         boolean hasDanger = isDangerous(groundStateOpt.get());
+         if (!hasDanger) {
+            Optional<BlockState> surfaceStateOpt = readState(level, new BlockPos(wx, surfaceY, wz), allowGeneration);
+            if (surfaceStateOpt.isEmpty()) {
+               return false;
+            }
+            hasDanger = isDangerous(surfaceStateOpt.get());
+         }
+
+         boolean hasWater;
+         if (allowGeneration) {
+            hasWater = !level.getFluidState(new BlockPos(wx, surfaceY, wz)).isEmpty();
+         } else {
+            var fluid = WorldgenChunkAccess.fluidState(level, new BlockPos(wx, surfaceY, wz));
+            if (fluid.isEmpty()) {
+               return false;
+            }
+            hasWater = !fluid.get().isEmpty();
+         }
+
+         for (int y = surfaceY; y <= this.maxy; y++) {
+            BlockPos pos = new BlockPos(wx, y, wz);
+            Optional<BlockState> stateOpt = readState(level, pos, allowGeneration);
+            if (stateOpt.isEmpty()) {
+               return false;
+            }
+            BlockState state = stateOpt.get();
+            if (isForbidden(level, pos, state)) {
+               hasForbidden = true;
+            }
+            if (isDangerous(state)) {
+               hasDanger = true;
+            }
+         }
+
+         short sa = 0;
+         boolean blocked = false;
+         for (int y = surfaceY; y < surfaceY + 3 && y <= this.maxy; y++) {
+            Optional<BlockState> stateOpt = readState(level, new BlockPos(wx, y, wz), allowGeneration);
+            if (stateOpt.isEmpty()) {
+               return false;
+            }
+            BlockState state = stateOpt.get();
+            if (blocked || state.canOcclude() && !state.is(BlockTags.REPLACEABLE)) {
+               blocked = true;
+            } else {
+               sa++;
+            }
+         }
+
+         this.danger[lx][lz] = hasDanger;
+         this.water[lx][lz] = hasWater;
+         this.buildingForbidden[lx][lz] = hasForbidden;
+         this.spaceAbove[lx][lz] = sa;
+         boolean altitudeOk = surfaceY > this.baseline - 10 && surfaceY < this.baseline + 10;
+         this.canBuild[lx][lz] = altitudeOk && !hasDanger && !hasForbidden;
+         return true;
+      }
+
+      private void markUnbuildable(int lx, int lz) {
+         this.topGround[lx][lz] = this.baseline;
+         this.canBuild[lx][lz] = false;
+         this.danger[lx][lz] = false;
+         this.water[lx][lz] = false;
+         this.buildingForbidden[lx][lz] = true;
+         this.spaceAbove[lx][lz] = 0;
+      }
+
+      private static Optional<BlockState> readState(ServerLevel level, BlockPos pos, boolean allowGeneration) {
+         if (allowGeneration) {
+            return Optional.of(level.getBlockState(pos));
+         }
+         return WorldgenChunkAccess.blockState(level, pos);
+      }
    }
 
    public int toLocalX(int worldX) {

@@ -7,7 +7,11 @@ import java.util.List;
 import net.minecraft.server.level.ServerLevel;
 import org.millenaire.civilization.bridge.CivilizationEventBridge;
 import org.millenaire.civilization.bridge.NeedsTradeBridge;
+import org.millenaire.civilization.interaction.InteractionTicker;
+import org.millenaire.civilization.interaction.RefugeeService;
+import org.millenaire.civilization.interaction.TradeCorridorService;
 import org.millenaire.civilization.offscreen.OffscreenReconciler;
+import org.millenaire.civilization.population.ImmigrationEvaluator;
 import org.millenaire.civilization.population.MigrationEvaluator;
 import org.millenaire.civilization.population.MigrationTransactionService;
 import org.millenaire.civilization.population.PopulationAggregator;
@@ -66,61 +70,72 @@ public final class CivilizationOrchestrator {
 
       LivingEventService.beginTick(gameTime);
 
-      runIfDue(overworld, state, CivilizationStage.EVENT_INGEST, gameTime, CivilizationConfig.STAGE_EVENT_INGEST_INTERVAL, () -> {
+      boolean stageWork = false;
+      stageWork |= runIfDue(overworld, state, CivilizationStage.EVENT_INGEST, gameTime, CivilizationConfig.STAGE_EVENT_INGEST_INTERVAL, () -> {
          CivilizationEventBridge.ingestPending(overworld, state);
       });
 
-      runIfDue(overworld, state, CivilizationStage.MEMBERSHIP_RECONCILE, gameTime, CivilizationConfig.STAGE_MEMBERSHIP_INTERVAL, () -> {
+      stageWork |= runIfDue(overworld, state, CivilizationStage.MEMBERSHIP_RECONCILE, gameTime, CivilizationConfig.STAGE_MEMBERSHIP_INTERVAL, () -> {
          reconcileMemberships(overworld, state);
       });
 
       // Relationship decay is lightweight and safe every orchestrator pass (manager has its own internal cadence).
       safe(overworld, "relationships", () -> RelationshipSavedData.get(overworld).getRelationshipManager().tickDecay(overworld));
 
-      runIfDue(overworld, state, CivilizationStage.ECONOMY, gameTime, CivilizationConfig.STAGE_ECONOMY_INTERVAL, () -> {
+      stageWork |= runIfDue(overworld, state, CivilizationStage.ECONOMY, gameTime, CivilizationConfig.STAGE_ECONOMY_INTERVAL, () -> {
          EconomySavedData.get(overworld).getTradeManager().tick(overworld);
          NeedsTradeBridge.syncNeedsToEconomy(overworld, state);
+         TradeCorridorService.refreshDisruptions(overworld);
       });
 
-      runIfDue(overworld, state, CivilizationStage.POLITICS, gameTime, CivilizationConfig.STAGE_POLITICS_INTERVAL, () -> {
+      stageWork |= runIfDue(overworld, state, CivilizationStage.POLITICS, gameTime, CivilizationConfig.STAGE_POLITICS_INTERVAL, () -> {
          PoliticsSavedData.get(overworld).getPoliticsManager().tick(overworld);
          CivilizationEventBridge.publishPoliticsChanges(overworld, state);
       });
 
-      runIfDue(overworld, state, CivilizationStage.DIPLOMACY, gameTime, CivilizationConfig.STAGE_DIPLOMACY_INTERVAL, () -> {
+      stageWork |= runIfDue(overworld, state, CivilizationStage.DIPLOMACY, gameTime, CivilizationConfig.STAGE_DIPLOMACY_INTERVAL, () -> {
          DiplomacySavedData.get(overworld).getDiplomaticManager().tick(overworld);
+         org.millenaire.faction.diplomacy.DiplomaticAiEvaluator.tick(overworld);
+         InteractionTicker.tick(overworld);
          CivilizationEventBridge.publishDiplomacyChanges(overworld, state);
       });
 
-      runIfDue(overworld, state, CivilizationStage.MILITARY, gameTime, CivilizationConfig.STAGE_MILITARY_INTERVAL, () -> {
+      stageWork |= runIfDue(overworld, state, CivilizationStage.MILITARY, gameTime, CivilizationConfig.STAGE_MILITARY_INTERVAL, () -> {
          MilitarySavedData.get(overworld).getMilitaryManager().tick(overworld);
       });
 
-      runIfDue(overworld, state, CivilizationStage.WAR, gameTime, CivilizationConfig.STAGE_WAR_INTERVAL, () -> {
+      stageWork |= runIfDue(overworld, state, CivilizationStage.WAR, gameTime, CivilizationConfig.STAGE_WAR_INTERVAL, () -> {
          WarSavedData.get(overworld).getWarManager().tick(overworld);
          TerritorySavedData.get(overworld).getTerritoryManager().tick(overworld);
          ConflictSavedData.get(overworld).getConflictManager().tick(overworld);
          CivilizationEventBridge.publishWarChanges(overworld, state);
+         org.millenaire.faction.crime.BountyRaidScheduler.tick(overworld);
       });
 
-      runIfDue(overworld, state, CivilizationStage.DEMOGRAPHICS, gameTime, CivilizationConfig.STAGE_DEMOGRAPHICS_INTERVAL, () -> {
+      stageWork |= runIfDue(overworld, state, CivilizationStage.DEMOGRAPHICS, gameTime, CivilizationConfig.STAGE_DEMOGRAPHICS_INTERVAL, () -> {
          PopulationAggregator.refreshDirtyFactions(overworld, state);
          MigrationTransactionService.recoverPending(overworld, state);
          MigrationEvaluator.evaluate(overworld, state);
+         ImmigrationEvaluator.evaluate(overworld, state);
+         RefugeeService.tick(overworld, state);
       });
 
-      runIfDue(overworld, state, CivilizationStage.DEVELOPMENT, gameTime, CivilizationConfig.STAGE_DEVELOPMENT_INTERVAL, () -> {
+      stageWork |= runIfDue(overworld, state, CivilizationStage.DEVELOPMENT, gameTime, CivilizationConfig.STAGE_DEVELOPMENT_INTERVAL, () -> {
          SettlementDevelopmentClassifier.refresh(overworld, state);
          ColonizationService.tick(overworld, state);
       });
 
-      runIfDue(overworld, state, CivilizationStage.HISTORY_PUBLISH, gameTime, CivilizationConfig.STAGE_HISTORY_INTERVAL, () -> {
+      stageWork |= runIfDue(overworld, state, CivilizationStage.HISTORY_PUBLISH, gameTime, CivilizationConfig.STAGE_HISTORY_INTERVAL, () -> {
          CivilizationEventBridge.flushHistory(overworld, state);
       });
 
-      runIfDueBeforeWrite(overworld, state, CivilizationStage.OFFSCREEN_RECONCILE, gameTime, CivilizationConfig.STAGE_OFFSCREEN_INTERVAL, previous -> {
+      stageWork |= runIfDueBeforeWrite(overworld, state, CivilizationStage.OFFSCREEN_RECONCILE, gameTime, CivilizationConfig.STAGE_OFFSCREEN_INTERVAL, previous -> {
          OffscreenReconciler.reconcile(overworld, state, previous);
       });
+
+      if (stageWork) {
+         state.setDirty();
+      }
 
       try {
          if (Boolean.TRUE.equals(MillenaireServerConfig.SERVER.civilizationMetricsLogging.get()) && gameTime % 1200L == 0L) {
@@ -128,11 +143,9 @@ public final class CivilizationOrchestrator {
          }
       } catch (IllegalStateException ignored) {
       }
-
-      state.setDirty();
    }
 
-   private static void runIfDue(
+   private static boolean runIfDue(
       ServerLevel level,
       CivilizationSavedData state,
       CivilizationStage stage,
@@ -144,18 +157,19 @@ public final class CivilizationOrchestrator {
       // Stagger by stage ordinal so stages do not align on the same tick.
       long staggered = interval + stage.ordinal() * 7L;
       if (last > 0L && gameTime - last < staggered) {
-         return;
+         return false;
       }
       state.setLastStageGameTime(stage, gameTime);
       CivilizationMetrics.STAGES_RUN.incrementAndGet();
       safe(level, stage.name(), action);
+      return true;
    }
 
    /**
     * Like {@link #runIfDue} but passes the previous stage timestamp before overwriting it.
     * Used by offscreen reconcile so elapsed time is computed correctly.
     */
-   private static void runIfDueBeforeWrite(
+   private static boolean runIfDueBeforeWrite(
       ServerLevel level,
       CivilizationSavedData state,
       CivilizationStage stage,
@@ -166,7 +180,7 @@ public final class CivilizationOrchestrator {
       long last = state.lastStageGameTime(stage);
       long staggered = interval + stage.ordinal() * 7L;
       if (last > 0L && gameTime - last < staggered) {
-         return;
+         return false;
       }
       // Record attempt time only after reading previous; success time is set inside the reconciler.
       state.setLastStageGameTime(stage, gameTime);
@@ -182,6 +196,7 @@ public final class CivilizationOrchestrator {
             e
          );
       }
+      return true;
    }
 
    private static void safe(ServerLevel level, String label, Runnable action) {

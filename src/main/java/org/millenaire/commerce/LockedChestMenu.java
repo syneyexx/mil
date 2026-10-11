@@ -85,7 +85,26 @@ public class LockedChestMenu extends AbstractContainerMenu {
          }
       }
 
+      boolean takingFromChest = !this.locked && slotId >= 0 && slotId < this.numRows * 9;
+      ItemStack before = takingFromChest ? ((Slot)this.slots.get(slotId)).getItem().copy() : ItemStack.EMPTY;
       super.clicked(slotId, button, clickType, player);
+      if (takingFromChest && player instanceof net.minecraft.server.level.ServerPlayer serverPlayer
+         && serverPlayer.level() instanceof net.minecraft.server.level.ServerLevel serverLevel
+         && this.chestInventory instanceof org.millenaire.block.LockedChestBlockEntity chest
+         && chest.getBuildingId() != null) {
+         ItemStack after = ((Slot)this.slots.get(slotId)).getItem();
+         boolean removed = before.getCount() > after.getCount()
+            || (!before.isEmpty() && after.isEmpty())
+            || (!serverPlayer.containerMenu.getCarried().isEmpty() && before.getCount() > 0 && after.getCount() < before.getCount());
+         if (!before.isEmpty() && (after.isEmpty() || after.getCount() < before.getCount() || removed)) {
+            org.millenaire.village.Village village = org.millenaire.village.VillageSavedData.get(serverLevel)
+               .getVillageManager()
+               .findVillageContaining(chest.getBuildingId());
+            if (village != null) {
+               org.millenaire.faction.crime.CrimeService.onTheft(serverLevel, serverPlayer, village);
+            }
+         }
+      }
    }
 
    public ItemStack quickMoveStack(Player player, int index) {

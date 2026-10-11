@@ -37,6 +37,9 @@ public final class VillageRehydrator {
             BuildingPlan plan = ModCultures.getBuildingPlan(building.getPlanId());
             if (plan == null) {
                LOGGER.warn("Plan not found for rehydration: {}", building.getPlanId());
+            } else if (building.isPlayerDesignated()) {
+               building.addRuntimeTags(plan.tags());
+               DesignatedBuildingService.refresh(level, building);
             } else {
                building.addRuntimeTags(plan.tags());
                building.resolveSpecialPoints(plan);

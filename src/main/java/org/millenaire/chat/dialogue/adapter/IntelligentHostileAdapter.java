@@ -4,6 +4,7 @@ import javax.annotation.Nullable;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.EnderMan;
 import net.minecraft.world.entity.monster.Witch;
 import org.millenaire.chat.NpcMind;
@@ -42,7 +43,7 @@ public final class IntelligentHostileAdapter implements NpcDialogueAdapter {
    @Override
    @Nullable
    public String refusalKey(ServerPlayer player, LivingEntity entity) {
-      if (entity.getTarget() == player && entity.hurtTime > 0) {
+      if (entity instanceof Mob mob && mob.getTarget() == player && entity.hurtTime > 0) {
          return "gui.millenaire.npcchat.combat";
       }
       return null;

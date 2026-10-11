@@ -27,6 +27,7 @@ public class VillageManager {
 
    public void addVillage(Village village) {
       this.villages.put(village.getId(), village);
+      org.millenaire.map.sync.SettlementMapSyncService.markDirty();
    }
 
    /**
@@ -44,6 +45,7 @@ public class VillageManager {
       }
 
       this.villages.remove(id);
+      org.millenaire.map.sync.SettlementMapSyncService.markRemoved(id);
    }
 
    @Nullable
@@ -191,10 +193,14 @@ public class VillageManager {
 
    public void tick(ServerLevel level) {
       boolean anyDirty = false;
-      boolean fireplaceSync = level.getGameTime() % 200L == 0L;
+      long gameTime = level.getGameTime();
 
       for (Village v : this.villages.values()) {
          this.tickVillageActivation(level, v);
+         // Spread periodic fireplace sync with stable UUID-based offsets (raid/background still every tick).
+         long uuidMix = v.getId().uuid().getMostSignificantBits() ^ v.getId().uuid().getLeastSignificantBits();
+         int offset = (int)Math.floorMod(uuidMix, 200L);
+         boolean fireplaceSync = Math.floorMod(gameTime - offset, 200L) == 0L;
          if (v.isActive()) {
             v.tick(level);
             if (fireplaceSync) {

@@ -2,6 +2,7 @@
  * Phase 4 formal diplomacy: treaties, alliances, embargoes, and political permissions.
  *
  * <p>Separate from Phase 2 relationship scores and Phase 3 economic trade statistics.
- * Does not implement wars, armies, battles, sieges, conquest, or autonomous diplomatic AI.
+ * Autonomous NPC treaty/war pressure is handled by {@link DiplomaticAiEvaluator} (budget-capped).
+ * Does not implement full army battles or sieges.
  */
 package org.millenaire.faction.diplomacy;

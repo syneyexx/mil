@@ -17,7 +17,6 @@ import org.millenaire.living.net.LivingActionChoicesPayload;
 import org.millenaire.living.requests.VillageRequest;
 import org.millenaire.living.requests.VillageRequestSavedData;
 import org.millenaire.living.requests.VillageRequestState;
-import org.millenaire.living.social.NpcSocialContextProvider;
 import org.millenaire.village.Village;
 import org.millenaire.village.VillagerRecord;
 

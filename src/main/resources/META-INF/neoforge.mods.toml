@@ -11,7 +11,7 @@ modId="millenaire"
 version="9.0.2"
 displayName="Millénaire"
 authors="Kinniken, Contributors"
-description='''Millénaire adds NPC villages to Minecraft with unique cultures, progressive building construction, trading, reputation, quests, Living Villages, deterministic worldgen, and optional civilization orchestration.'''
+description='''Millénaire adds NPC villages to Minecraft with unique cultures, progressive building construction, trading, reputation, quests, Living Villages, deterministic worldgen, and optional civilization orchestration. Optional soft integrations for biome packs, Macaw's, Farmer's Delight, Waystones, Create, Xaero's Minimap/World Map, and armor mods.'''
 
 [[dependencies.millenaire]]
     modId="neoforge"
@@ -26,3 +26,379 @@ description='''Millénaire adds NPC villages to Minecraft with unique cultures, 
     versionRange="[1.21.1,1.21.2)"
     ordering="NONE"
     side="BOTH"
+
+# --- Worldgen / biomes (optional) ---
+[[dependencies.millenaire]]
+    modId="terrablender"
+    type="optional"
+    versionRange="[1.21.1,)"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="biomesoplenty"
+    type="optional"
+    versionRange="*"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="biomeswevegone"
+    type="optional"
+    versionRange="*"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="natures_spirit"
+    type="optional"
+    versionRange="*"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="naturalist"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="lithostitched"
+    type="optional"
+    versionRange="*"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="glitchcore"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="corgilib"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="ohthetreesyoullgrow"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="auroras"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+# --- Structures / travel ---
+[[dependencies.millenaire]]
+    modId="waystones"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="dungeons_arise"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="nova_structures"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="yungsapi"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="travelersbackpack"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="travelerstitles"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="trek"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+# --- Architecture / food / create ---
+[[dependencies.millenaire]]
+    modId="farmersdelight"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="create"
+    type="optional"
+    versionRange="[6.0.0,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="supplementaries"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="moonlight"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="mcwbridges"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="mcwdoors"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="mcwfences"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="mcwfurnitures"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="mcwlights"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="mcwpaths"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="mcwroofs"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="mcwtrpdoors"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="mcwwindows"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="mcwstairs"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="mcwpaintings"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="mcwholidays"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="mcwbopr"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="mcwbiomeswevegone"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+# --- Arms / armor / curios ---
+[[dependencies.millenaire]]
+    modId="magistuarmory"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="magistuarmoryaddon"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="exotic_armory"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="immersive_armors"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="fantasy_armor"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="armorofages"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="artifacts"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="curios"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="caelus"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="truly_modular_armory"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="spell_engine"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="spell_power"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="ranged_weapon_api"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="tacz"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="geckolib"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.millenaire]]
+    modId="playeranimator"
+    type="optional"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
+
+# --- Map (optional client) ---
+[[dependencies.millenaire]]
+    modId="xaerominimap"
+    type="optional"
+    versionRange="*"
+    ordering="AFTER"
+    side="CLIENT"
+
+[[dependencies.millenaire]]
+    modId="xaeroworldmap"
+    type="optional"
+    versionRange="*"
+    ordering="AFTER"
+    side="CLIENT"

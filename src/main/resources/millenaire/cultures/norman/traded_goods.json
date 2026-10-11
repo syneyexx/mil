@@ -1334,6 +1334,135 @@
       "auto_generate": true,
       "min_reputation": 8192,
       "category": "crafting"
+    },
+    {
+      "id": "fd_cabbage",
+      "item": "farmersdelight:cabbage",
+      "selling_price": 3,
+      "category": "food",
+      "buying_price": 1,
+      "target_quantity": 32
+    },
+    {
+      "id": "fd_tomato",
+      "item": "farmersdelight:tomato",
+      "selling_price": 3,
+      "category": "food",
+      "buying_price": 1,
+      "target_quantity": 32
+    },
+    {
+      "id": "fd_cooked_rice",
+      "item": "farmersdelight:cooked_rice",
+      "selling_price": 6,
+      "category": "food",
+      "target_quantity": 16
+    },
+    {
+      "id": "fd_hamburger",
+      "item": "farmersdelight:hamburger",
+      "selling_price": 14,
+      "category": "food",
+      "target_quantity": 8
+    },
+    {
+      "id": "mcw_oak_roof",
+      "item": "mcwroofs:oak_roof",
+      "selling_price": 8,
+      "category": "construction",
+      "buying_price": 2,
+      "target_quantity": 32
+    },
+    {
+      "id": "mcw_oak_window",
+      "item": "mcwwindows:oak_window",
+      "selling_price": 10,
+      "category": "construction",
+      "buying_price": 3,
+      "target_quantity": 16
+    },
+    {
+      "id": "mcw_oak_door",
+      "item": "mcwdoors:oak_barn_door",
+      "selling_price": 12,
+      "category": "construction",
+      "buying_price": 4,
+      "target_quantity": 8
+    },
+    {
+      "id": "supp_lantern",
+      "item": "supplementaries:copper_lantern",
+      "selling_price": 10,
+      "category": "decoration",
+      "buying_price": 3,
+      "target_quantity": 16
+    },
+    {
+      "id": "create_cogwheel",
+      "item": "create:cogwheel",
+      "selling_price": 20,
+      "category": "construction",
+      "buying_price": 8,
+      "target_quantity": 8
+    },
+    {
+      "id": "create_andesite_alloy",
+      "item": "create:andesite_alloy",
+      "selling_price": 16,
+      "category": "construction",
+      "buying_price": 6,
+      "target_quantity": 16
+    },
+    {
+      "id": "waystone_item",
+      "item": "waystones:waystone",
+      "selling_price": 200,
+      "category": "misc",
+      "target_quantity": 1
+    },
+    {
+      "id": "travelersbackpack",
+      "item": "travelersbackpack:standard",
+      "selling_price": 80,
+      "category": "misc",
+      "target_quantity": 2
+    },
+    {
+      "id": "artifacts_bunny_hoppers",
+      "item": "artifacts:bunny_hoppers",
+      "selling_price": 120,
+      "category": "armor",
+      "target_quantity": 1
+    },
+    {
+      "id": "ek_arming_sword",
+      "item": "magistuarmory:arming_sword",
+      "selling_price": 60,
+      "category": "weapon",
+      "buying_price": 20,
+      "target_quantity": 4
+    },
+    {
+      "id": "immersive_heavy_helmet",
+      "item": "immersive_armors:heavy_helmet",
+      "selling_price": 50,
+      "category": "armor",
+      "buying_price": 15,
+      "target_quantity": 2
+    },
+    {
+      "id": "spell_tome_trophy",
+      "item": "spell_engine:scroll_fireball",
+      "selling_price": 150,
+      "category": "misc",
+      "target_quantity": 1
+    },
+    {
+      "id": "tacz_ammo_box",
+      "item": "tacz:ammo_box",
+      "selling_price": 100,
+      "category": "misc",
+      "target_quantity": 1
     }
   ]
 }

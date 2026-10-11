@@ -202,6 +202,7 @@ public class PlayerCultureReputation extends SavedData {
       boolean added = this.discoveredVillages.computeIfAbsent(player, k -> new HashSet<>()).add(villageId);
       if (added) {
          this.setDirty();
+         org.millenaire.map.sync.SettlementMapSyncService.markDirty();
       }
 
       return added;

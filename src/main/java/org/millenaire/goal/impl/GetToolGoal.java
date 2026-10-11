@@ -67,6 +67,34 @@ public class GetToolGoal implements VillagerGoal {
       }
    }
 
+   private static boolean mayUseDesignatedArmory(VillagerType vType) {
+      if (vType.hasTag("soldier") || vType.hasTag("guard") || vType.hasTag("military")) {
+         return true;
+      }
+
+      String path = vType.id().getPath().toLowerCase();
+      if (path.contains("soldier") || path.contains("guard") || path.contains("knight") || path.contains("archer")) {
+         return true;
+      }
+
+      for (String categoryId : vType.toolNeededClasses()) {
+         if (isWeaponOrArmorCategory(categoryId)) {
+            return true;
+         }
+      }
+
+      return false;
+   }
+
+   private static boolean isWeaponOrArmorCategory(String categoryId) {
+      if (categoryId == null) {
+         return false;
+      }
+
+      String id = categoryId.toLowerCase();
+      return id.contains("weapon") || id.contains("armour") || id.contains("armor") || id.contains("helmet") || id.contains("bow");
+   }
+
    private int countGetToolTasksForShop(GoalContext context, BuildingId shopId) {
       int count = 0;
 
@@ -105,7 +133,17 @@ public class GetToolGoal implements VillagerGoal {
       for (BuildingInstance building : context.village().getBuildings()) {
          BuildingPlan plan = ModCultures.getBuildingPlan(building.getPlanId());
          if (plan != null && plan.shopId() != null && building.getInventory() != null && building.isOperational()) {
+            if (building.isPlayerDesignated()
+               && building.getPurpose() == org.millenaire.building.BuildingPurpose.ARMORY
+               && !mayUseDesignatedArmory(vType)) {
+               continue;
+            }
+
             BuildingInventory shopInv = building.getInventory();
+            // Designated armory chests are live world containers; always rescan.
+            if (building.isPlayerDesignated()) {
+               shopInv.invalidateCache();
+            }
 
             for (ResourceLocation neededId : vType.itemsNeeded()) {
                Item neededItem = ItemHelper.resolve(neededId);
@@ -115,6 +153,12 @@ public class GetToolGoal implements VillagerGoal {
             }
 
             for (String categoryId : vType.toolNeededClasses()) {
+               if (building.isPlayerDesignated()
+                  && building.getPurpose() == org.millenaire.building.BuildingPurpose.ARMORY
+                  && !isWeaponOrArmorCategory(categoryId)) {
+                  continue;
+               }
+
                ToolCategory category = ToolCategoryRegistry.get(categoryId);
                if (category != null) {
                   ToolCategory.ToolEntry bestOwned = category.getBestOwned(item -> villagerInv.getCount(item) > 0);

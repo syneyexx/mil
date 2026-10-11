@@ -86,11 +86,22 @@ public final class NpcModelResolver {
    }
 
    public static Result resolveLmStudio(LmStudioModelDiscovery.Snapshot snap) {
+      String configured = MillenaireServerConfig.SERVER.npcChatModel.get();
+      String configuredTrimmed = configured == null ? "" : configured.trim();
+
       if (!snap.reachable()) {
+         // Still allow a manually configured model id — chat/completions may work even when
+         // /api/v1/models discovery fails (firewall, older LM Studio, brief startup race).
+         if (!configuredTrimmed.isEmpty()) {
+            return new Result(Status.OK, configuredTrimmed, configuredTrimmed, List.of());
+         }
          return new Result(Status.LMSTUDIO_UNREACHABLE, null, null, List.of());
       }
       List<LmStudioModelInfo> loaded = snap.loaded();
       if (loaded.isEmpty()) {
+         if (!configuredTrimmed.isEmpty()) {
+            return new Result(Status.OK, configuredTrimmed, configuredTrimmed, loaded);
+         }
          return new Result(Status.LMSTUDIO_NO_LOADED, null, null, loaded);
       }
       if (loaded.size() == 1) {
@@ -106,12 +117,13 @@ public final class NpcModelResolver {
          }
       }
 
-      String configured = MillenaireServerConfig.SERVER.npcChatModel.get();
-      if (configured != null && !configured.isBlank()) {
-         Optional<LmStudioModelInfo> configuredMatch = snap.find(configured.trim());
+      if (!configuredTrimmed.isEmpty()) {
+         Optional<LmStudioModelInfo> configuredMatch = snap.find(configuredTrimmed);
          if (configuredMatch.isPresent()) {
             return new Result(Status.OK, configuredMatch.get().effectiveModelId(), configuredMatch.get().label(), loaded);
          }
+         // Configured id may still be accepted by /v1/chat/completions even if not in the snapshot.
+         return new Result(Status.OK, configuredTrimmed, configuredTrimmed, loaded);
       }
 
       return new Result(Status.LMSTUDIO_MULTI_NEEDS_SELECTION, null, null, loaded);

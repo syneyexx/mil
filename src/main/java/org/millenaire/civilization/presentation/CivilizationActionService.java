@@ -16,14 +16,28 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.millenaire.building.AnywoodHelper;
+import org.millenaire.civilization.interaction.InteractionActions;
 import org.millenaire.civilization.settlement.ColonizationMaterializationGate;
 import org.millenaire.civilization.settlement.ColonizationOperation;
 import org.millenaire.civilization.settlement.ColonizationSavedData;
 import org.millenaire.civilization.settlement.ColonizationService;
 import org.millenaire.civilization.settlement.FoundingCostService;
+import org.millenaire.civilization.settlement.PlayerSettlementFoundingService;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.building.BuildingPlanSet;
+import org.millenaire.faction.Faction;
+import org.millenaire.faction.FactionId;
+import org.millenaire.faction.FactionSavedData;
+import org.millenaire.faction.FactionType;
+import org.millenaire.faction.ImmigrationPolicy;
+import org.millenaire.faction.TradePolicy;
+import org.millenaire.faction.diplomacy.AgreementTerminationReason;
+import org.millenaire.faction.diplomacy.AgreementType;
+import org.millenaire.faction.diplomacy.DiplomacySavedData;
+import org.millenaire.faction.war.War;
+import org.millenaire.faction.war.WarGoalType;
+import org.millenaire.faction.war.WarSavedData;
 import org.millenaire.living.LivingVillagesService;
 import org.millenaire.living.needs.VillageNeed;
 import org.millenaire.living.needs.VillageNeedsSnapshot;
@@ -128,6 +142,20 @@ public final class CivilizationActionService {
       if (!ServerPayloadGuards.isWithinVillageReach(player, village)) {
          return ActionResult.fail("civilization.millenaire.action.error.too_far");
       }
+      if (action.requiresVillageControl() && !village.isControlledBy(player.getUUID())) {
+         boolean sovereignOwner = PlayerSettlementFoundingService.isSovereignPlayerSettlement(level, village)
+            && village.getOwnerUUID() != null
+            && village.getOwnerUUID().equals(player.getUUID());
+         if (!sovereignOwner) {
+            return ActionResult.fail("civilization.millenaire.action.blocked.not_controller");
+         }
+      }
+      if (action.requiresSovereign()) {
+         Faction sovereign = resolveSovereignFaction(level, player, village);
+         if (sovereign == null) {
+            return ActionResult.fail("civilization.millenaire.action.blocked.not_sovereign");
+         }
+      }
       ActionResult result = switch (action) {
          case SUPPORT_NEED -> supportNeed(level, player, village, targetId, npcId);
          case PRIORITIZE_HOUSING -> prioritizeHousing(level, player, village, targetId);
@@ -135,6 +163,30 @@ public final class CivilizationActionService {
          case SUPPORT_COLONIZATION_MATERIALS -> supportColonizationMaterials(level, player, village, targetId);
          case AUTHORIZE_COLONIZATION -> resumeColonization(level, player, village, targetId);
          case VIEW_INTERRUPTED_OPERATION -> viewInterrupted(level, player, village, targetId);
+         case SET_IMMIGRATION_POLICY -> setImmigrationPolicy(level, player, village, targetId);
+         case SET_TRADE_POLICY -> setTradePolicy(level, player, village, targetId);
+         case DECLARE_WAR -> declareWar(level, player, village, targetId);
+         case OFFER_PEACE -> offerPeace(level, player, village, targetId);
+         case SET_EMBARGO -> setEmbargo(level, player, village, targetId, true);
+         case CLEAR_EMBARGO -> setEmbargo(level, player, village, targetId, false);
+         case OPEN_CONTROLLED_PROJECTS -> openControlledProjects(level, player, village);
+         case ASSIGN_GUARD -> assignGuard(level, player, village, targetId);
+         case RELIEVE_GUARD -> relieveGuard(level, player, village, targetId);
+         case OFFER_CARAVAN_CHARTER,
+            EMERGENCY_RELIEF,
+            PAY_BLOOD_MONEY,
+            RESPOND_CALL_TO_ARMS,
+            REFUSE_CALL_TO_ARMS,
+            OFFER_PROTECTORATE,
+            ACCEPT_ENVOY,
+            DECLINE_ENVOY,
+            SUBSIDIZE_CORRIDOR,
+            BROKER_PEACE,
+            HIRE_MERCENARIES,
+            PROPAGANDA_MARKET,
+            INTERROGATE_PRISONER,
+            PROPOSE_JOINT_WORK,
+            OFFER_FOSTERAGE -> executeInteraction(level, player, village, action, targetId);
       };
       if (!sendPlayerFeedback) {
          return new ActionResult(result.success(), result.messageKey(), result.detail(), false);
@@ -513,5 +565,251 @@ public final class CivilizationActionService {
          left -= take;
       }
       return taken;
+   }
+
+   private static ActionResult executeInteraction(
+      ServerLevel level,
+      ServerPlayer player,
+      Village village,
+      CivilizationActionId action,
+      @Nullable String targetId
+   ) {
+      Faction sovereign = resolveSovereignFaction(level, player, village);
+      if (sovereign == null) {
+         return ActionResult.fail("civilization.millenaire.action.blocked.not_sovereign");
+      }
+      return switch (action) {
+         case OFFER_CARAVAN_CHARTER -> InteractionActions.offerCaravanCharter(level, player, village, sovereign, targetId);
+         case EMERGENCY_RELIEF -> InteractionActions.emergencyRelief(level, player, village, sovereign, targetId);
+         case PAY_BLOOD_MONEY -> InteractionActions.payBloodMoney(level, player, village, sovereign, targetId);
+         case RESPOND_CALL_TO_ARMS -> InteractionActions.respondCallToArms(level, player, village, sovereign, targetId, true);
+         case REFUSE_CALL_TO_ARMS -> InteractionActions.respondCallToArms(level, player, village, sovereign, targetId, false);
+         case OFFER_PROTECTORATE -> InteractionActions.offerProtectorate(level, player, village, sovereign, targetId);
+         case ACCEPT_ENVOY -> InteractionActions.respondEnvoy(level, player, village, sovereign, targetId, true);
+         case DECLINE_ENVOY -> InteractionActions.respondEnvoy(level, player, village, sovereign, targetId, false);
+         case SUBSIDIZE_CORRIDOR -> InteractionActions.subsidizeCorridor(level, player, village, sovereign, targetId);
+         case BROKER_PEACE -> InteractionActions.brokerPeace(level, player, village, sovereign, targetId);
+         case HIRE_MERCENARIES -> InteractionActions.hireMercenaries(level, player, village, sovereign, targetId);
+         case PROPAGANDA_MARKET -> InteractionActions.propagandaMarket(level, player, village, sovereign, targetId);
+         case INTERROGATE_PRISONER -> InteractionActions.interrogatePrisoner(level, player, village, sovereign, targetId);
+         case PROPOSE_JOINT_WORK -> InteractionActions.proposeJointWork(level, player, village, sovereign, targetId);
+         case OFFER_FOSTERAGE -> InteractionActions.offerFosterage(level, player, village, sovereign, targetId);
+         default -> ActionResult.fail("civilization.millenaire.action.blocked.unavailable");
+      };
+   }
+
+   @Nullable
+   private static Faction resolveSovereignFaction(ServerLevel level, ServerPlayer player, Village village) {
+      if (!PlayerSettlementFoundingService.isSovereignPlayerSettlement(level, village)) {
+         return null;
+      }
+      boolean owner = village.isControlledBy(player.getUUID())
+         || (village.getOwnerUUID() != null && village.getOwnerUUID().equals(player.getUUID()));
+      if (!owner) {
+         return null;
+      }
+      Faction faction = FactionSavedData.get(level).getFactionManager().getFaction(village.getFactionId());
+      if (faction == null || faction.getType() != FactionType.PLAYER) {
+         return null;
+      }
+      if (!faction.isSovereignOwnedBy(player.getUUID())) {
+         return null;
+      }
+      return faction;
+   }
+
+   private static ActionResult openControlledProjects(ServerLevel level, ServerPlayer player, Village village) {
+      var payload = org.millenaire.village.ControlledProjectsService.buildPayload(village, level);
+      net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(
+         player,
+         payload,
+         new net.minecraft.network.protocol.common.custom.CustomPacketPayload[0]
+      );
+      return ActionResult.ok("gui.millenaire.city_admin.open_projects", village.getVillageName());
+   }
+
+   private static ActionResult setImmigrationPolicy(ServerLevel level, ServerPlayer player, Village village, @Nullable String targetId) {
+      Faction faction = resolveSovereignFaction(level, player, village);
+      if (faction == null) {
+         return ActionResult.fail("civilization.millenaire.action.blocked.not_sovereign");
+      }
+      ImmigrationPolicy policy = ImmigrationPolicy.tryParse(targetId);
+      faction.setImmigrationPolicy(policy);
+      FactionSavedData.get(level).setDirty();
+      return ActionResult.ok("civilization.millenaire.action.set_immigration_policy.ok", policy.name());
+   }
+
+   private static ActionResult setTradePolicy(ServerLevel level, ServerPlayer player, Village village, @Nullable String targetId) {
+      Faction faction = resolveSovereignFaction(level, player, village);
+      if (faction == null) {
+         return ActionResult.fail("civilization.millenaire.action.blocked.not_sovereign");
+      }
+      TradePolicy policy = TradePolicy.tryParse(targetId);
+      faction.setTradePolicy(policy);
+      FactionSavedData.get(level).setDirty();
+      return ActionResult.ok("civilization.millenaire.action.set_trade_policy.ok", policy.name());
+   }
+
+   private static ActionResult declareWar(ServerLevel level, ServerPlayer player, Village village, @Nullable String targetId) {
+      Faction faction = resolveSovereignFaction(level, player, village);
+      if (faction == null) {
+         return ActionResult.fail("civilization.millenaire.action.blocked.not_sovereign");
+      }
+      FactionId targetFaction = resolveTargetFactionId(level, targetId);
+      if (targetFaction == null || targetFaction.equals(faction.getId())) {
+         return ActionResult.fail("civilization.millenaire.action.blocked.invalid_target");
+      }
+      WarGoalType goal = org.millenaire.civilization.interaction.CasusBelliEvaluator.suggestWarGoal(
+         level, faction.getId(), targetFaction
+      );
+      War war = WarSavedData.get(level).getWarManager().declareWar(level, faction.getId(), targetFaction, goal);
+      if (war == null) {
+         return ActionResult.fail("civilization.millenaire.action.blocked.war_denied");
+      }
+      int casus = org.millenaire.civilization.interaction.CasusBelliEvaluator.scoreStrength(
+         level, faction.getId(), targetFaction
+      );
+      org.millenaire.civilization.interaction.InteractionSavedData.get(level).addTheaterStory(
+         new org.millenaire.civilization.interaction.TheaterStory(
+            "casus",
+            casus >= 30
+               ? "civilization.millenaire.theater.casus_strong"
+               : "civilization.millenaire.theater.casus_weak",
+            faction.getId().asString(),
+            targetFaction.asString(),
+            casus >= 30 ? 3 : 4,
+            level.getGameTime()
+         )
+      );
+      return ActionResult.ok("civilization.millenaire.action.declare_war.ok", targetFaction.asString());
+   }
+
+   private static ActionResult offerPeace(ServerLevel level, ServerPlayer player, Village village, @Nullable String targetId) {
+      Faction faction = resolveSovereignFaction(level, player, village);
+      if (faction == null) {
+         return ActionResult.fail("civilization.millenaire.action.blocked.not_sovereign");
+      }
+      FactionId targetFaction = resolveTargetFactionId(level, targetId);
+      if (targetFaction == null) {
+         return ActionResult.fail("civilization.millenaire.action.blocked.invalid_target");
+      }
+      if (!WarSavedData.get(level).getWarManager().areAtWar(faction.getId(), targetFaction)) {
+         return ActionResult.fail("civilization.millenaire.action.blocked.no_war");
+      }
+      var wars = WarSavedData.get(level).getWarManager().getWarsInvolving(faction.getId());
+      for (War war : wars) {
+         if (!war.getState().isOngoing()) {
+            continue;
+         }
+         if (war.getParticipant(targetFaction) == null) {
+            continue;
+         }
+         if (WarSavedData.get(level).getWarManager().beginPeaceNegotiation(level, war.getId())) {
+            Faction target = FactionSavedData.get(level).getFactionManager().getFaction(targetFaction);
+            if (target != null && target.getCultureId() != null) {
+               org.millenaire.faction.crime.CrimeService.onPeaceWithCulture(level, player.getUUID(), target.getCultureId());
+            }
+            // Soft fosterage bond as a living NAP after peace — no villager transfer required.
+            org.millenaire.civilization.interaction.InteractionSavedData.get(level).addFosterage(
+               new org.millenaire.civilization.interaction.FosterageBond(
+                  faction.getId().asString(),
+                  targetFaction.asString(),
+                  null,
+                  level.getGameTime() + org.millenaire.civilization.interaction.InteractionConfig.FOSTERAGE_DURATION_TICKS,
+                  org.millenaire.civilization.interaction.FosterageBond.Kind.GUEST
+               )
+            );
+            return ActionResult.ok("civilization.millenaire.action.offer_peace.ok", war.getId().asString());
+         }
+      }
+      return ActionResult.fail("civilization.millenaire.action.blocked.no_war");
+   }
+
+   private static ActionResult setEmbargo(
+      ServerLevel level, ServerPlayer player, Village village, @Nullable String targetId, boolean impose
+   ) {
+      Faction faction = resolveSovereignFaction(level, player, village);
+      if (faction == null) {
+         return ActionResult.fail("civilization.millenaire.action.blocked.not_sovereign");
+      }
+      FactionId targetFaction = resolveTargetFactionId(level, targetId);
+      if (targetFaction == null || targetFaction.equals(faction.getId())) {
+         return ActionResult.fail("civilization.millenaire.action.blocked.invalid_target");
+      }
+      var diplomacy = DiplomacySavedData.get(level).getDiplomaticManager();
+      if (impose) {
+         var agreement = diplomacy.imposeEmbargo(level, faction.getId(), targetFaction, 0L, "player_sovereign");
+         if (agreement == null) {
+            return ActionResult.fail("civilization.millenaire.action.blocked.embargo_denied");
+         }
+         return ActionResult.ok("civilization.millenaire.action.set_embargo.ok", targetFaction.asString());
+      }
+      boolean cleared = diplomacy.terminateActiveAgreement(
+         level, AgreementType.EMBARGO, faction.getId(), targetFaction, AgreementTerminationReason.EXPLICIT
+      );
+      if (!cleared) {
+         return ActionResult.fail("civilization.millenaire.action.blocked.no_embargo");
+      }
+      return ActionResult.ok("civilization.millenaire.action.clear_embargo.ok", targetFaction.asString());
+   }
+
+   private static ActionResult assignGuard(ServerLevel level, ServerPlayer player, Village village, @Nullable String targetId) {
+      if (!org.millenaire.civilization.settlement.PlayerSettlementFoundingService.isSovereignPlayerSettlement(level, village)) {
+         return ActionResult.fail("civilization.millenaire.action.blocked.not_sovereign");
+      }
+      UUID villagerId = parseUuid(targetId);
+      if (villagerId == null) {
+         return ActionResult.fail("civilization.millenaire.action.blocked.invalid_target");
+      }
+      if (!org.millenaire.village.GuardAssignmentService.assignGuard(level, village, villagerId)) {
+         return ActionResult.fail("civilization.millenaire.action.blocked.guard_assign_failed");
+      }
+      return ActionResult.ok("civilization.millenaire.action.assign_guard.ok", targetId);
+   }
+
+   private static ActionResult relieveGuard(ServerLevel level, ServerPlayer player, Village village, @Nullable String targetId) {
+      if (!org.millenaire.civilization.settlement.PlayerSettlementFoundingService.isSovereignPlayerSettlement(level, village)) {
+         return ActionResult.fail("civilization.millenaire.action.blocked.not_sovereign");
+      }
+      UUID villagerId = parseUuid(targetId);
+      if (villagerId == null) {
+         return ActionResult.fail("civilization.millenaire.action.blocked.invalid_target");
+      }
+      if (!org.millenaire.village.GuardAssignmentService.relieveGuard(level, village, villagerId)) {
+         return ActionResult.fail("civilization.millenaire.action.blocked.guard_relieve_failed");
+      }
+      return ActionResult.ok("civilization.millenaire.action.relieve_guard.ok", targetId);
+   }
+
+   @Nullable
+   private static UUID parseUuid(@Nullable String raw) {
+      if (raw == null || raw.isBlank()) {
+         return null;
+      }
+      try {
+         return UUID.fromString(raw.trim());
+      } catch (IllegalArgumentException e) {
+         return null;
+      }
+   }
+
+   @Nullable
+   private static FactionId resolveTargetFactionId(ServerLevel level, @Nullable String targetId) {
+      if (targetId == null || targetId.isBlank()) {
+         return null;
+      }
+      FactionId direct = FactionId.tryParse(targetId);
+      if (direct != null && FactionSavedData.get(level).getFactionManager().getFaction(direct) != null) {
+         return direct;
+      }
+      try {
+         UUID villageUuid = UUID.fromString(targetId);
+         Village targetVillage = VillageSavedData.get(level).getVillageManager().getVillage(
+            new org.millenaire.village.VillageId(villageUuid)
+         );
+         return targetVillage != null ? targetVillage.getFactionId() : null;
+      } catch (IllegalArgumentException e) {
+         return null;
+      }
    }
 }

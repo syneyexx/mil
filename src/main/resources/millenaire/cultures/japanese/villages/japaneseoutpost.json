@@ -2,7 +2,8 @@
   "culture": "millenaire:japanese",
   "biome_tags": [
     "#c:is_taiga",
-    "#c:is_hill"
+    "#c:is_hill",
+    "#millenaire:is_cherry_grove"
   ],
   "name": "Zenshou",
   "weight": 10,

@@ -16,7 +16,24 @@ public final class NpcReplyParser {
       if (raw == null || raw.isBlank()) {
          return Optional.empty();
       }
-      String json = extractJsonObject(raw.trim());
+      String trimmed = raw.trim();
+      Optional<NpcModelReply> structured = parseStructured(trimmed);
+      if (structured.isPresent()) {
+         return structured;
+      }
+      // Small local models often ignore the JSON schema and reply in plain prose.
+      String plain = sanitizeSay(trimmed);
+      if (plain.isBlank()) {
+         return Optional.empty();
+      }
+      return Optional.of(new NpcModelReply("", plain, "", List.of(), 0.0F, 0.0F, 0.0F, false, 0, ""));
+   }
+
+   private static Optional<NpcModelReply> parseStructured(String raw) {
+      String json = extractJsonObject(raw);
+      if (json == null) {
+         json = extractJsonObjectLoose(raw);
+      }
       if (json == null) {
          return Optional.empty();
       }
@@ -108,35 +125,45 @@ public final class NpcReplyParser {
    }
 
    public static String extractJsonObject(String raw) {
-      String text = raw.trim();
-      if (text.startsWith("```")) {
-         int firstNl = text.indexOf('\n');
-         if (firstNl > 0) {
-            text = text.substring(firstNl + 1);
-         }
-         int fence = text.lastIndexOf("```");
-         if (fence >= 0) {
-            text = text.substring(0, fence);
-         }
-         text = text.trim();
-      }
+      String text = stripCodeFence(raw);
       int start = text.indexOf('{');
       int end = text.lastIndexOf('}');
       if (start < 0 || end <= start) {
          return null;
       }
       String candidate = text.substring(start, end + 1);
-      if (start > 0 || end < text.length() - 1) {
-         // surrounding non-json text is a failure unless only whitespace outside after fence strip
-         String before = text.substring(0, start).trim();
-         String after = text.substring(end + 1).trim();
-         if (!before.isEmpty() || !after.isEmpty()) {
-            // Spec: "tekst rond het object die geen JSON is → failure"
-            // But fence-stripped content that is only the object is OK.
-            // If there is surrounding text, fail.
-            return null;
-         }
+      String before = text.substring(0, start).trim();
+      String after = text.substring(end + 1).trim();
+      if (!before.isEmpty() || !after.isEmpty()) {
+         return null;
       }
       return candidate;
+   }
+
+   /** Like {@link #extractJsonObject} but tolerates prose wrapping the JSON object. */
+   public static String extractJsonObjectLoose(String raw) {
+      String text = stripCodeFence(raw);
+      int start = text.indexOf('{');
+      int end = text.lastIndexOf('}');
+      if (start < 0 || end <= start) {
+         return null;
+      }
+      return text.substring(start, end + 1);
+   }
+
+   private static String stripCodeFence(String raw) {
+      String text = raw.trim();
+      if (!text.startsWith("```")) {
+         return text;
+      }
+      int firstNl = text.indexOf('\n');
+      if (firstNl > 0) {
+         text = text.substring(firstNl + 1);
+      }
+      int fence = text.lastIndexOf("```");
+      if (fence >= 0) {
+         text = text.substring(0, fence);
+      }
+      return text.trim();
    }
 }

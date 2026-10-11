@@ -1,0 +1,10 @@
+knight.greeting=Oranje boven in ons koninkrijk!
+knight.patrol=De dijken en muren houden ons veilig.
+lady.greeting=Welkom in onze gezellige zaal.
+farmer.greeting=Goede grond voor graan en tulpen.
+guard.greeting=Ik bescherm dit land, $name.
+lumberman.greeting=Nederlands eiken voor stevige huizen.
+smith.greeting=IJzer uit onze smederij.
+priest.greeting=Zegen op jouw reis, reiziger.
+wife.greeting=Kom brood en kaas delen.
+hostile=Wegwezen uit ons koninkrijk!

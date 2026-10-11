@@ -108,6 +108,16 @@ public final class WorldgenDiagCommand {
                .executes(ctx -> {
                   ctx.getSource()
                      .sendSuccess(() -> Component.literal(org.millenaire.worldgen.WorldgenMetrics.snapshot()), false);
+                  ctx.getSource()
+                     .sendSuccess(
+                        () -> Component.literal(
+                           "budget "
+                              + org.millenaire.worldgen.materialize.MaterializationTickBudget.diagnostic()
+                              + " planQueue="
+                              + org.millenaire.worldgen.plan.WorldgenPlanningQueue.get().size()
+                        ),
+                        false
+                     );
                   return 1;
                })
          );

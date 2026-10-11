@@ -37,6 +37,7 @@ public final class ModPayloads {
       new ModPayloads.ClientboundDef(SpeechChatPayload.TYPE, SpeechChatPayload.STREAM_CODEC),
       new ModPayloads.ClientboundDef(VillageTypeListPayload.TYPE, VillageTypeListPayload.STREAM_CODEC),
       new ModPayloads.ClientboundDef(InfoPanelContentPayload.TYPE, InfoPanelContentPayload.STREAM_CODEC),
+      new ModPayloads.ClientboundDef(WorldStatusContentPayload.TYPE, WorldStatusContentPayload.STREAM_CODEC),
       new ModPayloads.ClientboundDef(QuestInstanceSyncPayload.TYPE, QuestInstanceSyncPayload.STREAM_CODEC),
       new ModPayloads.ClientboundDef(QuestInstanceDestroyPayload.TYPE, QuestInstanceDestroyPayload.STREAM_CODEC),
       new ModPayloads.ClientboundDef(QuestResultTextPayload.TYPE, QuestResultTextPayload.STREAM_CODEC),
@@ -54,7 +55,11 @@ public final class ModPayloads {
       new ModPayloads.ClientboundDef(org.millenaire.chat.NpcChatLinePayload.TYPE, org.millenaire.chat.NpcChatLinePayload.STREAM_CODEC),
       new ModPayloads.ClientboundDef(org.millenaire.chat.NpcChatClosedPayload.TYPE, org.millenaire.chat.NpcChatClosedPayload.STREAM_CODEC),
       new ModPayloads.ClientboundDef(org.millenaire.living.net.LivingActionChoicesPayload.TYPE, org.millenaire.living.net.LivingActionChoicesPayload.STREAM_CODEC),
-      new ModPayloads.ClientboundDef(org.millenaire.living.net.LivingActionFeedbackPayload.TYPE, org.millenaire.living.net.LivingActionFeedbackPayload.STREAM_CODEC)
+      new ModPayloads.ClientboundDef(org.millenaire.living.net.LivingActionFeedbackPayload.TYPE, org.millenaire.living.net.LivingActionFeedbackPayload.STREAM_CODEC),
+      new ModPayloads.ClientboundDef(CityAdminPayload.TYPE, CityAdminPayload.STREAM_CODEC),
+      new ModPayloads.ClientboundDef(BountyHudPayload.TYPE, BountyHudPayload.STREAM_CODEC),
+      new ModPayloads.ClientboundDef(SettlementMapSnapshotPayload.TYPE, SettlementMapSnapshotPayload.STREAM_CODEC),
+      new ModPayloads.ClientboundDef(SettlementMapDeltaPayload.TYPE, SettlementMapDeltaPayload.STREAM_CODEC)
    );
 
    private ModPayloads() {
@@ -108,15 +113,28 @@ public final class ModPayloads {
       registrar.playToServer(TravelBookRequestPayload.TYPE, TravelBookRequestPayload.STREAM_CODEC, TravelBookRequestPayload::handleOnServer);
       registrar.playToServer(DiplomacyActionPayload.TYPE, DiplomacyActionPayload.STREAM_CODEC, DiplomacyActionPayload::handleOnServer);
       registrar.playToServer(VillageCreationRequestPayload.TYPE, VillageCreationRequestPayload.STREAM_CODEC, VillageCreationRequestPayload::handleOnServer);
+      registrar.playToServer(
+         SettlementFoundingRequestPayload.TYPE, SettlementFoundingRequestPayload.STREAM_CODEC, SettlementFoundingRequestPayload::handleOnServer
+      );
+      registrar.playToServer(CityAdminActionPayload.TYPE, CityAdminActionPayload.STREAM_CODEC, CityAdminActionPayload::handleOnServer);
+      registrar.playToServer(CityAdminRenamePayload.TYPE, CityAdminRenamePayload.STREAM_CODEC, CityAdminRenamePayload::handleOnServer);
       registrar.playToServer(CropLearningPayload.TYPE, CropLearningPayload.STREAM_CODEC, CropLearningPayload::handleOnServer);
       registrar.playToServer(HuntingLearningPayload.TYPE, HuntingLearningPayload.STREAM_CODEC, HuntingLearningPayload::handleOnServer);
       registrar.playToServer(CultureControlPurchasePayload.TYPE, CultureControlPurchasePayload.STREAM_CODEC, CultureControlPurchasePayload::handleOnServer);
       registrar.playToServer(InfoPanelRequestPayload.TYPE, InfoPanelRequestPayload.STREAM_CODEC, InfoPanelRequestPayload::handleOnServer);
+      registrar.playToServer(WorldStatusRequestPayload.TYPE, WorldStatusRequestPayload.STREAM_CODEC, WorldStatusRequestPayload::handleOnServer);
+      registrar.playToServer(WorldStatusActionPayload.TYPE, WorldStatusActionPayload.STREAM_CODEC, WorldStatusActionPayload::handleOnServer);
       registrar.playToServer(QuestCompleteStepPayload.TYPE, QuestCompleteStepPayload.STREAM_CODEC, QuestCompleteStepPayload::handle);
       registrar.playToServer(QuestRefusePayload.TYPE, QuestRefusePayload.STREAM_CODEC, QuestRefusePayload::handleOnServer);
       registrar.playToServer(WandDebugActionPayload.TYPE, WandDebugActionPayload.STREAM_CODEC, WandDebugActionPayload::handleOnServer);
       registrar.playToServer(NegationWandConfirmPayload.TYPE, NegationWandConfirmPayload.STREAM_CODEC, NegationWandConfirmPayload::handleOnServer);
       registrar.playToServer(BuildingProjectRequestPayload.TYPE, BuildingProjectRequestPayload.STREAM_CODEC, BuildingProjectRequestPayload::handleOnServer);
+      registrar.playToServer(
+         DesignateBuildingRequestPayload.TYPE, DesignateBuildingRequestPayload.STREAM_CODEC, DesignateBuildingRequestPayload::handleOnServer
+      );
+      registrar.playToServer(
+         UndesignateBuildingRequestPayload.TYPE, UndesignateBuildingRequestPayload.STREAM_CODEC, UndesignateBuildingRequestPayload::handleOnServer
+      );
       registrar.playToServer(
          BuildingUpgradeToggleRequestPayload.TYPE, BuildingUpgradeToggleRequestPayload.STREAM_CODEC, BuildingUpgradeToggleRequestPayload::handleOnServer
       );
@@ -175,6 +193,7 @@ public final class ModPayloads {
          put(map, SpeechChatPayload.TYPE, ClientPayloadHandler::handleSpeechChat);
          put(map, VillageTypeListPayload.TYPE, ClientPayloadHandler::handleVillageTypeList);
          put(map, InfoPanelContentPayload.TYPE, ClientPayloadHandler::handleInfoPanel);
+         put(map, WorldStatusContentPayload.TYPE, ClientPayloadHandler::handleWorldStatus);
          put(map, QuestInstanceSyncPayload.TYPE, ClientPayloadHandler::handleQuestSync);
          put(map, QuestInstanceDestroyPayload.TYPE, ClientPayloadHandler::handleQuestDestroy);
          put(map, QuestResultTextPayload.TYPE, ClientPayloadHandler::handleQuestResult);
@@ -193,6 +212,10 @@ public final class ModPayloads {
          put(map, org.millenaire.chat.NpcChatClosedPayload.TYPE, ClientPayloadHandler::handleNpcChatClosed);
          put(map, org.millenaire.living.net.LivingActionChoicesPayload.TYPE, ClientPayloadHandler::handleLivingActionChoices);
          put(map, org.millenaire.living.net.LivingActionFeedbackPayload.TYPE, ClientPayloadHandler::handleLivingActionFeedback);
+         put(map, CityAdminPayload.TYPE, ClientPayloadHandler::handleCityAdmin);
+         put(map, BountyHudPayload.TYPE, ClientPayloadHandler::handleBountyHud);
+         put(map, SettlementMapSnapshotPayload.TYPE, ClientPayloadHandler::handleSettlementMapSnapshot);
+         put(map, SettlementMapDeltaPayload.TYPE, ClientPayloadHandler::handleSettlementMapDelta);
          return map;
       }
 

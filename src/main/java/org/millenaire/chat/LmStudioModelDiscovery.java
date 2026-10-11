@@ -66,6 +66,7 @@ public final class LmStudioModelDiscovery {
          if ("lmstudio".equals(p) || "lm_studio".equals(p) || "lm-studio".equals(p)) {
             return true;
          }
+         // "auto" / blank / unknown → detect from URL below
       }
       String normalized = normalizeBase(baseUrl).toLowerCase();
       try {
@@ -75,13 +76,19 @@ public final class LmStudioModelDiscovery {
          if (host == null) {
             return false;
          }
-         boolean local = "localhost".equals(host) || "127.0.0.1".equals(host) || "[::1]".equals(host) || "::1".equals(host);
-         if (local && (port == 1234 || port == -1 && normalized.contains(":1234"))) {
+         if (host.contains("lmstudio") || normalized.contains("lmstudio")) {
             return true;
          }
-         return host.contains("lmstudio") || normalized.contains("lmstudio");
+         // LM Studio's default port. Includes LAN binds shown in the UI (e.g. 192.168.x.x:1234),
+         // not only localhost — otherwise provider=auto disables HTTP entirely.
+         if (port == 1234 || port == -1 && normalized.contains(":1234")) {
+            return true;
+         }
+         boolean loopback = "localhost".equals(host) || "127.0.0.1".equals(host)
+            || "[::1]".equals(host) || "::1".equals(host);
+         return loopback && (port == 1234 || port <= 0);
       } catch (Exception e) {
-         return normalized.contains("localhost:1234") || normalized.contains("127.0.0.1:1234");
+         return normalized.contains(":1234") || normalized.contains("lmstudio");
       }
    }
 
@@ -175,23 +182,59 @@ public final class LmStudioModelDiscovery {
          return Snapshot.unreachable(nowMs, "invalid baseUrl");
       }
       try {
-         HttpRequest.Builder builder = HttpRequest.newBuilder()
-            .uri(URI.create(modelsUrl))
-            .timeout(Duration.ofSeconds(3L))
-            .GET()
-            .header("Accept", "application/json");
-         if (apiKey != null && !apiKey.isBlank()) {
-            builder.header("Authorization", "Bearer " + apiKey);
-         }
-         HttpResponse<String> response = CLIENT.send(builder.build(), BodyHandlers.ofString());
+         HttpResponse<String> response = getJson(modelsUrl, apiKey);
          if (response.statusCode() < 200 || response.statusCode() >= 300) {
+            // Native REST may be disabled/older; still try OpenAI-compat /v1/models.
+            List<LmStudioModelInfo> openai = fetchOpenAiCompatModels(baseUrl, apiKey);
+            if (!openai.isEmpty()) {
+               return Snapshot.ok(nowMs, openai);
+            }
             return Snapshot.unreachable(nowMs, "HTTP " + response.statusCode());
          }
          List<LmStudioModelInfo> loaded = parseLoadedLlms(response.body());
+         if (loaded.isEmpty()) {
+            List<LmStudioModelInfo> openai = fetchOpenAiCompatModels(baseUrl, apiKey);
+            if (!openai.isEmpty()) {
+               LOGGER.info("LM Studio native /api/v1/models had no loaded LLMs; using {} from /v1/models", openai.size());
+               return Snapshot.ok(nowMs, openai);
+            }
+         }
          return Snapshot.ok(nowMs, loaded);
       } catch (Exception e) {
+         try {
+            List<LmStudioModelInfo> openai = fetchOpenAiCompatModels(baseUrl, apiKey);
+            if (!openai.isEmpty()) {
+               return Snapshot.ok(nowMs, openai);
+            }
+         } catch (Exception ignored) {
+            // fall through
+         }
          return Snapshot.unreachable(nowMs, e.toString());
       }
+   }
+
+   private static List<LmStudioModelInfo> fetchOpenAiCompatModels(@Nullable String baseUrl, @Nullable String apiKey) throws Exception {
+      String url = toOpenAiModelsUrl(baseUrl);
+      if (url == null) {
+         return List.of();
+      }
+      HttpResponse<String> response = getJson(url, apiKey);
+      if (response.statusCode() < 200 || response.statusCode() >= 300) {
+         return List.of();
+      }
+      return parseOpenAiCompatModels(response.body());
+   }
+
+   private static HttpResponse<String> getJson(String url, @Nullable String apiKey) throws Exception {
+      HttpRequest.Builder builder = HttpRequest.newBuilder()
+         .uri(URI.create(url))
+         .timeout(Duration.ofSeconds(3L))
+         .GET()
+         .header("Accept", "application/json");
+      if (apiKey != null && !apiKey.isBlank()) {
+         builder.header("Authorization", "Bearer " + apiKey);
+      }
+      return CLIENT.send(builder.build(), BodyHandlers.ofString());
    }
 
    static List<LmStudioModelInfo> parseLoadedLlms(String body) {
@@ -221,10 +264,17 @@ public final class LmStudioModelDiscovery {
          String key = firstNonBlank(text(model, "key"), text(model, "id"));
          String display = firstNonBlank(text(model, "display_name"), text(model, "name"), key);
          if (!model.has("loaded_instances") || !model.get("loaded_instances").isJsonArray()) {
-            // OpenAPI-compat fallback: some builds expose state=loaded without instances.
+            // OpenAPI-compat / partial native payloads: accept loaded/ready state, or a bare id.
             String state = text(model, "state");
-            if ("loaded".equalsIgnoreCase(state) && key != null && !key.isBlank()) {
-               out.add(new LmStudioModelInfo(key, key, display, type));
+            if (key != null && !key.isBlank() && (
+               state == null || state.isBlank()
+                  || "loaded".equalsIgnoreCase(state)
+                  || "ready".equalsIgnoreCase(state)
+            )) {
+               // Only trust bare entries when this looks like an OpenAI-style object (has id, no instances field).
+               if ("loaded".equalsIgnoreCase(state) || "ready".equalsIgnoreCase(state) || model.has("id")) {
+                  out.add(new LmStudioModelInfo(key, key, display, type));
+               }
             }
             continue;
          }
@@ -256,20 +306,60 @@ public final class LmStudioModelDiscovery {
       return "llm".equals(t) || "vlm".equals(t) || "language".equals(t);
    }
 
+   /**
+    * OpenAI-compatible {@code GET /v1/models} payload ({@code data: [{id, ...}]}).
+    * With JIT loading off, LM Studio typically lists the models the server will serve.
+    */
+   static List<LmStudioModelInfo> parseOpenAiCompatModels(String body) {
+      List<LmStudioModelInfo> out = new ArrayList<>();
+      JsonObject root = GSON.fromJson(body, JsonObject.class);
+      if (root == null || !root.has("data") || !root.get("data").isJsonArray()) {
+         return out;
+      }
+      for (JsonElement el : root.getAsJsonArray("data")) {
+         if (!el.isJsonObject()) {
+            continue;
+         }
+         JsonObject model = el.getAsJsonObject();
+         String id = firstNonBlank(text(model, "id"), text(model, "key"));
+         if (id == null || id.isBlank()) {
+            continue;
+         }
+         String lower = id.toLowerCase();
+         if (lower.contains("embed") || lower.contains("embedding")) {
+            continue;
+         }
+         String display = firstNonBlank(text(model, "display_name"), text(model, "name"), id);
+         out.add(new LmStudioModelInfo(id, id, display, "llm"));
+      }
+      out.sort(Comparator.comparing(LmStudioModelInfo::effectiveModelId));
+      return out;
+   }
+
    @Nullable
    static String toNativeModelsUrl(@Nullable String baseUrl) {
+      return toAuthorityPath(baseUrl, "/api/v1/models");
+   }
+
+   @Nullable
+   static String toOpenAiModelsUrl(@Nullable String baseUrl) {
+      return toAuthorityPath(baseUrl, "/v1/models");
+   }
+
+   @Nullable
+   private static String toAuthorityPath(@Nullable String baseUrl, String path) {
       if (baseUrl == null || baseUrl.isBlank()) {
          return null;
       }
       String normalized = normalizeBase(baseUrl);
       try {
-         URI uri = URI.create(normalized);
+         URI uri = URI.create(normalized.contains("://") ? normalized : "http://" + normalized);
          String scheme = uri.getScheme() == null ? "http" : uri.getScheme();
          String authority = uri.getRawAuthority();
          if (authority == null || authority.isBlank()) {
             return null;
          }
-         return scheme + "://" + authority + "/api/v1/models";
+         return scheme + "://" + authority + path;
       } catch (Exception e) {
          return null;
       }

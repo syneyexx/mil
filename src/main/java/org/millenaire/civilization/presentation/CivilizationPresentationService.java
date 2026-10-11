@@ -35,11 +35,15 @@ import org.millenaire.civilization.population.PopulationSnapshot;
 import org.millenaire.civilization.settlement.ColonizationOperation;
 import org.millenaire.civilization.settlement.ColonizationService;
 import org.millenaire.civilization.settlement.FoundingCostService;
+import org.millenaire.civilization.settlement.PlayerSettlementFoundingService;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.faction.Faction;
 import org.millenaire.faction.FactionId;
 import org.millenaire.faction.FactionSavedData;
+import org.millenaire.faction.FactionType;
+import org.millenaire.faction.ImmigrationPolicy;
+import org.millenaire.faction.TradePolicy;
 import org.millenaire.faction.diplomacy.AgreementStatus;
 import org.millenaire.faction.diplomacy.DiplomacySavedData;
 import org.millenaire.faction.diplomacy.DiplomaticAgreement;
@@ -47,6 +51,7 @@ import org.millenaire.faction.economy.EconomySavedData;
 import org.millenaire.faction.economy.FactionEconomicProfile;
 import org.millenaire.faction.politics.PoliticalLeader;
 import org.millenaire.faction.politics.PoliticsQueries;
+import org.millenaire.faction.relationship.RelationshipSavedData;
 import org.millenaire.faction.war.WarSavedData;
 import org.millenaire.language.BuildingNameHelper;
 import org.millenaire.living.LivingVillagesService;
@@ -126,6 +131,16 @@ public final class CivilizationPresentationService {
             ));
          }
       }
+      var shopStats = org.millenaire.village.PlayerShopService.statsForToday(village, level);
+      needs.add(new CivilizationVillageSnapshot.NeedLine(
+         "shopstats",
+         "shopstats",
+         shopStats.visits + "|" + shopStats.deniers,
+         0,
+         0,
+         true,
+         "info"
+      ));
 
       CivilizationVillageSnapshot.ProjectLine project = resolveProject(village);
       List<CivilizationVillageSnapshot.TradeLine> trades = resolveTrade(level, village, now);
@@ -165,9 +180,18 @@ public final class CivilizationPresentationService {
       Faction faction = factionId == null ? null : FactionSavedData.get(level).getFactionManager().getFaction(factionId);
       String display = faction != null ? faction.getDisplayName() : factionDisplayName(level, factionId);
       PoliticalLeader leader = factionId == null ? null : PoliticsQueries.leader(level, factionId);
-      String leaderName = leader != null && leader.getDisplayName() != null && !leader.getDisplayName().isBlank()
-         ? leader.getDisplayName()
-         : null;
+      String leaderName = null;
+      if (faction != null && faction.getType() == org.millenaire.faction.FactionType.PLAYER && faction.getSovereignOwnerUuid() != null) {
+         var online = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(faction.getSovereignOwnerUuid()) : null;
+         if (online != null) {
+            leaderName = online.getName().getString();
+         } else if (faction.getDisplayName() != null && !faction.getDisplayName().isBlank()) {
+            leaderName = faction.getDisplayName();
+         }
+      }
+      if (leaderName == null && leader != null && leader.getDisplayName() != null && !leader.getDisplayName().isBlank()) {
+         leaderName = leader.getDisplayName();
+      }
 
       int residents = 0;
       int housing = 0;
@@ -506,6 +530,26 @@ public final class CivilizationPresentationService {
          ));
       }
 
+      // Surface sovereign trade policy when it blocks auto-import (otherwise failures look silent).
+      if (out.stream().noneMatch(t -> "settlement_trade".equals(t.kindCode()) || "logistics".equals(t.kindCode()))) {
+         Faction faction = village.getFactionId() == null
+            ? null
+            : FactionSavedData.get(level).getFactionManager().getFaction(village.getFactionId());
+         if (faction != null && faction.getType() == FactionType.PLAYER && !faction.getTradePolicy().allowsImport()) {
+            out.add(new CivilizationVillageSnapshot.TradeLine(
+               "settlement_trade",
+               "blocked",
+               faction.getDisplayName() == null ? "" : faction.getDisplayName(),
+               "policy",
+               "inbound",
+               0,
+               0,
+               "trade_policy_" + faction.getTradePolicy().name().toLowerCase(Locale.ROOT),
+               now
+            ));
+         }
+      }
+
       out.sort(Comparator
          .comparingInt((CivilizationVillageSnapshot.TradeLine t) -> tradeKindPriority(t.kindCode()))
          .thenComparingLong(CivilizationVillageSnapshot.TradeLine::lastTransferGameTime)
@@ -776,7 +820,194 @@ public final class CivilizationPresentationService {
          interrupted ? colonization.operationId().toString() : null
       ));
 
+      Faction sovereign = resolveSovereignFactionForViewer(level, village, viewer);
+      boolean isSovereign = sovereign != null;
+      ImmigrationPolicy immigration = isSovereign ? sovereign.getImmigrationPolicy() : ImmigrationPolicy.OPEN;
+      TradePolicy trade = isSovereign ? sovereign.getTradePolicy() : TradePolicy.INBOUND_ONLY;
+      actions.add(new CivilizationVillageSnapshot.AllowedAction(
+         CivilizationActionId.SET_IMMIGRATION_POLICY,
+         isSovereign,
+         CivilizationActionId.SET_IMMIGRATION_POLICY.i18nKey(),
+         isSovereign ? "" : "civilization.millenaire.action.blocked.not_sovereign",
+         cycleImmigrationPolicy(immigration).name()
+      ));
+      actions.add(new CivilizationVillageSnapshot.AllowedAction(
+         CivilizationActionId.SET_TRADE_POLICY,
+         isSovereign,
+         CivilizationActionId.SET_TRADE_POLICY.i18nKey(),
+         isSovereign ? "" : "civilization.millenaire.action.blocked.not_sovereign",
+         cycleTradePolicy(trade).name()
+      ));
+
+      boolean canManageProjects = controlled || isSovereign;
+      actions.add(new CivilizationVillageSnapshot.AllowedAction(
+         CivilizationActionId.OPEN_CONTROLLED_PROJECTS,
+         canManageProjects,
+         CivilizationActionId.OPEN_CONTROLLED_PROJECTS.i18nKey(),
+         canManageProjects ? "" : "civilization.millenaire.action.blocked.not_controller",
+         null
+      ));
+
+      if (!isSovereign) {
+         actions.add(disabledDiplomacy(CivilizationActionId.DECLARE_WAR, "civilization.millenaire.action.blocked.not_sovereign"));
+         actions.add(disabledDiplomacy(CivilizationActionId.OFFER_PEACE, "civilization.millenaire.action.blocked.not_sovereign"));
+         actions.add(disabledDiplomacy(CivilizationActionId.SET_EMBARGO, "civilization.millenaire.action.blocked.not_sovereign"));
+         actions.add(disabledDiplomacy(CivilizationActionId.CLEAR_EMBARGO, "civilization.millenaire.action.blocked.not_sovereign"));
+      } else {
+         appendDiplomacyTargetActions(level, sovereign, actions);
+         appendGuardAssignmentActions(village, actions);
+      }
+
       return actions;
+   }
+
+   private static void appendGuardAssignmentActions(
+      Village village, List<CivilizationVillageSnapshot.AllowedAction> actions
+   ) {
+      int added = 0;
+      for (org.millenaire.village.VillagerRecord record : village.getVillagerRecords().values()) {
+         if (record == null || record.isKilled() || added >= 8) {
+            continue;
+         }
+         String name = (record.getFirstName() == null ? "" : record.getFirstName())
+            + " "
+            + (record.getFamilyName() == null ? "" : record.getFamilyName());
+         name = name.trim();
+         if (name.isBlank()) {
+            name = record.getUuid().toString().substring(0, 8);
+         }
+         String targetId = record.getUuid().toString();
+         if (record.isPlayerAssignedGuard()) {
+            actions.add(
+               new CivilizationVillageSnapshot.AllowedAction(
+                  CivilizationActionId.RELIEVE_GUARD,
+                  true,
+                  CivilizationActionId.RELIEVE_GUARD.i18nKey() + "|" + name,
+                  "",
+                  targetId
+               )
+            );
+         } else {
+            boolean canAssign = org.millenaire.village.GuardAssignmentService.findGuardType(village.getCultureId()) != null;
+            actions.add(
+               new CivilizationVillageSnapshot.AllowedAction(
+                  CivilizationActionId.ASSIGN_GUARD,
+                  canAssign,
+                  CivilizationActionId.ASSIGN_GUARD.i18nKey() + "|" + name,
+                  canAssign ? "" : "civilization.millenaire.action.blocked.no_guard_type",
+                  targetId
+               )
+            );
+         }
+         added++;
+      }
+   }
+
+   private static CivilizationVillageSnapshot.AllowedAction disabledDiplomacy(CivilizationActionId id, String reason) {
+      return new CivilizationVillageSnapshot.AllowedAction(id, false, id.i18nKey(), reason, null);
+   }
+
+   private static void appendDiplomacyTargetActions(
+      ServerLevel level,
+      Faction sovereign,
+      List<CivilizationVillageSnapshot.AllowedAction> actions
+   ) {
+      List<Faction> targets = new ArrayList<>();
+      for (Faction faction : FactionSavedData.get(level).getFactionManager().getAllFactions()) {
+         if (faction.getId().equals(sovereign.getId())) {
+            continue;
+         }
+         boolean interesting = WarSavedData.get(level).getWarManager().areAtWar(sovereign.getId(), faction.getId())
+            || RelationshipSavedData.get(level).getRelationshipManager().isHostile(sovereign.getId(), faction.getId())
+            || RelationshipSavedData.get(level).getRelationshipManager().isHostile(faction.getId(), sovereign.getId())
+            || (faction.getType() == FactionType.CULTURE && faction.getCultureId() != null);
+         if (!interesting) {
+            continue;
+         }
+         targets.add(faction);
+         if (targets.size() >= 24) {
+            break;
+         }
+      }
+      if (targets.isEmpty()) {
+         actions.add(disabledDiplomacy(CivilizationActionId.DECLARE_WAR, "civilization.millenaire.action.blocked.no_targets"));
+         actions.add(disabledDiplomacy(CivilizationActionId.OFFER_PEACE, "civilization.millenaire.action.blocked.no_targets"));
+         actions.add(disabledDiplomacy(CivilizationActionId.SET_EMBARGO, "civilization.millenaire.action.blocked.no_targets"));
+         actions.add(disabledDiplomacy(CivilizationActionId.CLEAR_EMBARGO, "civilization.millenaire.action.blocked.no_targets"));
+         return;
+      }
+      for (Faction target : targets) {
+         boolean atWar = WarSavedData.get(level).getWarManager().areAtWar(sovereign.getId(), target.getId());
+         boolean embargo = DiplomacySavedData.get(level).getDiplomaticManager().isEmbargoed(sovereign.getId(), target.getId())
+            || DiplomacySavedData.get(level).getDiplomaticManager().isEmbargoed(target.getId(), sovereign.getId());
+         String targetId = target.getId().asString();
+         String labelSuffix = target.getDisplayName() == null ? targetId : target.getDisplayName();
+         actions.add(new CivilizationVillageSnapshot.AllowedAction(
+            CivilizationActionId.DECLARE_WAR,
+            !atWar,
+            CivilizationActionId.DECLARE_WAR.i18nKey() + "|" + labelSuffix,
+            atWar ? "civilization.millenaire.action.blocked.already_war" : "",
+            targetId
+         ));
+         actions.add(new CivilizationVillageSnapshot.AllowedAction(
+            CivilizationActionId.OFFER_PEACE,
+            atWar,
+            CivilizationActionId.OFFER_PEACE.i18nKey() + "|" + labelSuffix,
+            atWar ? "" : "civilization.millenaire.action.blocked.no_war",
+            targetId
+         ));
+         actions.add(new CivilizationVillageSnapshot.AllowedAction(
+            CivilizationActionId.SET_EMBARGO,
+            !embargo,
+            CivilizationActionId.SET_EMBARGO.i18nKey() + "|" + labelSuffix,
+            embargo ? "civilization.millenaire.action.blocked.already_embargo" : "",
+            targetId
+         ));
+         actions.add(new CivilizationVillageSnapshot.AllowedAction(
+            CivilizationActionId.CLEAR_EMBARGO,
+            embargo,
+            CivilizationActionId.CLEAR_EMBARGO.i18nKey() + "|" + labelSuffix,
+            embargo ? "" : "civilization.millenaire.action.blocked.no_embargo",
+            targetId
+         ));
+      }
+   }
+
+   @Nullable
+   private static Faction resolveSovereignFactionForViewer(
+      ServerLevel level,
+      Village village,
+      @Nullable ServerPlayer viewer
+   ) {
+      if (viewer == null || !PlayerSettlementFoundingService.isSovereignPlayerSettlement(level, village)) {
+         return null;
+      }
+      boolean owner = village.isControlledBy(viewer.getUUID())
+         || (village.getOwnerUUID() != null && village.getOwnerUUID().equals(viewer.getUUID()));
+      if (!owner) {
+         return null;
+      }
+      Faction faction = FactionSavedData.get(level).getFactionManager().getFaction(village.getFactionId());
+      if (faction == null || faction.getType() != FactionType.PLAYER) {
+         return null;
+      }
+      return faction.isSovereignOwnedBy(viewer.getUUID()) ? faction : null;
+   }
+
+   private static ImmigrationPolicy cycleImmigrationPolicy(ImmigrationPolicy current) {
+      return switch (current == null ? ImmigrationPolicy.OPEN : current) {
+         case OPEN -> ImmigrationPolicy.RESTRICTED;
+         case RESTRICTED -> ImmigrationPolicy.CLOSED;
+         case CLOSED -> ImmigrationPolicy.OPEN;
+      };
+   }
+
+   private static TradePolicy cycleTradePolicy(TradePolicy current) {
+      return switch (current == null ? TradePolicy.INBOUND_ONLY : current) {
+         case OPEN -> TradePolicy.INBOUND_ONLY;
+         case INBOUND_ONLY -> TradePolicy.CLOSED;
+         case CLOSED -> TradePolicy.OPEN;
+      };
    }
 
    private static boolean isColonizationResumable(@Nullable ColonizationOperation op) {

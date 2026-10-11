@@ -21,6 +21,7 @@ import org.millenaire.faction.Faction;
 import org.millenaire.faction.FactionId;
 import org.millenaire.faction.FactionManager;
 import org.millenaire.faction.FactionSavedData;
+import org.millenaire.faction.FactionType;
 import org.millenaire.faction.diplomacy.DiplomacySavedData;
 import org.millenaire.faction.economy.EconomicBalanceLevel;
 import org.millenaire.faction.economy.EconomyQueries;
@@ -1751,6 +1752,18 @@ public final class PoliticsManager {
    }
 
    private void validateLeader(ServerLevel level, FactionPoliticalState state, Government government, @Nullable PoliticalLeader leader, long gameTime) {
+      Faction faction = FactionSavedData.get(level).getFactionManager().getFaction(state.getFactionId());
+      if (faction != null && faction.getType() == FactionType.PLAYER && faction.getSovereignOwnerUuid() != null) {
+         // Player-sovereign factions are ruled by the player — never force NPC succession.
+         if (leader != null && leader.isActive()) {
+            String sovereignName = resolveSovereignDisplayName(level, faction);
+            if (sovereignName != null) {
+               leader.setDisplayName(sovereignName);
+            }
+         }
+         return;
+      }
+
       if (leader == null) {
          if (!state.isSuccessionPending()) {
             this.beginSuccession(level, state.getFactionId(), SuccessionReason.REMOVAL, "missing_leader");
@@ -1773,6 +1786,18 @@ public final class PoliticsManager {
             }
          }
       }
+   }
+
+   @Nullable
+   private static String resolveSovereignDisplayName(ServerLevel level, Faction faction) {
+      if (faction.getSovereignOwnerUuid() == null) {
+         return null;
+      }
+      var player = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(faction.getSovereignOwnerUuid()) : null;
+      if (player != null) {
+         return player.getName().getString();
+      }
+      return faction.getDisplayName();
    }
 
    private void buildSuccessionCandidates(ServerLevel level, FactionPoliticalState state, Government government) {

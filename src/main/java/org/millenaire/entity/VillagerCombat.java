@@ -303,7 +303,9 @@ public final class VillagerCombat {
    }
 
    void onHurt(DamageSource source, float amount, boolean hadFullHealth) {
-      if (source.getEntity() instanceof ServerPlayer player && !player.isCreative() && !player.isSpectator() && !this.isRaiderEntity()) {
+      if (source.getEntity() instanceof ServerPlayer player
+         && CombatHelper.isPlayerTargetable(player)
+         && !this.isRaiderEntity()) {
          ResourceLocation vtId = this.villager.getVillagerTypeId();
          VillagerType vtype = vtId != null ? ModCultures.getVillagerType(vtId) : null;
          boolean nonHostileType = vtype != null && !vtype.isHostile();
@@ -313,6 +315,7 @@ public final class VillagerCombat {
             if (village != null) {
                int repChange = -((int)(amount * 10.0F));
                village.adjustReputation(serverLevel, player.getUUID(), repChange);
+               org.millenaire.faction.crime.CrimeService.onVillagerAssault(serverLevel, player, this.villager, village);
                LOGGER.debug(
                   "[Millenaire] {} hit {} : rep {} (village {})",
                   new Object[]{player.getGameProfile().getName(), this.villager.getVillagerTypeId(), repChange, village.getVillageName()}

@@ -1,0 +1,23 @@
+{
+  "culture": "millenaire:gabbers",
+  "name": "Spelerkoninkrijk",
+  "weight": 0,
+  "player_controlled": true,
+  "layout": [
+    { "plan": "millenaire:gabbers/playerlargefort", "role": "centre" },
+    { "plan": "millenaire:gabbers/lumbermanhut", "role": "start" },
+    { "plan": "millenaire:gabbers/guardhouse", "role": "start" },
+    { "plan": "millenaire:gabbers/farm", "role": "start" },
+    { "plan": "millenaire:gabbers/forge", "role": "core" },
+    { "plan": "millenaire:gabbers/church", "role": "core" },
+    { "plan": "millenaire:gabbers/market", "role": "core" },
+    { "plan": "millenaire:gabbers/carpenterhouse", "role": "core" },
+    { "plan": "millenaire:gabbers/armoury", "role": "core" },
+    { "plan": "millenaire:gabbers/watchtower", "role": "secondary" }
+  ],
+  "icon": "minecraft:orange_banner",
+  "carries_raid": true,
+  "path_materials": ["pathdirt", "pathgravel", "pathslabs"],
+  "inner_wall_type": "stonewalls",
+  "inner_wall_radius": 40
+}

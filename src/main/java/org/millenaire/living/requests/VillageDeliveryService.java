@@ -19,6 +19,7 @@ import org.millenaire.building.BuildingInstance;
 import org.millenaire.building.BuildingInventory;
 import org.millenaire.item.ItemHelper;
 import org.millenaire.village.Village;
+import org.millenaire.village.VillageId;
 import org.slf4j.Logger;
 
 /**
@@ -309,6 +310,114 @@ public final class VillageDeliveryService {
                remaining.getCount()
             );
          }
+      }
+   }
+
+   /**
+    * Attempt to pull previously stuck overdelivery goods out of the destination inventory
+    * and return them to the request owner (or drop at the townhall if offline).
+    * @return total item count recovered this call
+    */
+   public static int tryRecoverOutstanding(ServerLevel level, VillageRequest request) {
+      if (level == null || request == null || !request.hasRecoveryOutstanding()) {
+         return 0;
+      }
+      Village village = Village.resolve(level, new VillageId(request.villageId()));
+      if (village == null) {
+         return 0;
+      }
+      BuildingInstance townhall = village.getTownhall();
+      if (townhall == null || townhall.getInventory() == null) {
+         return 0;
+      }
+      BuildingInventory inv = townhall.getInventory();
+      inv.invalidateCacheOncePerTick(level.getGameTime());
+      ServerPlayer player = level.getServer() != null
+         ? level.getServer().getPlayerList().getPlayer(request.playerId())
+         : null;
+
+      int recoveredTotal = 0;
+      for (Entry<ResourceLocation, Integer> entry : List.copyOf(request.recoveryOutstanding().entrySet())) {
+         ResourceLocation itemId = entry.getKey();
+         int want = entry.getValue();
+         if (want <= 0) {
+            continue;
+         }
+         BuildingInventory.RemoveStacksResult result;
+         if (AnywoodHelper.isAnywood(itemId)) {
+            result = inv.removeByTagExact(level, AnywoodHelper.LOGS_TAG, want, java.util.Set.of());
+         } else {
+            Item item = ItemHelper.resolve(itemId);
+            if (item == null) {
+               continue;
+            }
+            result = inv.removeByItemExact(level, item, want);
+         }
+         List<ItemStack> pulled = result.stacks();
+         int pulledCount = result.removed();
+         if (pulledCount <= 0 || pulled.isEmpty()) {
+            continue;
+         }
+         int consumed = request.consumeRecovery(itemId, pulledCount);
+         if (consumed < pulledCount) {
+            // Ledger shrank under us; put surplus back into destination.
+            int surplus = pulledCount - consumed;
+            for (ItemStack stack : pulled) {
+               if (surplus <= 0) {
+                  break;
+               }
+               int giveBack = Math.min(surplus, stack.getCount());
+               if (giveBack <= 0) {
+                  continue;
+               }
+               ItemStack copy = stack.copy();
+               copy.setCount(giveBack);
+               inv.addExactStack(level, copy);
+               stack.shrink(giveBack);
+               surplus -= giveBack;
+            }
+         }
+         List<ItemStack> toReturn = new ArrayList<>();
+         for (ItemStack stack : pulled) {
+            if (!stack.isEmpty()) {
+               toReturn.add(stack);
+            }
+         }
+         if (player != null) {
+            returnStacksToPlayer(level, player, toReturn);
+         } else {
+            dropAtTownhall(level, townhall, toReturn);
+         }
+         recoveredTotal += consumed;
+      }
+      if (recoveredTotal > 0) {
+         VillageRequestSavedData.get(level).setDirty();
+         village.markDirty();
+         inv.invalidateCache();
+         LOGGER.info(
+            "[Living] Recovered {} overdelivery item(s) for request {} (player {})",
+            recoveredTotal,
+            request.requestId(),
+            request.playerId()
+         );
+      }
+      return recoveredTotal;
+   }
+
+   private static void dropAtTownhall(ServerLevel level, BuildingInstance townhall, List<ItemStack> stacks) {
+      net.minecraft.core.BlockPos pos = townhall.getSellingPos();
+      if (pos == null) {
+         pos = townhall.getOrigin();
+      }
+      for (ItemStack stack : stacks) {
+         if (stack == null || stack.isEmpty()) {
+            continue;
+         }
+         ItemEntity dropped = new ItemEntity(
+            level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, stack.copy()
+         );
+         dropped.setPickUpDelay(40);
+         level.addFreshEntity(dropped);
       }
    }
 

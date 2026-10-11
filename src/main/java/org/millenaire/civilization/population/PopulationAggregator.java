@@ -44,10 +44,42 @@ public final class PopulationAggregator {
          scanned++;
          Faction faction = factions.get((cursor + i) % n);
          PopulationSnapshot snap = aggregateFaction(villages, faction, level.getGameTime());
-         state.putPopulationSnapshot(faction.getId().asString(), snap.save());
+         String key = faction.getId().asString();
+         net.minecraft.nbt.CompoundTag next = snap.save();
+         net.minecraft.nbt.CompoundTag prev = state.getPopulationSnapshot(key);
+         if (prev != null && populationTagEqualIgnoringTime(prev, next)) {
+            continue;
+         }
+         state.putPopulationSnapshot(key, next);
          mutated++;
       }
-      state.setPopulationCursor(cursor + Math.max(1, mutated));
+      state.setPopulationCursor(cursor + Math.max(1, Math.max(mutated, scanned > 0 ? 1 : 0)));
+   }
+
+   private static boolean populationTagEqualIgnoringTime(net.minecraft.nbt.CompoundTag a, net.minecraft.nbt.CompoundTag b) {
+      if (a == b) {
+         return true;
+      }
+      if (a == null || b == null) {
+         return false;
+      }
+      for (String key : a.getAllKeys()) {
+         if ("at".equals(key)) {
+            continue;
+         }
+         if (!a.get(key).equals(b.get(key))) {
+            return false;
+         }
+      }
+      for (String key : b.getAllKeys()) {
+         if ("at".equals(key)) {
+            continue;
+         }
+         if (!a.contains(key)) {
+            return false;
+         }
+      }
+      return true;
    }
 
    public static PopulationSnapshot aggregateFaction(VillageSavedData villages, Faction faction, long gameTime) {
@@ -123,6 +155,12 @@ public final class PopulationAggregator {
          if (!building.isOperational()) {
             continue;
          }
+         if (building.isPlayerDesignated()
+            && building.getPurpose() != null
+            && building.getPurpose().providesImmigrantHousing()) {
+            capacity += building.hasBedManager() ? building.getBedManager().getBedCount() : 0;
+            continue;
+         }
          BuildingPlanSet planSet = building.getPlanSetId() != null ? ModCultures.getBuildingPlanSet(building.getPlanSetId()) : null;
          if (planSet == null || !planSet.isResidential()) {
             continue;
@@ -132,6 +170,95 @@ public final class PopulationAggregator {
          capacity += Math.max(0, slots);
       }
       return capacity;
+   }
+
+   /**
+    * Housing demand from spare residential slots; work demand from unfilled slots on production buildings.
+    */
+   public static AttractionDemand computeAttractionDemand(Village village, long gameTime) {
+      PopulationSnapshot pop = aggregateVillage(village, gameTime);
+      int housingDemand = Math.max(0, pop.housingCapacity() - pop.residents());
+      int workSlots = 0;
+      int filledOnWork = 0;
+      for (BuildingInstance building : village.getBuildings()) {
+         if (!building.isOperational()) {
+            continue;
+         }
+         // Designated workplaces pull civilian immigrants into HOUSE beds (farm bridge / pens).
+         if (building.isPlayerDesignated() && building.getPurpose() != null && building.getPurpose().isWorkAttraction()) {
+            workSlots += building.getPurpose() == org.millenaire.building.BuildingPurpose.FARMLAND ? 2 : 1;
+            continue;
+         }
+         if (building.getPlanSetId() == null) {
+            continue;
+         }
+         BuildingPlanSet planSet = ModCultures.getBuildingPlanSet(building.getPlanSetId());
+         if (planSet == null || !planSet.isResidential()) {
+            continue;
+         }
+         if (!looksLikeWorkBuilding(planSet)) {
+            continue;
+         }
+         int slots = planSet.maleResidentsAt(building.getVariant(), building.getLevel()).size()
+            + planSet.femaleResidentsAt(building.getVariant(), building.getLevel()).size();
+         workSlots += slots;
+         filledOnWork += countResidentsInBuilding(village, building);
+      }
+      int workDemand = Math.max(0, workSlots - filledOnWork);
+      // Housing-only vacancies still attract; work vacancies add pull even when counted in housing.
+      return new AttractionDemand(housingDemand, workDemand);
+   }
+
+   private static boolean looksLikeWorkBuilding(BuildingPlanSet planSet) {
+      String path = planSet.id() != null ? planSet.id().getPath().toLowerCase() : "";
+      if (path.startsWith("designated/")) {
+         return path.contains("farmland")
+            || path.contains("sheep_pen")
+            || path.contains("cattle_pen")
+            || path.contains("horse_stable")
+            || path.contains("chicken_coop")
+            || path.contains("pig_pen")
+            || path.contains("grove")
+            || path.contains("warehouse")
+            || path.contains("armory");
+      }
+      if (path.contains("house") || path.contains("home") || path.contains("hut_empty") || path.contains("apartment")) {
+         return false;
+      }
+      return path.contains("farm")
+         || path.contains("bakery")
+         || path.contains("forge")
+         || path.contains("smith")
+         || path.contains("quarry")
+         || path.contains("lumber")
+         || path.contains("mine")
+         || path.contains("workshop")
+         || path.contains("kiln")
+         || path.contains("mill")
+         || path.contains("grove")
+         || path.contains("cattle")
+         || path.contains("sheep")
+         || path.contains("chicken")
+         || path.contains("inn")
+         || path.contains("market")
+         || path.contains("shop")
+         || path.contains("guard")
+         || path.contains("armoury")
+         || path.contains("barrack")
+         || !planSet.startingGoods().isEmpty();
+   }
+
+   private static int countResidentsInBuilding(Village village, BuildingInstance building) {
+      int count = 0;
+      for (VillagerRecord record : village.getVillagerRecords().values()) {
+         if (record == null || record.isKilled() || record.getHomeBuilding() == null) {
+            continue;
+         }
+         if (record.getHomeBuilding().equals(building.getId())) {
+            count++;
+         }
+      }
+      return count;
    }
 
    private static boolean isMilitaryEligible(@javax.annotation.Nullable VillagerType type, VillagerRecord record) {

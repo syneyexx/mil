@@ -77,6 +77,25 @@ Colonization additionally persists `advanceCursor` and `refundCursor` in `Coloni
 
 Separates last **attempt**, last **success**, and per-faction last economy/offscreen time. Elapsed is read **before** overwriting stage clocks. Work is profile refresh only — `civilizationCatchupDays` caps that refresh window. No force-load, no free goods, no combat simulation.
 
+## Player sovereign founding (MANUAL)
+
+Players claim a site with the summoning wand (**Found settlement** mode), name it, and pick a culture/type template. `PlayerSettlementFoundingService` is the sole mutation path:
+
+1. Validates overworld, site terrain, and one sovereign faction per player (no min-distance vs existing villages)
+2. Creates a `FactionType.PLAYER` faction with `sovereignOwnerUuid` (never silently rewritten to a culture faction on bootstrap)
+3. Spawns an empty shell via `VillageSpawner.spawnSovereignShell` (buildings, no free occupants/goods)
+4. Assigns the PLAYER faction; owner is the founding player
+
+**Immigration** (`ImmigrationEvaluator`, demographics stage): housing + work demand pull same-culture civilians from overcrowded/surplus NPC villages (diplomacy/war gated), with capped traveler spawns when sources are scarce. Policies: `ImmigrationPolicy` / `TradePolicy` on the faction. Sovereign builds never receive free `spawnBuildingOccupants`.
+
+**Agency:** controller/sovereign actions include immigration/trade policy, declare war, offer peace, embargo, assign/relieve guards. Village relation/raid UI bridges into faction `RelationshipManager` / `WarManager`. Auto-trade respects PLAYER `TradePolicy` (default inbound-only — no silent chest export). City Admin Diplomacy lists up to 24 culture/hostile faction targets.
+
+**Designated purposes (player cities):** HOUSE, FARMLAND, ARMORY, TOWN_HALL, KING_HOUSE, pens/GROVE, WAREHOUSE, plus **JAIL** (beds+chests for arrests) and **SHOP** (chests; residents/merchants/road travelers buy stock for deniers).
+
+**Culture bounty / crime:** `CultureBountyManager` tracks player×culture bounty scores. Crimes (assault, murder, theft, pickpocket, raid) raise score with chat `Got a +N bounty by the Culture [Total: T]` and a top-right Wanted HUD (deniers). Guards (`helpInAttacks`) pursue WANTED+ players on sight in any village of that culture. Lethal guard hits trigger soft-death **arrest** (`ArrestService`): inventory → jail/townhall chest, teleport to jail, no death. Peace offers reduce bounty.
+
+`SettlementPlan.FoundingMode.MANUAL` marks empty-founding semantics alongside COLONIZATION (`isEmptyFounding()`).
+
 ## Autonomous founding
 
 Default **off** (`civilizationAutonomousFoundingEnabled`). Explicit lifecycle on `ColonizationOperation` + `SettlementPlan.FoundingMode.COLONIZATION`:

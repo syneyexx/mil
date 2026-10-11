@@ -2,7 +2,9 @@
   "culture": "millenaire:japanese",
   "biome_tags": [
     "#c:is_hill",
-    "#millenaire:is_meadow"
+    "#millenaire:is_meadow",
+    "#millenaire:is_hot_springs",
+    "#millenaire:is_cherry_grove"
   ],
   "name": "Onsenmachi",
   "weight": 10,

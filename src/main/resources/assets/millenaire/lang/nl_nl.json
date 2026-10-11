@@ -5187,6 +5187,7 @@
   "civilization.millenaire.overview.migration_kind.recovery": "Migratieherstel",
   "civilization.millenaire.overview.housing_capacity_unknown": "Huisvestingscapaciteit is onbekend.",
   "civilization.millenaire.overview.shortage_unproven": "Waargenomen tekort (niet volledig bewezen): %1$s",
+  "gui.millenaire.world_status.settlements.need_unproven": "Waargenomen behoefte (voorraad niet volledig bewezen): %s",
   "civilization.millenaire.overview.legacy_trade_limited": "Oudere herstelrecords bevatten geen exacte oorspronkelijke stacks.",
   "living.millenaire.action.support_village_need": "Dorpstekort ondersteunen",
   "living.millenaire.action.prioritize_housing_project": "Woningproject prioriteren",

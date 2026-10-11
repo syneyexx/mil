@@ -74,7 +74,7 @@ public class HostileVillagerGoal implements VillagerGoal {
       if (!e.isAlive()) {
          return false;
       } else if (e instanceof Player p) {
-         return p instanceof ServerPlayer && CombatHelper.isPlayerTargetable(p.isCreative(), p.isSpectator());
+         return p instanceof ServerPlayer && CombatHelper.isPlayerTargetable(p);
       } else if (!(e instanceof MillVillager mv)) {
          return false;
       } else {

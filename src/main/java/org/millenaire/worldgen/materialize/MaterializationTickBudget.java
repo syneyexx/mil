@@ -3,14 +3,22 @@ package org.millenaire.worldgen.materialize;
 import org.millenaire.config.MillenaireServerConfig;
 
 /**
- * Shared per-server-tick materialization budget. Multiple chunk-load events in the same tick
- * consume the same pool so they cannot each reset an unlimited allowance.
+ * Shared per-server-tick materialization budget combining operation counts with a wall-clock
+ * deadline. Multiple chunk-load events in the same tick consume the same pool.
  */
 public final class MaterializationTickBudget {
    private static long budgetGameTime = Long.MIN_VALUE;
    private static int remainingOps;
    private static int remainingScanCandidates;
    private static int remainingActivations;
+   private static int remainingPlanSteps;
+   private static long deadlineNanos;
+   private static long tickStartNanos;
+   private static long lastPhaseNanos;
+   private static long planningNanos;
+   private static long layoutNanos;
+   private static long materializeNanos;
+   private static long activationNanos;
 
    private MaterializationTickBudget() {
    }
@@ -21,7 +29,48 @@ public final class MaterializationTickBudget {
          remainingOps = MillenaireServerConfig.SERVER.worldgenMaterializationBudget.getAsInt();
          remainingScanCandidates = MillenaireServerConfig.SERVER.worldgenMaterializationScanBudget.getAsInt();
          remainingActivations = MillenaireServerConfig.SERVER.worldgenActivationBudget.getAsInt();
+         remainingPlanSteps = MillenaireServerConfig.SERVER.worldgenPlanningBudget.getAsInt();
+         int timeMs = MillenaireServerConfig.SERVER.worldgenTickTimeBudgetMs.getAsInt();
+         tickStartNanos = System.nanoTime();
+         deadlineNanos = tickStartNanos + Math.max(1, timeMs) * 1_000_000L;
+         lastPhaseNanos = tickStartNanos;
+         planningNanos = 0L;
+         layoutNanos = 0L;
+         materializeNanos = 0L;
+         activationNanos = 0L;
       }
+   }
+
+   public static boolean hasTime() {
+      return System.nanoTime() < deadlineNanos;
+   }
+
+   /** Shared soft deadline for this server tick (nanos). */
+   public static long deadlineNanos() {
+      return deadlineNanos;
+   }
+
+   public static boolean hasTimeAndOps() {
+      return hasTime() && remainingOps > 0;
+   }
+
+   public static void notePhase(Phase phase) {
+      long now = System.nanoTime();
+      long delta = Math.max(0L, now - lastPhaseNanos);
+      lastPhaseNanos = now;
+      switch (phase) {
+         case PLANNING -> planningNanos += delta;
+         case LAYOUT -> layoutNanos += delta;
+         case MATERIALIZE -> materializeNanos += delta;
+         case ACTIVATION -> activationNanos += delta;
+      }
+   }
+
+   public enum Phase {
+      PLANNING,
+      LAYOUT,
+      MATERIALIZE,
+      ACTIVATION
    }
 
    public static int remainingOps() {
@@ -29,6 +78,8 @@ public final class MaterializationTickBudget {
    }
 
    public static boolean hasOps() {
+      // Op count is independent of the wall-clock soft deadline so a short time budget cannot
+      // zero out all materialization after planning. Callers still check hasTime() between units.
       return remainingOps > 0;
    }
 
@@ -42,15 +93,18 @@ public final class MaterializationTickBudget {
    }
 
    public static boolean tryConsumeOp() {
+      if (!hasTime() || remainingOps <= 0) {
+         return false;
+      }
       return consumeOps(1) == 1;
    }
 
    public static boolean hasScanCandidates() {
-      return remainingScanCandidates > 0;
+      return remainingScanCandidates > 0 && hasTime();
    }
 
    public static boolean tryConsumeScan() {
-      if (remainingScanCandidates <= 0) {
+      if (remainingScanCandidates <= 0 || !hasTime()) {
          return false;
       }
       remainingScanCandidates--;
@@ -70,7 +124,50 @@ public final class MaterializationTickBudget {
       return true;
    }
 
+   public static boolean hasPlanBudget() {
+      return remainingPlanSteps > 0;
+   }
+
+   public static boolean tryConsumePlanStep() {
+      if (remainingPlanSteps <= 0) {
+         return false;
+      }
+      remainingPlanSteps--;
+      return true;
+   }
+
+   public static long elapsedMillis() {
+      return Math.max(0L, (System.nanoTime() - tickStartNanos) / 1_000_000L);
+   }
+
    public static String diagnostic() {
-      return "ops=" + remainingOps + " scans=" + remainingScanCandidates + " activations=" + remainingActivations;
+      return "ops="
+         + remainingOps
+         + " scans="
+         + remainingScanCandidates
+         + " activations="
+         + remainingActivations
+         + " plans="
+         + remainingPlanSteps
+         + " elapsedMs="
+         + elapsedMillis()
+         + " phaseMs={plan="
+         + planningNanos / 1_000_000L
+         + ",layout="
+         + layoutNanos / 1_000_000L
+         + ",mat="
+         + materializeNanos / 1_000_000L
+         + ",act="
+         + activationNanos / 1_000_000L
+         + "}";
+   }
+
+   public static void reset() {
+      budgetGameTime = Long.MIN_VALUE;
+      remainingOps = 0;
+      remainingScanCandidates = 0;
+      remainingActivations = 0;
+      remainingPlanSteps = 0;
+      deadlineNanos = 0L;
    }
 }

@@ -96,7 +96,7 @@ public final class RegionalRoadPlanner {
     * Prefer an existing local-road edge toward the neighbour; otherwise a radius rim point —
     * never the townhall centre when buildings occupy it.
     */
-   static BlockPos attachmentPoint(SettlementPlan plan, BlockPos toward) {
+   public static BlockPos attachmentPoint(SettlementPlan plan, BlockPos toward) {
       BlockPos best = null;
       double bestScore = Double.MAX_VALUE;
       for (var road : plan.roads()) {

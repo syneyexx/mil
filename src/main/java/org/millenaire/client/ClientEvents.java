@@ -21,9 +21,11 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.ComputeFovModifierEvent;
 import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent.AddLayers;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterLayerDefinitions;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers;
 import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent.Block;
+import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import org.millenaire.Millenaire;
@@ -32,14 +34,32 @@ import org.millenaire.block.ModBlocks;
 import org.millenaire.client.gui.FirePitScreen;
 import org.millenaire.client.gui.LockedChestScreen;
 import org.millenaire.client.gui.TradeScreen;
+import org.millenaire.client.model.AntichristPriestModel;
+import org.millenaire.client.model.BountyHunterArmorModel;
+import org.millenaire.client.model.BountyHunterModel;
+import org.millenaire.client.model.InfernalCultistModel;
+import org.millenaire.client.model.InfernalHarrowModel;
+import org.millenaire.client.model.InfernalHellhoundModel;
 import org.millenaire.client.model.MillFemaleAsymModel;
 import org.millenaire.client.model.MillFemaleSymModel;
 import org.millenaire.client.model.MillMaleModel;
 import org.millenaire.client.model.MillModelLayers;
+import org.millenaire.client.model.NetherWraithModel;
+import org.millenaire.client.render.AntichristPriestRenderer;
+import org.millenaire.client.render.BountyHunterArmorClientExtensions;
+import org.millenaire.client.render.BountyHunterArmorEmissiveLayer;
+import org.millenaire.client.render.BountyHunterBolaRenderer;
+import org.millenaire.client.render.BountyHunterRenderer;
 import org.millenaire.client.render.FirePitRenderer;
+import org.millenaire.client.render.InfernalCultistRenderer;
+import org.millenaire.client.render.InfernalFireballRenderer;
+import org.millenaire.client.render.InfernalHarrowRenderer;
+import org.millenaire.client.render.InfernalHellhoundRenderer;
+import org.millenaire.client.render.InfernalHexBoltRenderer;
 import org.millenaire.client.render.LockedChestRenderer;
 import org.millenaire.client.render.MillVillagerRenderer;
 import org.millenaire.client.render.MillWallDecorationRenderer;
+import org.millenaire.client.render.NetherWraithRenderer;
 import org.millenaire.client.render.VillagePanelRenderer;
 import org.millenaire.commerce.ModMenuTypes;
 import org.millenaire.entity.ModEntities;
@@ -54,6 +74,15 @@ public final class ClientEvents {
    public static void onRegisterRenderers(RegisterRenderers event) {
       event.registerEntityRenderer((EntityType)ModEntities.MILL_VILLAGER.get(), MillVillagerRenderer::new);
       event.registerEntityRenderer((EntityType)ModEntities.WALL_DECORATION.get(), MillWallDecorationRenderer::new);
+      event.registerEntityRenderer((EntityType)ModEntities.NETHER_WRAITH.get(), NetherWraithRenderer::new);
+      event.registerEntityRenderer((EntityType)ModEntities.INFERNAL_HARROW.get(), InfernalHarrowRenderer::new);
+      event.registerEntityRenderer((EntityType)ModEntities.INFERNAL_HELLHOUND.get(), InfernalHellhoundRenderer::new);
+      event.registerEntityRenderer((EntityType)ModEntities.INFERNAL_FIREBALL.get(), InfernalFireballRenderer::new);
+      event.registerEntityRenderer((EntityType)ModEntities.ANTICHRIST_PRIEST.get(), AntichristPriestRenderer::new);
+      event.registerEntityRenderer((EntityType)ModEntities.INFERNAL_CULTIST.get(), InfernalCultistRenderer::new);
+      event.registerEntityRenderer((EntityType)ModEntities.INFERNAL_HEX_BOLT.get(), InfernalHexBoltRenderer::new);
+      event.registerEntityRenderer((EntityType)ModEntities.BOUNTY_HUNTER.get(), BountyHunterRenderer::new);
+      event.registerEntityRenderer((EntityType)ModEntities.BOUNTY_HUNTER_BOLA.get(), BountyHunterBolaRenderer::new);
       event.registerBlockEntityRenderer((BlockEntityType)ModBlockEntities.LOCKED_CHEST.get(), LockedChestRenderer::new);
       event.registerBlockEntityRenderer((BlockEntityType)ModBlockEntities.VILLAGE_PANEL.get(), VillagePanelRenderer::new);
       event.registerBlockEntityRenderer((BlockEntityType)ModBlockEntities.FIRE_PIT.get(), FirePitRenderer::new);
@@ -73,6 +102,14 @@ public final class ClientEvents {
       event.registerLayerDefinition(MillModelLayers.MILL_VILLAGER_MALE_CLOTH_1, () -> MillMaleModel.createBodyLayer(cloth1));
       event.registerLayerDefinition(MillModelLayers.MILL_VILLAGER_FEMALE_SYM_CLOTH_1, () -> MillFemaleSymModel.createBodyLayer(cloth1));
       event.registerLayerDefinition(MillModelLayers.MILL_VILLAGER_FEMALE_ASYM_CLOTH_1, () -> MillFemaleAsymModel.createBodyLayer(cloth1));
+      event.registerLayerDefinition(MillModelLayers.NETHER_WRAITH, NetherWraithModel::createBodyLayer);
+      event.registerLayerDefinition(MillModelLayers.INFERNAL_HARROW, InfernalHarrowModel::createBodyLayer);
+      event.registerLayerDefinition(MillModelLayers.INFERNAL_HELLHOUND, InfernalHellhoundModel::createBodyLayer);
+      event.registerLayerDefinition(MillModelLayers.ANTICHRIST_PRIEST, AntichristPriestModel::createBodyLayer);
+      event.registerLayerDefinition(MillModelLayers.INFERNAL_CULTIST, InfernalCultistModel::createBodyLayer);
+      event.registerLayerDefinition(MillModelLayers.BOUNTY_HUNTER, BountyHunterModel::createBodyLayer);
+      event.registerLayerDefinition(MillModelLayers.BOUNTY_HUNTER_ARMOR, () -> BountyHunterArmorModel.createBodyLayer(false));
+      event.registerLayerDefinition(MillModelLayers.BOUNTY_HUNTER_ARMOR_SLIM, () -> BountyHunterArmorModel.createBodyLayer(true));
    }
 
    @SubscribeEvent
@@ -80,6 +117,32 @@ public final class ClientEvents {
       event.register(ModMenuTypes.TRADE.get(), TradeScreen::new);
       event.register(ModMenuTypes.LOCKED_CHEST.get(), LockedChestScreen::new);
       event.register(ModMenuTypes.FIRE_PIT.get(), FirePitScreen::new);
+   }
+
+   @SubscribeEvent
+   public static void onRegisterClientExtensions(RegisterClientExtensionsEvent event) {
+      event.registerItem(
+         BountyHunterArmorClientExtensions.INSTANCE,
+         ModItems.BOUNTY_HUNTER_HELMET.get(),
+         ModItems.BOUNTY_HUNTER_CHESTPLATE.get(),
+         ModItems.BOUNTY_HUNTER_LEGGINGS.get(),
+         ModItems.BOUNTY_HUNTER_BOOTS.get()
+      );
+   }
+
+   @SubscribeEvent
+   @SuppressWarnings({"rawtypes", "unchecked"})
+   public static void onAddLayers(AddLayers event) {
+      for (var skin : event.getSkins()) {
+         var renderer = event.getSkin(skin);
+         if (renderer instanceof net.minecraft.client.renderer.entity.LivingEntityRenderer living) {
+            living.addLayer(new BountyHunterArmorEmissiveLayer(living));
+         }
+      }
+      var armorStand = event.getRenderer(EntityType.ARMOR_STAND);
+      if (armorStand instanceof net.minecraft.client.renderer.entity.LivingEntityRenderer living) {
+         living.addLayer(new BountyHunterArmorEmissiveLayer(living));
+      }
    }
 
    @SubscribeEvent
@@ -101,6 +164,7 @@ public final class ClientEvents {
 
    @SubscribeEvent
    public static void onClientSetup(FMLClientSetupEvent event) {
+      org.millenaire.compat.xaero.XaeroCompatBootstrap.initClient();
       ModContainer container = Millenaire.getModContainer();
       container.registerExtensionPoint(IConfigScreenFactory.class, (IConfigScreenFactory)(mc, parent) -> new ConfigurationScreen(container, parent));
       event.enqueueWork(() -> {

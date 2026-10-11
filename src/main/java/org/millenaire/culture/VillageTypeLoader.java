@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.Map.Entry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.GsonHelper;
@@ -75,14 +76,16 @@ final class VillageTypeLoader {
          String villageName = GsonHelper.getAsString(json, "name", fallbackName);
          int weight = GsonHelper.getAsInt(json, "weight", 10);
          List<TagKey<Biome>> biomeTags = new ArrayList<>();
+         List<ResourceKey<Biome>> biomeKeys = new ArrayList<>();
          if (json.has("biome_tags")) {
             for (JsonElement e : GsonHelper.getAsJsonArray(json, "biome_tags")) {
                String raw = e.getAsString();
                if (raw.startsWith("#")) {
-                  raw = raw.substring(1);
+                  biomeTags.add(TagKey.create(Registries.BIOME, ResourceLocation.parse(raw.substring(1))));
+               } else {
+                  // Bare IDs are biome ResourceKeys (legacy docs); #prefix is a tag.
+                  biomeKeys.add(ResourceKey.create(Registries.BIOME, ResourceLocation.parse(raw)));
                }
-
-               biomeTags.add(TagKey.create(Registries.BIOME, ResourceLocation.parse(raw)));
             }
          }
 
@@ -218,6 +221,7 @@ final class VillageTypeLoader {
                villageName,
                weight,
                biomeTags,
+               biomeKeys,
                layout,
                sellingPriceOverrides,
                buyingPriceOverrides,

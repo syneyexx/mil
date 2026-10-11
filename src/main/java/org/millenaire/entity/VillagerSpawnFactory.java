@@ -106,6 +106,10 @@ public final class VillagerSpawnFactory {
                   villager.getInventory().add(item, entry.getValue());
                }
             }
+            if (vType.isHelpInAttacks() || vType.isRaider() || vType.isArcher()) {
+               String culturePath = village.getCultureId() != null ? village.getCultureId().getPath() : null;
+               org.millenaire.compat.CompatEquipmentRegistry.applyRandomKit(culturePath, villager, level.getRandom(), 0.65F);
+            }
          }
       }
 
@@ -137,6 +141,44 @@ public final class VillagerSpawnFactory {
 
          return villager;
       }
+   }
+
+   /**
+    * Spawns a MillVillager that is not registered into a village (road travelers / ambient).
+    * Caller owns despawn lifecycle.
+    */
+   @Nullable
+   public static MillVillager spawnTransient(ServerLevel level, ResourceLocation villagerTypeId, BlockPos spawnPos) {
+      VillagerType vType = ModCultures.getVillagerType(villagerTypeId);
+      if (vType == null || level == null || spawnPos == null) {
+         return null;
+      }
+      MillVillager villager = (MillVillager)((EntityType)ModEntities.MILL_VILLAGER.get()).create(level);
+      if (villager == null) {
+         return null;
+      }
+      villager.setVillagerTypeId(villagerTypeId);
+      if (vType.maxHealth() != 20.0F) {
+         AttributeInstance healthAttr = villager.getAttribute(Attributes.MAX_HEALTH);
+         if (healthAttr != null) {
+            healthAttr.setBaseValue(vType.maxHealth());
+            villager.setHealth(vType.maxHealth());
+         }
+      }
+      BlockPos safePos = findSafeSpawnPos(level, spawnPos);
+      villager.moveTo(safePos.getX() + 0.5, safePos.getY(), safePos.getZ() + 0.5, 0.0F, 0.0F);
+      VillagerAppearanceFactory.randomizeAppearance(villager, vType);
+      GoalRegistry registry = Millenaire.getGoalRegistry();
+      if (registry != null) {
+         villager.initGoals(registry, vType);
+      }
+      if (vType.isRaider() || vType.hasTag("hostile")) {
+         villager.setRaiderEntity(true);
+      }
+      if (!level.addFreshEntity(villager)) {
+         return null;
+      }
+      return villager;
    }
 
    private static BlockPos findSafeSpawnPos(ServerLevel level, BlockPos pos) {

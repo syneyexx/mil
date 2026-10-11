@@ -1,0 +1,13 @@
+{
+  "parent": "millenaire:friendindeed",
+  "display": {
+    "icon": { "item": "minecraft:crossbow" },
+    "title": { "translate": "advancement.millenaire.rep_illagers" },
+    "description": { "translate": "advancement.millenaire.rep_illagers.desc" }
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

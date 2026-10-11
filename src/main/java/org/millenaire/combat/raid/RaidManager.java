@@ -471,6 +471,11 @@ public final class RaidManager {
       }
 
       grantRaidAdvancements(attacker, target, attackersWon, level);
+      try {
+         org.millenaire.faction.crime.BountyRaidScheduler.onBountyRaidEnded(level, attacker, target, attackersWon);
+      } catch (Exception bountyError) {
+         LOGGER.debug("[Millenaire] Bounty raid end hook failed: {}", bountyError.toString());
+      }
       List<VillagerRecord> clones = new ArrayList<>();
 
       for (VillagerRecord r : target.getVillagerRecords().values()) {

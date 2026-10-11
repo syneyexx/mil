@@ -29,7 +29,10 @@
     "wall_carpet_large",
     "wall_carpet_medium",
     "wall_carpet_small",
-    "seeds"
+    "seeds",
+    "fd_onion",
+    "fd_beef_stew",
+    "mcw_sandstone_path"
   ],
   "buys": [
     "wood",

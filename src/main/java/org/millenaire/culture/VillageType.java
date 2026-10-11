@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.biome.Biome;
@@ -15,6 +17,7 @@ public record VillageType(
    String name,
    int weight,
    List<TagKey<Biome>> biomeTags,
+   List<ResourceKey<Biome>> biomeKeys,
    List<VillageType.LayoutSlot> layout,
    Map<String, Integer> sellingPriceOverrides,
    Map<String, Integer> buyingPriceOverrides,
@@ -84,6 +87,26 @@ public record VillageType(
       return this.terrainQualifiers.ocean();
    }
 
+   public boolean matchesBiome(Holder<Biome> biome) {
+      if (biome == null) {
+         return false;
+      }
+      if (this.biomeTags.isEmpty() && this.biomeKeys.isEmpty()) {
+         return true;
+      }
+      for (TagKey<Biome> tag : this.biomeTags) {
+         if (biome.is(tag)) {
+            return true;
+         }
+      }
+      for (ResourceKey<Biome> key : this.biomeKeys) {
+         if (biome.is(key)) {
+            return true;
+         }
+      }
+      return false;
+   }
+
    public VillageType withLayout(List<VillageType.LayoutSlot> newLayout) {
       return new VillageType(
          this.id,
@@ -91,6 +114,7 @@ public record VillageType(
          this.name,
          this.weight,
          this.biomeTags,
+         this.biomeKeys,
          newLayout,
          this.sellingPriceOverrides,
          this.buyingPriceOverrides,

@@ -69,6 +69,14 @@ public final class FactionSavedData extends SavedData {
       if (faction.getCultureId() != null) {
          tag.putString("culture", faction.getCultureId().toString());
       }
+      if (faction.getSovereignOwnerUuid() != null) {
+         tag.putUUID("sovereign_owner", faction.getSovereignOwnerUuid());
+      }
+      tag.putString("immigration_policy", faction.getImmigrationPolicy().name());
+      tag.putString("trade_policy", faction.getTradePolicy().name());
+      if (faction.getBannerNbt() != null) {
+         tag.putString("banner_nbt", faction.getBannerNbt());
+      }
 
       ListTag settlements = new ListTag();
 
@@ -159,6 +167,14 @@ public final class FactionSavedData extends SavedData {
 
       long createdAt = tag.contains("created_at") ? tag.getLong("created_at") : 0L;
       Faction faction = new Faction(factionId, type, displayName, cultureId, createdAt);
+      if (tag.hasUUID("sovereign_owner")) {
+         faction.setSovereignOwnerUuid(tag.getUUID("sovereign_owner"));
+      }
+      faction.setImmigrationPolicy(ImmigrationPolicy.tryParse(tag.contains("immigration_policy") ? tag.getString("immigration_policy") : null));
+      faction.setTradePolicy(TradePolicy.tryParse(tag.contains("trade_policy") ? tag.getString("trade_policy") : null));
+      if (tag.contains("banner_nbt")) {
+         faction.setBannerNbt(tag.getString("banner_nbt"));
+      }
       Set<VillageId> settlements = new LinkedHashSet<>();
 
       if (tag.contains("settlements")) {

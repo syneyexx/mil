@@ -1,7 +1,9 @@
 {
   "culture": "millenaire:byzantines",
   "biome_tags": [
-    "#c:is_hill"
+    "#c:is_hill",
+    "#millenaire:is_mediterranean",
+    "#millenaire:is_lavender"
   ],
   "name": "Mono Paratiritio",
   "weight": 0,

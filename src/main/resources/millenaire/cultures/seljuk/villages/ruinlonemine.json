@@ -2,7 +2,9 @@
   "culture": "millenaire:seljuk",
   "biome_tags": [
     "#c:is_desert",
-    "#c:is_badlands"
+    "#c:is_badlands",
+    "#millenaire:is_mediterranean",
+    "#millenaire:is_volcanic"
   ],
   "name": "Yıkık Mayın",
   "weight": 10,

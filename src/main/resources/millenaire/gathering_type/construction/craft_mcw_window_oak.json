@@ -1,0 +1,33 @@
+{
+  "handler": "crafting",
+  "priority": 35,
+  "scanRadius": 32,
+  "batchRadius": 8,
+  "maxActionsPerTask": 5,
+  "actionCooldown": 100,
+  "townhallLimit": {
+    "mcwwindows:window_base": 128
+  },
+  "handlerParams": {
+    "inputs": [
+      {
+        "item": "minecraft:oak_planks",
+        "count": 2
+      },
+      {
+        "item": "minecraft:glass_pane",
+        "count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "item": "mcwwindows:window_base",
+        "count": 1
+      }
+    ]
+  },
+  "heldItems": [
+    "minecraft:glass_pane",
+    "mcwwindows:window_base"
+  ]
+}

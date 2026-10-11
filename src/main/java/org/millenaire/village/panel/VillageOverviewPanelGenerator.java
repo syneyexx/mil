@@ -186,6 +186,9 @@ public final class VillageOverviewPanelGenerator {
          org.millenaire.civilization.presentation.CivilizationPresentationService.villageSnapshot(level, village, null);
       lines.add(PanelLine.separator());
       lines.add(PanelLine.translatable("panel.millenaire.civilization"));
+      if (org.millenaire.civilization.settlement.PlayerSettlementFoundingService.isSovereignPlayerSettlement(level, village)) {
+         lines.add(PanelLine.translatable("panel.millenaire.civilization_your_settlement"));
+      }
       if (snap.factionId() == null) {
          lines.add(PanelLine.translatable("panel.millenaire.civilization_independent"));
       } else {
@@ -210,10 +213,15 @@ public final class VillageOverviewPanelGenerator {
       }
       if (!snap.topNeeds().isEmpty()) {
          var need = snap.topNeeds().getFirst();
-         String shortageText = need.shortageProven()
-            ? String.valueOf(need.shortage())
-            : String.valueOf(need.observedShortage());
-         lines.add(PanelLine.translatableWithArgs(need.summaryKey(), need.detail(), need.severityCode(), shortageText));
+         if (need.shortageProven()) {
+            lines.add(PanelLine.translatableWithArgs(
+               need.summaryKey(), need.detail(), need.severityCode(), String.valueOf(need.shortage())
+            ));
+         } else {
+            lines.add(PanelLine.translatableWithArgs(
+               "civilization.millenaire.overview.shortage_unproven", String.valueOf(need.observedShortage())
+            ));
+         }
       }
       if (snap.colonization() != null) {
          lines.add(PanelLine.translatable(snap.colonization().statusLabelKey()));
@@ -248,6 +256,9 @@ public final class VillageOverviewPanelGenerator {
       }
       org.millenaire.civilization.presentation.CivilizationVillageSnapshot snap =
          org.millenaire.civilization.presentation.CivilizationPresentationService.villageSnapshot(level, village, player);
+      if (org.millenaire.civilization.settlement.PlayerSettlementFoundingService.isSovereignPlayerSettlement(level, village)) {
+         lines.add(PanelLine.translatable("panel.millenaire.civilization_your_settlement"));
+      }
       if (snap.factionId() == null) {
          lines.add(PanelLine.translatable("panel.millenaire.civilization_independent"));
       } else {

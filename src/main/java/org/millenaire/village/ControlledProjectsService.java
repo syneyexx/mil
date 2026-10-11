@@ -35,7 +35,9 @@ public final class ControlledProjectsService {
                   maxLevel = 1;
                }
 
-               String displayName = BuildingNameHelper.getTranslationKey(planSet);
+               String displayName = building.isPlayerDesignated()
+                  ? BuildingNameHelper.getTranslationKey(building)
+                  : BuildingNameHelper.getTranslationKey(planSet);
                String distance = formatDistanceDirection(center, building.getOrigin());
                boolean isTownHall = townhall != null && townhall.getId().equals(building.getId());
                entries.add(
@@ -45,7 +47,7 @@ public final class ControlledProjectsService {
                      planSet.id().toString(),
                      building.getLevel(),
                      maxLevel,
-                     building.isUpgradesAllowed(),
+                     building.isUpgradesAllowed() && !building.isPlayerDesignated(),
                      distance,
                      isTownHall
                   )

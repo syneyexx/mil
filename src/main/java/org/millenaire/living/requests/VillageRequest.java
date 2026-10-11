@@ -218,6 +218,29 @@ public final class VillageRequest {
       this.version++;
    }
 
+   /**
+    * Reduce the outstanding recovery ledger after goods were actually pulled back.
+    * @return amount actually consumed from the ledger
+    */
+   public int consumeRecovery(ResourceLocation itemId, int amount) {
+      if (itemId == null || amount <= 0) {
+         return 0;
+      }
+      int current = this.recoveryOutstanding.getOrDefault(itemId, 0);
+      if (current <= 0) {
+         return 0;
+      }
+      int take = Math.min(current, amount);
+      int left = current - take;
+      if (left <= 0) {
+         this.recoveryOutstanding.remove(itemId);
+      } else {
+         this.recoveryOutstanding.put(itemId, left);
+      }
+      this.version++;
+      return take;
+   }
+
    public Map<ResourceLocation, Integer> recoveryOutstanding() {
       return Collections.unmodifiableMap(this.recoveryOutstanding);
    }

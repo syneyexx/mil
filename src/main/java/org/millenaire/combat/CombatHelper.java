@@ -1,11 +1,14 @@
 package org.millenaire.combat;
 
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers.Entry;
 import net.minecraft.world.phys.AABB;
+import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillagerType;
 import org.millenaire.entity.MillVillager;
@@ -47,8 +50,42 @@ public final class CombatHelper {
       return 0.0;
    }
 
+   /**
+    * Whether Millenaire NPC/crime systems should treat this player as a normal survival target.
+    * Spectator is always ignored. Creative is ignored unless {@code treatCreativeAsSurvival} is true.
+    */
+   public static boolean isPlayerTargetable(Player player) {
+      if (player == null || player.isSpectator()) {
+         return false;
+      }
+      if (!player.isCreative()) {
+         return true;
+      }
+      return treatCreativeAsSurvival();
+   }
+
+   /** Prefer {@link #isPlayerTargetable(Player)} so the config is applied. */
+   @Deprecated
    public static boolean isPlayerTargetable(boolean creative, boolean spectator) {
-      return !creative && !spectator;
+      if (spectator) {
+         return false;
+      }
+      if (!creative) {
+         return true;
+      }
+      return treatCreativeAsSurvival();
+   }
+
+   public static boolean isPlayerTargetable(ServerPlayer player) {
+      return isPlayerTargetable((Player) player);
+   }
+
+   private static boolean treatCreativeAsSurvival() {
+      try {
+         return Boolean.TRUE.equals(MillenaireServerConfig.SERVER.treatCreativeAsSurvival.get());
+      } catch (IllegalStateException e) {
+         return true;
+      }
    }
 
    public static boolean isVillagerHostile(boolean selfIsRaiderEntity, boolean attackerIsRaiderEntity, boolean sameVillage) {

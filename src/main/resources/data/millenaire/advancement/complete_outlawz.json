@@ -1,0 +1,14 @@
+{
+  "parent": "millenaire:leader_outlawz",
+  "display": {
+    "icon": { "item": "minecraft:netherite_sword" },
+    "title": { "translate": "advancement.millenaire.complete_outlawz" },
+    "description": { "translate": "advancement.millenaire.complete_outlawz.desc" },
+    "frame": "challenge"
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

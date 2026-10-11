@@ -82,6 +82,11 @@ Fill the Result column when you verify locally.
 - **Setup:** Two nearby ACTIVE/PHYSICAL settlements; regional roads + bridges enabled; load corridor chunks gradually.
 - **Expected:** Continuous adjacent path cells (not only ~32-block samples); bridge budget abort keeps `PARTIAL` (not `CONNECTED`); schema-v1 coarse `CONNECTED` reopens as `RECOVERY_REQUIRED`.
 
+## Scenario J3 — Sand highways + travelers
+
+- **Setup:** `worldgenSandHighways=true`; explore until two Millenaire towns and one vanilla village are discovered; load corridors gradually.
+- **Expected:** `/millenaire highway status` shows nodes/routes; 4-wide sand/path_sandstone corridors; water → bridge band; steep mountain → tunnel; travelers appear near player on `CONNECTED` routes and despawn when far; mid-bridge/tunnel reload resumes; mod structures in `#millenaire:highway_endpoint` become nodes, pure dungeons do not.
+
 ## Scenario K — Multiplayer
 
 - **Expected:** One plan per region; one activation; no double NPCs.
@@ -96,4 +101,10 @@ Fill the Result column when you verify locally.
 
 ## Legacy fallback check
 
-Set `worldgenEngineEnabled=false`, restart, confirm previous `VillageSpawnQueue` behaviour returns for natural spawns. Manual `/millenaire spawn` must work with either setting.
+Default: `worldgenEngineEnabled=true`, `worldgenLegacyFallback=false` (Phase 4 only).
+
+- Set `worldgenLegacyFallback=true` to also run `VillageSpawnQueue` alongside Phase 4.
+- Set `worldgenEngineEnabled=false` to restore legacy-only natural spawns.
+- Manual `/millenaire spawn` must work with either setting.
+
+Confirm logs show no premature `no_candidates` rejects before `Worldgen engine ready`, and status lines eventually include `rejectReasons={...}` when plans are rejected.

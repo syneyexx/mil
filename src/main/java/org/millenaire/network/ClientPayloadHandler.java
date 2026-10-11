@@ -13,6 +13,7 @@ import org.millenaire.client.ClientLanguageCache;
 import org.millenaire.client.ClientQuestCache;
 import org.millenaire.client.FireplaceSmokeHandler;
 import org.millenaire.client.gui.CancelProjectConfirmScreen;
+import org.millenaire.client.gui.CityAdminScreen;
 import org.millenaire.client.gui.ControlledMilitaryScreen;
 import org.millenaire.client.gui.ControlledProjectsScreen;
 import org.millenaire.client.gui.HireScreen;
@@ -28,6 +29,7 @@ import org.millenaire.client.gui.UnlockingToast;
 import org.millenaire.client.gui.VillageBookScreen;
 import org.millenaire.client.gui.VillageChiefScreen;
 import org.millenaire.client.gui.VillagePanelScreen;
+import org.millenaire.client.gui.WorldStatusScreen;
 import org.millenaire.client.gui.NpcChatScreen;
 import org.millenaire.client.gui.VillagerInfoScreen;
 import org.millenaire.client.gui.WandDebugScreen;
@@ -215,8 +217,54 @@ public final class ClientPayloadHandler {
       context.enqueueWork(() -> Minecraft.getInstance().setScreen(new NewVillageScreen(payload)));
    }
 
+   public static void handleCityAdmin(CityAdminPayload payload, IPayloadContext context) {
+      context.enqueueWork(() -> {
+         Minecraft mc = Minecraft.getInstance();
+         if (mc.screen instanceof CityAdminScreen open && open.sameVillage(payload)) {
+            open.applyUpdate(payload);
+         } else {
+            mc.setScreen(new CityAdminScreen(payload));
+         }
+      });
+   }
+
+   public static void handleBountyHud(BountyHudPayload payload, IPayloadContext context) {
+      context.enqueueWork(() -> org.millenaire.client.BountyHudClientState.apply(payload));
+   }
+
+   public static void handleSettlementMapSnapshot(SettlementMapSnapshotPayload payload, IPayloadContext context) {
+      context.enqueueWork(() -> {
+         boolean complete = org.millenaire.client.map.SettlementMapClientCache.get()
+            .applySnapshotPart(payload.worldToken(), payload.revision(), payload.partIndex(), payload.partCount(), payload.entries());
+         if (complete) {
+            org.millenaire.compat.xaero.XaeroCompatBootstrap.syncFromCacheIfNeeded();
+         }
+      });
+   }
+
+   public static void handleSettlementMapDelta(SettlementMapDeltaPayload payload, IPayloadContext context) {
+      context.enqueueWork(() -> {
+         boolean applied = org.millenaire.client.map.SettlementMapClientCache.get()
+            .applyDelta(payload.worldToken(), payload.revision(), payload.upserts(), payload.removed());
+         if (applied) {
+            org.millenaire.compat.xaero.XaeroCompatBootstrap.syncFromCacheIfNeeded();
+         }
+      });
+   }
+
    public static void handleInfoPanel(InfoPanelContentPayload payload, IPayloadContext context) {
       context.enqueueWork(() -> Minecraft.getInstance().setScreen(new InfoPanelScreen(payload)));
+   }
+
+   public static void handleWorldStatus(WorldStatusContentPayload payload, IPayloadContext context) {
+      context.enqueueWork(() -> {
+         Minecraft mc = Minecraft.getInstance();
+         if (mc.screen instanceof WorldStatusScreen open) {
+            open.applyUpdate(payload);
+         } else {
+            mc.setScreen(new WorldStatusScreen(payload));
+         }
+      });
    }
 
    public static void handlePanelContent(PanelContentPayload payload, IPayloadContext context) {

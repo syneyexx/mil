@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import javax.annotation.Nullable;
 import net.minecraft.resources.ResourceLocation;
 import org.millenaire.village.VillageId;
@@ -24,6 +25,13 @@ public final class Faction {
    @Nullable
    private final ResourceLocation cultureId;
    private final Set<VillageId> settlementIds = new LinkedHashSet<>();
+   @Nullable
+   private UUID sovereignOwnerUuid;
+   private ImmigrationPolicy immigrationPolicy = ImmigrationPolicy.OPEN;
+   private TradePolicy tradePolicy = TradePolicy.INBOUND_ONLY;
+   /** Optional custom banner legacy NBT / serialized patterns for PLAYER factions. */
+   @Nullable
+   private String bannerNbt;
 
    public Faction(FactionId id, FactionType type, String displayName, @Nullable ResourceLocation cultureId, long createdAtGameTime) {
       this.id = Objects.requireNonNull(id, "id");
@@ -60,6 +68,44 @@ public final class Faction {
 
    public long getCreatedAtGameTime() {
       return this.createdAtGameTime;
+   }
+
+   @Nullable
+   public UUID getSovereignOwnerUuid() {
+      return this.sovereignOwnerUuid;
+   }
+
+   public void setSovereignOwnerUuid(@Nullable UUID sovereignOwnerUuid) {
+      this.sovereignOwnerUuid = sovereignOwnerUuid;
+   }
+
+   public boolean isSovereignOwnedBy(UUID playerId) {
+      return playerId != null && playerId.equals(this.sovereignOwnerUuid);
+   }
+
+   public ImmigrationPolicy getImmigrationPolicy() {
+      return this.immigrationPolicy == null ? ImmigrationPolicy.OPEN : this.immigrationPolicy;
+   }
+
+   public void setImmigrationPolicy(ImmigrationPolicy policy) {
+      this.immigrationPolicy = policy == null ? ImmigrationPolicy.OPEN : policy;
+   }
+
+   public TradePolicy getTradePolicy() {
+      return this.tradePolicy == null ? TradePolicy.INBOUND_ONLY : this.tradePolicy;
+   }
+
+   public void setTradePolicy(TradePolicy policy) {
+      this.tradePolicy = policy == null ? TradePolicy.INBOUND_ONLY : policy;
+   }
+
+   @Nullable
+   public String getBannerNbt() {
+      return this.bannerNbt;
+   }
+
+   public void setBannerNbt(@Nullable String bannerNbt) {
+      this.bannerNbt = bannerNbt == null || bannerNbt.isBlank() ? null : bannerNbt;
    }
 
    public Set<VillageId> getSettlementIds() {

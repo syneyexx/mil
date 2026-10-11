@@ -1256,6 +1256,28 @@
       "auto_generate": true,
       "min_reputation": 8192,
       "category": "crafting"
+    },
+    {
+      "id": "fd_salmon_roll",
+      "item": "farmersdelight:salmon_roll",
+      "selling_price": 10,
+      "category": "food",
+      "target_quantity": 8
+    },
+    {
+      "id": "naturalist_venison",
+      "item": "naturalist:cooked_venison",
+      "selling_price": 8,
+      "category": "food",
+      "target_quantity": 12
+    },
+    {
+      "id": "mcw_spruce_path",
+      "item": "mcwpaths:spruce_planks_path",
+      "selling_price": 6,
+      "category": "construction",
+      "buying_price": 2,
+      "target_quantity": 16
     }
   ]
 }

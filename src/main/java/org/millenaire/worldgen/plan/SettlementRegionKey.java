@@ -22,6 +22,10 @@ public record SettlementRegionKey(int regionX, int regionZ) {
       return ((long)this.regionX << 32) ^ (this.regionZ & 0xffffffffL);
    }
 
+   public static SettlementRegionKey fromPacked(long packed) {
+      return new SettlementRegionKey((int)(packed >> 32), (int)packed);
+   }
+
    public int centerChunkX(int regionSizeChunks) {
       int size = Math.max(4, regionSizeChunks);
       return this.regionX * size + size / 2;

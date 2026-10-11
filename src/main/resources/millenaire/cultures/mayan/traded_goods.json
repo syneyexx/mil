@@ -905,6 +905,36 @@
       "auto_generate": true,
       "min_reputation": 8192,
       "category": "crafting"
+    },
+    {
+      "id": "fd_tomato",
+      "item": "farmersdelight:tomato",
+      "selling_price": 3,
+      "category": "food",
+      "buying_price": 1,
+      "target_quantity": 32
+    },
+    {
+      "id": "fd_pumpkin_soup",
+      "item": "farmersdelight:pumpkin_soup",
+      "selling_price": 8,
+      "category": "food",
+      "target_quantity": 8
+    },
+    {
+      "id": "mcw_dark_oak_roof",
+      "item": "mcwroofs:dark_oak_roof",
+      "selling_price": 9,
+      "category": "construction",
+      "buying_price": 3,
+      "target_quantity": 12
+    },
+    {
+      "id": "naturalist_venison",
+      "item": "naturalist:cooked_venison",
+      "selling_price": 8,
+      "category": "food",
+      "target_quantity": 8
     }
   ]
 }

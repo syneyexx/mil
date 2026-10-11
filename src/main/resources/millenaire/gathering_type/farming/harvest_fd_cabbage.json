@@ -1,0 +1,33 @@
+{
+  "handler": "harvesting",
+  "priority": 40,
+  "scanRadius": 32,
+  "batchRadius": 8,
+  "maxActionsPerTask": 16,
+  "actionCooldown": 10,
+  "villageLimit": {
+    "farmersdelight:cabbage": 256
+  },
+  "handlerParams": {
+    "targetBlock": "farmersdelight:cabbages",
+    "targetState": {
+      "age": 7
+    },
+    "buildingTag": "wheat",
+    "harvestItems": [
+      {
+        "item": "farmersdelight:cabbage",
+        "chance": 100
+      },
+      {
+        "item": "farmersdelight:cabbage_seeds",
+        "chance": 50
+      }
+    ]
+  },
+  "sentenceKey": "collectcrop",
+  "labelKey": "collectcrop",
+  "heldItems": [
+    "farmersdelight:cabbage"
+  ]
+}

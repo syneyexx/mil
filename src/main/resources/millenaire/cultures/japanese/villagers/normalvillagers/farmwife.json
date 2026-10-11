@@ -19,6 +19,8 @@
     "millenaire:harvest_wheat_home",
     "millenaire:plant_wheat_home",
     "millenaire:plant_rice",
+    "millenaire:cook_fd_rice",
+    "millenaire:plant_fd_cabbage",
     "millenaire:craft_thatchfromwheat",
     "millenaire:get_resources_for_shops",
     "millenaire:deliver_resources_shop",

@@ -251,7 +251,7 @@ public final class RegionalRoadMaterializer {
       }
       int start = Math.floorMod(roads.roundRobinCursor(), ordered.size());
       for (int i = 0; i < ordered.size() && processed < MAX_ROUTES_PER_TICK; i++) {
-         if (!MaterializationTickBudget.hasOps()) {
+         if (!MaterializationTickBudget.hasTimeAndOps()) {
             break;
          }
          RouteProgress route = ordered.get((start + i) % ordered.size());
@@ -372,7 +372,7 @@ public final class RegionalRoadMaterializer {
       BlockPos previousSurface = route.lastPlacedSurface();
 
       for (int i = route.cursor; i < route.waypoints.size() && scanned < MAX_CELLS_SCAN; i++) {
-         if (!MaterializationTickBudget.hasOps()) {
+         if (!MaterializationTickBudget.hasTimeAndOps()) {
             route.status = RouteStatus.PARTIAL;
             route.blockReason = "budget_exhausted";
             return;

@@ -1,7 +1,9 @@
 {
   "culture": "millenaire:seljuk",
   "biome_tags": [
-    "#c:is_savanna"
+    "#c:is_savanna",
+    "#millenaire:is_mediterranean",
+    "#millenaire:is_volcanic"
   ],
   "name": "Çiftlik",
   "weight": 8,
