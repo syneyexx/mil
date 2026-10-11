@@ -72,6 +72,13 @@ public final class ModItems {
       "bounty_hunter_spawn_egg",
       props -> new DeferredSpawnEggItem(ModEntities.BOUNTY_HUNTER, 0x2A1D15, 0xFF9E1B, props)
    );
+   public static final DeferredItem<DeferredSpawnEggItem> HEMELWACHTER_SPAWN_EGG = ITEMS.registerItem(
+      "hemelwachter_spawn_egg",
+      props -> new DeferredSpawnEggItem(ModEntities.HEMELWACHTER, 0xE8E0D0, 0xD4AF37, props)
+   );
+   public static final DeferredItem<Item> HEMELKERN = ITEMS.registerItem("hemelkern", props -> new Item(props.stacksTo(16)));
+   public static final DeferredItem<Item> HEMELFRAGMENT = ITEMS.registerItem("hemelfragment", props -> new Item(props.stacksTo(64)));
+   public static final DeferredItem<BlockItem> HEMELLANTAARN_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.HEMELLANTAARN);
    public static final DeferredItem<PickaxeItem> NORMAN_PICKAXE = ITEMS.registerItem(
       "norman_pickaxe",
       props -> new PickaxeItem(NormanMaterials.NORMAN_TOOL, props.attributes(DiggerItem.createAttributes(NormanMaterials.NORMAN_TOOL, 1.0F, -2.8F)))

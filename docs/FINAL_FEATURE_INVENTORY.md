@@ -45,6 +45,11 @@ Legend: **IMPLEMENTED_UNVERIFIED** = source complete, runtime not verified by ag
 | Pilgrimage temporary trips | IMPLEMENTED_UNVERIFIED | `PilgrimageService` |
 | Religion policy + incidents | IMPLEMENTED_UNVERIFIED | `ReligionPolicyService` / `ReligionIncidentService` |
 | Built-in culture traditions (10 cultures) | IMPLEMENTED_UNVERIFIED | `millenaire/religion/**` + per-culture `religion.json` |
+| World Boss Events planner + SavedData | IMPLEMENTED_UNVERIFIED | `WorldBossEventPlanner` / `WorldBossEventSavedData` |
+| Extensible world-boss definition pool | IMPLEMENTED_UNVERIFIED | `WorldBossDefinitionRegistry` (Hemelwachter only) |
+| Hemelwachter boss (combat/model/loot) | IMPLEMENTED_UNVERIFIED | `HemelwachterEntity` + client model/renderer |
+| Hemelkern / Hemelfragment / Hemellantaarn | IMPLEMENTED_UNVERIFIED | items + light block recipe |
+| World boss admin commands | IMPLEMENTED_UNVERIFIED | `/millenaire worldboss …` |
 
 ## Pre-existing (baseline) still authoritative
 

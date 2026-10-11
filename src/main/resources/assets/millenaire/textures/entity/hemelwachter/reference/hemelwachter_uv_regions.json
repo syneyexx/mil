@@ -1,0 +1,107 @@
+{
+  "texture": "hemelwachter_atlas.png",
+  "texture_size": [
+    1254,
+    1254
+  ],
+  "coordinate_system": "Pixel coordinates [u0,v0,u1,v1], origin top-left. Regions are inset to avoid atlas-edge artifacts. Map cuboid faces individually.",
+  "status": "Texture atlas for a future matching model; not a skin for an existing entity. Actual glow requires a separate emissive rendering pass.",
+  "regions": {
+    "eye_neutral": [
+      48,
+      58,
+      307,
+      307
+    ],
+    "eye_provoked": [
+      347,
+      58,
+      607,
+      307
+    ],
+    "core_side": [
+      648,
+      58,
+      906,
+      307
+    ],
+    "core_rear": [
+      947,
+      58,
+      1208,
+      307
+    ],
+    "feather_front": [
+      48,
+      351,
+      307,
+      606
+    ],
+    "feather_back": [
+      347,
+      351,
+      607,
+      606
+    ],
+    "feather_edge": [
+      648,
+      351,
+      906,
+      606
+    ],
+    "wing_root": [
+      947,
+      351,
+      1208,
+      606
+    ],
+    "ring_front": [
+      48,
+      649,
+      307,
+      879
+    ],
+    "ring_underside": [
+      347,
+      649,
+      607,
+      879
+    ],
+    "rune_cyan": [
+      648,
+      649,
+      906,
+      879
+    ],
+    "rune_amber": [
+      947,
+      649,
+      1208,
+      879
+    ],
+    "wing_trim": [
+      48,
+      922,
+      307,
+      1180
+    ],
+    "halo_cyan": [
+      347,
+      922,
+      607,
+      1180
+    ],
+    "ivory": [
+      648,
+      922,
+      906,
+      1180
+    ],
+    "gold": [
+      947,
+      922,
+      1208,
+      1180
+    ]
+  }
+}

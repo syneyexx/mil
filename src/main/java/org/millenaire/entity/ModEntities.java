@@ -98,6 +98,24 @@ public final class ModEntities {
          .updateInterval(10)
          .build("millenaire:bounty_hunter_bola")
    );
+   public static final DeferredHolder<EntityType<?>, EntityType<HemelwachterEntity>> HEMELWACHTER = ENTITY_TYPES.register(
+      "hemelwachter",
+      () -> Builder.of(HemelwachterEntity::new, MobCategory.MONSTER)
+         .sized(3.2F, 4.5F)
+         .clientTrackingRange(12)
+         .updateInterval(2)
+         .fireImmune()
+         .build("millenaire:hemelwachter")
+   );
+   public static final DeferredHolder<EntityType<?>, EntityType<CelestialBoltEntity>> CELESTIAL_BOLT = ENTITY_TYPES.register(
+      "celestial_bolt",
+      () -> Builder.<CelestialBoltEntity>of(CelestialBoltEntity::new, MobCategory.MISC)
+         .sized(0.45F, 0.45F)
+         .clientTrackingRange(6)
+         .updateInterval(8)
+         .fireImmune()
+         .build("millenaire:celestial_bolt")
+   );
 
    private ModEntities() {
    }
@@ -116,6 +134,7 @@ public final class ModEntities {
       event.put((EntityType)ANTICHRIST_PRIEST.get(), AntichristPriestEntity.createAttributes().build());
       event.put((EntityType)INFERNAL_CULTIST.get(), InfernalCultistEntity.createAttributes().build());
       event.put((EntityType)BOUNTY_HUNTER.get(), BountyHunterEntity.createAttributes().build());
+      event.put((EntityType)HEMELWACHTER.get(), HemelwachterEntity.createAttributes().build());
    }
 
    private static void onRegisterSpawnPlacements(RegisterSpawnPlacementsEvent event) {

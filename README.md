@@ -44,6 +44,14 @@ Server config lives in the NeoForge Millénaire server config (keys under `gener
 - Player deliveries preserve exact `ItemStack`s (components included) for deposit, return, and overdelivery recovery
 - The unsafe `VillageDeliveryService.deliver(...)` overload without live caps refuses delivery
 
+### World Boss Events
+
+- `worldBossEvents.enabled` — master switch (disabling stops new events; SavedData retained; active-boss policy `force_depart` / `leave`)
+- Interval `intervalMinTicks` / `intervalMaxTicks` (default 72000–108000 ≈ 60–90 min at 20 TPS; lag stretches wall-clock time)
+- One world timer; eligible survival/adventure Overworld players; extensible boss pool (Hemelwachter registered)
+- Admin: `/millenaire worldboss status|next|start [id]|end|list`
+- See `docs/WORLD_BOSS_EVENTS_ARCHITECTURE.md`, `docs/WORLD_BOSS_EVENTS_IMPLEMENTATION.md`, `docs/WORLD_BOSS_EVENTS_LOCAL_VALIDATION.md`
+
 ### Religion
 
 - `religionEnabled` — master switch (disabling pauses simulation; SavedData is retained)

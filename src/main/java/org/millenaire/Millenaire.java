@@ -421,9 +421,11 @@ public class Millenaire {
          WorldgenDiagCommand.register(event.getDispatcher());
          org.millenaire.worldgen.highway.HighwayCommand.register(event.getDispatcher());
          org.millenaire.command.NpcChatModelCommand.register(event);
+         org.millenaire.worldboss.command.WorldBossCommand.register(event.getDispatcher());
       });
       org.millenaire.living.LivingVillagesLifecycle.bootstrap();
       org.millenaire.religion.ReligionLifecycle.bootstrap();
+      org.millenaire.worldboss.WorldBossDefinitions.bootstrap();
       NeoForge.EVENT_BUS.addListener(ServerStoppingEvent.class, event -> {
          org.millenaire.chat.NpcChatService.onServerStopping();
          org.millenaire.living.LivingVillagesLifecycle.onServerStopping();
@@ -500,6 +502,7 @@ public class Millenaire {
             if (org.millenaire.worldgen.highway.HighwayEngine.isEnabled()) {
                org.millenaire.worldgen.highway.HighwayEngine.tick(overworld);
             }
+            org.millenaire.worldboss.WorldBossEventPlanner.tick(event.getServer());
             // Legacy fallback keeps natural villages appearing if the Phase 4 engine stalls.
             boolean legacyFallback = false;
             try {
