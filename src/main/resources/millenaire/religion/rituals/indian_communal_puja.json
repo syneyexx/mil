@@ -1,0 +1,29 @@
+{
+  "kind": "service",
+  "tradition": "millenaire:sanatana_dharma",
+  "location_tags": [
+    "pujas"
+  ],
+  "required_leader_roles": [
+    "pandit",
+    "sadhu"
+  ],
+  "requires_leader": true,
+  "supplies": [
+    {
+      "item": "minecraft:milk_bucket",
+      "count": 1
+    },
+    {
+      "item": "minecraft:wheat",
+      "count": 8
+    }
+  ],
+  "min_participants": 3,
+  "cooldown_days": 3,
+  "priority": 65,
+  "effects_profile": "default_communal",
+  "id": "millenaire:indian_communal_puja",
+  "name_key": "ritual.millenaire.indian_communal_puja.name",
+  "description_key": "ritual.millenaire.indian_communal_puja.desc"
+}

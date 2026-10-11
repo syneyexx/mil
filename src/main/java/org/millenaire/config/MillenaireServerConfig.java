@@ -142,6 +142,14 @@ public final class MillenaireServerConfig {
    public final IntValue npcReactionProcessingBudget;
    public final BooleanValue npcDialogueActionSuggestionsEnabled;
    public final BooleanValue livingVillagesDebugLogging;
+   public final BooleanValue religionEnabled;
+   public final IntValue religionEvaluationInterval;
+   public final IntValue religionGlobalBudget;
+   public final IntValue religionCeremonyBudget;
+   public final IntValue religionMaxHistoryPerVillage;
+   public final IntValue religionMaxCeremoniesTracked;
+   public final IntValue religionCatchupLimit;
+   public final BooleanValue religionDebugLogging;
    public final BooleanValue civilizationEvolutionEnabled;
    public final BooleanValue civilizationAutoTradeEnabled;
    public final BooleanValue civilizationOffscreenEnabled;
@@ -760,6 +768,39 @@ public final class MillenaireServerConfig {
       this.livingVillagesDebugLogging = builder.comment("Verbose Living Villages debug logging")
          .translation("millenaire.config.livingVillages.debugLogging")
          .define("livingVillagesDebugLogging", false);
+      builder.pop();
+      builder.comment(
+            new String[]{
+               "Religion — traditions, daily practice, ceremonies, pilgrimages, and village faith communities.",
+               "When disabled, simulation pauses but SavedData is retained. Does not require civilization",
+               "evolution or an LLM provider. Disabling does NOT wipe affiliations or ceremony history."
+            }
+         )
+         .push("religion");
+      this.religionEnabled = builder.comment("Master switch for religion simulation")
+         .translation("millenaire.config.religion.enabled")
+         .define("religionEnabled", true);
+      this.religionEvaluationInterval = builder.comment("Ticks between religion evaluation passes per village (staggered)")
+         .translation("millenaire.config.religion.evaluationInterval")
+         .defineInRange("religionEvaluationInterval", 100, 40, 4000);
+      this.religionGlobalBudget = builder.comment("Max villages evaluated for religion per server tick")
+         .translation("millenaire.config.religion.globalBudget")
+         .defineInRange("religionGlobalBudget", 4, 1, 32);
+      this.religionCeremonyBudget = builder.comment("Max ceremony state advances per religion tick pass")
+         .translation("millenaire.config.religion.ceremonyBudget")
+         .defineInRange("religionCeremonyBudget", 8, 1, 64);
+      this.religionMaxHistoryPerVillage = builder.comment("Max local religion history lines retained per village")
+         .translation("millenaire.config.religion.maxHistoryPerVillage")
+         .defineInRange("religionMaxHistoryPerVillage", 32, 8, 128);
+      this.religionMaxCeremoniesTracked = builder.comment("Max ceremony instances retained (active + recent)")
+         .translation("millenaire.config.religion.maxCeremoniesTracked")
+         .defineInRange("religionMaxCeremoniesTracked", 64, 16, 256);
+      this.religionCatchupLimit = builder.comment("Max catch-up ceremony plans after sleep/time-skip per village per day")
+         .translation("millenaire.config.religion.catchupLimit")
+         .defineInRange("religionCatchupLimit", 1, 0, 4);
+      this.religionDebugLogging = builder.comment("Verbose religion debug logging")
+         .translation("millenaire.config.religion.debugLogging")
+         .define("religionDebugLogging", false);
       builder.pop();
       builder.comment(
             new String[]{

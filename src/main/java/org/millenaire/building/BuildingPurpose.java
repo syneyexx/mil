@@ -22,7 +22,9 @@ public enum BuildingPurpose {
    WAREHOUSE(8, false, false, true),
    JAIL(2, false, true, true),
    SHOP(4, false, false, true),
-   GUEST_QUARTER(4, false, true, false);
+   GUEST_QUARTER(4, false, true, false),
+   /** Player-designated religious site (shrine / chapel / prayer hall). */
+   SHRINE(4, false, false, false);
 
    private final int maxCount;
    private final boolean openAir;
@@ -82,7 +84,7 @@ public enum BuildingPurpose {
    public boolean isWorkAttraction() {
       return switch (this) {
          case FARMLAND, SHEEP_PEN, CATTLE_PEN, HORSE_STABLE, CHICKEN_COOP, PIG_PEN, GROVE, WAREHOUSE, ARMORY, SHOP -> true;
-         case HOUSE, TOWN_HALL, KING_HOUSE, JAIL, GUEST_QUARTER -> false;
+         case HOUSE, TOWN_HALL, KING_HOUSE, JAIL, GUEST_QUARTER, SHRINE -> false;
       };
    }
 
@@ -103,6 +105,7 @@ public enum BuildingPurpose {
          case JAIL -> "Jail";
          case SHOP -> "Shop";
          case GUEST_QUARTER -> "Guest Quarter";
+         case SHRINE -> "Shrine";
       };
    }
 

@@ -1,0 +1,19 @@
+{
+  "kind": "pilgrimage",
+  "tradition": "millenaire:western_christianity",
+  "location_tags": [
+    "pilgrimsite",
+    "praying"
+  ],
+  "requires_leader": false,
+  "min_participants": 1,
+  "max_participants": 6,
+  "gather_ticks": 400,
+  "active_ticks": 800,
+  "cooldown_days": 14,
+  "priority": 40,
+  "effects_profile": "pilgrimage",
+  "id": "millenaire:generic_pilgrimage",
+  "name_key": "ritual.millenaire.generic_pilgrimage.name",
+  "description_key": "ritual.millenaire.generic_pilgrimage.desc"
+}

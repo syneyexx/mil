@@ -876,6 +876,7 @@ public class BuildGoal implements VillagerGoal {
             }
 
             village.recordChronicleEvent(level, VillageEventType.BUILDING_COMPLETED, chronicleName, null);
+            org.millenaire.religion.ReligionLifecycle.onReligiousBuildingCompleted(level, village, this.building);
             BuildGoal.LOGGER.info("Building {} completed — {} special points resolved", this.building.getPlanId(), this.building.getResolvedPoints().size());
          }
 

@@ -46,6 +46,15 @@ public final class DesignatedBuildingPlans {
       registerPurpose(BuildingPurpose.JAIL, "Jail", "military", List.of("designated_jail", "jail"), null, false, "military");
       registerPurpose(BuildingPurpose.SHOP, "Shop", "commerce", List.of("designated_shop", "shop", "market"), "player_shop", false, "commerce");
       registerPurpose(BuildingPurpose.GUEST_QUARTER, "Guest Quarter", "houses", List.of("designated_guest_quarter", "guest_quarter", "inn"), null, false, "house");
+      registerPurpose(
+         BuildingPurpose.SHRINE,
+         "Shrine",
+         "religious",
+         List.of("designated_shrine", "praying", "shrine", "temple"),
+         null,
+         false,
+         "othervillage"
+      );
    }
 
    public static ResourceLocation planSetId(BuildingPurpose purpose) {

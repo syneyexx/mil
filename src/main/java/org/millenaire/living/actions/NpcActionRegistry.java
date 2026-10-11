@@ -84,6 +84,23 @@ public final class NpcActionRegistry {
             case VIEW_INTERRUPTED_OPERATION -> out.add(NpcActionType.VIEW_INTERRUPTED_OPERATION);
          }
       }
+      try {
+         if (MillenaireServerConfig.SERVER.religionEnabled.get()) {
+            out.add(NpcActionType.VIEW_RELIGION_STATUS);
+            var ceremony = org.millenaire.religion.ReligionService.get().ceremonies().activeCeremony(ctx.level(), ctx.village());
+            if (ceremony != null) {
+               out.add(NpcActionType.JOIN_CEREMONY);
+               if (!ceremony.suppliesConsumed()) {
+                  out.add(NpcActionType.HELP_PREPARE_CEREMONY);
+                  out.add(NpcActionType.DELIVER_RITUAL_SUPPLIES);
+               }
+            }
+            if (ctx.village().isUnderAttack()) {
+               out.add(NpcActionType.SUPPORT_AFTER_ATTACK);
+            }
+         }
+      } catch (IllegalStateException ignored) {
+      }
       return out;
    }
 

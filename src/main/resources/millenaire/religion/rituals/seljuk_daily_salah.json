@@ -1,0 +1,17 @@
+{
+  "kind": "daily",
+  "tradition": "millenaire:sunni_islam",
+  "location_tags": [
+    "mosque",
+    "mosquefemaleside"
+  ],
+  "requires_leader": false,
+  "min_participants": 1,
+  "priority": 25,
+  "minimum_hour": 0,
+  "maximum_hour": 24000,
+  "effects_profile": "daily_quiet",
+  "id": "millenaire:seljuk_daily_salah",
+  "name_key": "ritual.millenaire.seljuk_daily_salah.name",
+  "description_key": "ritual.millenaire.seljuk_daily_salah.desc"
+}

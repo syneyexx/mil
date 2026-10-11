@@ -33,7 +33,11 @@ public enum LivingEventType {
    WAR_DECLARED,
    PEACE_SIGNED,
    TRADE_COMPLETED,
-   SETTLEMENT_DEVELOPMENT;
+   SETTLEMENT_DEVELOPMENT,
+   /** Religion system — verified ceremony / incident outcomes only. */
+   CEREMONY_COMPLETED,
+   RELIGIOUS_INCIDENT,
+   FAITH_AFFILIATION_CHANGED;
 
    public String i18nKey() {
       return "living.millenaire.event." + this.name().toLowerCase(Locale.ROOT);
@@ -52,7 +56,9 @@ public enum LivingEventType {
             WAR_DECLARED,
             PEACE_SIGNED,
             TRADE_COMPLETED,
-            VILLAGE_FOUNDED -> true;
+            VILLAGE_FOUNDED,
+            CEREMONY_COMPLETED,
+            RELIGIOUS_INCIDENT -> true;
          default -> false;
       };
    }

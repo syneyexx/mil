@@ -1,8 +1,8 @@
 # Millénaire
 
-Millénaire is a Minecraft **1.21.1** / **NeoForge** mod that adds living NPC villages with distinct cultures, progressive construction, trading, reputation, quests, Living Villages needs/requests, deterministic worldgen settlements, and optional civilization-scale faction orchestration (economy, diplomacy, war, migration, colonization).
+Millénaire is a Minecraft **1.21.1** / **NeoForge** mod that adds living NPC villages with distinct cultures, progressive construction, trading, reputation, quests, Living Villages needs/requests, an integrated religion system (traditions, daily practice, ceremonies, pilgrimages), deterministic worldgen settlements, and optional civilization-scale faction orchestration (economy, diplomacy, war, migration, colonization).
 
-**Local verification** (builds, CI, Minecraft runs, gametests) remains the responsibility of the repository owner. This document does not claim runtime verification. For the integrity-persistence milestone, the agent intentionally did not run GameTests, GitHub CI tests, or other automated verification — owner tests locally.
+**Local verification** (builds, CI, Minecraft runs, gametests) remains the responsibility of the repository owner. This document does not claim runtime verification. Agents for this repository do not run GameTests, GitHub CI tests, or other automated verification — owner tests locally.
 
 ## Requirements
 
@@ -43,6 +43,16 @@ Server config lives in the NeoForge Millénaire server config (keys under `gener
 - Deliveries require a **live** need/project; `request.remaining()` is only an upper bound
 - Player deliveries preserve exact `ItemStack`s (components included) for deposit, return, and overdelivery recovery
 - The unsafe `VillageDeliveryService.deliver(...)` overload without live caps refuses delivery
+
+### Religion
+
+- `religionEnabled` — master switch (disabling pauses simulation; SavedData is retained)
+- `religionEvaluationInterval` / `religionGlobalBudget` / `religionCeremonyBudget` — staggered per-village evaluation
+- `religionCatchupLimit` — caps ceremony catch-up after sleep/time-skip
+- Culture↔tradition is content-driven (not 1:1 hardcoded); `outlawz` has no organized religion
+- NPC affiliations persist by villager UUID across migration/respawn; never re-rolled on reload
+- Works without LLM and without civilization evolution
+- See `docs/RELIGION_ARCHITECTURE.md`, `docs/RELIGION_IMPLEMENTATION.md`, `docs/RELIGION_LOCAL_VALIDATION.md`
 
 ### Civilization
 
@@ -101,6 +111,7 @@ Server config lives in the NeoForge Millénaire server config (keys under `gener
 - `docs/FINAL_FEATURE_INVENTORY.md`
 - `docs/WORLDGEN_OVERHAUL_ARCHITECTURE.md` / `WORLDGEN_OVERHAUL_IMPLEMENTATION.md`
 - `docs/LIVING_VILLAGES_ARCHITECTURE.md` / `LIVING_VILLAGES_IMPLEMENTATION.md`
+- `docs/RELIGION_ARCHITECTURE.md` / `RELIGION_IMPLEMENTATION.md` / `RELIGION_LOCAL_VALIDATION.md`
 - Local validation docs describe owner-run checks; this agent does not execute them
 
 ## Development

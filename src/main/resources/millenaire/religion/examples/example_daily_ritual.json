@@ -1,0 +1,13 @@
+{
+  "id": "mymod:example_daily",
+  "kind": "daily",
+  "tradition": "mymod:example_tradition",
+  "name_key": "ritual.mymod.example_daily.name",
+  "description_key": "ritual.mymod.example_daily.desc",
+  "location_tags": [
+    "praying"
+  ],
+  "requires_leader": false,
+  "min_participants": 1,
+  "priority": 12
+}

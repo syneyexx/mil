@@ -1,0 +1,31 @@
+{
+  "kind": "feast",
+  "tradition": "millenaire:pulse_circle",
+  "location_tags": [
+    "praying"
+  ],
+  "required_leader_roles": [
+    "pulsekeeper"
+  ],
+  "requires_leader": true,
+  "supplies": [
+    {
+      "item": "minecraft:cookie",
+      "count": 16
+    },
+    {
+      "item": "minecraft:glow_berries",
+      "count": 8
+    }
+  ],
+  "min_participants": 5,
+  "cooldown_days": 10,
+  "day_modulo": 10,
+  "align_with_festival": true,
+  "priority": 86,
+  "sound": "minecraft:block.note_block.basedrum",
+  "effects_profile": "feast",
+  "id": "millenaire:gabber_circle_feast",
+  "name_key": "ritual.millenaire.gabber_circle_feast.name",
+  "description_key": "ritual.millenaire.gabber_circle_feast.desc"
+}

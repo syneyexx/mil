@@ -976,6 +976,20 @@ All paths are relative to a sub-mod root — a direct child of
 - **Marvel** (a.k.a. wonder): a one-shot top-tier building per culture
   (`buildings/wonders/`), gated behind a quest chain.
 
+## §Religion content (traditions & rituals)
+
+Religion is content-driven and loaded with cultures.
+
+- Global traditions: `millenaire/religion/traditions/<id>.json`
+- Global rituals: `millenaire/religion/rituals/<id>.json`
+- Per-culture binding: `millenaire/cultures/<culture>/religion.json`
+  - `"traditions": ["millenaire:western_christianity"]`
+  - or `"no_organized_religion": true` (see `outlawz`)
+- Custom packs may overlay the same paths under `millenaire-custom/<submod>/`.
+- Invalid references log `[Religion]` errors and do not wipe other cultures.
+- Examples for authors: `millenaire/religion/examples/`.
+- Design docs: repository `docs/RELIGION_ARCHITECTURE.md`.
+
 ## Annex C. Links
 
 - Templates: `millenaire/_templates/`

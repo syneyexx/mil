@@ -33,6 +33,18 @@ Legend: **IMPLEMENTED_UNVERIFIED** = source complete, runtime not verified by ag
 | Abstract→physical free items | UNSUPPORTED | forbidden by design |
 | Force-loaded offscreen combat | UNSUPPORTED | forbidden by design |
 | LLM-driven faction decisions | UNSUPPORTED | forbidden by design |
+| Religion content loader + validation | IMPLEMENTED_UNVERIFIED | `ReligionContentLoader` / `ReligionContentRegistry` |
+| Village faith community + NPC affiliations | IMPLEMENTED_UNVERIFIED | `ReligionSavedData` |
+| Ceremony state machine | IMPLEMENTED_UNVERIFIED | `CeremonyCoordinator` |
+| Daily practice via visit goals | IMPLEMENTED_UNVERIFIED | `DailyPracticeService` + `VisitBuildingGoal` completion |
+| AttendCeremonyGoal | IMPLEMENTED_UNVERIFIED | GoalScheduler injection |
+| Ritual supplies + social outcomes | IMPLEMENTED_UNVERIFIED | `RitualSupplyService` / `CeremonyEffects` |
+| Village Book / Travel Book / dialogue religion | IMPLEMENTED_UNVERIFIED | `ReligionPresentationService` |
+| Player religion actions | IMPLEMENTED_UNVERIFIED | `ReligionActionService` via `NpcActionType` |
+| Player SHRINE purpose | IMPLEMENTED_UNVERIFIED | `BuildingPurpose.SHRINE` |
+| Pilgrimage temporary trips | IMPLEMENTED_UNVERIFIED | `PilgrimageService` |
+| Religion policy + incidents | IMPLEMENTED_UNVERIFIED | `ReligionPolicyService` / `ReligionIncidentService` |
+| Built-in culture traditions (10 cultures) | IMPLEMENTED_UNVERIFIED | `millenaire/religion/**` + per-culture `religion.json` |
 
 ## Pre-existing (baseline) still authoritative
 

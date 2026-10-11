@@ -72,6 +72,11 @@ public final class VillageBookService {
       sections.add(ConstructionPanelGenerator.generateResources(village, effectiveLevel));
       sections.add(MilitaryPanelGenerator.generateMilitary(village, effectiveLevel));
       sections.add(VillageOverviewPanelGenerator.generateCivilization(village, effectiveLevel, player));
+      if (effectiveLevel != null) {
+         sections.add(
+            org.millenaire.religion.ReligionService.get().presentation().villageBookSection(effectiveLevel, village, player)
+         );
+      }
       sections.add(VillageOverviewPanelGenerator.generateChronicle(village));
       return sections;
    }

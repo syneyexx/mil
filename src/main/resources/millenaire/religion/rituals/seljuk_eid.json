@@ -1,0 +1,30 @@
+{
+  "kind": "feast",
+  "tradition": "millenaire:sunni_islam",
+  "location_tags": [
+    "mosque"
+  ],
+  "required_leader_roles": [
+    "imam"
+  ],
+  "requires_leader": true,
+  "supplies": [
+    {
+      "item": "minecraft:cooked_mutton",
+      "count": 12
+    },
+    {
+      "item": "minecraft:bread",
+      "count": 12
+    }
+  ],
+  "min_participants": 6,
+  "cooldown_days": 30,
+  "day_modulo": 30,
+  "align_with_festival": true,
+  "priority": 94,
+  "effects_profile": "feast",
+  "id": "millenaire:seljuk_eid",
+  "name_key": "ritual.millenaire.seljuk_eid.name",
+  "description_key": "ritual.millenaire.seljuk_eid.desc"
+}

@@ -1,0 +1,17 @@
+{
+  "kind": "daily",
+  "tradition": "millenaire:angakkuq_way",
+  "location_tags": [
+    "praying"
+  ],
+  "requires_leader": false,
+  "min_participants": 1,
+  "priority": 17,
+  "held_items": [
+    "minecraft:bone"
+  ],
+  "effects_profile": "daily_quiet",
+  "id": "millenaire:inuit_daily_propitiation",
+  "name_key": "ritual.millenaire.inuit_daily_propitiation.name",
+  "description_key": "ritual.millenaire.inuit_daily_propitiation.desc"
+}

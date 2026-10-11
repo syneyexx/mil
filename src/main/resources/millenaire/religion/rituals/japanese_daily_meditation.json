@@ -1,0 +1,19 @@
+{
+  "kind": "daily",
+  "tradition": "millenaire:nihon_way",
+  "location_tags": [
+    "pujas",
+    "praying"
+  ],
+  "requires_leader": false,
+  "min_participants": 1,
+  "priority": 16,
+  "held_items": [
+    "minecraft:stick"
+  ],
+  "sound": "minecraft:block.bamboo.hit",
+  "effects_profile": "daily_quiet",
+  "id": "millenaire:japanese_daily_meditation",
+  "name_key": "ritual.millenaire.japanese_daily_meditation.name",
+  "description_key": "ritual.millenaire.japanese_daily_meditation.desc"
+}

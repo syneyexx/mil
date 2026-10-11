@@ -391,6 +391,7 @@ public class Millenaire {
       goalRegistry.register(new ClearOldPathGoal());
       goalRegistry.register(new BuildPathGoal());
       VisitGoalLoader.loadAll(goalRegistry);
+      goalRegistry.register(new org.millenaire.religion.goal.AttendCeremonyGoal());
       goalRegistry.register(new ForeignMerchantKeepStallGoal());
       goalRegistry.register(new MerchantVisitInnGoal());
       goalRegistry.register(new MerchantVisitBuildingGoal());
@@ -422,6 +423,7 @@ public class Millenaire {
          org.millenaire.command.NpcChatModelCommand.register(event);
       });
       org.millenaire.living.LivingVillagesLifecycle.bootstrap();
+      org.millenaire.religion.ReligionLifecycle.bootstrap();
       NeoForge.EVENT_BUS.addListener(ServerStoppingEvent.class, event -> {
          org.millenaire.chat.NpcChatService.onServerStopping();
          org.millenaire.living.LivingVillagesLifecycle.onServerStopping();

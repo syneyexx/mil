@@ -946,6 +946,13 @@ public class MillVillager extends PathfinderMob {
          }
       }
 
+      if (!villagerType.isChild()) {
+         VillagerGoal attendCeremony = registry.get(org.millenaire.religion.goal.AttendCeremonyGoal.ID);
+         if (attendCeremony != null && !goals.contains(attendCeremony)) {
+            goals.add(attendCeremony);
+         }
+      }
+
       this.goalScheduler = new GoalScheduler(goals);
    }
 

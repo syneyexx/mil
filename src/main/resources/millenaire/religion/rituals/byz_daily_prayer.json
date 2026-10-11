@@ -1,0 +1,20 @@
+{
+  "kind": "daily",
+  "tradition": "millenaire:eastern_christianity",
+  "location_tags": [
+    "praying"
+  ],
+  "requires_leader": false,
+  "min_participants": 1,
+  "priority": 18,
+  "minimum_hour": 0,
+  "maximum_hour": 13000,
+  "held_items": [
+    "minecraft:glow_berries"
+  ],
+  "sound": "minecraft:block.amethyst_block.chime",
+  "effects_profile": "daily_quiet",
+  "id": "millenaire:byz_daily_prayer",
+  "name_key": "ritual.millenaire.byz_daily_prayer.name",
+  "description_key": "ritual.millenaire.byz_daily_prayer.desc"
+}

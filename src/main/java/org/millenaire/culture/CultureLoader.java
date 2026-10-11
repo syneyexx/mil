@@ -88,6 +88,11 @@ public final class CultureLoader {
 
       resolveVillagerTypeGoods();
       org.millenaire.building.DesignatedBuildingPlans.register();
+      try {
+         org.millenaire.religion.content.ReligionContentLoader.loadAll();
+      } catch (RuntimeException e) {
+         LOGGER.error("[Religion] Content load failed: {}", e.getMessage(), e);
+      }
       LOGGER.info(
          "Millénaire content loaded: {} cultures, {} plans ({} sets), {} villager types, {} village types",
          new Object[]{

@@ -1,0 +1,34 @@
+{
+  "id": "mymod:example_tradition",
+  "name_key": "religion.mymod.example_tradition.name",
+  "description_key": "religion.mymod.example_tradition.desc",
+  "cultures": [
+    "myculture"
+  ],
+  "location_tags": [
+    "praying"
+  ],
+  "roles": [
+    {
+      "id": "seer",
+      "type_path_contains": [
+        "priest"
+      ],
+      "clergy": true,
+      "can_lead_ceremony": true
+    }
+  ],
+  "daily_rituals": [
+    "mymod:example_daily"
+  ],
+  "service_rituals": [
+    "mymod:example_service"
+  ],
+  "feast_rituals": [],
+  "memorial_rituals": [],
+  "family_rituals": [
+    "millenaire:generic_family_blessing"
+  ],
+  "consecration_rituals": [],
+  "pilgrimage_rituals": []
+}
