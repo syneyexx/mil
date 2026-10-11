@@ -1,0 +1,16 @@
+{
+  "parent": "millenaire:firstcontact",
+  "display": {
+    "icon": { "item": "millenaire:hemelkern" },
+    "title": { "translate": "advancement.millenaire.hemelwachter_defeat" },
+    "description": { "translate": "advancement.millenaire.hemelwachter_defeat.desc" },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "requirement": {
+      "trigger": "millenaire:millenaire_trigger"
+    }
+  }
+}

@@ -27,6 +27,9 @@ public final class ClientGameEvents {
       if (BountyHunterArmorPreviewSession.enabled()) {
          BountyHunterArmorPreviewSession.tick(mc);
       }
+      if (HemelwachterPreviewSession.enabled()) {
+         HemelwachterPreviewSession.tick(mc);
+      }
       if (mc.player == null) {
          FireplaceSmokeHandler.clearAll();
       } else {
@@ -53,6 +56,9 @@ public final class ClientGameEvents {
       }
       if (BountyHunterArmorPreviewSession.enabled()) {
          BountyHunterArmorPreviewSession.onRenderFrame(Minecraft.getInstance().getMainRenderTarget());
+      }
+      if (HemelwachterPreviewSession.enabled()) {
+         HemelwachterPreviewSession.onRenderFrame(Minecraft.getInstance().getMainRenderTarget());
       }
    }
 }

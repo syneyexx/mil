@@ -206,6 +206,29 @@ public final class MillenaireServerConfig {
    public final BooleanValue computeOffloadHighwayPlan;
    public final BooleanValue computeOffloadWorldgenPlan;
    public final BooleanValue computeOffloadWaypointGraph;
+   public final BooleanValue worldBossEventsEnabled;
+   public final IntValue worldBossIntervalMinTicks;
+   public final IntValue worldBossIntervalMaxTicks;
+   public final ConfigValue<String> worldBossAllowedDimensions;
+   public final IntValue worldBossSpawnMinDistance;
+   public final IntValue worldBossSpawnMaxDistance;
+   public final IntValue worldBossHoverHeight;
+   public final IntValue worldBossSpawnAttemptsPerPulse;
+   public final IntValue worldBossVillageAvoidRadius;
+   public final IntValue worldBossNeutralDwellTicks;
+   public final IntValue worldBossCombatTimeoutTicks;
+   public final BooleanValue worldBossAllowCreativeAnchors;
+   public final BooleanValue worldBossAllowAdventureAnchors;
+   public final ConfigValue<String> worldBossDisableActivePolicy;
+   public final IntValue worldBossHemelwachterWeight;
+   public final DoubleValue worldBossHemelwachterHealth;
+   public final DoubleValue worldBossHemelwachterArmor;
+   public final DoubleValue worldBossHemelwachterToughness;
+   public final DoubleValue worldBossBeamDamage;
+   public final DoubleValue worldBossBeamRange;
+   public final DoubleValue worldBossBuffetDamage;
+   public final DoubleValue worldBossProjectileDamage;
+   public final IntValue worldBossEffectBudgetPerTick;
 
    public static int getDefaultClearMargin() {
       try {
@@ -1005,6 +1028,87 @@ public final class MillenaireServerConfig {
       this.computeOffloadWaypointGraph = builder.comment("Offload waypoint-graph edge batch prep to worker threads")
          .translation("millenaire.config.compute.offloadWaypointGraph")
          .define("computeOffloadWaypointGraph", true);
+      builder.pop();
+
+      builder.comment(
+            new String[]{
+               "World Boss Events — one active-playtime timer per world/server.",
+               "Default interval 72000–108000 ticks ≈ 60–90 minutes at 20 TPS.",
+               "Under server lag a tick timer takes longer wall-clock time than the nominal minutes.",
+               "Timer pauses with no eligible online players; sleep//time set does not advance it.",
+               "Disabling stops new events; SavedData is retained. Active-boss policy is explicit."
+            }
+         )
+         .push("worldBossEvents");
+      this.worldBossEventsEnabled = builder.comment("Master switch for world boss events")
+         .translation("millenaire.config.worldBossEvents.enabled")
+         .define("enabled", true);
+      this.worldBossIntervalMinTicks = builder.comment("Minimum active ticks between events (72000 ≈ 60 min at 20 TPS)")
+         .translation("millenaire.config.worldBossEvents.intervalMinTicks")
+         .defineInRange("intervalMinTicks", 72000, 1200, 1728000);
+      this.worldBossIntervalMaxTicks = builder.comment("Maximum active ticks between events (108000 ≈ 90 min at 20 TPS)")
+         .translation("millenaire.config.worldBossEvents.intervalMaxTicks")
+         .defineInRange("intervalMaxTicks", 108000, 1200, 1728000);
+      this.worldBossAllowedDimensions = builder.comment("Comma-separated dimension ids allowed as event anchors/spawns")
+         .translation("millenaire.config.worldBossEvents.allowedDimensions")
+         .define("allowedDimensions", "minecraft:overworld");
+      this.worldBossSpawnMinDistance = builder.comment("Minimum horizontal spawn distance from anchor player")
+         .translation("millenaire.config.worldBossEvents.spawnMinDistance")
+         .defineInRange("spawnMinDistance", 40, 16, 128);
+      this.worldBossSpawnMaxDistance = builder.comment("Maximum horizontal spawn distance from anchor player")
+         .translation("millenaire.config.worldBossEvents.spawnMaxDistance")
+         .defineInRange("spawnMaxDistance", 70, 24, 160);
+      this.worldBossHoverHeight = builder.comment("Hover height above ground for aerial bosses")
+         .translation("millenaire.config.worldBossEvents.hoverHeight")
+         .defineInRange("hoverHeight", 10, 4, 40);
+      this.worldBossSpawnAttemptsPerPulse = builder.comment("Spawn candidate attempts per selecting pulse (bounded)")
+         .translation("millenaire.config.worldBossEvents.spawnAttemptsPerPulse")
+         .defineInRange("spawnAttemptsPerPulse", 8, 1, 24);
+      this.worldBossVillageAvoidRadius = builder.comment("Avoid spawning within this radius of Millénaire villages / protected structures")
+         .translation("millenaire.config.worldBossEvents.villageAvoidRadius")
+         .defineInRange("villageAvoidRadius", 96, 16, 256);
+      this.worldBossNeutralDwellTicks = builder.comment("Neutral observation time before peaceful departure (6000 ≈ 5 min at 20 TPS)")
+         .translation("millenaire.config.worldBossEvents.neutralDwellTicks")
+         .defineInRange("neutralDwellTicks", 6000, 200, 72000);
+      this.worldBossCombatTimeoutTicks = builder.comment("Ticks without valid combat targets before disengage/depart")
+         .translation("millenaire.config.worldBossEvents.combatTimeoutTicks")
+         .defineInRange("combatTimeoutTicks", 12000, 200, 72000);
+      this.worldBossAllowCreativeAnchors = builder.comment("Allow creative players as event anchors/targets")
+         .translation("millenaire.config.worldBossEvents.allowCreativeAnchors")
+         .define("allowCreativeAnchors", false);
+      this.worldBossAllowAdventureAnchors = builder.comment("Allow adventure players as event anchors/targets")
+         .translation("millenaire.config.worldBossEvents.allowAdventureAnchors")
+         .define("allowAdventureAnchors", true);
+      this.worldBossDisableActivePolicy = builder.comment("When disabled with an active boss: leave | force_depart")
+         .translation("millenaire.config.worldBossEvents.disableActivePolicy")
+         .define("disableActivePolicy", "force_depart");
+      this.worldBossHemelwachterWeight = builder.comment("Selection weight for Hemelwachter in the boss pool")
+         .translation("millenaire.config.worldBossEvents.hemelwachterWeight")
+         .defineInRange("hemelwachterWeight", 100, 1, 10000);
+      this.worldBossHemelwachterHealth = builder.comment("Hemelwachter max health (1200 = 600 hearts)")
+         .translation("millenaire.config.worldBossEvents.hemelwachterHealth")
+         .defineInRange("hemelwachterHealth", 1200.0D, 100.0D, 20000.0D);
+      this.worldBossHemelwachterArmor = builder.comment("Hemelwachter armor")
+         .translation("millenaire.config.worldBossEvents.hemelwachterArmor")
+         .defineInRange("hemelwachterArmor", 12.0D, 0.0D, 30.0D);
+      this.worldBossHemelwachterToughness = builder.comment("Hemelwachter armor toughness")
+         .translation("millenaire.config.worldBossEvents.hemelwachterToughness")
+         .defineInRange("hemelwachterToughness", 6.0D, 0.0D, 20.0D);
+      this.worldBossBeamDamage = builder.comment("Eye beam damage before armor")
+         .translation("millenaire.config.worldBossEvents.beamDamage")
+         .defineInRange("beamDamage", 14.0D, 1.0D, 100.0D);
+      this.worldBossBeamRange = builder.comment("Eye beam maximum range")
+         .translation("millenaire.config.worldBossEvents.beamRange")
+         .defineInRange("beamRange", 40.0D, 8.0D, 80.0D);
+      this.worldBossBuffetDamage = builder.comment("Wing buffet damage before armor")
+         .translation("millenaire.config.worldBossEvents.buffetDamage")
+         .defineInRange("buffetDamage", 16.0D, 1.0D, 100.0D);
+      this.worldBossProjectileDamage = builder.comment("Celestial projectile damage before armor")
+         .translation("millenaire.config.worldBossEvents.projectileDamage")
+         .defineInRange("projectileDamage", 8.0D, 1.0D, 100.0D);
+      this.worldBossEffectBudgetPerTick = builder.comment("Soft cap hint for boss particle/sound bursts per tick")
+         .translation("millenaire.config.worldBossEvents.effectBudgetPerTick")
+         .defineInRange("effectBudgetPerTick", 24, 4, 128);
       builder.pop();
    }
 

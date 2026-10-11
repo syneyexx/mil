@@ -53,6 +53,9 @@ public final class MillModelLayers {
    public static final ModelLayerLocation BOUNTY_HUNTER_ARMOR_SLIM = new ModelLayerLocation(
       ResourceLocation.fromNamespaceAndPath("millenaire", "bounty_hunter_armor"), "slim"
    );
+   public static final ModelLayerLocation HEMELWACHTER = new ModelLayerLocation(
+      ResourceLocation.fromNamespaceAndPath("millenaire", "hemelwachter"), "main"
+   );
 
    private MillModelLayers() {
    }

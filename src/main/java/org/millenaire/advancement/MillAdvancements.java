@@ -56,6 +56,7 @@ public final class MillAdvancements {
    public static final ResourceLocation MP_RAIDONPLAYER = id("mp_raidonplayer");
    public static final ResourceLocation MP_NEIGHBOURTRADE = id("mp_neighbourtrade");
    public static final ResourceLocation MP_FRIENDLYVILLAGE = id("mp_friendlyvillage");
+   public static final ResourceLocation HEMELWACHTER_DEFEAT = id("hemelwachter_defeat");
    public static final List<String> ADVANCEMENT_CULTURES = List.of("norman", "indian", "mayan", "japanese", "byzantines", "inuits", "seljuk", "gabbers", "outlawz", "illagers");
    public static final Map<String, ResourceLocation> REP = new HashMap<>();
    public static final Map<String, ResourceLocation> LEADER = new HashMap<>();

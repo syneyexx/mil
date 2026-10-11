@@ -55,6 +55,10 @@ neoForge {
             if (project.hasProperty('millenaire.bountyArmorPreview')) {
                 systemProperty 'millenaire.bountyArmorPreview', project.property('millenaire.bountyArmorPreview')
             }
+            // Optional visual QA: ./gradlew runClient -Pmillenaire.hemelwachterPreview=true
+            if (project.hasProperty('millenaire.hemelwachterPreview')) {
+                systemProperty 'millenaire.hemelwachterPreview', project.property('millenaire.hemelwachterPreview')
+            }
         }
 
         server {

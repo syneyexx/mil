@@ -60,6 +60,10 @@ public final class ModCreativeTabs {
             output.accept((ItemLike)ModItems.ANTICHRIST_PRIEST_SPAWN_EGG.get());
             output.accept((ItemLike)ModItems.INFERNAL_CULTIST_SPAWN_EGG.get());
             output.accept((ItemLike)ModItems.BOUNTY_HUNTER_SPAWN_EGG.get());
+            output.accept((ItemLike)ModItems.HEMELWACHTER_SPAWN_EGG.get());
+            output.accept((ItemLike)ModItems.HEMELKERN.get());
+            output.accept((ItemLike)ModItems.HEMELFRAGMENT.get());
+            output.accept((ItemLike)ModBlocks.HEMELLANTAARN.get());
             output.accept((ItemLike)ModItems.NORMAN_SWORD.get());
             output.accept((ItemLike)ModItems.NORMAN_PICKAXE.get());
             output.accept((ItemLike)ModItems.NORMAN_AXE.get());

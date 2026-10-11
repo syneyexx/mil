@@ -37,6 +37,7 @@ import org.millenaire.client.gui.TradeScreen;
 import org.millenaire.client.model.AntichristPriestModel;
 import org.millenaire.client.model.BountyHunterArmorModel;
 import org.millenaire.client.model.BountyHunterModel;
+import org.millenaire.client.model.HemelwachterModel;
 import org.millenaire.client.model.InfernalCultistModel;
 import org.millenaire.client.model.InfernalHarrowModel;
 import org.millenaire.client.model.InfernalHellhoundModel;
@@ -50,7 +51,9 @@ import org.millenaire.client.render.BountyHunterArmorClientExtensions;
 import org.millenaire.client.render.BountyHunterArmorEmissiveLayer;
 import org.millenaire.client.render.BountyHunterBolaRenderer;
 import org.millenaire.client.render.BountyHunterRenderer;
+import org.millenaire.client.render.CelestialBoltRenderer;
 import org.millenaire.client.render.FirePitRenderer;
+import org.millenaire.client.render.HemelwachterRenderer;
 import org.millenaire.client.render.InfernalCultistRenderer;
 import org.millenaire.client.render.InfernalFireballRenderer;
 import org.millenaire.client.render.InfernalHarrowRenderer;
@@ -83,6 +86,8 @@ public final class ClientEvents {
       event.registerEntityRenderer((EntityType)ModEntities.INFERNAL_HEX_BOLT.get(), InfernalHexBoltRenderer::new);
       event.registerEntityRenderer((EntityType)ModEntities.BOUNTY_HUNTER.get(), BountyHunterRenderer::new);
       event.registerEntityRenderer((EntityType)ModEntities.BOUNTY_HUNTER_BOLA.get(), BountyHunterBolaRenderer::new);
+      event.registerEntityRenderer((EntityType)ModEntities.HEMELWACHTER.get(), HemelwachterRenderer::new);
+      event.registerEntityRenderer((EntityType)ModEntities.CELESTIAL_BOLT.get(), CelestialBoltRenderer::new);
       event.registerBlockEntityRenderer((BlockEntityType)ModBlockEntities.LOCKED_CHEST.get(), LockedChestRenderer::new);
       event.registerBlockEntityRenderer((BlockEntityType)ModBlockEntities.VILLAGE_PANEL.get(), VillagePanelRenderer::new);
       event.registerBlockEntityRenderer((BlockEntityType)ModBlockEntities.FIRE_PIT.get(), FirePitRenderer::new);
@@ -110,6 +115,7 @@ public final class ClientEvents {
       event.registerLayerDefinition(MillModelLayers.BOUNTY_HUNTER, BountyHunterModel::createBodyLayer);
       event.registerLayerDefinition(MillModelLayers.BOUNTY_HUNTER_ARMOR, () -> BountyHunterArmorModel.createBodyLayer(false));
       event.registerLayerDefinition(MillModelLayers.BOUNTY_HUNTER_ARMOR_SLIM, () -> BountyHunterArmorModel.createBodyLayer(true));
+      event.registerLayerDefinition(MillModelLayers.HEMELWACHTER, HemelwachterModel::createBodyLayer);
    }
 
    @SubscribeEvent
