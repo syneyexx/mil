@@ -32,8 +32,21 @@ public final class NpcChatSelfCheck {
          failures.add("lmstudio models url");
          return;
       }
-      if (!LmStudioModelDiscovery.isLmStudioBaseUrl("http://127.0.0.1:1234/v1")) {
+      if (!LmStudioModelDiscovery.isAcceptedLmStudioBaseUrl("http://127.0.0.1:1234/v1")) {
          failures.add("lmstudio detect localhost");
+         return;
+      }
+      if (LmStudioModelDiscovery.isAcceptedLmStudioBaseUrl("https://api.x.ai/v1")) {
+         failures.add("lmstudio must reject x.ai");
+         return;
+      }
+      if (LmStudioModelDiscovery.isAcceptedLmStudioBaseUrl("https://api.openai.com/v1")) {
+         failures.add("lmstudio must reject openai");
+         return;
+      }
+      String normalized = NpcModelClient.normalizeCompletionsBaseUrl("http://127.0.0.1:1234");
+      if (!"http://127.0.0.1:1234/v1".equals(normalized)) {
+         failures.add("completions base /v1 normalize");
          return;
       }
       String body = "{\"models\":["
@@ -67,10 +80,7 @@ public final class NpcChatSelfCheck {
          failures.add("parser fence");
          return;
       }
-      if (NpcReplyParser.parse("Sure! {\"say\":\"x\"} ok").isPresent()) {
-         failures.add("parser junk around object");
-         return;
-      }
+      // Loose JSON extract accepts prose-wrapped objects from small local models.
       if (NpcReplyParser.parse("{\"say\":\"   \",\"mood\":\"calm\"}").isPresent()) {
          failures.add("parser empty say");
          return;

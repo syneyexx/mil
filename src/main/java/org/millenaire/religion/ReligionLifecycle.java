@@ -60,7 +60,7 @@ public final class ReligionLifecycle {
          if (Math.floorMod(village.getId().uuid().hashCode() + now, interval) != 0) {
             continue;
          }
-         if (!level.isLoaded(village.getCenter())) {
+         if (!village.isActive() || !level.isLoaded(village.getCenter())) {
             continue;
          }
          ReligionService.get().ceremonies().tickVillage(level, village);

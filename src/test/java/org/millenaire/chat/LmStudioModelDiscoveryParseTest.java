@@ -61,6 +61,34 @@ class LmStudioModelDiscoveryParseTest {
    }
 
    @Test
+   void acceptsOnlyLocalLmStudioUrls() {
+      assertTrue(LmStudioModelDiscovery.isAcceptedLmStudioBaseUrl("http://127.0.0.1:1234/v1"));
+      assertTrue(LmStudioModelDiscovery.isAcceptedLmStudioBaseUrl("http://localhost:1234/v1"));
+      assertTrue(LmStudioModelDiscovery.isAcceptedLmStudioBaseUrl("http://192.168.1.18:1234/v1"));
+      assertTrue(LmStudioModelDiscovery.isAcceptedLmStudioBaseUrl("http://10.0.0.5:1234/v1"));
+      assertFalse(LmStudioModelDiscovery.isAcceptedLmStudioBaseUrl("https://api.x.ai/v1"));
+      assertFalse(LmStudioModelDiscovery.isAcceptedLmStudioBaseUrl("https://api.openai.com/v1"));
+      assertFalse(LmStudioModelDiscovery.isAcceptedLmStudioBaseUrl("https://openrouter.ai/api/v1"));
+      assertFalse(LmStudioModelDiscovery.isAcceptedLmStudioBaseUrl(""));
+   }
+
+   @Test
+   void normalizesCompletionsBaseToV1() {
+      assertEquals("http://127.0.0.1:1234/v1", NpcModelClient.normalizeCompletionsBaseUrl("http://127.0.0.1:1234"));
+      assertEquals("http://127.0.0.1:1234/v1", NpcModelClient.normalizeCompletionsBaseUrl("http://127.0.0.1:1234/v1/"));
+      assertEquals("http://127.0.0.1:1234/v1", NpcModelClient.normalizeCompletionsBaseUrl("http://127.0.0.1:1234/v1/chat/completions"));
+   }
+
+   @Test
+   void unreachableSnapshotFailsLoud() {
+      NpcModelResolver.Result result = NpcModelResolver.resolveLmStudio(
+         LmStudioModelDiscovery.Snapshot.unreachable(1L, "down")
+      );
+      assertFalse(result.ok());
+      assertEquals(NpcModelResolver.Status.LMSTUDIO_UNREACHABLE, result.status());
+   }
+
+   @Test
    void plainTextReplyIsAccepted() {
       assertTrue(NpcReplyParser.parse("I'm doing well, traveler.").isPresent());
       assertEquals("I'm doing well, traveler.", NpcReplyParser.parse("I'm doing well, traveler.").get().say());

@@ -36,7 +36,8 @@ public final class AerialNearPlayerSpawnStrategy implements WorldBossSpawnStrate
          maxDist = tmp;
       }
       int hover = cfg.worldBossHoverHeight.getAsInt();
-      int attempts = Math.min(12, cfg.worldBossSpawnAttemptsPerPulse.getAsInt());
+      // One candidate per SELECTING pulse: amortize structure/clearance cost across ticks.
+      int attempts = 1;
       BlockPos playerPos = anchor.blockPosition();
 
       for (int i = 0; i < attempts; i++) {
@@ -93,6 +94,6 @@ public final class AerialNearPlayerSpawnStrategy implements WorldBossSpawnStrate
             return true;
          }
       }
-      return StructureAvoidance.hasConflict(level, pos, margin);
+      return StructureAvoidance.hasConflictSparse(level, pos, margin);
    }
 }

@@ -190,10 +190,8 @@ public class Millenaire {
          if (event.getConfig().getType() == Type.COMMON) {
             MillenaireCommonConfig.COMMON.bindLogCategories();
          }
-      });
-      modEventBus.addListener(ModConfigEvent.class, event -> {
-         if (event.getConfig().getType() == Type.COMMON) {
-            MillenaireCommonConfig.COMMON.bindLogCategories();
+         if (event.getConfig().getType() == Type.SERVER) {
+            org.millenaire.chat.NpcChatConfigMigration.migrateLoadedServerConfig();
          }
       });
       ModBlocks.register(modEventBus);
@@ -421,13 +419,16 @@ public class Millenaire {
          WorldgenDiagCommand.register(event.getDispatcher());
          org.millenaire.worldgen.highway.HighwayCommand.register(event.getDispatcher());
          org.millenaire.command.NpcChatModelCommand.register(event);
+         org.millenaire.companion.CompanionCommand.register(event);
          org.millenaire.worldboss.command.WorldBossCommand.register(event.getDispatcher());
       });
       org.millenaire.living.LivingVillagesLifecycle.bootstrap();
       org.millenaire.religion.ReligionLifecycle.bootstrap();
       org.millenaire.worldboss.WorldBossDefinitions.bootstrap();
+      org.millenaire.companion.CompanionChatBridge.bootstrap();
       NeoForge.EVENT_BUS.addListener(ServerStoppingEvent.class, event -> {
          org.millenaire.chat.NpcChatService.onServerStopping();
+         org.millenaire.companion.CompanionLifecycle.onServerStopping();
          org.millenaire.living.LivingVillagesLifecycle.onServerStopping();
          TestPlayerManager.onServerStopping();
          TravelBookNavigationState.clearAll();
@@ -479,57 +480,81 @@ public class Millenaire {
          TestPlayerManager.acknowledgeChunkBatch();
          ServerLevel overworld = event.getServer().getLevel(Level.OVERWORLD);
          if (overworld != null) {
+            org.millenaire.perf.tick.ServerTickGovernor.beginTick(overworld.getGameTime());
             // Apply completed worker results before village/worldgen consume shared budgets.
+            org.millenaire.perf.tick.ServerTickGovernor.enter(org.millenaire.perf.tick.TickPhase.APPLY);
             if (org.millenaire.perf.compute.MillenaireComputePool.isRunning()) {
                org.millenaire.perf.compute.ComputeMailbox.get()
                   .drainAndApply(overworld, org.millenaire.perf.compute.ComputeOffload.applyBudgetPerTick());
             }
-            // Shared soft deadline for village + worldgen work on this tick.
-            org.millenaire.worldgen.materialize.MaterializationTickBudget.ensureTick(overworld.getGameTime());
             VillageSavedData.get(overworld).getVillageManager().tick(overworld);
             org.millenaire.village.RoadTravelerShopScheduler.tick(overworld);
+            org.millenaire.perf.tick.ServerTickGovernor.enter(org.millenaire.perf.tick.TickPhase.CIV_FACTION);
             if (org.millenaire.civilization.CivilizationOrchestrator.isEnabled()) {
                org.millenaire.civilization.CivilizationOrchestrator.onServerTick(overworld);
             } else {
                FactionLifecycle.onServerTick(overworld);
             }
-            org.millenaire.faction.crime.hunter.BountyHunterDispatchManager.tick(overworld);
-            org.millenaire.faction.crime.hunter.BountyHunterCustodyTicker.tick(overworld);
+            if (org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+               org.millenaire.faction.crime.hunter.BountyHunterDispatchManager.tick(overworld);
+               org.millenaire.faction.crime.hunter.BountyHunterCustodyTicker.tick(overworld);
+            } else {
+               org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.CIV_FACTION);
+            }
+            org.millenaire.perf.tick.ServerTickGovernor.enter(org.millenaire.perf.tick.TickPhase.WORLDGEN);
             if (WorldgenEngine.isEnabled()) {
                WorldgenEngine.onServerTick(overworld);
             }
             org.millenaire.worldgen.starter.StarterSettlementService.tick(overworld);
+            org.millenaire.perf.tick.ServerTickGovernor.enter(org.millenaire.perf.tick.TickPhase.HIGHWAY);
             if (org.millenaire.worldgen.highway.HighwayEngine.isEnabled()) {
                org.millenaire.worldgen.highway.HighwayEngine.tick(overworld);
             }
+            org.millenaire.perf.tick.ServerTickGovernor.enter(org.millenaire.perf.tick.TickPhase.BOSS_QUEST_MAP);
             org.millenaire.worldboss.WorldBossEventPlanner.tick(event.getServer());
             // Legacy fallback keeps natural villages appearing if the Phase 4 engine stalls.
+            // Skip when the shared soft deadline is already spent so spawn cannot pile onto a hot tick.
             boolean legacyFallback = false;
             try {
                legacyFallback = Boolean.TRUE.equals(MillenaireServerConfig.SERVER.worldgenLegacyFallback.get());
             } catch (IllegalStateException ignored) {
             }
-            if (!naturalSpawnSuppressed && (!WorldgenEngine.isEnabled() || legacyFallback)) {
+            if (
+               !naturalSpawnSuppressed
+                  && (!WorldgenEngine.isEnabled() || legacyFallback)
+                  && org.millenaire.perf.tick.ServerTickGovernor.hasTime()
+            ) {
                spawnQueue.trySpawnNext(overworld);
+            } else if (!naturalSpawnSuppressed && (!WorldgenEngine.isEnabled() || legacyFallback)) {
+               org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.BOSS_QUEST_MAP);
             }
          }
 
-         org.millenaire.chat.NpcChatService.tickSessions(event.getServer());
+         boolean tailHasTime = overworld == null || org.millenaire.perf.tick.ServerTickGovernor.hasTime();
+         if (tailHasTime) {
+            org.millenaire.chat.NpcChatService.tickSessions(event.getServer());
+            org.millenaire.companion.CompanionLifecycle.tick(event.getServer());
 
-         for (ServerPlayer player : event.getServer().getPlayerList().getPlayers()) {
-            ServerLevel playerLevel = player.serverLevel();
-            QuestManager.tickQuests(player, playerLevel);
-            QuestManager.tickSpecialActions(player, playerLevel);
-         }
+            for (ServerPlayer player : event.getServer().getPlayerList().getPlayers()) {
+               ServerLevel playerLevel = player.serverLevel();
+               QuestManager.tickQuests(player, playerLevel);
+               QuestManager.tickSpecialActions(player, playerLevel);
+            }
 
-         WaypointVisualizationManager.tick(event.getServer());
-         if (overworld != null && overworld.getGameTime() % 20L == 0L) {
-            VillageMapMarkerService.processAllPlayers(event.getServer());
+            WaypointVisualizationManager.tick(event.getServer());
+            if (overworld != null && overworld.getGameTime() % 20L == 0L) {
+               VillageMapMarkerService.processAllPlayers(event.getServer());
+            }
+            org.millenaire.map.sync.SettlementMapSyncService.tick(event.getServer());
+            // Backfill Millenaire village waystones for existing worlds (every ~30s).
+            if (overworld != null && overworld.getGameTime() % 600L == 0L) {
+               org.millenaire.compat.WaystoneVillagePlacer.tickBackfill(overworld);
+            }
+         } else {
+            org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.BOSS_QUEST_MAP);
          }
-         org.millenaire.map.sync.SettlementMapSyncService.tick(event.getServer());
-         // Backfill Millenaire village waystones for existing worlds (every ~30s).
-         if (overworld != null && overworld.getGameTime() % 600L == 0L) {
-            org.millenaire.compat.WaystoneVillagePlacer.tickBackfill(overworld);
+         if (overworld != null) {
+            org.millenaire.perf.tick.ServerTickGovernor.endTick();
          }
       });
       NeoForge.EVENT_BUS.addListener(ChunkEvent.Load.class, event -> {

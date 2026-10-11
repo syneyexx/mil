@@ -29,14 +29,27 @@ public final class InteractionTicker {
       if (level == null) {
          return;
       }
+      if (!org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+         org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.CIV_FACTION);
+         return;
+      }
       InteractionSavedData data = InteractionSavedData.get(level);
       long now = level.getGameTime();
-      data.setLastTickerPassGameTime(now);
-
+      // Avoid dirtying SavedData for telemetry-only last-pass time.
       TradeCorridorService.refreshDisruptions(level);
       ClaimHeatService.decay(level);
-      ClaimHeatService.recompute(level);
+      // Full pairwise heat recompute is the heavy step — defer when soft tick budget is spent.
+      if (org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+         ClaimHeatService.recompute(level);
+      } else {
+         org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.CIV_FACTION);
+         return;
+      }
       expireTimedState(level, data, now);
+      if (!org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+         org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.CIV_FACTION);
+         return;
+      }
       maybeStartFestivals(level, data, now);
       generateTheaterStories(level, data, now);
       MarketDayService.tickFlags(level);

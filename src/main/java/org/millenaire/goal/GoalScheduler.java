@@ -44,8 +44,23 @@ public class GoalScheduler {
    }
 
    public void tick(@Nullable GoalContext ctx) {
+      this.tick(ctx, true, true);
+   }
+
+   /**
+    * @param allowGoalPick when false, skip idle goal selection and leisure rechecks;
+    *        current task still runs every tick.
+    */
+   public void tick(@Nullable GoalContext ctx, boolean allowGoalPick) {
+      this.tick(ctx, allowGoalPick, true);
+   }
+
+   /**
+    * @param allowCombatScan when false, skip combat-urgent canStart preemption scans.
+    */
+   public void tick(@Nullable GoalContext ctx, boolean allowGoalPick, boolean allowCombatScan) {
       try {
-         this.tickInternal(ctx);
+         this.tickInternal(ctx, allowGoalPick, allowCombatScan);
       } catch (Exception e) {
          LOGGER.error(
             "[Millenaire] Exception in GoalScheduler.tick() — goal={}, task={} — forced reset",
@@ -72,7 +87,7 @@ public class GoalScheduler {
       }
    }
 
-   private void tickInternal(@Nullable GoalContext ctx) {
+   private void tickInternal(@Nullable GoalContext ctx, boolean allowGoalPick, boolean allowCombatScan) {
       if (this.currentTask != null && this.currentTask.isFinished()) {
          this.currentTask.stop(ctx, StopReason.COMPLETED);
          if (ctx != null) {
@@ -97,32 +112,36 @@ public class GoalScheduler {
          this.resetIdleBackoff();
       }
 
-      if (this.currentTask != null && this.currentGoal != null && this.currentGoal.isLeisure() && this.leisureRecheckCooldown > 0) {
-         this.leisureRecheckCooldown--;
-      } else if (this.currentTask != null && this.currentGoal != null && this.currentGoal.isLeisure()) {
-         this.leisureRecheckCooldown = 9;
+      if (allowGoalPick) {
+         if (this.currentTask != null && this.currentGoal != null && this.currentGoal.isLeisure() && this.leisureRecheckCooldown > 0) {
+            this.leisureRecheckCooldown--;
+         } else if (this.currentTask != null && this.currentGoal != null && this.currentGoal.isLeisure()) {
+            this.leisureRecheckCooldown = 9;
 
-         for (VillagerGoal goal : this.goals) {
-            if (!goal.isLeisure()
-               && isTimeAllowed(goal, ctx)
-               && this.isCooldownExpired(goal.id(), goal.reoccurDelayTicks(), ctx != null ? ctx.gameTime() : 0L)
-               && goal.canStart(ctx)) {
-               this.currentTask.stop(ctx, StopReason.INTERRUPTED);
-               if (ctx != null) {
-                  ctx.villager().getNavManager().stop(ctx.villager());
+            for (VillagerGoal goal : this.goals) {
+               if (!goal.isLeisure()
+                  && isTimeAllowed(goal, ctx)
+                  && this.isCooldownExpired(goal.id(), goal.reoccurDelayTicks(), ctx != null ? ctx.gameTime() : 0L)
+                  && goal.canStart(ctx)) {
+                  this.currentTask.stop(ctx, StopReason.INTERRUPTED);
+                  if (ctx != null) {
+                     ctx.villager().getNavManager().stop(ctx.villager());
+                  }
+
+                  this.currentGoal = goal;
+                  this.currentTask = goal.start(ctx);
+                  this.lastGoalTick.put(goal.id(), ctx != null ? ctx.gameTime() : 0L);
+                  this.taskTicks = 0;
+                  this.resetIdleBackoff();
+                  break;
                }
-
-               this.currentGoal = goal;
-               this.currentTask = goal.start(ctx);
-               this.lastGoalTick.put(goal.id(), ctx != null ? ctx.gameTime() : 0L);
-               this.taskTicks = 0;
-               this.resetIdleBackoff();
-               break;
             }
          }
+      } else if (this.currentTask != null && this.currentGoal != null && this.currentGoal.isLeisure() && this.leisureRecheckCooldown > 0) {
+         this.leisureRecheckCooldown--;
       }
 
-      if (this.currentTask != null && this.currentGoal != null) {
+      if (allowCombatScan && this.currentTask != null && this.currentGoal != null) {
          boolean currentIsCombat = this.currentGoal.isCombatUrgent();
          int currentPriority = currentIsCombat ? this.currentGoal.computePriority(ctx) : Integer.MIN_VALUE;
 
@@ -151,7 +170,7 @@ public class GoalScheduler {
       if (this.currentTask == null) {
          if (this.idleBackoff > 0) {
             this.idleBackoff--;
-         } else {
+         } else if (allowGoalPick) {
             GoalScheduler.BestGoal best = this.pickBest(ctx);
             if (best != null) {
                this.currentGoal = best.goal();

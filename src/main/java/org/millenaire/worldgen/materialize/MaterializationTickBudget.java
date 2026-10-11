@@ -30,7 +30,13 @@ public final class MaterializationTickBudget {
          remainingScanCandidates = MillenaireServerConfig.SERVER.worldgenMaterializationScanBudget.getAsInt();
          remainingActivations = MillenaireServerConfig.SERVER.worldgenActivationBudget.getAsInt();
          remainingPlanSteps = MillenaireServerConfig.SERVER.worldgenPlanningBudget.getAsInt();
-         int timeMs = MillenaireServerConfig.SERVER.worldgenTickTimeBudgetMs.getAsInt();
+         int timeMs;
+         try {
+            // Prefer tick governor global budget when present; fall back to legacy worldgen key.
+            timeMs = MillenaireServerConfig.SERVER.tickGlobalBudgetMs.getAsInt();
+         } catch (IllegalStateException e) {
+            timeMs = MillenaireServerConfig.SERVER.worldgenTickTimeBudgetMs.getAsInt();
+         }
          tickStartNanos = System.nanoTime();
          deadlineNanos = tickStartNanos + Math.max(1, timeMs) * 1_000_000L;
          lastPhaseNanos = tickStartNanos;
@@ -39,6 +45,11 @@ public final class MaterializationTickBudget {
          materializeNanos = 0L;
          activationNanos = 0L;
       }
+   }
+
+   /** Align soft deadline with {@link org.millenaire.perf.tick.ServerTickGovernor} reserved pie. */
+   public static void setDeadlineNanos(long nanos) {
+      deadlineNanos = nanos;
    }
 
    public static boolean hasTime() {

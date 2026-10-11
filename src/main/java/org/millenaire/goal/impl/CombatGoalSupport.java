@@ -93,19 +93,6 @@ final class CombatGoalSupport {
 
    @Nullable
    private static MillVillager findClosestOpponent(MillVillager v, double radius, Predicate<MillVillager> isOpponent) {
-      double bestSq = radius * radius;
-      MillVillager best = null;
-
-      for (MillVillager other : v.level().getEntitiesOfClass(MillVillager.class, v.getBoundingBox().inflate(radius))) {
-         if (other != v && other.isAlive() && isOpponent.test(other)) {
-            double d = v.distanceToSqr(other);
-            if (d < bestSq) {
-               bestSq = d;
-               best = other;
-            }
-         }
-      }
-
-      return best;
+      return org.millenaire.perf.sense.CombatSenseCache.findClosestVillager(v, radius, isOpponent);
    }
 }

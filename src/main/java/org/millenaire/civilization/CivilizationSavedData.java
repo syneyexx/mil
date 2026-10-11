@@ -252,18 +252,33 @@ public class CivilizationSavedData extends SavedData {
       }
    }
 
+   /**
+    * Marks a dedupe key as published until {@code gameTime + ttlTicks}.
+    * Stored value is per-entry {@code expiresAt} (not mark time).
+    */
    public boolean tryMarkPublished(String dedupeKey, long gameTime, long ttlTicks) {
       if (dedupeKey == null || dedupeKey.isBlank()) {
          return true;
       }
-      Long prev = this.publishedEventKeys.get(dedupeKey);
-      if (prev != null && gameTime - prev < ttlTicks) {
+      this.prunePublishedKeys(gameTime);
+      Long expiresAt = this.publishedEventKeys.get(dedupeKey);
+      if (expiresAt != null && gameTime < expiresAt) {
          return false;
       }
-      this.publishedEventKeys.put(dedupeKey, gameTime);
+      long newExpiry = gameTime + Math.max(1L, ttlTicks);
+      this.publishedEventKeys.put(dedupeKey, newExpiry);
       if (this.publishedEventKeys.size() > 4096) {
-         long cutoff = gameTime - ttlTicks * 4L;
-         this.publishedEventKeys.entrySet().removeIf(e -> e.getValue() < cutoff);
+         this.prunePublishedKeys(gameTime);
+         if (this.publishedEventKeys.size() > 4096) {
+            // Drop oldest expiry first under hard pressure.
+            this.publishedEventKeys.entrySet()
+               .stream()
+               .sorted(java.util.Map.Entry.comparingByValue())
+               .limit(this.publishedEventKeys.size() - 4096L)
+               .map(java.util.Map.Entry::getKey)
+               .toList()
+               .forEach(this.publishedEventKeys::remove);
+         }
       }
       this.setDirty();
       return true;
@@ -274,8 +289,12 @@ public class CivilizationSavedData extends SavedData {
       if (dedupeKey == null || dedupeKey.isBlank()) {
          return false;
       }
-      Long prev = this.publishedEventKeys.get(dedupeKey);
-      return prev != null && gameTime - prev < ttlTicks;
+      Long expiresAt = this.publishedEventKeys.get(dedupeKey);
+      return expiresAt != null && gameTime < expiresAt;
+   }
+
+   private void prunePublishedKeys(long gameTime) {
+      this.publishedEventKeys.entrySet().removeIf(e -> e.getValue() == null || e.getValue() <= gameTime);
    }
 
    public void queueHistoryKey(String key) {
@@ -508,8 +527,10 @@ public class CivilizationSavedData extends SavedData {
       }
       CompoundTag published = tag.getCompound("published");
       for (String key : published.getAllKeys()) {
+         // Values are per-entry expiresAt. Legacy mark-time entries prune naturally when past.
          data.publishedEventKeys.put(key, published.getLong(key));
       }
+      data.prunePublishedKeys(0L);
       CompoundTag markers = tag.getCompound("markers");
       for (String key : markers.getAllKeys()) {
          data.stateMarkers.put(key, markers.getString(key));

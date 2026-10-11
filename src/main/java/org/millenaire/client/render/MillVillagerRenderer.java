@@ -6,6 +6,8 @@ import com.mojang.math.Axis;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.Font.DisplayMode;
@@ -51,6 +53,25 @@ public class MillVillagerRenderer extends MobRenderer<MillVillager, HumanoidMode
    private final HumanoidModel<MillVillager> maleModel = (HumanoidModel<MillVillager>)this.model;
    private final HumanoidModel<MillVillager> femaleSymModel;
    private final HumanoidModel<MillVillager> femaleAsymModel;
+   private UUID nameCacheEntityId;
+   private String nameCacheDisplayName;
+   private String nameCacheNativeRole;
+   private String nameCacheRoleName;
+   private String nameCacheGoalLabel;
+   private String nameCacheQuestLabel;
+   private String nameCacheSpeechText;
+   private boolean nameCacheCanRead;
+   private boolean nameCacheHired;
+   private boolean nameCacheAggressive;
+   private int nameCacheHireHours;
+   private int nameCacheHealthHearts;
+   private int nameCacheMaxHearts;
+   private Component nameCacheNameRoleLine;
+   private Component nameCacheGoalLine;
+   private Component nameCacheQuestLine;
+   private Component nameCacheHireLine;
+   private List<Component> nameCacheSpeechNative = List.of();
+   private List<Component> nameCacheSpeechTranslation = List.of();
 
    public MillVillagerRenderer(Context context) {
       super(context, new MillMaleModel(context.bakeLayer(MillModelLayers.MILL_VILLAGER_MALE)), 0.5F);
@@ -94,10 +115,18 @@ public class MillVillagerRenderer extends MobRenderer<MillVillager, HumanoidMode
       ((HumanoidModel)this.model).rightArmPose = entity.getItemInHand(InteractionHand.MAIN_HAND).isEmpty() ? ArmPose.EMPTY : ArmPose.ITEM;
       ((HumanoidModel)this.model).leftArmPose = entity.getItemInHand(InteractionHand.OFF_HAND).isEmpty() ? ArmPose.EMPTY : ArmPose.ITEM;
       super.render(entity, entityYaw, partialTick, poseStack, bufferSource, packedLight);
-      List<ItemStack> floatingIcons = defineFloatingIcons(entity);
-      if (!floatingIcons.isEmpty()) {
-         this.renderFloatingIcons(entity, floatingIcons, poseStack, bufferSource, packedLight);
+      if (this.isFullNameDetail(entity)) {
+         List<ItemStack> floatingIcons = defineFloatingIcons(entity);
+         if (!floatingIcons.isEmpty()) {
+            this.renderFloatingIcons(entity, floatingIcons, poseStack, bufferSource, packedLight);
+         }
       }
+   }
+
+   private boolean isFullNameDetail(MillVillager entity) {
+      int dist = MillenaireClientConfig.CLIENT.namesDistance.getAsInt();
+      double fullDetailDist = dist * 0.45;
+      return this.entityRenderDispatcher.distanceToSqr(entity) <= fullDetailDist * fullDetailDist;
    }
 
    protected void setupRotations(MillVillager entity, PoseStack poseStack, float bob, float yBodyRot, float partialTick, float scale) {
@@ -136,36 +165,16 @@ public class MillVillagerRenderer extends MobRenderer<MillVillager, HumanoidMode
    protected void renderNameTag(MillVillager entity, Component content, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, float partialTick) {
       String displayName = entity.getVillagerDisplayName();
       if (displayName != null && !displayName.isEmpty()) {
+         boolean fullDetail = this.isFullNameDetail(entity);
+         this.refreshNameTagCache(entity, fullDetail);
          Font font = this.getFont();
-         String nameStr = !displayName.startsWith("entity.") && !displayName.startsWith("role.")
-            ? displayName
-            : Component.translatable(displayName).getString();
-         String nativeRole = entity.getNativeRoleName();
-         String roleName = entity.getRoleName();
-         boolean hasRole = nativeRole != null && !nativeRole.isEmpty();
-         String nameRoleStr;
-         if (hasRole) {
-            ResourceLocation cultureId = entity.getCultureId();
-            boolean canReadNames = cultureId != null && ClientLanguageCache.canReadVillagerNames(cultureId);
-            if (canReadNames && roleName != null && !roleName.isEmpty()) {
-               String translatedRole = roleName.startsWith("role.") ? Component.translatable(roleName).getString() : roleName;
-               nameRoleStr = DisplayNameResolver.equivalent(nativeRole, translatedRole)
-                  ? nameStr + ", " + nativeRole
-                  : nameStr + ", " + nativeRole + " (" + translatedRole + ")";
-            } else {
-               nameRoleStr = nameStr + ", " + nativeRole;
-            }
-         } else {
-            nameRoleStr = nameStr;
-         }
-
-         Component nameRoleLine = Component.literal(nameRoleStr);
-         String goalLabel = entity.getGoalLabel();
-         boolean hasGoal = goalLabel != null && !goalLabel.isEmpty();
-         Component goalLine = hasGoal ? DisplayUtils.resolveGoalLabelComponent(goalLabel) : null;
-         String questLabel = ClientQuestCache.getQuestLabelForVillager(entity.getUUID());
-         boolean hasQuest = questLabel != null;
-         Component questLine = hasQuest ? Component.literal("[" + questLabel + "]") : null;
+         Component nameRoleLine = this.nameCacheNameRoleLine;
+         Component goalLine = fullDetail ? this.nameCacheGoalLine : null;
+         Component questLine = fullDetail ? this.nameCacheQuestLine : null;
+         Component hireLine = fullDetail ? this.nameCacheHireLine : null;
+         boolean hasGoal = goalLine != null;
+         boolean hasQuest = questLine != null;
+         boolean hasHire = hireLine != null;
          int lineHeight = 9 + 1;
          int bgColor = -1342177280;
          poseStack.pushPose();
@@ -190,45 +199,28 @@ public class MillVillagerRenderer extends MobRenderer<MillVillager, HumanoidMode
             drawNameLine(font, questLine, questX, questY, -1596072483, matrix, immediateBuffer, bgColor, emissiveLight);
          }
 
-         boolean hasHire = entity.clientIsHired();
          float hireY = (hasGoal ? goalY : (hasQuest ? questY : nameY)) - (hasHire ? lineHeight : 0);
          if (hasHire) {
-            String stanceKey = entity.clientIsAggressive() ? "gui.millenaire.hire.aggressive" : "gui.millenaire.hire.passive";
-            String hireStr = Component.translatable(
-                     "gui.millenaire.hire.health", new Object[]{String.valueOf((int)entity.getHealth() / 2), String.valueOf((int)entity.getMaxHealth() / 2)}
-                  )
-                  .getString()
-               + " — "
-               + Component.translatable(stanceKey).getString()
-               + " — "
-               + Component.translatable("gui.millenaire.hire.hiredvillager", new Object[]{entity.clientHireHoursLeft()}).getString();
-            Component hireLine = Component.literal(hireStr);
             float hireX = -font.width(hireLine) / 2.0F;
             drawNameLine(font, hireLine, hireX, hireY, -2307474, matrix, immediateBuffer, bgColor, emissiveLight);
          }
 
          float nameX = -font.width(nameRoleLine) / 2.0F;
          drawNameLine(font, nameRoleLine, nameX, nameY, -1, matrix, immediateBuffer, bgColor, emissiveLight);
-         String speechText = entity.getSpeechText();
-         boolean hasSpeech = speechText != null && !speechText.isEmpty();
-         if (hasSpeech) {
+         if (fullDetail && (!this.nameCacheSpeechNative.isEmpty() || !this.nameCacheSpeechTranslation.isEmpty())) {
             int speechBg = -1342177280;
-            int maxSpeechChars = 60;
-            String[] speechParts = resolveSpeechLines(speechText, entity);
-            List<String> nativeLines = speechParts[0] != null ? wordWrap(speechParts[0], maxSpeechChars) : List.of();
-            List<String> translationLines = speechParts[1] != null ? wordWrap(speechParts[1], maxSpeechChars) : List.of();
             float topLine = hasHire ? hireY : (hasGoal ? goalY : (hasQuest ? questY : nameY));
             float currentY = topLine - lineHeight - 2.0F;
 
-            for (int i = translationLines.size() - 1; i >= 0; i--) {
-               Component transComp = Component.literal(translationLines.get(i));
+            for (int i = this.nameCacheSpeechTranslation.size() - 1; i >= 0; i--) {
+               Component transComp = this.nameCacheSpeechTranslation.get(i);
                float transX = -font.width(transComp) / 2.0F;
                drawNameLine(font, transComp, transX, currentY, -5636096, matrix, immediateBuffer, speechBg, emissiveLight);
                currentY -= lineHeight;
             }
 
-            for (int i = nativeLines.size() - 1; i >= 0; i--) {
-               Component nativeComp = Component.literal(nativeLines.get(i));
+            for (int i = this.nameCacheSpeechNative.size() - 1; i >= 0; i--) {
+               Component nativeComp = this.nameCacheSpeechNative.get(i);
                float nativeX = -font.width(nativeComp) / 2.0F;
                drawNameLine(font, nativeComp, nativeX, currentY, -11184641, matrix, immediateBuffer, speechBg, emissiveLight);
                currentY -= lineHeight;
@@ -240,32 +232,130 @@ public class MillVillagerRenderer extends MobRenderer<MillVillager, HumanoidMode
       }
    }
 
+   private void refreshNameTagCache(MillVillager entity, boolean fullDetail) {
+      String displayName = entity.getVillagerDisplayName();
+      String nativeRole = entity.getNativeRoleName();
+      String roleName = entity.getRoleName();
+      ResourceLocation cultureId = entity.getCultureId();
+      boolean canReadNames = cultureId != null && ClientLanguageCache.canReadVillagerNames(cultureId);
+      String goalLabel = fullDetail ? entity.getGoalLabel() : null;
+      String questLabel = fullDetail ? ClientQuestCache.getQuestLabelForVillager(entity.getUUID()) : null;
+      String speechText = fullDetail ? entity.getSpeechText() : null;
+      boolean hired = fullDetail && entity.clientIsHired();
+      boolean aggressive = hired && entity.clientIsAggressive();
+      int hireHours = hired ? entity.clientHireHoursLeft() : 0;
+      int healthHearts = hired ? (int)entity.getHealth() / 2 : 0;
+      int maxHearts = hired ? (int)entity.getMaxHealth() / 2 : 0;
+
+      boolean sameEntity = Objects.equals(this.nameCacheEntityId, entity.getUUID());
+      boolean unchanged = sameEntity
+         && Objects.equals(this.nameCacheDisplayName, displayName)
+         && Objects.equals(this.nameCacheNativeRole, nativeRole)
+         && Objects.equals(this.nameCacheRoleName, roleName)
+         && this.nameCacheCanRead == canReadNames
+         && Objects.equals(this.nameCacheGoalLabel, goalLabel)
+         && Objects.equals(this.nameCacheQuestLabel, questLabel)
+         && Objects.equals(this.nameCacheSpeechText, speechText)
+         && this.nameCacheHired == hired
+         && this.nameCacheAggressive == aggressive
+         && this.nameCacheHireHours == hireHours
+         && this.nameCacheHealthHearts == healthHearts
+         && this.nameCacheMaxHearts == maxHearts;
+      if (unchanged) {
+         return;
+      }
+
+      this.nameCacheEntityId = entity.getUUID();
+      this.nameCacheDisplayName = displayName;
+      this.nameCacheNativeRole = nativeRole;
+      this.nameCacheRoleName = roleName;
+      this.nameCacheCanRead = canReadNames;
+      this.nameCacheGoalLabel = goalLabel;
+      this.nameCacheQuestLabel = questLabel;
+      this.nameCacheSpeechText = speechText;
+      this.nameCacheHired = hired;
+      this.nameCacheAggressive = aggressive;
+      this.nameCacheHireHours = hireHours;
+      this.nameCacheHealthHearts = healthHearts;
+      this.nameCacheMaxHearts = maxHearts;
+
+      String nameStr = !displayName.startsWith("entity.") && !displayName.startsWith("role.")
+         ? displayName
+         : Component.translatable(displayName).getString();
+      String nameRoleStr;
+      if (nativeRole != null && !nativeRole.isEmpty()) {
+         if (canReadNames && roleName != null && !roleName.isEmpty()) {
+            String translatedRole = roleName.startsWith("role.") ? Component.translatable(roleName).getString() : roleName;
+            nameRoleStr = DisplayNameResolver.equivalent(nativeRole, translatedRole)
+               ? nameStr + ", " + nativeRole
+               : nameStr + ", " + nativeRole + " (" + translatedRole + ")";
+         } else {
+            nameRoleStr = nameStr + ", " + nativeRole;
+         }
+      } else {
+         nameRoleStr = nameStr;
+      }
+      this.nameCacheNameRoleLine = Component.literal(nameRoleStr);
+      this.nameCacheGoalLine = goalLabel != null && !goalLabel.isEmpty() ? DisplayUtils.resolveGoalLabelComponent(goalLabel) : null;
+      this.nameCacheQuestLine = questLabel != null ? Component.literal("[" + questLabel + "]") : null;
+      if (hired) {
+         String stanceKey = aggressive ? "gui.millenaire.hire.aggressive" : "gui.millenaire.hire.passive";
+         String hireStr = Component.translatable("gui.millenaire.hire.health", String.valueOf(healthHearts), String.valueOf(maxHearts)).getString()
+            + " — "
+            + Component.translatable(stanceKey).getString()
+            + " — "
+            + Component.translatable("gui.millenaire.hire.hiredvillager", hireHours).getString();
+         this.nameCacheHireLine = Component.literal(hireStr);
+      } else {
+         this.nameCacheHireLine = null;
+      }
+
+      if (speechText != null && !speechText.isEmpty()) {
+         String[] speechParts = resolveSpeechLines(speechText, entity);
+         List<String> nativeLines = speechParts[0] != null ? wordWrap(speechParts[0], 60) : List.of();
+         List<String> translationLines = speechParts[1] != null ? wordWrap(speechParts[1], 60) : List.of();
+         List<Component> nativeComps = new ArrayList<>(nativeLines.size());
+         for (String line : nativeLines) {
+            nativeComps.add(Component.literal(line));
+         }
+         List<Component> transComps = new ArrayList<>(translationLines.size());
+         for (String line : translationLines) {
+            transComps.add(Component.literal(line));
+         }
+         this.nameCacheSpeechNative = nativeComps;
+         this.nameCacheSpeechTranslation = transComps;
+      } else {
+         this.nameCacheSpeechNative = List.of();
+         this.nameCacheSpeechTranslation = List.of();
+      }
+   }
+
    private static void drawNameLine(
       Font font, Component text, float x, float y, int color, Matrix4f matrix, MultiBufferSource bufferSource, int bgColor, int emissiveLight
    ) {
-      int seeThruColor = color & 16777215 | -2147483648;
-      font.drawInBatch(text, x, y, seeThruColor, false, matrix, bufferSource, DisplayMode.SEE_THROUGH, bgColor, emissiveLight);
-      font.drawInBatch(text, x, y, color, false, matrix, bufferSource, DisplayMode.NORMAL, 0, emissiveLight);
+      // Single pass is enough beyond very close range; dual SEE_THROUGH+NORMAL was ~2x font cost.
+      font.drawInBatch(text, x, y, color, false, matrix, bufferSource, DisplayMode.NORMAL, bgColor, emissiveLight);
    }
 
    private static String[] resolveSpeechLines(String speechRef, MillVillager entity) {
       return SpeechResolver.resolve(speechRef);
    }
 
+   private static final ItemStack CHIEF_ICON = new ItemStack(Items.GOLDEN_HELMET);
+   private static ItemStack purseIconCached;
+
    private static List<ItemStack> defineFloatingIcons(MillVillager entity) {
-      List<ItemStack> icons = new ArrayList<>();
+      // Reuse stacks — allocating ItemStacks every frame was a client FPS tax in busy villages.
+      List<ItemStack> icons = new ArrayList<>(3);
       if (entity.isChief()) {
-         icons.add(new ItemStack(Items.GOLDEN_HELMET));
+         icons.add(CHIEF_ICON);
       }
-
-      if (entity.isSelling()) {
-         icons.add(new ItemStack((ItemLike)ModItems.PURSE.get()));
+      if (entity.isSelling() || entity.isForeignMerchant()) {
+         if (purseIconCached == null) {
+            purseIconCached = new ItemStack((ItemLike)ModItems.PURSE.get());
+         }
+         icons.add(purseIconCached);
       }
-
-      if (entity.isForeignMerchant()) {
-         icons.add(new ItemStack((ItemLike)ModItems.PURSE.get()));
-      }
-
       return icons;
    }
 

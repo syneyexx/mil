@@ -187,7 +187,7 @@ public class VillageSpawnQueue {
          double distToSpawnSq = candidate.distSqr(level.getSharedSpawnPos());
          if (spawnProtRadius > 0L && distToSpawnSq < spawnProtRadius * spawnProtRadius) {
             if (log) {
-               LOGGER.info(
+               LOGGER.debug(
                   "[Millenaire spawn] {} rejected: within spawn protection ({} < {})",
                   new Object[]{candidate.toShortString(), (int)Math.sqrt(distToSpawnSq), spawnProtRadius}
                );
@@ -228,13 +228,13 @@ public class VillageSpawnQueue {
                         if (!tooCloseForLone) {
                            this.loneBuildingQueue.addLast(new VillageSpawnQueue.LBCandidate(surfacePos, distToSpawnSq, currentTick, 0L));
                            if (log) {
-                              LOGGER.info("[Millenaire spawn] {} deferred to LB queue (village failed)", surfacePos.toShortString());
+                              LOGGER.debug("[Millenaire spawn] {} deferred to LB queue (village failed)", surfacePos.toShortString());
                            }
                         }
                      } else if (!tooCloseForLone) {
                         this.loneBuildingQueue.addLast(new VillageSpawnQueue.LBCandidate(surfacePos, distToSpawnSq, currentTick, 0L));
                         if (log) {
-                           LOGGER.info("[Millenaire spawn] {} deferred to LB queue (too close for village)", surfacePos.toShortString());
+                           LOGGER.debug("[Millenaire spawn] {} deferred to LB queue (too close for village)", surfacePos.toShortString());
                         }
                      }
 
@@ -254,7 +254,7 @@ public class VillageSpawnQueue {
                   }
                }
             } else if (log && genVillages && tooCloseForVillage) {
-               LOGGER.info("[Millenaire spawn] {} skipped for village: tooClose", candidate.toShortString());
+               LOGGER.debug("[Millenaire spawn] {} skipped for village: tooClose", candidate.toShortString());
             }
          }
       }
@@ -275,7 +275,7 @@ public class VillageSpawnQueue {
 
             if (isExpired(candidate, currentTick, 72000L)) {
                if (log) {
-                  LOGGER.info("[Millenaire spawn] LB candidate {} expired (TTL)", candidate.pos().toShortString());
+                  LOGGER.debug("[Millenaire spawn] LB candidate {} expired (TTL)", candidate.pos().toShortString());
                }
             } else if (shouldBackoff(candidate, currentTick)) {
                this.loneBuildingQueue.addLast(candidate);
@@ -293,12 +293,12 @@ public class VillageSpawnQueue {
                );
                if (placement == VillageManager.LBPlacement.BLOCKED) {
                   if (log) {
-                     LOGGER.info("[Millenaire spawn] LB candidate {} dropped (too close after re-check)", candidate.pos().toShortString());
+                     LOGGER.debug("[Millenaire spawn] LB candidate {} dropped (too close after re-check)", candidate.pos().toShortString());
                   }
                } else {
                   boolean keyOnly = placement == VillageManager.LBPlacement.KEY_ONLY;
                   if (log) {
-                     LOGGER.info("[Millenaire spawn] LB candidate {} passed coverage check", candidate.pos().toShortString());
+                     LOGGER.debug("[Millenaire spawn] LB candidate {} passed coverage check", candidate.pos().toShortString());
                   }
 
                   VillageSpawnQueue.SpawnResult result = this.trySpawnVillage(level, candidate.pos(), candidate.distToSpawnSq(), manager, true, log, keyOnly);
@@ -529,7 +529,7 @@ public class VillageSpawnQueue {
             if (validPerc < requiredValidity) {
                filteredByBiomeValidity++;
                if (log && validCount > 0) {
-                  LOGGER.info(
+                  LOGGER.debug(
                      "[Millenaire spawn]   {} rejected: biome validity {}/{} = {}% < {}%",
                      new Object[]{vt.id(), validCount, totalCount, Math.round(validPerc * 100.0F), Math.round(requiredValidity * 100.0F)}
                   );
@@ -544,11 +544,11 @@ public class VillageSpawnQueue {
          if (log) {
             int dist = (int)Math.sqrt(distToSpawnSq);
             if (biomeCandidates.isEmpty()) {
-               LOGGER.info(
+               LOGGER.debug(
                   "[Millenaire spawn] {} at {} rejected: no {} type registered for biome {}", new Object[]{label, surfacePos.toShortString(), label, biomeId}
                );
             } else {
-               LOGGER.info(
+               LOGGER.debug(
                   "[Millenaire spawn] {} at {} rejected: {} biome-compatible {} type(s) found but all filtered out (spawnDist={}/{}: {}, hamlets: {}, maxCount: {}, minDist: {}, biomeValidity: {})",
                   new Object[]{
                      label,
@@ -591,7 +591,7 @@ public class VillageSpawnQueue {
          }
 
          if (log) {
-            LOGGER.info(
+            LOGGER.debug(
                "[Millenaire spawn] {} at {} trying type '{}' (radius={}, biome={})",
                new Object[]{label, surfacePos.toShortString(), chosen.id(), chosen.radius(), biomeId}
             );
@@ -599,7 +599,7 @@ public class VillageSpawnQueue {
 
          if (manager.overlapsExistingVillage(surfacePos, chosen.radius())) {
             if (log) {
-               LOGGER.info(
+               LOGGER.debug(
                   "[Millenaire spawn] {} at {} rejected: footprint would overlap an existing village (radius={})",
                   new Object[]{label, surfacePos.toShortString(), chosen.radius()}
                );
@@ -612,7 +612,7 @@ public class VillageSpawnQueue {
                )
              {
                if (log) {
-                  LOGGER.info("[Millenaire spawn] {} at {} deferred: chunks not loaded (radius={})", new Object[]{label, surfacePos.toShortString(), r});
+                  LOGGER.debug("[Millenaire spawn] {} at {} deferred: chunks not loaded (radius={})", new Object[]{label, surfacePos.toShortString(), r});
                }
 
                if (!loneBuilding) {
@@ -622,26 +622,26 @@ public class VillageSpawnQueue {
                return VillageSpawnQueue.SpawnResult.DEFERRED;
             } else if (StructureAvoidance.hasConflict(level, surfacePos, chosen.radius())) {
                if (log) {
-                  LOGGER.info("[Millenaire spawn] {} at {} rejected: vanilla structure conflict", label, surfacePos.toShortString());
+                  LOGGER.debug("[Millenaire spawn] {} at {} rejected: vanilla structure conflict", label, surfacePos.toShortString());
                }
 
                return VillageSpawnQueue.SpawnResult.FAILED;
             } else if (!SiteValidator.validate(level, surfacePos, chosen.radius(), loneBuilding)) {
                if (log) {
-                  LOGGER.info("[Millenaire spawn] {} at {} rejected: terrain validation failed", label, surfacePos.toShortString());
+                  LOGGER.debug("[Millenaire spawn] {} at {} rejected: terrain validation failed", label, surfacePos.toShortString());
                }
 
                return VillageSpawnQueue.SpawnResult.FAILED;
             } else {
                double distToSpawn = Math.sqrt(distToSpawnSq);
                int completion = computeCompletionByDistance(distToSpawn);
-               LOGGER.info(
+               LOGGER.debug(
                   "[Millenaire] Natural spawn ({}) : {} at {} (completion: {}%, queue: {}, lbQueue: {})",
                   new Object[]{label, chosen.id(), surfacePos.toShortString(), completion, this.candidates.size(), this.loneBuildingQueue.size()}
                );
                Component failure = VillageSpawner.spawnVillage(level, surfacePos, chosen, completion);
                if (log && failure != null) {
-                  LOGGER.info("[Millenaire spawn] {} at {} rejected: {}", new Object[]{label, surfacePos.toShortString(), failure.getString()});
+                  LOGGER.debug("[Millenaire spawn] {} at {} rejected: {}", new Object[]{label, surfacePos.toShortString(), failure.getString()});
                }
 
                if (failure == null && loneBuilding) {

@@ -85,6 +85,20 @@ public class VillagePathManager {
    private int outstandingPathJobs = 0;
    private static final int MAX_FOOTPRINT_PROBE = 16;
    static final int CLEAR_CELL_SIZE = 8;
+   private static final int PATH_SCAN_CELLS_PER_TICK = 256;
+   @Nullable
+   private transient Map<Long, Integer> cachedBuildingFloors;
+   private transient long cachedBuildingFloorsGeneration = Long.MIN_VALUE;
+   private boolean pathScanInProgress;
+   private int pathScanX;
+   private int pathScanZ;
+   private int pathScanMinX;
+   private int pathScanMaxX;
+   private int pathScanMinZ;
+   private int pathScanMaxZ;
+   private final List<BlockPos> pathScanAccum = new ArrayList<>();
+   @Nullable
+   private Set<BlockPos> pathScanNewPositions;
 
    public void recalculatePaths(ServerLevel level, Village village, boolean autobuild) {
       if ((Boolean)MillenaireServerConfig.SERVER.buildPaths.get()) {
@@ -311,8 +325,12 @@ public class VillagePathManager {
                this.buildRouteIds.clear();
                this.buildPathIndex = 0;
                this.buildEntryIndex = 0;
-               this.pathsToClear.clear();
+               this.pathsToClear = new ArrayList<>();
                this.clearIndex = 0;
+               this.pathScanInProgress = false;
+               this.pathScanAccum.clear();
+               this.pathScanNewPositions = null;
+               this.cachedBuildingFloors = null;
                this.allNewPathPositions.clear();
                this.pathLevelByPos.clear();
                this.pathLevelByColumn.clear();
@@ -325,17 +343,22 @@ public class VillagePathManager {
                   Set<Long> borders = computeBorderCells(village);
                   Set<Long> affinity = new HashSet<>(this.previousSurfaceColumns);
                   affinity.addAll(this.currentRecalcSurfaceColumns);
-                  PathTerrainSnapshot snapshot = PathTerrainSnapshot.capture(level, village, routes, floors, borders, affinity);
-                  for (PathRoute route : routes) {
-                     PathRoute routeCapture = route;
-                     boolean submitted = MillenaireComputePool.submit(() -> {
-                        VillagePathManager.TraceResult tr = snapshot.searchTrace(routeCapture);
-                        return new PathTraceComputeResult(village.getId(), generation, routeCapture, tr);
-                     });
-                     if (submitted) {
-                        this.outstandingPathJobs++;
-                     } else {
-                        this.pendingRoutes.add(route);
+                  if (!org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+                     org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.VILLAGE_NEAR);
+                     this.pendingRoutes.addAll(routes);
+                  } else {
+                     PathTerrainSnapshot snapshot = PathTerrainSnapshot.capture(level, village, routes, floors, borders, affinity);
+                     for (PathRoute route : routes) {
+                        PathRoute routeCapture = route;
+                        boolean submitted = MillenaireComputePool.submit(() -> {
+                           VillagePathManager.TraceResult tr = snapshot.searchTrace(routeCapture);
+                           return new PathTraceComputeResult(village.getId(), generation, routeCapture, tr);
+                        });
+                        if (submitted) {
+                           this.outstandingPathJobs++;
+                        } else {
+                           this.pendingRoutes.add(route);
+                        }
                      }
                   }
                } else {
@@ -363,13 +386,31 @@ public class VillagePathManager {
    }
 
    public void tick(ServerLevel level, Village village) {
+      if (this.pathScanInProgress) {
+         this.continuePathScan(level, village);
+         return;
+      }
       if (!this.pendingRoutes.isEmpty()) {
+         // Cap sync fallback to one route per tick; never storm 3×5000-node searches under load.
+         if (!org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+            org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.VILLAGE_NEAR);
+            return;
+         }
          PathRoute route = this.pendingRoutes.removeFirst();
-         Map<Long, Integer> buildingFloors = computeBuildingFloors(village);
+         Map<Long, Integer> buildingFloors = this.buildingFloorsForGeneration(village);
          Set<Long> borderCells = computeBorderCells(village);
          VillagePathManager.TraceResult tr = findTraceWithFallbackDetailed(level, village, route, buildingFloors, borderCells, this.surfaceAffinity());
          this.placeTracedRoute(level, village, route, tr);
+         // Remaining pending routes wait for later ticks (one sync search per VillagePathManager.tick).
       }
+   }
+
+   private Map<Long, Integer> buildingFloorsForGeneration(Village village) {
+      if (this.cachedBuildingFloors == null || this.cachedBuildingFloorsGeneration != this.pathComputeGeneration) {
+         this.cachedBuildingFloors = computeBuildingFloors(village);
+         this.cachedBuildingFloorsGeneration = this.pathComputeGeneration;
+      }
+      return this.cachedBuildingFloors;
    }
 
    private void placeTracedRoute(ServerLevel level, Village village, PathRoute route, VillagePathManager.TraceResult tr) {
@@ -387,7 +428,7 @@ public class VillagePathManager {
          this.checkRoutesComplete(level, village);
          return;
       }
-      Map<Long, Integer> buildingFloors = computeBuildingFloors(village);
+      Map<Long, Integer> buildingFloors = this.buildingFloorsForGeneration(village);
       int routePathLevel = route.pathLevel();
       BuildingId routeSourceIdT = route.sourceId();
       BuildingId routeDestIdT = route.destinationId();
@@ -926,13 +967,69 @@ public class VillagePathManager {
    private void checkRoutesComplete(ServerLevel level, Village village) {
       if (this.pendingRoutes.isEmpty() && this.outstandingPathJobs <= 0) {
          this.snapshotSurfaceColumns();
-         this.pathsToClear = this.scanExistingPaths(level, village, this.allNewPathPositions);
-         this.clearIndex = 0;
-         LOGGER.info("Path calculation complete: {} path lists, {} blocks to clear", this.pathsToBuild.size(), this.pathsToClear.size());
+         this.beginPathScan(level, village, this.allNewPathPositions);
          if (this.pendingThPosForDiag != null) {
             this.rewriteDiagnosticsConnectivity(this.pathLevelByPos, this.pendingThPosForDiag, this.foreignFootprintProbe(village), village);
          }
 
+         village.markDirty();
+      }
+   }
+
+   private void beginPathScan(ServerLevel level, Village village, Set<BlockPos> newPositions) {
+      int radius = 80;
+      VillageType vt = ModCultures.getVillageType(village.getVillageTypeId());
+      if (vt != null) {
+         radius = vt.radius();
+      }
+      int cx = village.getCenter().getX();
+      int cz = village.getCenter().getZ();
+      this.pathScanMinX = cx - radius;
+      this.pathScanMaxX = cx + radius;
+      this.pathScanMinZ = cz - radius;
+      this.pathScanMaxZ = cz + radius;
+      this.pathScanX = this.pathScanMinX;
+      this.pathScanZ = this.pathScanMinZ;
+      this.pathScanAccum.clear();
+      this.pathScanNewPositions = newPositions;
+      this.pathScanInProgress = true;
+      this.pathsToClear = new ArrayList<>();
+      this.clearIndex = 0;
+      this.continuePathScan(level, village);
+   }
+
+   private void continuePathScan(ServerLevel level, Village village) {
+      if (!this.pathScanInProgress) {
+         return;
+      }
+      Set<BlockPos> newPositions = this.pathScanNewPositions != null ? this.pathScanNewPositions : Set.of();
+      MutableBlockPos mutable = new MutableBlockPos();
+      int cells = 0;
+      while (this.pathScanX <= this.pathScanMaxX && cells < PATH_SCAN_CELLS_PER_TICK) {
+         int x = this.pathScanX;
+         int z = this.pathScanZ;
+         int terrainY = level.getHeight(Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1;
+         for (int y = terrainY - 2; y <= terrainY + 3; y++) {
+            mutable.set(x, y, z);
+            BlockState state = level.getBlockState(mutable);
+            if (isSystemPathBlock(state) && !newPositions.contains(mutable)) {
+               this.pathScanAccum.add(mutable.immutable());
+            }
+         }
+         cells++;
+         this.pathScanZ++;
+         if (this.pathScanZ > this.pathScanMaxZ) {
+            this.pathScanZ = this.pathScanMinZ;
+            this.pathScanX++;
+         }
+      }
+      if (this.pathScanX > this.pathScanMaxX) {
+         this.pathsToClear = sortForTravel(this.pathScanAccum);
+         this.clearIndex = 0;
+         this.pathScanInProgress = false;
+         this.pathScanAccum.clear();
+         this.pathScanNewPositions = null;
+         LOGGER.info("Path calculation complete: {} path lists, {} blocks to clear", this.pathsToBuild.size(), this.pathsToClear.size());
          village.markDirty();
       }
    }
@@ -1548,7 +1645,13 @@ public class VillagePathManager {
 
    public void nightlyRecheck(ServerLevel level, Village village) {
       if ((Boolean)MillenaireServerConfig.SERVER.buildPaths.get()) {
-         if (this.pendingRoutes.isEmpty() && this.outstandingPathJobs <= 0 && !this.hasPathsToBuild() && !this.hasPathsToClear()) {
+         if (
+            this.pendingRoutes.isEmpty()
+               && this.outstandingPathJobs <= 0
+               && !this.pathScanInProgress
+               && !this.hasPathsToBuild()
+               && !this.hasPathsToClear()
+         ) {
             boolean allOk = this.verifyInvariantAll(level, village);
             if (allOk) {
                if (this.pathRecheckFailNights != 0) {
@@ -1572,8 +1675,15 @@ public class VillagePathManager {
 
    public void startRecalcIfDirty(ServerLevel level, Village village) {
       if (this.pathsDirty) {
-         if (this.pendingRoutes.isEmpty() && this.outstandingPathJobs <= 0 && !this.hasPathsToBuild() && !this.hasPathsToClear()) {
+         if (
+            this.pendingRoutes.isEmpty()
+               && this.outstandingPathJobs <= 0
+               && !this.pathScanInProgress
+               && !this.hasPathsToBuild()
+               && !this.hasPathsToClear()
+         ) {
             this.pathsDirty = false;
+            this.cachedBuildingFloors = null;
             this.recalculatePaths(level, village, false);
             village.markDirty();
          }

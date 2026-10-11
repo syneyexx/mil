@@ -361,7 +361,7 @@ public class HemelwachterEntity extends Monster {
          if (this.clientAnimTicks > 0) {
             this.clientAnimTicks--;
          }
-         if (this.tickCount % 8 == 0) {
+         if (this.tickCount % 20 == 0) {
             this.level()
                .addParticle(
                   ParticleTypes.END_ROD,
@@ -459,7 +459,9 @@ public class HemelwachterEntity extends Monster {
       this.departTicks--;
       this.setDeltaMovement(this.getDeltaMovement().x * 0.9, 0.25, this.getDeltaMovement().z * 0.9);
       if (this.level() instanceof ServerLevel serverLevel) {
-         serverLevel.sendParticles(ParticleTypes.CLOUD, this.getX(), this.getY() + 1.5, this.getZ(), 6, 1.0, 1.0, 1.0, 0.02);
+         int budget = MillenaireServerConfig.SERVER.worldBossEffectBudgetPerTick.getAsInt();
+         int count = Mth.clamp(budget / 12, 1, 2);
+         serverLevel.sendParticles(ParticleTypes.CLOUD, this.getX(), this.getY() + 1.5, this.getZ(), count, 1.0, 1.0, 1.0, 0.02);
       }
       if (this.departTicks <= 0) {
          this.departureFinished = true;
@@ -513,8 +515,13 @@ public class HemelwachterEntity extends Monster {
          this.bossEvent.removeAllPlayers();
          return;
       }
+      boolean wasVisible = this.bossEvent.isVisible();
       this.bossEvent.setProgress(this.getHealth() / this.getMaxHealth());
       this.bossEvent.setVisible(true);
+      // Player membership is the expensive part — refresh every 10 ticks (immediate on first show).
+      if (wasVisible && this.tickCount % 10 != 0) {
+         return;
+      }
       if (this.level() instanceof ServerLevel serverLevel) {
          for (ServerPlayer player : serverLevel.players()) {
             if (player.distanceToSqr(this) < 96.0 * 96.0 && WorldBossEligibility.isCombatTarget(player)) {

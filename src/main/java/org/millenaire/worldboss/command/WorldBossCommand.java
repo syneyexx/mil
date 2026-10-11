@@ -8,6 +8,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import org.millenaire.worldboss.ActiveWorldBossEvent;
 import org.millenaire.worldboss.WorldBossDefinition;
@@ -34,6 +35,7 @@ public final class WorldBossCommand {
                      .executes(ctx -> start(ctx.getSource(), StringArgumentType.getString(ctx, "bossId")))
                )
          )
+         .then(Commands.literal("trigger").executes(ctx -> trigger(ctx.getSource())))
          .then(Commands.literal("end").executes(ctx -> end(ctx.getSource())))
          .then(Commands.literal("list").executes(ctx -> list(ctx.getSource())));
 
@@ -50,16 +52,27 @@ public final class WorldBossCommand {
       WorldBossEventSavedData data = WorldBossEventSavedData.get(overworld);
       ActiveWorldBossEvent active = data.active();
       boolean enabled = WorldBossEligibility.eventsEnabled();
+      long day = WorldBossTimerLogic.dayIndex(overworld.getDayTime());
+      String cadence;
+      try {
+         cadence = org.millenaire.config.MillenaireServerConfig.SERVER.worldBossCadenceMode.get();
+      } catch (IllegalStateException e) {
+         cadence = "DAYS";
+      }
+      boolean days = cadence == null || !"ACTIVE_PLAYTIME".equalsIgnoreCase(cadence.trim());
+      String timerLine = days
+         ? "day=" + day + " nextDueDay=" + data.nextDueDayIndex()
+            + " daysRemaining=" + WorldBossTimerLogic.daysRemaining(day, data.nextDueDayIndex())
+         : "elapsed=" + data.elapsedActiveTicks() + "/" + data.nextIntervalTicks()
+            + " remaining=" + WorldBossTimerLogic.remaining(data.elapsedActiveTicks(), data.nextIntervalTicks());
       source.sendSuccess(
          () -> Component.literal(
             "WorldBoss enabled="
                + enabled
-               + " elapsed="
-               + data.elapsedActiveTicks()
-               + "/"
-               + data.nextIntervalTicks()
-               + " remaining="
-               + WorldBossTimerLogic.remaining(data.elapsedActiveTicks(), data.nextIntervalTicks())
+               + " cadence="
+               + (days ? "DAYS" : "ACTIVE_PLAYTIME")
+               + " "
+               + timerLine
                + " lastBoss="
                + data.lastBossId()
                + " lastOutcome="
@@ -76,6 +89,12 @@ public final class WorldBossCommand {
                   + active.bossId()
                   + " state="
                   + active.state()
+                  + " anchor="
+                  + active.anchorPlayerId()
+                  + " spawnAttempts="
+                  + active.spawnAttempts()
+                  + " spawnPos="
+                  + active.spawnPos()
                   + " entity="
                   + active.bossEntityUuid()
             ),
@@ -91,11 +110,27 @@ public final class WorldBossCommand {
          return 0;
       }
       WorldBossEventSavedData data = WorldBossEventSavedData.get(overworld);
-      int remaining = WorldBossTimerLogic.remaining(data.elapsedActiveTicks(), data.nextIntervalTicks());
-      source.sendSuccess(
-         () -> Component.translatable("millenaire.worldboss.command.next", remaining, remaining / 1200),
-         false
-      );
+      String cadence;
+      try {
+         cadence = org.millenaire.config.MillenaireServerConfig.SERVER.worldBossCadenceMode.get();
+      } catch (IllegalStateException e) {
+         cadence = "DAYS";
+      }
+      boolean days = cadence == null || !"ACTIVE_PLAYTIME".equalsIgnoreCase(cadence.trim());
+      if (days) {
+         long day = WorldBossTimerLogic.dayIndex(overworld.getDayTime());
+         long remainingDays = WorldBossTimerLogic.daysRemaining(day, data.nextDueDayIndex());
+         source.sendSuccess(
+            () -> Component.translatable("millenaire.worldboss.command.next_days", remainingDays, data.nextDueDayIndex()),
+            false
+         );
+      } else {
+         int remaining = WorldBossTimerLogic.remaining(data.elapsedActiveTicks(), data.nextIntervalTicks());
+         source.sendSuccess(
+            () -> Component.translatable("millenaire.worldboss.command.next", remaining, remaining / 1200),
+            false
+         );
+      }
       return 1;
    }
 
@@ -108,12 +143,24 @@ public final class WorldBossCommand {
             return 0;
          }
       }
-      boolean ok = WorldBossEventPlanner.forceStart(source.getServer(), id);
+      ServerPlayer preferred = source.getEntity() instanceof ServerPlayer player ? player : null;
+      boolean ok = WorldBossEventPlanner.forceStart(source.getServer(), id, preferred);
       if (!ok) {
          source.sendFailure(Component.translatable("millenaire.worldboss.command.start_failed"));
          return 0;
       }
       source.sendSuccess(() -> Component.translatable("millenaire.worldboss.command.started"), true);
+      return 1;
+   }
+
+   private static int trigger(CommandSourceStack source) {
+      ServerPlayer preferred = source.getEntity() instanceof ServerPlayer player ? player : null;
+      boolean ok = WorldBossEventPlanner.trigger(source.getServer(), preferred);
+      if (!ok) {
+         source.sendFailure(Component.translatable("millenaire.worldboss.command.trigger_failed"));
+         return 0;
+      }
+      source.sendSuccess(() -> Component.translatable("millenaire.worldboss.command.triggered"), true);
       return 1;
    }
 

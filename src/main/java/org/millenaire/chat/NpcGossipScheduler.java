@@ -33,7 +33,10 @@ public final class NpcGossipScheduler {
       if (currentDay <= data.getLastGossipDay()) {
          return;
       }
-      runDay(level, data, currentDay);
+      if (!runDay(level, data, currentDay)) {
+         // Budget deferred — retry on a later tick the same day.
+         return;
+      }
       data.setLastGossipDay(currentDay);
    }
 
@@ -44,7 +47,12 @@ public final class NpcGossipScheduler {
       data.setLastGossipDay(forcedDay);
    }
 
-   private static void runDay(ServerLevel level, NpcMindSavedData data, long currentDay) {
+   private static boolean runDay(ServerLevel level, NpcMindSavedData data, long currentDay) {
+      // Day job is expensive — bail if the AI_SUPPORT budget is already spent.
+      if (!org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+         org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.AI_SUPPORT);
+         return false;
+      }
       VillageManager manager = VillageSavedData.get(level).getVillageManager();
       Map<ResourceLocation, List<NpcRumor>> byCulture = new HashMap<>();
       for (NpcRumor rumor : data.getRumors().values()) {
@@ -65,6 +73,7 @@ public final class NpcGossipScheduler {
 
       expireAndPrune(data, currentDay);
       data.markChanged();
+      return true;
    }
 
    private static void spreadSameVillage(ServerLevel level, VillageManager manager, NpcMindSavedData data, NpcRumor rumor, long currentDay) {

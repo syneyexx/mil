@@ -159,6 +159,11 @@ public final class CivilizationOrchestrator {
       if (last > 0L && gameTime - last < staggered) {
          return false;
       }
+      // Soft deadline: leave stage due so it retries next tick instead of skipping a full interval.
+      if (stage != CivilizationStage.EVENT_INGEST && !org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+         org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.CIV_FACTION);
+         return false;
+      }
       state.setLastStageGameTime(stage, gameTime);
       CivilizationMetrics.STAGES_RUN.incrementAndGet();
       safe(level, stage.name(), action);
@@ -180,6 +185,10 @@ public final class CivilizationOrchestrator {
       long last = state.lastStageGameTime(stage);
       long staggered = interval + stage.ordinal() * 7L;
       if (last > 0L && gameTime - last < staggered) {
+         return false;
+      }
+      if (!org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+         org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.CIV_FACTION);
          return false;
       }
       // Record attempt time only after reading previous; success time is set inside the reconciler.

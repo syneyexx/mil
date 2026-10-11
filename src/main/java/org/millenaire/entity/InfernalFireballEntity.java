@@ -37,7 +37,7 @@ public class InfernalFireballEntity extends AbstractHurtingProjectile {
       if (!this.level().isClientSide && this.lifeTicks > MAX_LIFE_TICKS) {
          this.discard();
       }
-      if (this.level().isClientSide) {
+      if (this.level().isClientSide && CombatFxBudget.allowTrailParticle(this)) {
          this.level()
             .addParticle(
                ParticleTypes.FLAME,

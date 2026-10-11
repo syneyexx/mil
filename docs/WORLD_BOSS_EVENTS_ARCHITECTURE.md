@@ -191,7 +191,8 @@ Config section `worldBossEvents`: enable, intervals, dimensions, spawn distance,
 
 Commands (`/millenaire worldboss …`, permission level 2+):
 
-- `status`, `next`, `start` [bossId], `end`, `list`
+- `status`, `next`, `start` [bossId], `trigger`, `end`, `list`
+- `trigger` is an admin force-start (same as `start` without a boss id)
 
 No terrain-clearing spawn force command.
 

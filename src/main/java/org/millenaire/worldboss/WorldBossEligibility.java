@@ -93,6 +93,36 @@ public final class WorldBossEligibility {
       return out;
    }
 
+   /**
+    * Admin/force-start anchors: any non-spectator in an allowed dimension (includes creative).
+    */
+   public static boolean isAdminAnchorCandidate(ServerPlayer player) {
+      return player != null
+         && !player.isSpectator()
+         && player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR
+         && isAllowedDimension(player.level().dimension());
+   }
+
+   public static List<ServerPlayer> adminAnchorCandidates(MinecraftServer server) {
+      List<ServerPlayer> out = new ArrayList<>();
+      for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+         if (isAdminAnchorCandidate(player)) {
+            out.add(player);
+         }
+      }
+      return out;
+   }
+
+   /** Eligible first; if none, admin candidates (so creative ops can force events). */
+   public static List<ServerPlayer> anchorCandidates(MinecraftServer server) {
+      List<ServerPlayer> eligible = eligiblePlayers(server);
+      return eligible.isEmpty() ? adminAnchorCandidates(server) : eligible;
+   }
+
+   public static boolean isUsableAnchor(ServerPlayer player) {
+      return isEligiblePlayer(player) || isAdminAnchorCandidate(player);
+   }
+
    public static boolean anyEligibleOnline(MinecraftServer server) {
       return !eligiblePlayers(server).isEmpty();
    }

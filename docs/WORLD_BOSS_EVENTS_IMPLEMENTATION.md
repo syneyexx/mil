@@ -35,7 +35,7 @@ Wiring: `WorldBossDefinitions.bootstrap()` and `WorldBossEventPlanner.tick` from
 - Neutral arrive → observe → depart (~5 min) or provoke (attributed player damage) → combat with eye beam / wing buffet / 3 celestial bolts, phases at 60%/30%.
 - Bossbar for nearby combat-eligible players; cleared on depart/death.
 - Defeat: one Hemelkern, few Hemelfragmenten, XP, advancement; Hemelkern crafts Hemellantaarn (light 15).
-- Admin: `/millenaire worldboss status|next|start [bossId]|end|list` (also `/worldboss …`), permission 2.
+- Admin: `/millenaire worldboss status|next|start [bossId]|trigger|end|list` (also `/worldboss …`), permission 2.
 - Disable policy: `force_depart` (default) or `leave`; SavedData retained.
 
 ---

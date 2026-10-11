@@ -28,7 +28,7 @@ public final class WorldBossDefinitions {
             .bossBar(BossBarColor.YELLOW, BossBarOverlay.NOTCHED_10)
             .neutralDwellTicks(6000)
             .combatTimeoutTicks(12000)
-            .announceTicks(80)
+            .announceTicks(0)
             .arriveTicks(100)
             .lootTable(ResourceLocation.fromNamespaceAndPath("millenaire", "entities/hemelwachter"))
             .advancementId(MillAdvancements.HEMELWACHTER_DEFEAT)

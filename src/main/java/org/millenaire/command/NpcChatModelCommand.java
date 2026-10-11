@@ -4,6 +4,14 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpClient.Redirect;
+import java.net.http.HttpClient.Version;
+import java.net.http.HttpResponse.BodyHandlers;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import net.minecraft.commands.CommandSourceStack;
@@ -13,13 +21,20 @@ import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import org.millenaire.chat.LmStudioModelDiscovery;
 import org.millenaire.chat.LmStudioModelInfo;
+import org.millenaire.chat.NpcModelClient;
 import org.millenaire.chat.NpcModelResolver;
+import org.millenaire.config.MillenaireServerConfig;
 
 /**
- * Player/op commands for LM Studio model discovery and selection.
- * Remote OpenAI-compatible providers keep using the configured model name.
+ * Player/op commands for LM Studio model discovery, selection, and connectivity probe.
  */
 public final class NpcChatModelCommand {
+   private static final HttpClient PROBE_CLIENT = HttpClient.newBuilder()
+      .connectTimeout(Duration.ofSeconds(2L))
+      .followRedirects(Redirect.NORMAL)
+      .version(Version.HTTP_1_1)
+      .build();
+
    private static final SuggestionProvider<CommandSourceStack> LOADED_MODELS = (ctx, builder) -> {
       List<String> ids = LmStudioModelDiscovery.cached().loaded().stream().map(LmStudioModelInfo::effectiveModelId).toList();
       return SharedSuggestionProvider.suggest(ids, builder);
@@ -48,21 +63,12 @@ public final class NpcChatModelCommand {
             .executes(NpcChatModelCommand::list)
             .then(Commands.literal("refresh").executes(NpcChatModelCommand::refresh))
       );
+      npcchat.then(Commands.literal("probe").executes(NpcChatModelCommand::probe));
       event.getDispatcher().register(Commands.literal("millenaire").then(npcchat));
    }
 
    private static int status(CommandContext<CommandSourceStack> ctx) {
-      CommandSourceStack source = ctx.getSource();
-      if (!NpcModelResolver.usesLmStudio()) {
-         NpcModelResolver.Result remote = NpcModelResolver.resolveCachedOrManual();
-         if (remote.ok()) {
-            source.sendSuccess(() -> Component.translatable("command.millenaire.npcchat.model.remote", remote.modelId()), false);
-         } else {
-            source.sendFailure(Component.translatable(remote.messageKey()));
-         }
-         return remote.ok() ? 1 : 0;
-      }
-      return refreshAndReport(source, false);
+      return refreshAndReport(ctx.getSource(), false);
    }
 
    private static int list(CommandContext<CommandSourceStack> ctx) {
@@ -75,7 +81,7 @@ public final class NpcChatModelCommand {
 
    private static int select(CommandContext<CommandSourceStack> ctx) {
       if (!NpcModelResolver.usesLmStudio()) {
-         ctx.getSource().sendFailure(Component.translatable("command.millenaire.npcchat.model.not_lmstudio"));
+         ctx.getSource().sendFailure(NpcModelClient.lmStudioOnlyComponent());
          return 0;
       }
       String id = StringArgumentType.getString(ctx, "id").trim();
@@ -104,7 +110,7 @@ public final class NpcChatModelCommand {
 
    private static int refreshAndReport(CommandSourceStack source, boolean listAll) {
       if (!NpcModelResolver.usesLmStudio()) {
-         source.sendFailure(Component.translatable("command.millenaire.npcchat.model.not_lmstudio"));
+         source.sendFailure(NpcModelClient.lmStudioOnlyComponent());
          return 0;
       }
       CompletableFuture<LmStudioModelDiscovery.Snapshot> future = LmStudioModelDiscovery.refreshAsync(true);
@@ -138,11 +144,98 @@ public final class NpcChatModelCommand {
             false
          );
       } else {
-         source.sendFailure(Component.translatable(resolved.messageKey()));
+         source.sendFailure(resolved.messageComponent());
          source.sendSuccess(() -> Component.translatable("command.millenaire.npcchat.model.select_hint"), false);
       }
       if (changed) {
          source.sendSuccess(() -> Component.translatable("command.millenaire.npcchat.model.changed"), false);
       }
+   }
+
+   private static int probe(CommandContext<CommandSourceStack> ctx) {
+      CommandSourceStack source = ctx.getSource();
+      if (!(Boolean)MillenaireServerConfig.SERVER.npcChatEnabled.get()) {
+         source.sendFailure(Component.translatable("gui.millenaire.npcchat.disabled"));
+         return 0;
+      }
+      String rawBase = MillenaireServerConfig.SERVER.npcChatBaseUrl.get();
+      if (!NpcModelResolver.usesLmStudio()) {
+         source.sendFailure(NpcModelClient.lmStudioOnlyComponent());
+         source.sendSuccess(() -> Component.translatable("command.millenaire.npcchat.probe.base", rawBase == null ? "" : rawBase), false);
+         return 0;
+      }
+      String base = NpcModelClient.normalizeCompletionsBaseUrl(rawBase);
+      String modelsUrl = LmStudioModelDiscovery.toOpenAiModelsUrl(rawBase);
+      source.sendSuccess(() -> Component.translatable("command.millenaire.npcchat.probe.start", base == null ? "" : base), false);
+
+      CompletableFuture.supplyAsync(() -> {
+         long t0 = System.currentTimeMillis();
+         ProbeResult result = new ProbeResult();
+         result.baseUrl = base;
+         result.modelsUrl = modelsUrl;
+         try {
+            if (modelsUrl == null) {
+               result.error = "invalid_url";
+               return result;
+            }
+            HttpRequest.Builder builder = HttpRequest.newBuilder()
+               .uri(URI.create(modelsUrl))
+               .timeout(Duration.ofSeconds(3L))
+               .GET()
+               .header("Accept", "application/json");
+            String apiKey = NpcModelClient.resolveApiKeyAllowingBlankForLmStudio();
+            if (apiKey != null && !apiKey.isBlank()) {
+               builder.header("Authorization", "Bearer " + apiKey);
+            }
+            HttpResponse<String> response = PROBE_CLIENT.send(builder.build(), BodyHandlers.ofString());
+            result.latencyMs = System.currentTimeMillis() - t0;
+            result.httpStatus = response.statusCode();
+            result.ok = response.statusCode() >= 200 && response.statusCode() < 300;
+            if (result.ok) {
+               result.modelCount = LmStudioModelDiscovery.parseOpenAiCompatModels(response.body()).size();
+            }
+         } catch (Exception e) {
+            result.latencyMs = System.currentTimeMillis() - t0;
+            result.error = e.getClass().getSimpleName();
+            result.ok = false;
+         }
+         return result;
+      }).thenAccept(result -> source.getServer().execute(() -> {
+         if (!result.ok) {
+            source.sendFailure(Component.translatable(
+               "command.millenaire.npcchat.probe.fail",
+               result.httpStatus > 0 ? String.valueOf(result.httpStatus) : (result.error == null ? "?" : result.error),
+               result.latencyMs
+            ));
+            return;
+         }
+         source.sendSuccess(() -> Component.translatable(
+            "command.millenaire.npcchat.probe.ok",
+            result.modelCount,
+            result.latencyMs
+         ), false);
+         LmStudioModelDiscovery.refreshAsync(true).thenAccept(snap -> source.getServer().execute(() -> {
+            NpcModelResolver.Result resolved = NpcModelResolver.resolveLmStudio(snap);
+            if (resolved.ok()) {
+               source.sendSuccess(
+                  () -> Component.translatable("command.millenaire.npcchat.model.active", resolved.displayLabel(), "probe"),
+                  false
+               );
+            } else {
+               source.sendFailure(resolved.messageComponent());
+            }
+         }));
+      }));
+      return 1;
+   }
+
+   private static final class ProbeResult {
+      String baseUrl;
+      String modelsUrl;
+      boolean ok;
+      int httpStatus;
+      int modelCount;
+      long latencyMs;
+      String error;
    }
 }

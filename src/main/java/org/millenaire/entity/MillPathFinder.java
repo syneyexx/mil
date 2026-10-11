@@ -31,8 +31,17 @@ public class MillPathFinder extends PathFinder {
    private final NodeEvaluator nodeEvaluator;
    private static final boolean DEBUG = false;
    private final BinaryHeap openSet = new BinaryHeap();
-   private static final long SEARCH_TIME_BUDGET_NANOS = 25000000L;
-   private static final int TIME_CHECK_INTERVAL = 256;
+   private static final long DEFAULT_SEARCH_TIME_BUDGET_NANOS = 2_000_000L;
+   private static final int TIME_CHECK_INTERVAL = 64;
+
+   private static long searchTimeBudgetNanos() {
+      try {
+         int ms = org.millenaire.config.MillenaireServerConfig.SERVER.pathMaxSearchMs.getAsInt();
+         return Math.max(500_000L, ms * 1_000_000L);
+      } catch (IllegalStateException e) {
+         return DEFAULT_SEARCH_TIME_BUDGET_NANOS;
+      }
+   }
 
    public MillPathFinder(NodeEvaluator nodeEvaluator, int maxVisitedNodes) {
       super(nodeEvaluator, maxVisitedNodes);
@@ -73,10 +82,11 @@ public class MillPathFinder extends PathFinder {
       Set<Target> set2 = Sets.newHashSetWithExpectedSize(set.size());
       int j = (int)(this.maxVisitedNodes * searchDepthMultiplier);
       long startNanos = System.nanoTime();
+      long budgetNanos = searchTimeBudgetNanos();
 
       while (!this.openSet.isEmpty()) {
          i++;
-         if (i >= j || i % 256 == 0 && System.nanoTime() - startNanos > 25000000L) {
+         if (i >= j || i % TIME_CHECK_INTERVAL == 0 && System.nanoTime() - startNanos > budgetNanos) {
             break;
          }
 

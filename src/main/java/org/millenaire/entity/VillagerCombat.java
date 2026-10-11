@@ -1,6 +1,7 @@
 package org.millenaire.entity;
 
 import com.mojang.logging.LogUtils;
+import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import net.minecraft.ChatFormatting;
@@ -39,6 +40,8 @@ import org.slf4j.Logger;
 
 public final class VillagerCombat {
    private static final Logger LOGGER = LogUtils.getLogger();
+   private static final double MOB_AGGRO_RANGE = 16.0;
+   private static final double MOB_AGGRO_RANGE_SQ = MOB_AGGRO_RANGE * MOB_AGGRO_RANGE;
    private final MillVillager villager;
    @Nullable
    private LivingEntity attackTarget;
@@ -286,20 +289,34 @@ public final class VillagerCombat {
    }
 
    void triggerMobAttacks() {
-      AABB box = new AABB(
-         this.villager.getX() - 16.0,
-         this.villager.getY() - 5.0,
-         this.villager.getZ() - 16.0,
-         this.villager.getX() + 16.0,
-         this.villager.getY() + 5.0,
-         this.villager.getZ() + 16.0
-      );
-
-      for (Monster mob : this.villager.level().getEntitiesOfClass(Monster.class, box)) {
-         if (mob.getTarget() == null && mob.hasLineOfSight(this.villager)) {
+      List<Monster> candidates = this.nearbyMonstersForAggro();
+      for (Monster mob : candidates) {
+         if (mob.getTarget() == null
+            && mob.distanceToSqr(this.villager) <= MOB_AGGRO_RANGE_SQ
+            && Math.abs(mob.getY() - this.villager.getY()) <= 5.0
+            && mob.hasLineOfSight(this.villager)) {
             mob.setTarget(this.villager);
          }
       }
+   }
+
+   private List<Monster> nearbyMonstersForAggro() {
+      VillageId villageId = this.villager.getVillageId();
+      if (villageId != null && this.villager.level() instanceof ServerLevel serverLevel) {
+         Village village = Village.resolve(serverLevel, villageId);
+         if (village != null) {
+            return org.millenaire.perf.sense.CombatSenseCache.monsters(serverLevel, village);
+         }
+      }
+      AABB box = new AABB(
+         this.villager.getX() - MOB_AGGRO_RANGE,
+         this.villager.getY() - 5.0,
+         this.villager.getZ() - MOB_AGGRO_RANGE,
+         this.villager.getX() + MOB_AGGRO_RANGE,
+         this.villager.getY() + 5.0,
+         this.villager.getZ() + MOB_AGGRO_RANGE
+      );
+      return this.villager.level().getEntitiesOfClass(Monster.class, box);
    }
 
    private boolean isDefensiveType() {

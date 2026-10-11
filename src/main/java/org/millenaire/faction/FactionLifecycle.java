@@ -27,6 +27,24 @@ import org.slf4j.Logger;
  */
 public final class FactionLifecycle {
    private static final Logger LOGGER = LogUtils.getLogger();
+   private static final long[] LAST_STAGE_GAME_TIME = new long[FactionTickStage.values().length];
+
+   private enum FactionTickStage {
+      RELATIONSHIPS(20L),
+      ECONOMY(40L),
+      DIPLOMACY(40L),
+      MILITARY(40L),
+      WAR(40L),
+      TERRITORY(60L),
+      POLITICS(60L),
+      CONFLICT(60L);
+
+      private final long interval;
+
+      FactionTickStage(long interval) {
+         this.interval = interval;
+      }
+   }
 
    private FactionLifecycle() {
    }
@@ -220,82 +238,68 @@ public final class FactionLifecycle {
          return;
       }
 
+      boolean staging = true;
       try {
+         staging = Boolean.TRUE.equals(org.millenaire.config.MillenaireServerConfig.SERVER.factionLifecycleStagingEnabled.get());
+      } catch (IllegalStateException ignored) {
+      }
+
+      long gameTime = overworld.getGameTime();
+      runFactionStage(staging, gameTime, FactionTickStage.RELATIONSHIPS, () -> {
          RelationshipManager manager = RelationshipSavedData.get(overworld).getRelationshipManager();
          manager.tickDecay(overworld);
-      } catch (Exception e) {
-         LOGGER.error(
-            "[Millenaire] Faction relationship decay tick failed: {}",
-            e.getClass().getSimpleName() + ": " + e.getMessage(),
-            e
-         );
-      }
-
-      try {
+      }, "relationship decay");
+      runFactionStage(staging, gameTime, FactionTickStage.ECONOMY, () -> {
          EconomySavedData.get(overworld).getTradeManager().tick(overworld);
-      } catch (Exception e) {
-         LOGGER.error(
-            "[Millenaire] Faction economy tick failed: {}",
-            e.getClass().getSimpleName() + ": " + e.getMessage(),
-            e
-         );
-      }
-
-      try {
+      }, "economy");
+      runFactionStage(staging, gameTime, FactionTickStage.DIPLOMACY, () -> {
          DiplomacySavedData.get(overworld).getDiplomaticManager().tick(overworld);
-      } catch (Exception e) {
-         LOGGER.error(
-            "[Millenaire] Faction diplomacy tick failed: {}",
-            e.getClass().getSimpleName() + ": " + e.getMessage(),
-            e
-         );
-      }
-
-      try {
+      }, "diplomacy");
+      runFactionStage(staging, gameTime, FactionTickStage.MILITARY, () -> {
          MilitarySavedData.get(overworld).getMilitaryManager().tick(overworld);
-      } catch (Exception e) {
-         LOGGER.error(
-            "[Millenaire] Faction military tick failed: {}",
-            e.getClass().getSimpleName() + ": " + e.getMessage(),
-            e
-         );
-      }
-
-      try {
+      }, "military");
+      runFactionStage(staging, gameTime, FactionTickStage.WAR, () -> {
          WarSavedData.get(overworld).getWarManager().tick(overworld);
-      } catch (Exception e) {
-         LOGGER.error(
-            "[Millenaire] Faction warfare tick failed: {}",
-            e.getClass().getSimpleName() + ": " + e.getMessage(),
-            e
-         );
-      }
-
-      try {
+      }, "warfare");
+      runFactionStage(staging, gameTime, FactionTickStage.TERRITORY, () -> {
          TerritorySavedData.get(overworld).getTerritoryManager().tick(overworld);
-      } catch (Exception e) {
-         LOGGER.error(
-            "[Millenaire] Faction territory tick failed: {}",
-            e.getClass().getSimpleName() + ": " + e.getMessage(),
-            e
-         );
-      }
-
-      try {
+      }, "territory");
+      runFactionStage(staging, gameTime, FactionTickStage.POLITICS, () -> {
          PoliticsSavedData.get(overworld).getPoliticsManager().tick(overworld);
-      } catch (Exception e) {
-         LOGGER.error(
-            "[Millenaire] Faction politics tick failed: {}",
-            e.getClass().getSimpleName() + ": " + e.getMessage(),
-            e
-         );
-      }
-
-      try {
+      }, "politics");
+      runFactionStage(staging, gameTime, FactionTickStage.CONFLICT, () -> {
          ConflictSavedData.get(overworld).getConflictManager().tick(overworld);
+      }, "internal conflict");
+   }
+
+   private static void runFactionStage(
+      boolean staging,
+      long gameTime,
+      FactionTickStage stage,
+      Runnable action,
+      String label
+   ) {
+      if (staging) {
+         long last = LAST_STAGE_GAME_TIME[stage.ordinal()];
+         long staggered = stage.interval + stage.ordinal() * 7L;
+         if (last > 0L && gameTime - last < staggered) {
+            return;
+         }
+         if (!org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+            org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.CIV_FACTION);
+            return;
+         }
+         LAST_STAGE_GAME_TIME[stage.ordinal()] = gameTime;
+      } else if (!org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+         org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.CIV_FACTION);
+         return;
+      }
+      try {
+         action.run();
       } catch (Exception e) {
          LOGGER.error(
-            "[Millenaire] Faction internal conflict tick failed: {}",
+            "[Millenaire] Faction {} tick failed: {}",
+            label,
             e.getClass().getSimpleName() + ": " + e.getMessage(),
             e
          );

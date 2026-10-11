@@ -14,11 +14,13 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 
 public final class FireplaceSmokeHandler {
-   private static final double RENDER_DIST_SQ = 4096.0;
-   private static final double EVICT_DIST_SQ = 16384.0;
+   private static final double RENDER_DIST_SQ = 2304.0; // 48 blocks (was 64)
+   private static final double EVICT_DIST_SQ = 9216.0; // 96 blocks
    private static final int EVICT_CHECK_INTERVAL = 20;
    private static final long SMOKE_START_TIME = 9000L;
    private static final long SMOKE_END_TIME = 16000L;
+   /** Hard cap of campfire particles spawned per eligible client tick. */
+   private static final int MAX_PARTICLES_PER_TICK = 8;
    private static final Map<UUID, FireplaceSmokeHandler.FireplaceVillageData> knownPositions = new HashMap<>();
    private static ResourceKey<Level> lastDimension = null;
 
@@ -57,21 +59,39 @@ public final class FireplaceSmokeHandler {
                }
 
                RandomSource random = level.getRandom();
+               int spawned = 0;
+               int subsamplePhase = (int)Math.floorMod(gameTime / 2L, 4L);
 
                for (FireplaceSmokeHandler.FireplaceVillageData data : knownPositions.values()) {
-                  for (BlockPos pos : data.positions()) {
-                     if (!(pos.distToCenterSqr(player.position()) > 4096.0) && level.isLoaded(pos)) {
-                        level.addAlwaysVisibleParticle(
-                           ParticleTypes.CAMPFIRE_COSY_SMOKE,
-                           true,
-                           pos.getX() + 0.5 + random.nextGaussian() * 0.15,
-                           pos.getY() + 0.5,
-                           pos.getZ() + 0.5 + random.nextGaussian() * 0.15,
-                           0.0,
-                           0.07,
-                           0.0
-                        );
+                  List<BlockPos> positions = data.positions();
+                  for (int i = 0; i < positions.size(); i++) {
+                     if (spawned >= MAX_PARTICLES_PER_TICK) {
+                        return;
                      }
+                     // Rotate which fireplaces emit so dense villages still smoke over time.
+                     if (Math.floorMod(i, 4) != subsamplePhase) {
+                        continue;
+                     }
+                     BlockPos pos = positions.get(i);
+                     double distSq = pos.distToCenterSqr(player.position());
+                     if (distSq > RENDER_DIST_SQ || !level.isLoaded(pos)) {
+                        continue;
+                     }
+                     // Farther fireplaces emit less often (every other eligible tick).
+                     if (distSq > 1024.0 && (gameTime & 4L) != 0L) {
+                        continue;
+                     }
+                     level.addAlwaysVisibleParticle(
+                        ParticleTypes.CAMPFIRE_COSY_SMOKE,
+                        true,
+                        pos.getX() + 0.5 + random.nextGaussian() * 0.15,
+                        pos.getY() + 0.5,
+                        pos.getZ() + 0.5 + random.nextGaussian() * 0.15,
+                        0.0,
+                        0.07,
+                        0.0
+                     );
+                     spawned++;
                   }
                }
             }
@@ -82,7 +102,7 @@ public final class FireplaceSmokeHandler {
    private static void evictDistant(LocalPlayer player) {
       knownPositions.entrySet().removeIf(entry -> {
          BlockPos center = entry.getValue().center();
-         return center.distToCenterSqr(player.position()) > 16384.0;
+         return center.distToCenterSqr(player.position()) > EVICT_DIST_SQ;
       });
    }
 

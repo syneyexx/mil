@@ -53,18 +53,69 @@ public final class StructureAvoidance {
    }
 
    /**
+    * Cheap 5-point probe for aerial world-boss spawn (center + four diagonals at radius).
+    * Worldgen placement should keep using {@link #hasConflictLoaded}.
+    */
+   public static boolean hasConflictSparse(ServerLevel level, BlockPos center, int villageRadius) {
+      LoadedVerdict verdict = hasConflictSparseLoaded(level, center, villageRadius);
+      return verdict == LoadedVerdict.CONFLICT;
+   }
+
+   /**
     * Checks protected structures only on loaded columns. Unloaded sample points are skipped;
     * WAITING only if the centre column itself is missing.
     */
    public static LoadedVerdict hasConflictLoaded(ServerLevel level, BlockPos center, int villageRadius) {
+      AvoidContext ctx = prepareAvoidContext(level, center, villageRadius);
+      if (ctx.early != null) {
+         return ctx.early;
+      }
+
+      for (int dx = -ctx.scanRadius; dx <= ctx.scanRadius; dx += SCAN_STEP) {
+         for (int dz = -ctx.scanRadius; dz <= ctx.scanRadius; dz += SCAN_STEP) {
+            if (conflictsAt(level, center, center.offset(dx, 0, dz), ctx)) {
+               return LoadedVerdict.CONFLICT;
+            }
+         }
+      }
+
+      return LoadedVerdict.CLEAR;
+   }
+
+   /**
+    * Sparse loaded check: center + four diagonals at {@code villageRadius + safety margin}.
+    */
+   public static LoadedVerdict hasConflictSparseLoaded(ServerLevel level, BlockPos center, int villageRadius) {
+      AvoidContext ctx = prepareAvoidContext(level, center, villageRadius);
+      if (ctx.early != null) {
+         return ctx.early;
+      }
+
+      int r = ctx.scanRadius;
+      BlockPos[] samples = new BlockPos[]{
+         center,
+         center.offset(r, 0, r),
+         center.offset(r, 0, -r),
+         center.offset(-r, 0, r),
+         center.offset(-r, 0, -r)
+      };
+      for (BlockPos check : samples) {
+         if (conflictsAt(level, center, check, ctx)) {
+            return LoadedVerdict.CONFLICT;
+         }
+      }
+      return LoadedVerdict.CLEAR;
+   }
+
+   private static AvoidContext prepareAvoidContext(ServerLevel level, BlockPos center, int villageRadius) {
       if (!org.millenaire.worldgen.terrain.WorldgenChunkAccess.isColumnLoaded(level, center.getX(), center.getZ())) {
-         return LoadedVerdict.WAITING;
+         return AvoidContext.early(LoadedVerdict.WAITING);
       }
       MillenaireServerConfig cfg = MillenaireServerConfig.SERVER;
       boolean preserveVanilla = cfg == null || Boolean.TRUE.equals(cfg.worldgenPreserveVanillaStructures.get());
       boolean preserveModded = cfg == null || Boolean.TRUE.equals(cfg.worldgenPreserveModdedStructures.get());
       if (!preserveVanilla && !preserveModded) {
-         return LoadedVerdict.CLEAR;
+         return AvoidContext.early(LoadedVerdict.CLEAR);
       }
 
       int margin = cfg != null ? cfg.worldgenStructureSafetyMargin.get() : SAFETY_MARGIN;
@@ -90,45 +141,56 @@ public final class StructureAvoidance {
          }
       }
 
-      for (int dx = -scanRadius; dx <= scanRadius; dx += SCAN_STEP) {
-         for (int dz = -scanRadius; dz <= scanRadius; dz += SCAN_STEP) {
-            BlockPos check = center.offset(dx, 0, dz);
-            if (!org.millenaire.worldgen.terrain.WorldgenChunkAccess.isColumnLoaded(level, check.getX(), check.getZ())) {
-               continue;
-            }
-            if (preserveVanilla) {
-               StructureStart villageStart = sm.getStructureWithPieceAt(check, StructureTags.VILLAGE);
-               if (villageStart.isValid()) {
-                  LOGGER.debug("[Millenaire] Spawn rejected at {} : vanilla village detected at {}", center.toShortString(), check.toShortString());
-                  return LoadedVerdict.CONFLICT;
-               }
+      return new AvoidContext(null, scanRadius, sm, preserveVanilla, avoidedVanilla, avoidedModded);
+   }
 
-               for (int i = 0; i < avoidedVanilla.size(); i++) {
-                  if (sm.getStructureAt(check, avoidedVanilla.get(i)).isValid()) {
-                     LOGGER.debug(
-                        "[Millenaire] Spawn rejected at {} : structure '{}' detected at {}",
-                        center.toShortString(),
-                        AVOIDED_STRUCTURE_KEYS.get(i).location(),
-                        check.toShortString()
-                     );
-                     return LoadedVerdict.CONFLICT;
-                  }
-               }
-            }
+   private static boolean conflictsAt(ServerLevel level, BlockPos center, BlockPos check, AvoidContext ctx) {
+      if (!org.millenaire.worldgen.terrain.WorldgenChunkAccess.isColumnLoaded(level, check.getX(), check.getZ())) {
+         return false;
+      }
+      if (ctx.preserveVanilla) {
+         StructureStart villageStart = ctx.sm.getStructureWithPieceAt(check, StructureTags.VILLAGE);
+         if (villageStart.isValid()) {
+            LOGGER.debug("[Millenaire] Spawn rejected at {} : vanilla village detected at {}", center.toShortString(), check.toShortString());
+            return true;
+         }
 
-            for (Structure structure : avoidedModded) {
-               if (sm.getStructureAt(check, structure).isValid()) {
-                  LOGGER.debug(
-                     "[Millenaire] Spawn rejected at {} : modded structure detected at {}",
-                     center.toShortString(),
-                     check.toShortString()
-                  );
-                  return LoadedVerdict.CONFLICT;
-               }
+         for (int i = 0; i < ctx.avoidedVanilla.size(); i++) {
+            if (ctx.sm.getStructureAt(check, ctx.avoidedVanilla.get(i)).isValid()) {
+               LOGGER.debug(
+                  "[Millenaire] Spawn rejected at {} : structure '{}' detected at {}",
+                  center.toShortString(),
+                  AVOIDED_STRUCTURE_KEYS.get(i).location(),
+                  check.toShortString()
+               );
+               return true;
             }
          }
       }
 
-      return LoadedVerdict.CLEAR;
+      for (Structure structure : ctx.avoidedModded) {
+         if (ctx.sm.getStructureAt(check, structure).isValid()) {
+            LOGGER.debug(
+               "[Millenaire] Spawn rejected at {} : modded structure detected at {}",
+               center.toShortString(),
+               check.toShortString()
+            );
+            return true;
+         }
+      }
+      return false;
+   }
+
+   private record AvoidContext(
+      LoadedVerdict early,
+      int scanRadius,
+      StructureManager sm,
+      boolean preserveVanilla,
+      List<Structure> avoidedVanilla,
+      List<Structure> avoidedModded
+   ) {
+      static AvoidContext early(LoadedVerdict verdict) {
+         return new AvoidContext(verdict, 0, null, false, List.of(), List.of());
+      }
    }
 }

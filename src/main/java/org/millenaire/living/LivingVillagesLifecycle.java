@@ -42,6 +42,7 @@ public final class LivingVillagesLifecycle {
          return;
       }
       LivingEventService.beginTick(level.getGameTime());
+      // Needs/requests only for active (Near/Mid loaded) villages — Far stays data-only via offscreen.
       LivingVillagesService.get().needsEngine().tickActiveVillages(level);
       VillageRequestService.tickMaintenance(level);
       long now = level.getGameTime();

@@ -3,7 +3,7 @@
 **Status:** All items pending until the user runs them locally.  
 **Do not mark passed from source inspection alone.**
 
-Build and run Minecraft 1.21.1 + NeoForge 21.1.256 with this branch. Configure `npcChat` API key (or `MILLENAIRE_NPC_API_KEY`) as needed.
+Build and run Minecraft 1.21.1 + NeoForge 21.1.256 with this branch. NPC chat is **LM Studio only** — start the local server, load one LLM, set world `npcChat.baseUrl` to `http://127.0.0.1:1234/v1`. Optional token: config or `LM_API_TOKEN`.
 
 ---
 
@@ -46,28 +46,24 @@ Build and run Minecraft 1.21.1 + NeoForge 21.1.256 with this branch. Configure `
 | X3 | Optional third-party mod absent | Game starts; no classloading crash |
 | X4 | Deny-list entity type in config | Generic adapter rejects; clear feedback |
 
-## AI provider
+## LM Studio (only supported provider)
 
 | # | Test | Expected |
 |---|------|----------|
-| A1 | Provider available | Normal replies |
-| A2 | Provider unavailable / wrong URL | Fallback line + failed message; UI unlocks |
+| A1 | LM Studio running + model loaded | Normal replies; request visible in LM Studio |
+| A2 | LM Studio stopped / wrong URL | System error (`unreachable` / `http_error`); **no** fake greeting fallback; UI unlocks |
 | A3 | Wrong model id | Failure path; UI unlocks |
-| A4 | Invalid API key | No crash; clear failure; UI unlocks |
+| A4 | Optional bad API token | No crash; clear failure; UI unlocks |
 | A5 | Timeout | Failure path; UI unlocks |
-| A6 | Malformed JSON body | Fallback; UI unlocks |
+| A6 | Malformed JSON body | Plain-text parse or failure; UI unlocks |
 | A7 | Rapid repeated sends | Rate-limit system line; UI unlocks |
 | A8 | Close UI before reply arrives | Stale reply does not appear later |
-
-## LM Studio
-
-| # | Test | Expected |
-|---|------|----------|
-| LMS1 | `baseUrl=http://localhost:1234/v1`, exactly one LLM loaded, empty/irrelevant model id | Chat works without manual model name |
+| LMS1 | `baseUrl=http://127.0.0.1:1234/v1`, exactly one LLM loaded, empty model id | Chat works without manual model name |
 | LMS2 | No LLM loaded | Clear `no_loaded` message; UI unlocks |
-| LMS3 | Two+ LLMs loaded, no selection | Clear `choose_model` message; `/millenaire npcchat model select <id>` works |
+| LMS3 | Two+ LLMs loaded, no selection | Clear `choose_model`; `/millenaire npcchat model select <id>` works |
 | LMS4 | Unload/load different single model | Next refresh/chat uses the newly loaded model |
-| LMS5 | Remote x.ai/OpenAI URL | Configured model name still used; LM Studio commands report not applicable |
+| LMS5 | Remote x.ai/OpenAI URL in config | Rejected with `lmstudio.only`; no cloud HTTP |
+| LMS6 | `/millenaire npcchat probe` | Reports reachability, model count, latency |
 
 ## Lifecycle
 

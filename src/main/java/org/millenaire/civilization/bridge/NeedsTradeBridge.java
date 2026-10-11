@@ -153,8 +153,17 @@ public final class NeedsTradeBridge {
       }
       DiplomaticManager diplomacy = DiplomacySavedData.get(level).getDiplomaticManager();
       List<Candidate> candidates = new ArrayList<>();
+      int exporterScanBudget = 32;
+      try {
+         exporterScanBudget = MillenaireServerConfig.SERVER.civilizationExporterScanBudget.getAsInt();
+      } catch (IllegalStateException ignored) {
+      }
+      int exporterScans = 0;
 
       for (Faction candidateFaction : FactionSavedData.get(level).getFactionManager().getAllFactions()) {
+         if (exporterScans >= exporterScanBudget) {
+            break;
+         }
          boolean sameFaction = candidateFaction.getId().equals(importerFactionId);
          if (sameFaction) {
             if (!Boolean.TRUE.equals(MillenaireServerConfig.SERVER.civilizationIntraFactionLogistics.get())) {
@@ -172,9 +181,13 @@ public final class NeedsTradeBridge {
             continue;
          }
          for (Village exporter : villagesOf(level, candidateFaction)) {
+            if (exporterScans >= exporterScanBudget) {
+               break;
+            }
             if (exporter.getId().equals(importerVillage.getId())) {
                continue;
             }
+            exporterScans++;
             int available = SettlementTradeExecutor.countExportable(level, exporter, item);
             if (available <= 0) {
                continue;

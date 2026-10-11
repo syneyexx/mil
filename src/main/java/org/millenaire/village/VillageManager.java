@@ -18,12 +18,22 @@ import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillageType;
 import org.millenaire.faction.FactionLifecycle;
 import org.millenaire.living.LivingVillagesLifecycle;
+import org.millenaire.perf.tick.ServerTickGovernor;
+import org.millenaire.perf.tick.TickPhase;
+import org.millenaire.perf.tick.VillageSimulationLod;
 import org.slf4j.Logger;
 
 public class VillageManager {
    private static final Logger LOGGER = LogUtils.getLogger();
    private final Map<VillageId, Village> villages = new LinkedHashMap<>();
    private static final int FIREPLACE_SYNC_INTERVAL = 200;
+   /** Mid-LOD villages deferred when the soft tick budget was spent; drained next ticks. */
+   private final java.util.ArrayList<VillageId> midLodDeferred = new java.util.ArrayList<>();
+   /** Near villages deferred when per-tick Near quota / soft budget spent. */
+   private final java.util.ArrayList<VillageId> nearLodDeferred = new java.util.ArrayList<>();
+   /** Coalesce VillageSavedData.setDirty to reduce full-NBT autosave hitch frequency. */
+   private static final int DIRTY_COALESCE_TICKS = 20;
+   private boolean pendingSavedDataDirty;
 
    public void addVillage(Village village) {
       this.villages.put(village.getId(), village);
@@ -194,33 +204,146 @@ public class VillageManager {
    public void tick(ServerLevel level) {
       boolean anyDirty = false;
       long gameTime = level.getGameTime();
+      java.util.ArrayList<Village> nearDue = new java.util.ArrayList<>();
+      java.util.ArrayList<Village> midDue = new java.util.ArrayList<>();
 
-      for (Village v : this.villages.values()) {
-         this.tickVillageActivation(level, v);
-         // Spread periodic fireplace sync with stable UUID-based offsets (raid/background still every tick).
-         long uuidMix = v.getId().uuid().getMostSignificantBits() ^ v.getId().uuid().getLeastSignificantBits();
-         int offset = (int)Math.floorMod(uuidMix, 200L);
-         boolean fireplaceSync = Math.floorMod(gameTime - offset, 200L) == 0L;
-         if (v.isActive()) {
-            v.tick(level);
-            if (fireplaceSync) {
-               v.sendFireplacePositions(level);
+      // Drain previously deferred Near villages first (round-robin fairness).
+      if (!this.nearLodDeferred.isEmpty()) {
+         for (VillageId id : this.nearLodDeferred) {
+            Village deferred = this.villages.get(id);
+            if (deferred != null && deferred.isActive()) {
+               nearDue.add(deferred);
             }
          }
+         this.nearLodDeferred.clear();
+      }
 
-         v.backgroundTick(level);
+      // Drain previously deferred Mid villages.
+      if (!this.midLodDeferred.isEmpty()) {
+         for (VillageId id : this.midLodDeferred) {
+            Village deferred = this.villages.get(id);
+            if (deferred != null && deferred.isActive() && !midDue.contains(deferred)) {
+               midDue.add(deferred);
+            }
+         }
+         this.midLodDeferred.clear();
+      }
+
+      ServerTickGovernor.enter(TickPhase.VILLAGE_NEAR);
+      int farBgInterval = 20;
+      try {
+         farBgInterval = Math.max(1, MillenaireServerConfig.SERVER.farBackgroundTickInterval.getAsInt());
+      } catch (IllegalStateException ignored) {
+      }
+      for (Village v : this.villages.values()) {
+         this.tickVillageActivation(level, v);
+         VillageSimulationLod lod = VillageSimulationLod.resolve(level, v);
+         ServerTickGovernor.noteLod(lod);
+
+         int villageHash = VillageSimulationLod.villageHash(v);
+
+         if (lod == VillageSimulationLod.NEAR && v.isActive() && !nearDue.contains(v)) {
+            nearDue.add(v);
+         } else if (
+            lod == VillageSimulationLod.MID
+               && v.isActive()
+               && lod.shouldRunFullTick(gameTime, villageHash)
+               && !midDue.contains(v)
+         ) {
+            midDue.add(v);
+         }
+
+         if (v.isActive()) {
+            ServerTickGovernor.noteActiveVillage();
+         } else {
+            ServerTickGovernor.noteDataOnlyVillage();
+         }
+
+         // Far/inactive: data-only — stagger backgroundTick (raid-urgent always runs).
+         boolean raidUrgent = v.isRaidActiveOrSuffering();
+         boolean runBackground;
+         if (raidUrgent || lod == VillageSimulationLod.NEAR || (lod == VillageSimulationLod.MID && v.isActive())) {
+            runBackground = true;
+         } else {
+            int stagger = Math.floorMod(villageHash, farBgInterval);
+            runBackground = Math.floorMod(gameTime, farBgInterval) == stagger;
+            if (!runBackground) {
+               ServerTickGovernor.noteBackgroundTickSkipped();
+            }
+         }
+         if (runBackground) {
+            v.backgroundTick(level);
+         }
+         if (v.consumeDirty()) {
+            anyDirty = true;
+         }
+      }
+
+      int nearMax = 2;
+      try {
+         nearMax = Math.max(1, MillenaireServerConfig.SERVER.nearVillageMaxFullTicksPerTick.getAsInt());
+      } catch (IllegalStateException ignored) {
+      }
+      int nearRan = 0;
+      for (int i = 0; i < nearDue.size(); i++) {
+         Village v = nearDue.get(i);
+         if (nearRan >= nearMax || (!ServerTickGovernor.hasTime() && nearRan > 0)) {
+            for (int j = i; j < nearDue.size(); j++) {
+               this.nearLodDeferred.add(nearDue.get(j).getId());
+               ServerTickGovernor.noteDefer(TickPhase.VILLAGE_NEAR);
+            }
+            break;
+         }
+         v.tick(level);
+         nearRan++;
+         long uuidMix = v.getId().uuid().getMostSignificantBits() ^ v.getId().uuid().getLeastSignificantBits();
+         int offset = (int)Math.floorMod(uuidMix, 200L);
+         if (Math.floorMod(gameTime - offset, 200L) == 0L) {
+            v.sendFireplacePositions(level);
+         }
+         if (v.consumeDirty()) {
+            anyDirty = true;
+         }
+      }
+
+      ServerTickGovernor.enter(TickPhase.VILLAGE_MID);
+      for (int i = 0; i < midDue.size(); i++) {
+         Village v = midDue.get(i);
+         if (!ServerTickGovernor.hasTime() && i > 0) {
+            for (int j = i; j < midDue.size(); j++) {
+               this.midLodDeferred.add(midDue.get(j).getId());
+               ServerTickGovernor.noteDefer(TickPhase.VILLAGE_MID);
+               ServerTickGovernor.noteMidDeferred();
+            }
+            break;
+         }
+         v.tick(level);
+         long uuidMix = v.getId().uuid().getMostSignificantBits() ^ v.getId().uuid().getLeastSignificantBits();
+         int offset = (int)Math.floorMod(uuidMix, 200L);
+         if (Math.floorMod(gameTime - offset, 200L) == 0L) {
+            v.sendFireplacePositions(level);
+         }
          if (v.consumeDirty()) {
             anyDirty = true;
          }
       }
 
       if (anyDirty) {
+         this.pendingSavedDataDirty = true;
+      }
+      if (this.pendingSavedDataDirty && Math.floorMod(gameTime, DIRTY_COALESCE_TICKS) == 0L) {
          VillageSavedData.get(level).setDirty();
+         this.pendingSavedDataDirty = false;
       }
 
-      org.millenaire.chat.NpcGossipScheduler.tick(level);
-      org.millenaire.living.LivingVillagesLifecycle.onVillageManagerTick(level);
-      org.millenaire.religion.ReligionLifecycle.onVillageManagerTick(level);
+      ServerTickGovernor.enter(TickPhase.AI_SUPPORT);
+      if (ServerTickGovernor.hasTime()) {
+         org.millenaire.chat.NpcGossipScheduler.tick(level);
+         org.millenaire.living.LivingVillagesLifecycle.onVillageManagerTick(level);
+         org.millenaire.religion.ReligionLifecycle.onVillageManagerTick(level);
+      } else {
+         ServerTickGovernor.noteDefer(TickPhase.AI_SUPPORT);
+      }
    }
 
    private void tickVillageActivation(ServerLevel level, Village v) {
@@ -238,24 +361,28 @@ public class VillageManager {
                this.loadChunks(level, v);
             }
          } else {
-            double nearestDistSq = Double.MAX_VALUE;
+            // Amortize player-distance scans: each village at most once every 5 ticks.
+            int stagger = Math.floorMod(VillageSimulationLod.villageHash(v), 5);
+            if (Math.floorMod(level.getGameTime(), 5L) == stagger) {
+               double nearestDistSq = Double.MAX_VALUE;
 
-            for (ServerPlayer player : level.players()) {
-               double distSq = player.blockPosition().distSqr(v.getCenter());
-               if (distSq < nearestDistSq) {
-                  nearestDistSq = distSq;
+               for (ServerPlayer player : level.players()) {
+                  double distSq = player.blockPosition().distSqr(v.getCenter());
+                  if (distSq < nearestDistSq) {
+                     nearestDistSq = distSq;
+                  }
                }
-            }
 
-            double keepRadiusSq = (double)Village.getKeepActiveRadius() * Village.getKeepActiveRadius();
-            double unloadRadiusSq = (double)Village.getUnloadRadius() * Village.getUnloadRadius();
-            if (nearestDistSq < keepRadiusSq) {
-               if (!v.isChunksForceLoaded()) {
-                  this.loadChunks(level, v);
+               double keepRadiusSq = (double)Village.getKeepActiveRadius() * Village.getKeepActiveRadius();
+               double unloadRadiusSq = (double)Village.getUnloadRadius() * Village.getUnloadRadius();
+               if (nearestDistSq < keepRadiusSq) {
+                  if (!v.isChunksForceLoaded()) {
+                     this.loadChunks(level, v);
+                  }
+               } else if (nearestDistSq > unloadRadiusSq && v.isChunksForceLoaded()) {
+                  v.syncRecords(level);
+                  this.unloadChunks(level, v);
                }
-            } else if (nearestDistSq > unloadRadiusSq && v.isChunksForceLoaded()) {
-               v.syncRecords(level);
-               this.unloadChunks(level, v);
             }
          }
 

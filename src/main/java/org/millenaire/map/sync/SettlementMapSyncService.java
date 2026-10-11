@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.millenaire.config.MillenaireServerConfig;
+import org.millenaire.network.SettlementMapDeltaPayload;
 import org.millenaire.network.SettlementMapSnapshotPayload;
 import org.millenaire.village.VillageId;
 import org.slf4j.Logger;
@@ -21,7 +22,8 @@ import org.slf4j.Logger;
  */
 public final class SettlementMapSyncService {
    private static final Logger LOGGER = LogUtils.getLogger();
-   private static final int COALESCE_INTERVAL_TICKS = 40;
+   /** Coalesce dirty map pushes; keeps bandwidth/CPU bounded under mass settlement churn. */
+   private static final int COALESCE_INTERVAL_TICKS = 60;
    private static final int MAX_ENTRIES_PER_PACKET = 200;
 
    private static int revision;
@@ -76,13 +78,19 @@ public final class SettlementMapSyncService {
       if (overworld == null || overworld.getGameTime() % COALESCE_INTERVAL_TICKS != 0L) {
          return;
       }
+      List<UUID> removed = List.copyOf(removedIds);
       removedIds.clear();
       dirty = false;
       revision++;
-      // Full per-player snapshot avoids stale client markers when visibility shrinks.
+      // Periodic updates use deltas; login/full resync still uses sendSnapshot.
       for (ServerPlayer player : server.getPlayerList().getPlayers()) {
          try {
-            sendSnapshot(player);
+            List<SettlementMapEntry> upserts = SettlementMapDtoBuilder.buildForPlayer(overworld, player, revision);
+            PacketDistributor.sendToPlayer(
+               player,
+               new SettlementMapDeltaPayload(worldToken, revision, upserts, removed),
+               new CustomPacketPayload[0]
+            );
          } catch (Exception e) {
             LOGGER.warn("[Millenaire] Settlement map sync failed for {}: {}", player.getGameProfile().getName(), e.toString());
          }

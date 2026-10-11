@@ -23,6 +23,7 @@ Covers timer pause/advance/no-backlog, player anti-repeat weighting, and weighte
 /millenaire worldboss list
 /millenaire worldboss start
 /millenaire worldboss start hemelwachter
+/millenaire worldboss trigger
 /millenaire worldboss end
 ```
 

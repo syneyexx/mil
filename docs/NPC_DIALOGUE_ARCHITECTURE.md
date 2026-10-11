@@ -62,18 +62,19 @@ Adapters build `NpcDialogueContext`. Millénaire reuses `NpcPersonaBuilder`. Pro
 
 Acquire in-flight slot → resolve model → async HTTP → `server.execute` → validate session/generation/entity/range → apply sanitized reply → release slot exactly once. Model output cannot spawn items, run commands, or mutate inventories.
 
-### LM Studio auto-detection
+### LM Studio only
 
-When `npcChat.provider` is `auto`/`lmstudio` and the base URL points at LM Studio (typically `http://localhost:1234/v1`):
+NPC chat talks exclusively to a local LM Studio server (OpenAI-compatible `/v1`). Cloud URLs (`api.openai.com`, `api.x.ai`, etc.) are rejected with `gui.millenaire.npcchat.lmstudio.only`.
 
-1. `LmStudioModelDiscovery` calls `GET /api/v1/models` (host-derived native API, not the OpenAI `/v1` path).
-2. Only entries with `type` llm/vlm and non-empty `loaded_instances` are eligible.
+Default base URL: `http://127.0.0.1:1234/v1` (world `serverconfig`). Completions always use a normalized `…/v1/chat/completions` path.
+
+1. `LmStudioModelDiscovery` calls `GET /api/v1/models` (host-derived native API) and falls back to `GET /v1/models`.
+2. Only entries with `type` llm/vlm and non-empty `loaded_instances` are eligible (OpenAI-compat listings are also accepted).
 3. **Exactly one** loaded LLM → selected automatically (no manual model name required).
-4. **Multiple** loaded LLMs → use runtime selection (`/millenaire npcchat model select <id>`) or a matching configured `npcChat.model`.
-5. **None** loaded → clear UI/command message (`gui.millenaire.npcchat.lmstudio.no_loaded`).
-6. Loaded-set fingerprint changes clear stale manual selections and are noticed on periodic refresh / next chat.
-
-Remote OpenAI-compatible providers (`provider=openai` or non-LM Studio URLs) keep the configured manual model id and API key requirements.
+4. **Multiple** loaded LLMs → `/millenaire npcchat model select <id>` or configured `npcChat.model`.
+5. **None** loaded / unreachable → clear system message in the chat UI (no fake greeting fallback).
+6. Warm discovery cache is reused on send; `/millenaire npcchat probe` checks reachability + latency.
+7. Interactive turns use a short `CHAT_SYSTEM_PROMPT`; consolidation keeps a heavier prompt.
 
 ## Civilization facts
 
@@ -101,4 +102,4 @@ Optional mods should register after presence checks. Do not classload missing mo
 
 ## Configuration (`npcChat`)
 
-Existing provider settings retained. Added: millenaire/vanilla/modded/genericLiving/nonverbal toggles, line-of-sight, transient retention, max minds, entity allow/deny lists.
+LM Studio base URL + optional model id / API token. Legacy `provider` field is unused (keep `lmstudio`). Also: millenaire/vanilla/modded/genericLiving/nonverbal toggles, line-of-sight, transient retention, max minds, entity allow/deny lists.

@@ -2,7 +2,10 @@ package org.millenaire.village;
 
 import com.mojang.logging.LogUtils;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import net.minecraft.core.component.DataComponents;
@@ -17,6 +20,7 @@ import net.minecraft.world.level.ItemLike;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.millenaire.building.BuildingInstance;
+import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.civilization.CivilizationSavedData;
 import org.millenaire.civilization.presentation.CivilizationActionId;
 import org.millenaire.civilization.presentation.CivilizationActionService;
@@ -48,6 +52,8 @@ public final class VillageBookService {
    private static final double MAX_PURCHASE_DISTANCE_SQ = 4096.0;
    /** ~5 seconds at 20 TPS — short TTL for book-action double-click dedupe. */
    private static final long BOOK_ACTION_DEDUPE_TTL_TICKS = 100L;
+   /** playerUuid|villageUuid -> last heavy refresh gameTime */
+   private static final Map<String, Long> REFRESH_LAST_TICK = new HashMap<>();
 
    private VillageBookService() {
    }
@@ -302,6 +308,10 @@ public final class VillageBookService {
             return;
          }
 
+         if (!allowHeavyRefresh(player, village, level.getGameTime())) {
+            return;
+         }
+
          openOrRefreshBook(
             player,
             village,
@@ -354,5 +364,37 @@ public final class VillageBookService {
             }
          }
       }
+   }
+
+   /**
+    * Rate-limits heavy book rebuilds from client refresh spam. Opening via item use still
+    * goes through {@link #openOrRefreshBook} without this gate.
+    */
+   private static boolean allowHeavyRefresh(ServerPlayer player, Village village, long gameTime) {
+      int minInterval = 20;
+      try {
+         minInterval = MillenaireServerConfig.SERVER.villageBookRefreshMinIntervalTicks.getAsInt();
+      } catch (IllegalStateException ignored) {
+      }
+      if (minInterval <= 0) {
+         return true;
+      }
+      String key = player.getUUID() + "|" + village.getId().uuid();
+      Long last = REFRESH_LAST_TICK.get(key);
+      if (last != null && gameTime - last < minInterval) {
+         return false;
+      }
+      REFRESH_LAST_TICK.put(key, gameTime);
+      if (REFRESH_LAST_TICK.size() > 512) {
+         long cutoff = gameTime - Math.max(200L, minInterval * 10L);
+         Iterator<Map.Entry<String, Long>> it = REFRESH_LAST_TICK.entrySet().iterator();
+         while (it.hasNext()) {
+            Map.Entry<String, Long> e = it.next();
+            if (e.getValue() == null || e.getValue() < cutoff) {
+               it.remove();
+            }
+         }
+      }
+      return true;
    }
 }

@@ -29,6 +29,10 @@ public final class RoadTravelerShopScheduler {
       if (!enabled() || level == null) {
          return;
       }
+      if (!org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+         org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.VILLAGE_NEAR);
+         return;
+      }
       long now = level.getGameTime();
       if (lastTickGameTime != Long.MIN_VALUE && now - lastTickGameTime < INTERVAL_TICKS) {
          return;

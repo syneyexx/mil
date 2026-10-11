@@ -14,12 +14,14 @@ import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillagerType;
 import org.millenaire.entity.VillagerNavDriver;
 import org.millenaire.goal.GoalContext;
+import org.millenaire.goal.PerVillageTickCache;
 import org.millenaire.goal.PerVillagerThrottle;
 import org.millenaire.goal.ProgressAwareTask;
 import org.millenaire.goal.StopReason;
 import org.millenaire.goal.TravelPhase;
 import org.millenaire.goal.VillagerGoal;
 import org.millenaire.goal.VillagerTask;
+import org.millenaire.village.Village;
 import org.slf4j.Logger;
 
 public class GatherGoodsGoal implements VillagerGoal {
@@ -28,6 +30,7 @@ public class GatherGoodsGoal implements VillagerGoal {
    private static final int PRIORITY = 500;
    static final double SCAN_RADIUS_H = 20.0;
    static final double SCAN_RADIUS_V = 10.0;
+   private static final PerVillageTickCache<List<ItemEntity>> SCAN_CACHE = new PerVillageTickCache<>(10);
    private final PerVillagerThrottle throttle = new PerVillagerThrottle(100);
 
    @Override
@@ -70,12 +73,35 @@ public class GatherGoodsGoal implements VillagerGoal {
    @Nullable
    static ItemEntity findClosestItem(GoalContext context, VillagerType vtype) {
       AABB scanBox = context.villager().getBoundingBox().inflate(20.0, 10.0, 20.0);
-      List<ItemEntity> items = context.level().getEntitiesOfClass(ItemEntity.class, scanBox);
+      List<ItemEntity> items;
+      Village village = context.village();
+      if (village != null && context.level().getServer() != null) {
+         long now = context.level().getGameTime();
+         BlockPos center = village.getCenter();
+         items = SCAN_CACHE.get(
+            village.getId().uuid(),
+            now,
+            () -> context.level()
+               .getEntitiesOfClass(
+                  ItemEntity.class,
+                  new AABB(
+                     center.getX() - 32,
+                     center.getY() - 16,
+                     center.getZ() - 32,
+                     center.getX() + 32,
+                     center.getY() + 16,
+                     center.getZ() + 32
+                  )
+               )
+         );
+      } else {
+         items = context.level().getEntitiesOfClass(ItemEntity.class, scanBox);
+      }
       ItemEntity closest = null;
       double closestDistSq = Double.MAX_VALUE;
 
       for (ItemEntity itemEntity : items) {
-         if (!itemEntity.isRemoved()) {
+         if (!itemEntity.isRemoved() && scanBox.intersects(itemEntity.getBoundingBox())) {
             ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(itemEntity.getItem().getItem());
             if (vtype.resolvedCollectGoods().contains(itemId)) {
                double distSq = context.villager().distanceToSqr(itemEntity);

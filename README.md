@@ -49,7 +49,7 @@ Server config lives in the NeoForge Millénaire server config (keys under `gener
 - `worldBossEvents.enabled` — master switch (disabling stops new events; SavedData retained; active-boss policy `force_depart` / `leave`)
 - Interval `intervalMinTicks` / `intervalMaxTicks` (default 72000–108000 ≈ 60–90 min at 20 TPS; lag stretches wall-clock time)
 - One world timer; eligible survival/adventure Overworld players; extensible boss pool (Hemelwachter registered)
-- Admin: `/millenaire worldboss status|next|start [id]|end|list`
+- Admin: `/millenaire worldboss status|next|start [id]|trigger|end|list`
 - See `docs/WORLD_BOSS_EVENTS_ARCHITECTURE.md`, `docs/WORLD_BOSS_EVENTS_IMPLEMENTATION.md`, `docs/WORLD_BOSS_EVENTS_LOCAL_VALIDATION.md`
 
 ### Religion
@@ -76,9 +76,12 @@ Server config lives in the NeoForge Millénaire server config (keys under `gener
 
 ### NPC chat
 
-- `npcChatEnabled`, `npcChatProvider`, `npcChatBaseUrl`, `npcChatModel`, `npcChatApiKey`
-- Supports LM Studio / OpenAI-compatible providers when configured
-- **API keys must not be stored in the repository**
+- **LM Studio / Ollama only** (local OpenAI-compatible server). Cloud APIs (OpenAI, xAI/Grok, etc.) are rejected.
+- `npcChatEnabled`, `npcChatBaseUrl` (default `http://127.0.0.1:1234/v1` on **new worlds**), optional `npcChatModel` / `npcChatApiKey`
+- Legacy `npcChatProvider` is ignored; keep `lmstudio`. Edit the **world** `serverconfig/millenaire-server.toml`.
+- Stale cloud `baseUrl` values are auto-migrated to the LM Studio default when the world loads.
+- Diagnose: `/millenaire npcchat probe` and `/millenaire npcchat models refresh`
+- Optional token via config or `LM_API_TOKEN` — **never store secrets in the repository**
 - Model output never authorizes game mutations
 
 ## Generation modes

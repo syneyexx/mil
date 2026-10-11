@@ -50,6 +50,14 @@ public final class ComputeOffload {
       }
    }
 
+   public static boolean entityPaths() {
+      try {
+         return masterEnabled() && Boolean.TRUE.equals(MillenaireServerConfig.SERVER.computeOffloadEntityPaths.get());
+      } catch (IllegalStateException e) {
+         return false;
+      }
+   }
+
    public static int applyBudgetPerTick() {
       try {
          return MillenaireServerConfig.SERVER.computeApplyBudgetPerTick.getAsInt();

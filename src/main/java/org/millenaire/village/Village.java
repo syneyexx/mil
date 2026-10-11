@@ -1351,6 +1351,11 @@ public class Village {
       }
    }
 
+   /** True while a raid is planned/active/suffering — keeps backgroundTick from being staggered away. */
+   public boolean isRaidActiveOrSuffering() {
+      return this.raidState.isRaidActiveOrSuffering();
+   }
+
    public void backgroundTick(ServerLevel level) {
       long currentDay = level.getDayTime() / 24000L;
       long timeOfDay = level.getDayTime() % 24000L;
@@ -1366,7 +1371,7 @@ public class Village {
          RaidManager.tickRaid(this, level);
       }
 
-      if (level.getGameTime() % 100L == 0L) {
+      if (level.getGameTime() % 100L == 0L && org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
          this.tickHireExpiry(level);
       }
    }
@@ -1419,11 +1424,22 @@ public class Village {
          }
       }
 
+      boolean hasTime = org.millenaire.perf.tick.ServerTickGovernor.hasTime();
+      int villageHash = org.millenaire.perf.tick.VillageSimulationLod.villageHash(this);
+      VillageWorkSlice focus = VillageWorkSlice.forGameTime(level.getGameTime(), villageHash);
+      boolean allowIntegrity = VillageWorkSlice.allow(VillageWorkSlice.INTEGRITY, focus, hasTime);
+      boolean allowGrowth = VillageWorkSlice.allow(VillageWorkSlice.GROWTH, focus, hasTime);
+      boolean allowEnvironment = VillageWorkSlice.allow(VillageWorkSlice.ENVIRONMENT, focus, hasTime);
+      boolean allowMarkets = VillageWorkSlice.allow(VillageWorkSlice.MARKETS, focus, hasTime);
+      boolean allowPaths = VillageWorkSlice.allow(VillageWorkSlice.PATHS, focus, hasTime);
+      boolean allowPanels = VillageWorkSlice.allow(VillageWorkSlice.PANELS_MARVEL, focus, hasTime);
+
       if (this.waypointRebuildThrottle.isDirty()) {
          // Defer heavy graph rebuild when the shared tick time budget is already spent.
-         org.millenaire.worldgen.materialize.MaterializationTickBudget.ensureTick(level.getGameTime());
-         if (org.millenaire.worldgen.materialize.MaterializationTickBudget.hasTime()) {
+         if (hasTime || allowPaths) {
             this.rebuildWaypointGraphIfStale(level, 60L);
+         } else {
+            org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.VILLAGE_NEAR);
          }
       }
 
@@ -1433,20 +1449,24 @@ public class Village {
 
       this.integrityTickCounter++;
       if (this.needsOrphanCleanup || this.integrityTickCounter >= 600) {
-         boolean wasOrphanCleanup = this.needsOrphanCleanup;
-         this.needsOrphanCleanup = false;
-         this.integrityTickCounter = 0;
-         this.syncRecords(level);
-         VillageIntegrityChecker.checkIntegrity(level, this);
-         VillageIntegrityChecker.cleanupOrphanedEntities(level, this);
-         if (!level.isDay()) {
-            this.autoSpawnResidents(level);
-         }
+         if (!this.needsOrphanCleanup && !allowIntegrity) {
+            this.integrityTickCounter = 600;
+            org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.VILLAGE_NEAR);
+         } else {
+            this.needsOrphanCleanup = false;
+            this.integrityTickCounter = 0;
+            this.syncRecords(level);
+            VillageIntegrityChecker.checkIntegrity(level, this);
+            VillageIntegrityChecker.cleanupOrphanedEntities(level, this);
+            if (!level.isDay()) {
+               this.autoSpawnResidents(level);
+            }
 
-         this.reconcileInnMerchantLogs();
+            this.reconcileInnMerchantLogs();
+         }
       }
 
-      if (this.integrityTickCounter == 300) {
+      if (this.integrityTickCounter == 300 && allowIntegrity) {
          Set<UUID> knownUuids = this.getVillagerUuids();
 
          for (BuildingInstance b : this.buildings) {
@@ -1458,13 +1478,24 @@ public class Village {
 
       this.growthTickCounter++;
       if (this.growthTickCounter >= 20) {
-         this.growthTickCounter = 0;
-         VillageGrowthManager.evaluateGrowth(level, this);
-         WallGrowthManager.evaluate(level, this);
+         if (!allowGrowth) {
+            this.growthTickCounter = 20;
+            org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.VILLAGE_NEAR);
+         } else {
+            this.growthTickCounter = 0;
+            VillageGrowthManager.evaluateGrowth(level, this);
+            WallGrowthManager.evaluate(level, this);
+         }
       }
 
-      if (level.getGameTime() % 20L == 0L) {
-         this.despawnDangerousMobs(level);
+      // Stagger despawn across villages so Near villages do not all scan the same tick.
+      int despawnStagger = Math.floorMod(villageHash, 20);
+      if (Math.floorMod(level.getGameTime(), 20L) == despawnStagger) {
+         if (allowEnvironment) {
+            this.despawnDangerousMobs(level);
+         } else {
+            org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.VILLAGE_NEAR);
+         }
       }
 
       if (level.getGameTime() % 20L == 10L) {
@@ -1475,16 +1506,16 @@ public class Village {
          this.placeNegationWandInChests(level);
       }
 
-      if (this.isPlayerControlled() && level.getGameTime() % 200L == 40L) {
+      if (this.isPlayerControlled() && level.getGameTime() % 200L == 40L && allowMarkets) {
          DesignatedBuildingService.refreshAll(level, this);
       }
 
-      if (level.getGameTime() % 100L == 0L) {
+      if (level.getGameTime() % 100L == 0L && allowEnvironment) {
          this.updatePens(level, false);
       }
 
       VillageSellerDispatcher.checkSeller(level, this);
-      if (level.getGameTime() % 100L == 50L) {
+      if (level.getGameTime() % 100L == 50L && allowMarkets) {
          boolean isDaytime = !TickConstants.isNight(level);
 
          for (BuildingInstance b : this.buildings) {
@@ -1501,23 +1532,31 @@ public class Village {
          }
       }
 
-      if (level.getGameTime() % 20L == 0L) {
+      if (level.getGameTime() % 20L == 0L && allowEnvironment) {
          VillageEnvironmentHelper.tickGroveSaplings(level, this);
       }
 
       this.refreshGoods(level);
-      if (level.getGameTime() % 1000L == 0L) {
+      if (level.getGameTime() % 1000L == 0L && allowMarkets) {
          this.regenerateScrollIfNeeded(level);
       }
 
-      this.pathManager.tick(level, this);
-      this.pathManager.startRecalcIfDirty(level, this);
+      if (allowPaths) {
+         this.pathManager.tick(level, this);
+         this.pathManager.startRecalcIfDirty(level, this);
+      } else {
+         org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.VILLAGE_NEAR);
+      }
       if (this.marvelManager == null && MarvelManager.isMarvelVillageType(this)) {
          this.marvelManager = new MarvelManager();
       }
 
       if (this.marvelManager != null) {
-         this.marvelManager.tick(this, level);
+         if (allowPanels) {
+            this.marvelManager.tick(this, level);
+         } else {
+            org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.VILLAGE_NEAR);
+         }
       }
 
       long currentDay = level.getDayTime() / 24000L;
@@ -1530,15 +1569,20 @@ public class Village {
 
       this.panelTickCounter++;
       if (this.panelTickCounter >= 40) {
-         this.panelTickCounter = 0;
-         this.updatePanelDisplayLines(level);
+         if (!allowPanels) {
+            this.panelTickCounter = 40;
+            org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.VILLAGE_NEAR);
+         } else {
+            this.panelTickCounter = 0;
+            this.updatePanelDisplayLines(level);
+         }
       }
 
-      if (level.getGameTime() % 200L == 0L) {
+      if (level.getGameTime() % 200L == 0L && allowPanels) {
          this.checkExplorationAdvancements(level);
       }
 
-      if (level.getGameTime() % 200L == 0L) {
+      if (level.getGameTime() % 200L == 0L && allowPanels) {
          this.checkTravelBookDiscoveries(level);
       }
    }

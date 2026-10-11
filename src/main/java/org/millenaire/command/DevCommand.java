@@ -43,6 +43,7 @@ public final class DevCommand {
       org.millenaire.living.command.LivingDevCommand.registerUnder(dev);
       org.millenaire.civilization.command.CivilizationCommand.registerUnder(dev);
       ComputeCommand.registerUnder(dev);
+      TickCommand.registerUnder(dev);
       BiomeCoverageCommand.registerUnder(dev);
       BountyHunterDevCommand.registerUnder(dev);
       StarterSettlementCommand.registerUnder(dev);

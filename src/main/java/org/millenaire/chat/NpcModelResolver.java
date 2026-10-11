@@ -4,12 +4,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
+import net.minecraft.network.chat.Component;
 import org.millenaire.config.MillenaireServerConfig;
 
 /**
- * Resolves the effective chat-completions model id.
- * LM Studio: auto-detect loaded LLMs via /api/v1/models.
- * Other providers: keep the configured manual model name.
+ * Resolves the effective chat-completions model id for local LM Studio or Ollama.
  */
 public final class NpcModelResolver {
    private NpcModelResolver() {
@@ -18,9 +17,8 @@ public final class NpcModelResolver {
    public enum Status {
       OK,
       PROVIDER_DISABLED,
-      MISSING_API_KEY,
       MISSING_BASE_URL,
-      MISSING_MANUAL_MODEL,
+      NOT_LMSTUDIO,
       LMSTUDIO_UNREACHABLE,
       LMSTUDIO_NO_LOADED,
       LMSTUDIO_MULTI_NEEDS_SELECTION
@@ -34,19 +32,26 @@ public final class NpcModelResolver {
       public String messageKey() {
          return switch (this.status) {
             case PROVIDER_DISABLED -> "gui.millenaire.npcchat.disabled";
-            case MISSING_API_KEY -> "gui.millenaire.npcchat.missing_api_key";
             case MISSING_BASE_URL -> "gui.millenaire.npcchat.missing_base_url";
-            case MISSING_MANUAL_MODEL -> "gui.millenaire.npcchat.missing_manual_model";
+            case NOT_LMSTUDIO -> "gui.millenaire.npcchat.lmstudio.only";
             case LMSTUDIO_UNREACHABLE -> "gui.millenaire.npcchat.lmstudio.unreachable";
             case LMSTUDIO_NO_LOADED -> "gui.millenaire.npcchat.lmstudio.no_loaded";
             case LMSTUDIO_MULTI_NEEDS_SELECTION -> "gui.millenaire.npcchat.lmstudio.choose_model";
             case OK -> "gui.millenaire.npcchat.lmstudio.ready";
          };
       }
+
+      public Component messageComponent() {
+         if (this.status == Status.NOT_LMSTUDIO) {
+            return NpcModelClient.lmStudioOnlyComponent();
+         }
+         return Component.translatable(messageKey());
+      }
    }
 
+   /** True when the configured base URL is an accepted local LLM endpoint (LM Studio or Ollama). */
    public static boolean usesLmStudio() {
-      return LmStudioModelDiscovery.isLmStudioBaseUrl(MillenaireServerConfig.SERVER.npcChatBaseUrl.get());
+      return LmStudioModelDiscovery.isAcceptedLocalLlmBaseUrl(MillenaireServerConfig.SERVER.npcChatBaseUrl.get());
    }
 
    public static CompletableFuture<Result> resolveAsync() {
@@ -58,7 +63,12 @@ public final class NpcModelResolver {
          return CompletableFuture.completedFuture(new Result(Status.MISSING_BASE_URL, null, null, List.of()));
       }
       if (!usesLmStudio()) {
-         return CompletableFuture.completedFuture(resolveManualRemote());
+         return CompletableFuture.completedFuture(new Result(Status.NOT_LMSTUDIO, null, null, List.of()));
+      }
+      LmStudioModelDiscovery.Snapshot cached = LmStudioModelDiscovery.cached();
+      long now = System.currentTimeMillis();
+      if (cached.fresh(now) && cached.reachable()) {
+         return CompletableFuture.completedFuture(resolveLmStudio(cached));
       }
       return LmStudioModelDiscovery.refreshAsync(false).thenApply(NpcModelResolver::resolveLmStudio);
    }
@@ -68,37 +78,20 @@ public final class NpcModelResolver {
          return new Result(Status.PROVIDER_DISABLED, null, null, List.of());
       }
       if (!usesLmStudio()) {
-         return resolveManualRemote();
+         return new Result(Status.NOT_LMSTUDIO, null, null, List.of());
       }
       return resolveLmStudio(LmStudioModelDiscovery.cached());
    }
 
-   private static Result resolveManualRemote() {
-      String key = NpcModelClient.resolveApiKey();
-      if (key == null) {
-         return new Result(Status.MISSING_API_KEY, null, null, List.of());
-      }
-      String model = MillenaireServerConfig.SERVER.npcChatModel.get();
-      if (model == null || model.isBlank()) {
-         return new Result(Status.MISSING_MANUAL_MODEL, null, null, List.of());
-      }
-      return new Result(Status.OK, model.trim(), model.trim(), List.of());
-   }
-
    public static Result resolveLmStudio(LmStudioModelDiscovery.Snapshot snap) {
-      String configured = MillenaireServerConfig.SERVER.npcChatModel.get();
-      String configuredTrimmed = configured == null ? "" : configured.trim();
-
       if (!snap.reachable()) {
-         // Still allow a manually configured model id — chat/completions may work even when
-         // /api/v1/models discovery fails (firewall, older LM Studio, brief startup race).
-         if (!configuredTrimmed.isEmpty()) {
-            return new Result(Status.OK, configuredTrimmed, configuredTrimmed, List.of());
-         }
+         // Fail loud: do not POST to a host discovery cannot reach.
          return new Result(Status.LMSTUDIO_UNREACHABLE, null, null, List.of());
       }
+      String configuredTrimmed = configuredModelId();
       List<LmStudioModelInfo> loaded = snap.loaded();
       if (loaded.isEmpty()) {
+         // Reachable but nothing loaded — allow a configured id for JIT / OpenAI-compat servers.
          if (!configuredTrimmed.isEmpty()) {
             return new Result(Status.OK, configuredTrimmed, configuredTrimmed, loaded);
          }
@@ -122,10 +115,21 @@ public final class NpcModelResolver {
          if (configuredMatch.isPresent()) {
             return new Result(Status.OK, configuredMatch.get().effectiveModelId(), configuredMatch.get().label(), loaded);
          }
-         // Configured id may still be accepted by /v1/chat/completions even if not in the snapshot.
          return new Result(Status.OK, configuredTrimmed, configuredTrimmed, loaded);
       }
 
       return new Result(Status.LMSTUDIO_MULTI_NEEDS_SELECTION, null, null, loaded);
+   }
+
+   private static String configuredModelId() {
+      try {
+         if (MillenaireServerConfig.SERVER == null || MillenaireServerConfig.SERVER.npcChatModel == null) {
+            return "";
+         }
+         String configured = MillenaireServerConfig.SERVER.npcChatModel.get();
+         return configured == null ? "" : configured.trim();
+      } catch (Exception e) {
+         return "";
+      }
    }
 }

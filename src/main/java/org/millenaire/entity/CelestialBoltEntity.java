@@ -48,7 +48,7 @@ public class CelestialBoltEntity extends AbstractHurtingProjectile {
             }
          }
       }
-      if (this.level().isClientSide && this.random.nextInt(2) == 0) {
+      if (this.level().isClientSide && this.random.nextInt(2) == 0 && CombatFxBudget.allowTrailParticle(this)) {
          this.level()
             .addParticle(
                ParticleTypes.END_ROD,

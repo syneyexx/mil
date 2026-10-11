@@ -53,42 +53,118 @@ public final class LmStudioModelDiscovery {
    private LmStudioModelDiscovery() {
    }
 
-   public static boolean isLmStudioBaseUrl(@Nullable String baseUrl) {
+   /**
+    * NPC chat / companion accept local LM Studio or Ollama endpoints.
+    * Remote cloud APIs (OpenAI, xAI, etc.) are rejected. URL shape decides.
+    */
+   public static boolean isAcceptedLmStudioBaseUrl(@Nullable String baseUrl) {
+      return isAcceptedLocalLlmBaseUrl(baseUrl);
+   }
+
+   /** Local LM Studio (:1234) or Ollama (:11434) on loopback/LAN. */
+   public static boolean isAcceptedLocalLlmBaseUrl(@Nullable String baseUrl) {
       if (baseUrl == null || baseUrl.isBlank()) {
          return false;
-      }
-      String provider = MillenaireServerConfig.SERVER.npcChatProvider.get();
-      if (provider != null) {
-         String p = provider.trim().toLowerCase();
-         if ("openai".equals(p) || "remote".equals(p)) {
-            return false;
-         }
-         if ("lmstudio".equals(p) || "lm_studio".equals(p) || "lm-studio".equals(p)) {
-            return true;
-         }
-         // "auto" / blank / unknown → detect from URL below
       }
       String normalized = normalizeBase(baseUrl).toLowerCase();
       try {
          URI uri = URI.create(normalized.contains("://") ? normalized : "http://" + normalized);
+         String scheme = uri.getScheme();
+         if (scheme != null && !"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
+            return false;
+         }
          String host = uri.getHost();
          int port = uri.getPort();
          if (host == null) {
             return false;
          }
+         if (isRemoteCloudApiHost(host)) {
+            return false;
+         }
          if (host.contains("lmstudio") || normalized.contains("lmstudio")) {
             return true;
          }
-         // LM Studio's default port. Includes LAN binds shown in the UI (e.g. 192.168.x.x:1234),
-         // not only localhost — otherwise provider=auto disables HTTP entirely.
-         if (port == 1234 || port == -1 && normalized.contains(":1234")) {
+         if (host.contains("ollama") || normalized.contains("ollama")) {
+            return true;
+         }
+         // LM Studio default port / Ollama default port (incl. LAN binds).
+         if (port == 1234 || port == 11434 || (port == -1 && (normalized.contains(":1234") || normalized.contains(":11434")))) {
             return true;
          }
          boolean loopback = "localhost".equals(host) || "127.0.0.1".equals(host)
             || "[::1]".equals(host) || "::1".equals(host);
-         return loopback && (port == 1234 || port <= 0);
+         if (loopback) {
+            return true;
+         }
+         return isPrivateOrLocalHost(host);
       } catch (Exception e) {
-         return normalized.contains(":1234") || normalized.contains("lmstudio");
+         return !isRemoteCloudApiHost(normalized)
+            && (normalized.contains(":1234")
+               || normalized.contains(":11434")
+               || normalized.contains("lmstudio")
+               || normalized.contains("ollama"));
+      }
+   }
+
+   public static boolean isOllamaBaseUrl(@Nullable String baseUrl) {
+      if (baseUrl == null || baseUrl.isBlank()) {
+         return false;
+      }
+      String normalized = normalizeBase(baseUrl).toLowerCase();
+      return normalized.contains(":11434") || normalized.contains("ollama");
+   }
+
+   /** @deprecated use {@link #isAcceptedLocalLlmBaseUrl(String)} */
+   @Deprecated
+   public static boolean isLmStudioBaseUrl(@Nullable String baseUrl) {
+      return isAcceptedLocalLlmBaseUrl(baseUrl);
+   }
+
+   /** True when the URL/host matches a known remote cloud LLM API (OpenAI, xAI, etc.). */
+   public static boolean isRemoteCloudApiUrl(@Nullable String hostOrUrl) {
+      if (hostOrUrl == null || hostOrUrl.isBlank()) {
+         return false;
+      }
+      return isRemoteCloudApiHost(hostOrUrl);
+   }
+
+   private static boolean isRemoteCloudApiHost(String hostOrUrl) {
+      String h = hostOrUrl.toLowerCase();
+      return h.contains("api.openai.com")
+         || h.contains("api.x.ai")
+         || h.contains("api.anthropic.com")
+         || h.contains("generativelanguage.googleapis.com")
+         || h.contains("api.groq.com")
+         || h.contains("openrouter.ai")
+         || h.contains("api.mistral.ai")
+         || h.contains("api.together.xyz")
+         || h.contains("api.fireworks.ai")
+         || h.contains("openai.azure.com");
+   }
+
+   private static boolean isPrivateOrLocalHost(String host) {
+      if (host.endsWith(".local") || host.endsWith(".lan")) {
+         return true;
+      }
+      String[] parts = host.split("\\.");
+      if (parts.length != 4) {
+         return false;
+      }
+      try {
+         int a = Integer.parseInt(parts[0]);
+         int b = Integer.parseInt(parts[1]);
+         if (a == 10) {
+            return true;
+         }
+         if (a == 192 && b == 168) {
+            return true;
+         }
+         if (a == 172 && b >= 16 && b <= 31) {
+            return true;
+         }
+         return a == 127;
+      } catch (NumberFormatException e) {
+         return false;
       }
    }
 
@@ -310,7 +386,7 @@ public final class LmStudioModelDiscovery {
     * OpenAI-compatible {@code GET /v1/models} payload ({@code data: [{id, ...}]}).
     * With JIT loading off, LM Studio typically lists the models the server will serve.
     */
-   static List<LmStudioModelInfo> parseOpenAiCompatModels(String body) {
+   public static List<LmStudioModelInfo> parseOpenAiCompatModels(String body) {
       List<LmStudioModelInfo> out = new ArrayList<>();
       JsonObject root = GSON.fromJson(body, JsonObject.class);
       if (root == null || !root.has("data") || !root.get("data").isJsonArray()) {
@@ -342,7 +418,7 @@ public final class LmStudioModelDiscovery {
    }
 
    @Nullable
-   static String toOpenAiModelsUrl(@Nullable String baseUrl) {
+   public static String toOpenAiModelsUrl(@Nullable String baseUrl) {
       return toAuthorityPath(baseUrl, "/v1/models");
    }
 

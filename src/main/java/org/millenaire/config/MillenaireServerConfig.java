@@ -120,6 +120,17 @@ public final class MillenaireServerConfig {
    public final IntValue npcChatMaxStoredMinds;
    public final ConfigValue<String> npcChatEntityAllowList;
    public final ConfigValue<String> npcChatEntityDenyList;
+   public final BooleanValue companionEnabled;
+   public final BooleanValue companionChatViaT;
+   public final IntValue companionChatRange;
+   public final IntValue companionHeartbeatSeconds;
+   public final IntValue companionMaxProactiveLinesPerMinute;
+   public final IntValue companionMaxIntentsPerReply;
+   public final IntValue companionMaxDistanceBeforeReturn;
+   public final IntValue companionMaxPerPlayer;
+   public final IntValue companionSummonVillageRange;
+   public final ConfigValue<String> companionActionAllowList;
+   public final ConfigValue<String> companionActionDenyList;
    public final BooleanValue livingVillagesEnabled;
    public final BooleanValue villageNeedsEnabled;
    public final IntValue villageNeedsEvaluationInterval;
@@ -206,7 +217,39 @@ public final class MillenaireServerConfig {
    public final BooleanValue computeOffloadHighwayPlan;
    public final BooleanValue computeOffloadWorldgenPlan;
    public final BooleanValue computeOffloadWaypointGraph;
+   public final BooleanValue computeOffloadEntityPaths;
+   public final BooleanValue tickGovernorEnabled;
+   public final BooleanValue villageLodEnabled;
+   public final IntValue villageLodMidInterval;
+   public final BooleanValue villagerAiCadenceEnabled;
+   public final IntValue villagerAiMidDistance;
+   public final IntValue villagerAiMidInterval;
+   public final BooleanValue factionLifecycleStagingEnabled;
+   public final IntValue civilizationExporterScanBudget;
+   public final IntValue villageBookRefreshMinIntervalTicks;
+   public final IntValue nearVillageMaxFullTicksPerTick;
+   public final BooleanValue entityLodEnabled;
+   public final IntValue entityLodMidDistance;
+   public final IntValue entityLodFarDistance;
+   public final BooleanValue entityLodFarSleep;
+   public final IntValue entityLodMidCombatInterval;
+   public final IntValue pathMaxSearchMs;
+   public final IntValue pathNodeMultiplier;
+   public final IntValue pathMaxStartsPerTick;
+   public final IntValue tickGlobalBudgetMs;
+   public final IntValue tickPhaseApplyMs;
+   public final IntValue tickPhaseVillageNearMs;
+   public final IntValue tickPhaseVillageMidMs;
+   public final IntValue tickPhaseAiSupportMs;
+   public final IntValue tickPhaseCivMs;
+   public final IntValue tickPhaseWorldgenMs;
+   public final IntValue tickPhaseHighwayMs;
+   public final IntValue tickPhaseTailMs;
+   public final IntValue farBackgroundTickInterval;
    public final BooleanValue worldBossEventsEnabled;
+   public final ConfigValue<String> worldBossCadenceMode;
+   public final IntValue worldBossIntervalDays;
+   public final BooleanValue worldBossQuietSpawn;
    public final IntValue worldBossIntervalMinTicks;
    public final IntValue worldBossIntervalMaxTicks;
    public final ConfigValue<String> worldBossAllowedDimensions;
@@ -627,34 +670,31 @@ public final class MillenaireServerConfig {
          .translation("millenaire.config.legacyAutoConvertMaxPngs")
          .defineInRange("legacyAutoConvertMaxPngs", 2500, 0, 5000);
       builder.pop();
-      builder.comment("Free-form NPC chat backed by an OpenAI-compatible chat completions API").push("npcChat");
+      builder.comment("Free-form NPC chat backed by local LM Studio (OpenAI-compatible /v1 on the same machine or LAN)").push("npcChat");
       this.npcChatEnabled = builder.comment("Master switch for NPC free chat. When false, no HTTP calls are made.")
          .translation("millenaire.config.npcChat.enabled")
          .define("enabled", true);
       this.npcChatProvider = builder.comment(
             new String[]{
-               "NPC chat provider mode: auto | lmstudio | openai.",
-               "auto detects LM Studio from the base URL (localhost OR LAN IP on port 1234, e.g. http://192.168.1.18:1234/v1).",
-               "lmstudio forces GET /api/v1/models (+ /v1/models fallback) and loaded LLM selection.",
-               "openai keeps the configured model name for remote OpenAI-compatible APIs (requires apiKey + model)."
+               "Legacy field; NPC chat is LM Studio only. Keep 'lmstudio'.",
+               "Values openai/remote/auto are ignored — cloud APIs are rejected. The base URL must point at LM Studio."
             }
          )
          .translation("millenaire.config.npcChat.provider")
          .define("provider", "lmstudio");
       this.npcChatBaseUrl = builder.comment(
             new String[]{
-               "API base URL without a trailing slash.",
-               "LM Studio: http://localhost:1234/v1 (preferred on the same PC) or http://<lan-ip>:1234/v1.",
-               "Model name optional for LM Studio; loaded LLMs are auto-detected. Edit this in the world's serverconfig.",
-               "Remote example: https://api.x.ai/v1"
+               "Local OpenAI-compatible API base URL (no trailing slash). LM Studio or Ollama only — not cloud APIs.",
+               "LM Studio: http://127.0.0.1:1234/v1  |  Ollama: http://127.0.0.1:11434/v1",
+               "New worlds use this default automatically. Cloud URLs are rejected and migrated to the LM Studio default on load.",
+               "Model name optional for LM Studio auto-detect; set model id for Ollama (e.g. llama3.2)."
             }
          )
          .translation("millenaire.config.npcChat.baseUrl")
-         .define("baseUrl", "http://localhost:1234/v1");
+         .define("baseUrl", org.millenaire.chat.NpcChatConfigMigration.DEFAULT_LOCAL_BASE_URL);
       this.npcChatModel = builder.comment(
             new String[]{
-               "Model id for remote OpenAI-compatible providers.",
-               "For LM Studio: leave empty for automatic selection when exactly one LLM is loaded;",
+               "Optional LM Studio model id. Leave empty for automatic selection when exactly one LLM is loaded;",
                "when multiple LLMs are loaded, set this (or use /millenaire npcchat model select) to choose one."
             }
          )
@@ -662,16 +702,15 @@ public final class MillenaireServerConfig {
          .define("model", "");
       this.npcChatApiKey = builder.comment(
             new String[]{
-               "API key for NPC chat. Leave empty to read MILLENAIRE_NPC_API_KEY from the environment.",
-               "For local LM Studio, an empty key is allowed (optional LM_API_TOKEN).",
-               "Never log this value. For remote providers an empty key disables the model while still storing player quotes."
+               "Optional LM Studio API token. Leave empty for local default (no auth).",
+               "If set, sent as Bearer. Env LM_API_TOKEN is also accepted. Never log this value."
             }
          )
          .translation("millenaire.config.npcChat.apiKey")
          .define("apiKey", "");
       this.npcChatTimeoutSeconds = builder.comment("HTTP request timeout in seconds")
          .translation("millenaire.config.npcChat.timeoutSeconds")
-         .defineInRange("timeoutSeconds", 12, 4, 30);
+         .defineInRange("timeoutSeconds", 8, 4, 30);
       this.npcChatMaxConcurrent = builder.comment("Maximum concurrent model requests on this server")
          .translation("millenaire.config.npcChat.maxConcurrent")
          .defineInRange("maxConcurrent", 4, 1, 8);
@@ -722,6 +761,44 @@ public final class MillenaireServerConfig {
       this.npcChatEntityDenyList = builder.comment("Comma-separated entity type ids denied from the generic adapter")
          .translation("millenaire.config.npcChat.entityDenyList")
          .define("entityDenyList", "");
+      builder.pop();
+      builder.comment("Opt-in LM Companion — inert until /millenaire companion summon|bind")
+         .push("companion");
+      this.companionEnabled = builder.comment("Master switch for companion systems. Still requires summon/bind command.")
+         .translation("millenaire.config.companion.enabled")
+         .define("enabled", true);
+      this.companionChatViaT = builder.comment(
+            "When true, vanilla T-chat is heard by your summoned companion (no NPC chat UI required)."
+         )
+         .translation("millenaire.config.companion.chatViaT")
+         .define("chatViaT", true);
+      this.companionChatRange = builder.comment("Max distance (blocks) for the companion to hear T-chat")
+         .translation("millenaire.config.companion.chatRange")
+         .defineInRange("chatRange", 48, 8, 128);
+      this.companionHeartbeatSeconds = builder.comment("Seconds between companion LM heartbeats when near the player")
+         .translation("millenaire.config.companion.heartbeatSeconds")
+         .defineInRange("heartbeatSeconds", 30, 10, 120);
+      this.companionMaxProactiveLinesPerMinute = builder.comment("Max proactive speech lines per minute")
+         .translation("millenaire.config.companion.maxProactiveLinesPerMinute")
+         .defineInRange("maxProactiveLinesPerMinute", 3, 1, 12);
+      this.companionMaxIntentsPerReply = builder.comment("Max intents applied from one LM reply")
+         .translation("millenaire.config.companion.maxIntentsPerReply")
+         .defineInRange("maxIntentsPerReply", 4, 1, 8);
+      this.companionMaxDistanceBeforeReturn = builder.comment("Blocks before companion auto-returns to player")
+         .translation("millenaire.config.companion.maxDistanceBeforeReturn")
+         .defineInRange("maxDistanceBeforeReturn", 48, 16, 128);
+      this.companionMaxPerPlayer = builder.comment("Max bonded companions per player")
+         .translation("millenaire.config.companion.maxPerPlayer")
+         .defineInRange("maxPerPlayer", 1, 1, 1);
+      this.companionSummonVillageRange = builder.comment("Max distance to nearest village for summon")
+         .translation("millenaire.config.companion.summonVillageRange")
+         .defineInRange("summonVillageRange", 256, 32, 1024);
+      this.companionActionAllowList = builder.comment("Optional comma-separated intent allow-list; empty = all catalog intents")
+         .translation("millenaire.config.companion.actionAllowList")
+         .define("actionAllowList", "");
+      this.companionActionDenyList = builder.comment("Comma-separated intent deny-list")
+         .translation("millenaire.config.companion.actionDenyList")
+         .define("actionDenyList", "");
       builder.pop();
       builder.comment("Living Villages 2.0 — needs, social simulation, assistance requests (does not disable core Millénaire when off)")
          .push("livingVillages");
@@ -1028,14 +1105,123 @@ public final class MillenaireServerConfig {
       this.computeOffloadWaypointGraph = builder.comment("Offload waypoint-graph edge batch prep to worker threads")
          .translation("millenaire.config.compute.offloadWaypointGraph")
          .define("computeOffloadWaypointGraph", true);
+      this.computeOffloadEntityPaths = builder.comment(
+            "Offload Mid-LOD entity A* to worker threads via NavRegionSnapshot (Near stays sync under PathRequestQueue)"
+         )
+         .translation("millenaire.config.compute.offloadEntityPaths")
+         .define("computeOffloadEntityPaths", true);
       builder.pop();
 
       builder.comment(
             new String[]{
-               "World Boss Events — one active-playtime timer per world/server.",
-               "Default interval 72000–108000 ticks ≈ 60–90 minutes at 20 TPS.",
-               "Under server lag a tick timer takes longer wall-clock time than the nominal minutes.",
-               "Timer pauses with no eligible online players; sleep//time set does not advance it.",
+               "Tick Governor + Simulation LOD — soft shared deadline across Millenaire phases.",
+               "Does not remove features; amortizes far/mid work and adds fair deferral under load.",
+               "Uses worldgenTickTimeBudgetMs as the shared soft wall-clock budget."
+            }
+         )
+         .push("tickGovernor");
+      this.tickGovernorEnabled = builder.comment("Master switch for ServerTickGovernor soft deadline checks")
+         .translation("millenaire.config.tickGovernor.enabled")
+         .define("enabled", true);
+      this.villageLodEnabled = builder.comment("Distance LOD for active villages (Near full / Mid staggered / Far background)")
+         .translation("millenaire.config.tickGovernor.villageLodEnabled")
+         .define("villageLodEnabled", true);
+      this.villageLodMidInterval = builder.comment("Ticks between full Village.tick for Mid LOD villages (staggered)")
+         .translation("millenaire.config.tickGovernor.villageLodMidInterval")
+         .defineInRange("villageLodMidInterval", 2, 1, 20);
+      this.villagerAiCadenceEnabled = builder.comment("Amortize goal-pick for villagers beyond mid distance")
+         .translation("millenaire.config.tickGovernor.villagerAiCadenceEnabled")
+         .define("villagerAiCadenceEnabled", true);
+      this.villagerAiMidDistance = builder.comment("Players within this distance keep full AI goal-pick rate")
+         .translation("millenaire.config.tickGovernor.villagerAiMidDistance")
+         .defineInRange("villagerAiMidDistance", 48, 16, 256);
+      this.villagerAiMidInterval = builder.comment("Goal-pick interval for distant villagers")
+         .translation("millenaire.config.tickGovernor.villagerAiMidInterval")
+         .defineInRange("villagerAiMidInterval", 3, 1, 20);
+      this.factionLifecycleStagingEnabled = builder.comment(
+            "When civilization orchestrator is off, stage FactionLifecycle managers like civ stages"
+         )
+         .translation("millenaire.config.tickGovernor.factionLifecycleStagingEnabled")
+         .define("factionLifecycleStagingEnabled", true);
+      this.civilizationExporterScanBudget = builder.comment("Max exporter village inventory scans per needs-trade pass")
+         .translation("millenaire.config.tickGovernor.civilizationExporterScanBudget")
+         .defineInRange("civilizationExporterScanBudget", 32, 4, 256);
+      this.villageBookRefreshMinIntervalTicks = builder.comment(
+            "Min ticks between heavy village-book rebuilds per player+village (0 = off)"
+         )
+         .translation("millenaire.config.tickGovernor.villageBookRefreshMinIntervalTicks")
+         .defineInRange("villageBookRefreshMinIntervalTicks", 20, 0, 200);
+      this.nearVillageMaxFullTicksPerTick = builder.comment(
+            "Max Near villages that may run full Village.tick per server tick (rest deferred FIFO)"
+         )
+         .translation("millenaire.config.tickGovernor.nearVillageMaxFullTicksPerTick")
+         .defineInRange("nearVillageMaxFullTicksPerTick", 2, 1, 32);
+      this.entityLodEnabled = builder.comment("Distance LOD for loaded villagers (Near / Mid / Far sleep)")
+         .translation("millenaire.config.tickGovernor.entityLodEnabled")
+         .define("entityLodEnabled", true);
+      this.entityLodMidDistance = builder.comment("Players within this distance keep full villager AI")
+         .translation("millenaire.config.tickGovernor.entityLodMidDistance")
+         .defineInRange("entityLodMidDistance", 48, 16, 256);
+      this.entityLodFarDistance = builder.comment("Beyond this distance villagers Far-sleep when enabled")
+         .translation("millenaire.config.tickGovernor.entityLodFarDistance")
+         .defineInRange("entityLodFarDistance", 96, 32, 512);
+      this.entityLodFarSleep = builder.comment("Aggressive Far sleep: skip goal-pick, combat scans, ambient work")
+         .translation("millenaire.config.tickGovernor.entityLodFarSleep")
+         .define("entityLodFarSleep", true);
+      this.entityLodMidCombatInterval = builder.comment("Combat canStart scan interval for Mid-distance villagers")
+         .translation("millenaire.config.tickGovernor.entityLodMidCombatInterval")
+         .defineInRange("entityLodMidCombatInterval", 5, 1, 40);
+      this.pathMaxSearchMs = builder.comment("Hard wall-clock abort for entity A* path searches (ms)")
+         .translation("millenaire.config.tickGovernor.pathMaxSearchMs")
+         .defineInRange("pathMaxSearchMs", 2, 1, 25);
+      this.pathNodeMultiplier = builder.comment("MillPathNavigation node budget multiplier (was 8)")
+         .translation("millenaire.config.tickGovernor.pathNodeMultiplier")
+         .defineInRange("pathNodeMultiplier", 2, 1, 8);
+      this.pathMaxStartsPerTick = builder.comment(
+            "Max new entity path searches started per server tick globally (PathRequestQueue)"
+         )
+         .translation("millenaire.config.tickGovernor.pathMaxStartsPerTick")
+         .defineInRange("pathMaxStartsPerTick", 2, 1, 32);
+      this.tickGlobalBudgetMs = builder.comment("Global Millenaire Post-tick soft ceiling (ms); includes WORLDGEN reserve")
+         .translation("millenaire.config.tickGovernor.globalBudgetMs")
+         .defineInRange("globalBudgetMs", 12, 4, 50);
+      this.tickPhaseApplyMs = builder.comment("APPLY phase quota (ms)")
+         .translation("millenaire.config.tickGovernor.phaseApplyMs")
+         .defineInRange("phaseApplyMs", 2, 1, 20);
+      this.tickPhaseVillageNearMs = builder.comment("VILLAGE_NEAR phase quota (ms)")
+         .translation("millenaire.config.tickGovernor.phaseVillageNearMs")
+         .defineInRange("phaseVillageNearMs", 4, 1, 30);
+      this.tickPhaseVillageMidMs = builder.comment("VILLAGE_MID phase quota (ms)")
+         .translation("millenaire.config.tickGovernor.phaseVillageMidMs")
+         .defineInRange("phaseVillageMidMs", 2, 1, 20);
+      this.tickPhaseAiSupportMs = builder.comment("AI_SUPPORT phase quota (ms)")
+         .translation("millenaire.config.tickGovernor.phaseAiSupportMs")
+         .defineInRange("phaseAiSupportMs", 1, 1, 20);
+      this.tickPhaseCivMs = builder.comment("CIV_FACTION phase quota (ms)")
+         .translation("millenaire.config.tickGovernor.phaseCivMs")
+         .defineInRange("phaseCivMs", 2, 1, 20);
+      this.tickPhaseWorldgenMs = builder.comment("WORLDGEN reserved phase quota (ms); earlier phases cannot consume this")
+         .translation("millenaire.config.tickGovernor.phaseWorldgenMs")
+         .defineInRange("phaseWorldgenMs", 2, 1, 20);
+      this.tickPhaseHighwayMs = builder.comment("HIGHWAY reserved phase quota (ms)")
+         .translation("millenaire.config.tickGovernor.phaseHighwayMs")
+         .defineInRange("phaseHighwayMs", 1, 1, 20);
+      this.tickPhaseTailMs = builder.comment("BOSS_QUEST_MAP / TAIL phase quota (ms)")
+         .translation("millenaire.config.tickGovernor.phaseTailMs")
+         .defineInRange("phaseTailMs", 1, 1, 20);
+      this.farBackgroundTickInterval = builder.comment(
+            "Ticks between backgroundTick for inactive/Far villages (raid-active always runs)"
+         )
+         .translation("millenaire.config.tickGovernor.farBackgroundTickInterval")
+         .defineInRange("farBackgroundTickInterval", 20, 1, 200);
+      builder.pop();
+
+      builder.comment(
+            new String[]{
+               "World Boss Events — default cadence is every N Minecraft days (world time).",
+               "DAYS mode: sleep//time set advances the calendar; still requires an eligible online player to fire.",
+               "ACTIVE_PLAYTIME mode: legacy tick counter while eligible players are online.",
+               "quietSpawn skips announce chat/sound/particles; aerial descent still runs.",
                "Disabling stops new events; SavedData is retained. Active-boss policy is explicit."
             }
          )
@@ -1043,10 +1229,19 @@ public final class MillenaireServerConfig {
       this.worldBossEventsEnabled = builder.comment("Master switch for world boss events")
          .translation("millenaire.config.worldBossEvents.enabled")
          .define("enabled", true);
-      this.worldBossIntervalMinTicks = builder.comment("Minimum active ticks between events (72000 ≈ 60 min at 20 TPS)")
+      this.worldBossCadenceMode = builder.comment("DAYS (default) or ACTIVE_PLAYTIME")
+         .translation("millenaire.config.worldBossEvents.cadenceMode")
+         .define("cadenceMode", "DAYS");
+      this.worldBossIntervalDays = builder.comment("Minecraft days between events when cadenceMode=DAYS")
+         .translation("millenaire.config.worldBossEvents.intervalDays")
+         .defineInRange("intervalDays", 5, 1, 365);
+      this.worldBossQuietSpawn = builder.comment("Skip announce/arrive chat+FX; spawn high and descend only")
+         .translation("millenaire.config.worldBossEvents.quietSpawn")
+         .define("quietSpawn", true);
+      this.worldBossIntervalMinTicks = builder.comment("ACTIVE_PLAYTIME only: minimum active ticks between events")
          .translation("millenaire.config.worldBossEvents.intervalMinTicks")
          .defineInRange("intervalMinTicks", 72000, 1200, 1728000);
-      this.worldBossIntervalMaxTicks = builder.comment("Maximum active ticks between events (108000 ≈ 90 min at 20 TPS)")
+      this.worldBossIntervalMaxTicks = builder.comment("ACTIVE_PLAYTIME only: maximum active ticks between events")
          .translation("millenaire.config.worldBossEvents.intervalMaxTicks")
          .defineInRange("intervalMaxTicks", 108000, 1200, 1728000);
       this.worldBossAllowedDimensions = builder.comment("Comma-separated dimension ids allowed as event anchors/spawns")

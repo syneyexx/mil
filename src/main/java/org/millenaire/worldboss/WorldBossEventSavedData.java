@@ -17,12 +17,16 @@ import net.minecraft.world.level.saveddata.SavedData.Factory;
 
 public final class WorldBossEventSavedData extends SavedData {
    private static final String DATA_NAME = "millenaire_world_boss_events";
-   public static final int CURRENT_VERSION = 1;
+   public static final int CURRENT_VERSION = 2;
    private static final int RECENT_PLAYER_HISTORY = 8;
 
+   /** Legacy active-playtime fields (kept for ACTIVE_PLAYTIME cadence / migration). */
    private int elapsedActiveTicks;
    private int nextIntervalTicks;
    private boolean intervalChosen;
+   /** Day-cadence: next overworld day index when an event may start. -1 = unset. */
+   private long nextDueDayIndex = -1L;
+   private boolean dayCadenceChosen;
    @Nullable
    private ActiveWorldBossEvent active;
    @Nullable
@@ -54,6 +58,11 @@ public final class WorldBossEventSavedData extends SavedData {
       this.setDirty();
    }
 
+   /** Updates elapsed without marking SavedData dirty (persist on due / periodic flush). */
+   public void setElapsedActiveTicksSoft(int elapsedActiveTicks) {
+      this.elapsedActiveTicks = Math.max(0, elapsedActiveTicks);
+   }
+
    public int nextIntervalTicks() {
       return this.nextIntervalTicks;
    }
@@ -66,6 +75,26 @@ public final class WorldBossEventSavedData extends SavedData {
 
    public boolean intervalChosen() {
       return this.intervalChosen;
+   }
+
+   public long nextDueDayIndex() {
+      return this.nextDueDayIndex;
+   }
+
+   public void setNextDueDayIndex(long nextDueDayIndex) {
+      this.nextDueDayIndex = Math.max(0L, nextDueDayIndex);
+      this.dayCadenceChosen = true;
+      this.setDirty();
+   }
+
+   public boolean dayCadenceChosen() {
+      return this.dayCadenceChosen && this.nextDueDayIndex >= 0L;
+   }
+
+   public void clearDayCadence() {
+      this.nextDueDayIndex = -1L;
+      this.dayCadenceChosen = false;
+      this.setDirty();
    }
 
    @Nullable
@@ -145,6 +174,8 @@ public final class WorldBossEventSavedData extends SavedData {
       tag.putInt("elapsedActiveTicks", this.elapsedActiveTicks);
       tag.putInt("nextIntervalTicks", this.nextIntervalTicks);
       tag.putBoolean("intervalChosen", this.intervalChosen);
+      tag.putLong("nextDueDayIndex", this.nextDueDayIndex);
+      tag.putBoolean("dayCadenceChosen", this.dayCadenceChosen);
       if (this.active != null) {
          tag.put("active", this.active.save(registries));
       }
@@ -165,9 +196,18 @@ public final class WorldBossEventSavedData extends SavedData {
 
    private static WorldBossEventSavedData load(CompoundTag tag) {
       WorldBossEventSavedData data = new WorldBossEventSavedData();
+      int version = tag.contains("version") ? tag.getInt("version") : 1;
       data.elapsedActiveTicks = tag.getInt("elapsedActiveTicks");
       data.nextIntervalTicks = Math.max(1, tag.getInt("nextIntervalTicks"));
       data.intervalChosen = tag.getBoolean("intervalChosen") || tag.contains("nextIntervalTicks");
+      if (tag.contains("nextDueDayIndex")) {
+         data.nextDueDayIndex = tag.getLong("nextDueDayIndex");
+         data.dayCadenceChosen = tag.getBoolean("dayCadenceChosen") || data.nextDueDayIndex >= 0L;
+      } else if (version < 2 && data.intervalChosen) {
+         // Migrate on first day-mode ensure in planner (needs current dayTime).
+         data.dayCadenceChosen = false;
+         data.nextDueDayIndex = -1L;
+      }
       if (tag.contains("active")) {
          data.active = ActiveWorldBossEvent.load(tag.getCompound("active"));
       }

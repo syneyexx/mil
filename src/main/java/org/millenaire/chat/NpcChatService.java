@@ -274,19 +274,29 @@ public final class NpcChatService {
       mind.addTurn(player.getUUID(), NpcTurn.ROLE_PLAYER, sanitized, gameTime);
       data.markChanged();
 
+      if (target.entity() instanceof MillVillager companionVillager && companionVillager.isCompanion()) {
+         org.millenaire.companion.CompanionBondSavedData bonds =
+            org.millenaire.companion.CompanionBondSavedData.get(level);
+         org.millenaire.companion.CompanionBond bond = bonds.get(player.getUUID());
+         if (bond != null
+            && companionVillager.getUUID().equals(bond.companionEntityId())
+            && !bond.dismissed()) {
+            org.millenaire.companion.CompanionBrain.onPlayerChat(level, player, companionVillager, bond, sanitized);
+         }
+      }
+
       PacketDistributor.sendToPlayer(player, new NpcChatLinePayload(entityId, SPEAKER_PLAYER, sanitized, false), new CustomPacketPayload[0]);
 
       NpcDialogueContext ctx = target.adapter().buildContext(player, target.entity(), mind, data, sanitized, languageCode);
 
       if (!NpcModelClient.isConfigured()) {
-         String why = NpcModelClient.notConfiguredMessageKey();
-         if (why != null) {
-            sendSystemLine(player, entityId, why, false);
-         }
-         String fallback = ctx.fallbackLine().isBlank()
-            ? Component.translatable("gui.millenaire.npcchat.no_model").getString()
-            : ctx.fallbackLine();
-         deliverNpcLine(player, target, session, mind, data, fallback, null, sanitized, false);
+         Component why = NpcModelClient.notConfiguredComponent();
+         sendSystemLineText(
+            player,
+            entityId,
+            why != null ? why.getString() : NpcModelClient.lmStudioOnlyComponent().getString(),
+            false
+         );
          return;
       }
 
@@ -300,7 +310,7 @@ public final class NpcChatService {
 
       List<String> rumorLines = buildRumorLinesFor(mind, data, target);
       String systemPrompt = ctx.systemPromptOverride().isBlank()
-         ? (target.adapter().defaultSystemPrompt().isBlank() ? NpcPromptBuilder.SYSTEM_PROMPT : target.adapter().defaultSystemPrompt())
+         ? (target.adapter().defaultSystemPrompt().isBlank() ? NpcPromptBuilder.CHAT_SYSTEM_PROMPT : target.adapter().defaultSystemPrompt())
          : ctx.systemPromptOverride();
       String userPrompt = NpcPromptBuilder.buildUserPromptFromContext(ctx, mind, player.getUUID(), languageCode, sanitized, rumorLines);
 
@@ -343,18 +353,8 @@ public final class NpcChatService {
                NpcMindSavedData mindData = NpcMindSavedData.get(online.serverLevel());
                NpcMind livingMind = mindData.getOrCreateMind(targetUuid);
                if (reply == null || reply.isEmpty()) {
-                  String resolveFail = NpcModelClient.resolveFailureMessageKey();
-                  if (resolveFail != null) {
-                     current.endRequest(capturedGeneration);
-                     sendSystemLine(online, capturedEntityId, resolveFail, false);
-                     return;
-                  }
-                  NpcDialogueContext failCtx = livingTarget.adapter().buildContext(online, livingTarget.entity(), livingMind, mindData, capturedSpeech, languageCode);
-                  String fallback = failCtx.fallbackLine().isBlank()
-                     ? Component.translatable("gui.millenaire.npcchat.no_model").getString()
-                     : failCtx.fallbackLine();
-                  deliverNpcLine(online, livingTarget, current, livingMind, mindData, fallback, null, capturedSpeech, true);
-                  sendSystemLine(online, capturedEntityId, "gui.millenaire.npcchat.failed", false);
+                  current.endRequest(capturedGeneration);
+                  sendSystemLine(online, capturedEntityId, NpcModelClient.failureMessageKeyOrDefault(), false);
                   return;
                }
                deliverNpcLine(online, livingTarget, current, livingMind, mindData, reply.get().say(), reply.get(), capturedSpeech, true);
@@ -637,7 +637,10 @@ public final class NpcChatService {
    }
 
    private static void sendSystemLine(ServerPlayer player, int entityId, String key, boolean pending) {
-      String text = Component.translatable(key).getString();
+      sendSystemLineText(player, entityId, Component.translatable(key).getString(), pending);
+   }
+
+   private static void sendSystemLineText(ServerPlayer player, int entityId, String text, boolean pending) {
       PacketDistributor.sendToPlayer(player, new NpcChatLinePayload(entityId, SPEAKER_SYSTEM, text, pending), new CustomPacketPayload[0]);
    }
 

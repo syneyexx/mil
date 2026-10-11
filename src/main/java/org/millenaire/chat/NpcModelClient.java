@@ -18,24 +18,26 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
+import net.minecraft.network.chat.Component;
 import org.millenaire.config.MillenaireServerConfig;
 import org.slf4j.Logger;
 
 /**
- * OpenAI-compatible chat completions client. Never blocks the server thread.
+ * LM Studio chat-completions client (OpenAI-compatible local HTTP). Never blocks the server thread.
  * Concurrency uses an in-flight counter so live config changes cannot grant extra permits mid-flight.
- * LM Studio model ids are resolved via {@link NpcModelResolver} / {@link LmStudioModelDiscovery}.
  */
 public final class NpcModelClient {
    private static final Logger LOGGER = LogUtils.getLogger();
    private static final Gson GSON = new Gson();
    private static final HttpClient CLIENT = HttpClient.newBuilder()
-      .connectTimeout(Duration.ofSeconds(4L))
+      .connectTimeout(Duration.ofSeconds(3L))
       .followRedirects(Redirect.NORMAL)
       .version(Version.HTTP_1_1)
       .build();
    private static final AtomicInteger IN_FLIGHT = new AtomicInteger(0);
    private static final Object LOCK = new Object();
+   /** Default max tokens for interactive chat turns (keep replies short/fast). */
+   public static final int CHAT_MAX_TOKENS = 100;
 
    private NpcModelClient() {
    }
@@ -48,12 +50,7 @@ public final class NpcModelClient {
       if (baseUrl == null || baseUrl.isBlank()) {
          return false;
       }
-      if (NpcModelResolver.usesLmStudio()) {
-         // Local LM Studio does not require a non-empty API key for normal use.
-         return true;
-      }
-      // provider=auto with a non-LM URL still needs key+model; port 1234 is treated as LM Studio.
-      return resolveApiKey() != null && hasManualModelConfigured();
+      return NpcModelResolver.usesLmStudio();
    }
 
    /** Human-readable reason when {@link #isConfigured()} is false; null when configured. */
@@ -66,21 +63,29 @@ public final class NpcModelClient {
       if (baseUrl == null || baseUrl.isBlank()) {
          return "gui.millenaire.npcchat.missing_base_url";
       }
-      if (NpcModelResolver.usesLmStudio()) {
-         return null;
-      }
-      if (resolveApiKey() == null) {
-         return "gui.millenaire.npcchat.missing_api_key";
-      }
-      if (!hasManualModelConfigured()) {
-         return "gui.millenaire.npcchat.missing_manual_model";
+      if (!NpcModelResolver.usesLmStudio()) {
+         return "gui.millenaire.npcchat.lmstudio.only";
       }
       return null;
    }
 
-   private static boolean hasManualModelConfigured() {
-      String model = MillenaireServerConfig.SERVER.npcChatModel.get();
-      return model != null && !model.isBlank();
+   /** Localized system line when {@link #isConfigured()} is false; null when configured. */
+   @Nullable
+   public static Component notConfiguredComponent() {
+      String key = notConfiguredMessageKey();
+      if (key == null) {
+         return null;
+      }
+      if ("gui.millenaire.npcchat.lmstudio.only".equals(key)) {
+         return lmStudioOnlyComponent();
+      }
+      return Component.translatable(key);
+   }
+
+   /** {@code gui.millenaire.npcchat.lmstudio.only} including the rejected baseUrl. */
+   public static Component lmStudioOnlyComponent() {
+      String baseUrl = MillenaireServerConfig.SERVER.npcChatBaseUrl.get();
+      return Component.translatable("gui.millenaire.npcchat.lmstudio.only", baseUrl == null ? "" : baseUrl);
    }
 
    @Nullable
@@ -89,24 +94,17 @@ public final class NpcModelClient {
       if (key != null && !key.isBlank()) {
          return key.trim();
       }
-      String env = System.getenv("MILLENAIRE_NPC_API_KEY");
-      if (env != null && !env.isBlank()) {
-         return env.trim();
+      String lmEnv = System.getenv("LM_API_TOKEN");
+      if (lmEnv != null && !lmEnv.isBlank()) {
+         return lmEnv.trim();
       }
-      if (NpcModelResolver.usesLmStudio()) {
-         String lmEnv = System.getenv("LM_API_TOKEN");
-         if (lmEnv != null && !lmEnv.isBlank()) {
-            return lmEnv.trim();
-         }
-         // LM Studio local default: no token required.
-         return "";
-      }
-      return null;
+      // LM Studio local default: no token required.
+      return "";
    }
 
    /** API key for LM Studio discovery; blank string means "send no Authorization unless configured". */
    @Nullable
-   static String resolveApiKeyAllowingBlankForLmStudio() {
+   public static String resolveApiKeyAllowingBlankForLmStudio() {
       return resolveApiKey();
    }
 
@@ -137,18 +135,19 @@ public final class NpcModelClient {
    }
 
    public static CompletableFuture<Optional<NpcModelReply>> sendAsync(String systemPrompt, String userPrompt, UUID targetId) {
-      return sendRawAsync(systemPrompt, userPrompt, targetId, 260).thenApply(raw -> raw.flatMap(NpcReplyParser::parse));
+      return sendRawAsync(systemPrompt, userPrompt, targetId, CHAT_MAX_TOKENS).thenApply(raw -> raw.flatMap(NpcReplyParser::parse));
    }
 
    /**
     * Resolves the model (including LM Studio auto-detect), then performs the HTTP call.
     * Returns empty when resolution or the provider fails. Callers should use
-    * {@link #resolveFailureMessageKey()} after an empty result when appropriate.
+    * {@link #resolveFailureMessageKey()} / {@link #httpFailureMessageKey()} after an empty result.
     */
    public static CompletableFuture<Optional<String>> sendRawAsync(String systemPrompt, String userPrompt, UUID targetId, int maxTokens) {
       return NpcModelResolver.resolveAsync().thenCompose(resolution -> {
          if (!resolution.ok()) {
             lastResolveFailureKey = resolution.messageKey();
+            lastHttpFailureKey = null;
             LOGGER.warn("NPC chat model resolution failed for {}: {}", targetId, resolution.status());
             return CompletableFuture.completedFuture(Optional.empty());
          }
@@ -159,11 +158,28 @@ public final class NpcModelClient {
    }
 
    private static volatile String lastResolveFailureKey;
+   private static volatile String lastHttpFailureKey;
    private static volatile String lastResolvedModelLabel;
 
    @Nullable
    public static String resolveFailureMessageKey() {
       return lastResolveFailureKey;
+   }
+
+   @Nullable
+   public static String httpFailureMessageKey() {
+      return lastHttpFailureKey;
+   }
+
+   /** Prefer resolve failure, then HTTP failure, then generic failed. */
+   public static String failureMessageKeyOrDefault() {
+      if (lastResolveFailureKey != null) {
+         return lastResolveFailureKey;
+      }
+      if (lastHttpFailureKey != null) {
+         return lastHttpFailureKey;
+      }
+      return "gui.millenaire.npcchat.failed";
    }
 
    @Nullable
@@ -176,21 +192,21 @@ public final class NpcModelClient {
    ) {
       String apiKey = resolveApiKey();
       if (apiKey == null) {
+         lastHttpFailureKey = "gui.millenaire.npcchat.lmstudio.unreachable";
          return CompletableFuture.completedFuture(Optional.empty());
       }
-      String baseUrl = MillenaireServerConfig.SERVER.npcChatBaseUrl.get();
-      if (baseUrl == null || baseUrl.isBlank()) {
+      String baseUrl = normalizeCompletionsBaseUrl(MillenaireServerConfig.SERVER.npcChatBaseUrl.get());
+      if (baseUrl == null) {
+         lastHttpFailureKey = "gui.millenaire.npcchat.missing_base_url";
          return CompletableFuture.completedFuture(Optional.empty());
-      }
-      while (baseUrl.endsWith("/")) {
-         baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
       }
       int timeout = MillenaireServerConfig.SERVER.npcChatTimeoutSeconds.getAsInt();
 
       JsonObject body = new JsonObject();
       body.addProperty("model", model);
-      body.addProperty("temperature", 0.8);
+      body.addProperty("temperature", 0.7);
       body.addProperty("max_tokens", Math.max(32, Math.min(maxTokens, 800)));
+      body.addProperty("stream", false);
       JsonArray messages = new JsonArray();
       JsonObject system = new JsonObject();
       system.addProperty("role", "system");
@@ -214,6 +230,7 @@ public final class NpcModelClient {
          }
       } catch (Exception e) {
          LOGGER.warn("NPC chat request build failed for {}: {}", targetId, e.toString());
+         lastHttpFailureKey = "gui.millenaire.npcchat.lmstudio.unreachable";
          return CompletableFuture.completedFuture(Optional.empty());
       }
 
@@ -222,6 +239,7 @@ public final class NpcModelClient {
       return CLIENT.sendAsync(request, BodyHandlers.ofString()).handle((response, error) -> {
          if (error != null) {
             LOGGER.warn("NPC chat request failed for {}: {}", targetId, error.toString());
+            lastHttpFailureKey = "gui.millenaire.npcchat.lmstudio.unreachable";
             return Optional.empty();
          }
          int status = response.statusCode();
@@ -231,15 +249,46 @@ public final class NpcModelClient {
                snippet = snippet.substring(0, 240);
             }
             LOGGER.warn("NPC chat non-2xx for {}: {} body={}", targetId, status, snippet);
+            lastHttpFailureKey = "gui.millenaire.npcchat.lmstudio.http_error";
             return Optional.empty();
          }
          String content = extractContent(response.body());
          if (content == null || content.isBlank()) {
             LOGGER.warn("NPC chat empty body for {}", targetId);
+            lastHttpFailureKey = "gui.millenaire.npcchat.lmstudio.empty_reply";
             return Optional.empty();
          }
+         lastHttpFailureKey = null;
          return Optional.of(content);
       });
+   }
+
+   /**
+    * Ensures the OpenAI-compat base ends with {@code /v1} so completions hit {@code /v1/chat/completions}.
+    */
+   @Nullable
+   public static String normalizeCompletionsBaseUrl(@Nullable String raw) {
+      if (raw == null || raw.isBlank()) {
+         return null;
+      }
+      String value = raw.trim();
+      while (value.endsWith("/")) {
+         value = value.substring(0, value.length() - 1);
+      }
+      if (value.endsWith("/v1")) {
+         return value;
+      }
+      // Strip accidental /chat/completions suffix if pasted from docs.
+      if (value.endsWith("/chat/completions")) {
+         value = value.substring(0, value.length() - "/chat/completions".length());
+         while (value.endsWith("/")) {
+            value = value.substring(0, value.length() - 1);
+         }
+         if (value.endsWith("/v1")) {
+            return value;
+         }
+      }
+      return value + "/v1";
    }
 
    @Nullable

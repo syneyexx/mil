@@ -142,7 +142,7 @@ public final class MillenaireVillagerAdapter implements NpcDialogueAdapter {
          .hiredByPlayer(persona.hiredByPlayer())
          .communicationInstructions(instructions)
          .fallbackLine(fallbackLine(villager, language))
-         .systemPromptOverride(NpcPromptBuilder.SYSTEM_PROMPT)
+         .systemPromptOverride(NpcPromptBuilder.CHAT_SYSTEM_PROMPT)
          .build();
    }
 
@@ -165,7 +165,7 @@ public final class MillenaireVillagerAdapter implements NpcDialogueAdapter {
 
    @Override
    public String defaultSystemPrompt() {
-      return NpcPromptBuilder.SYSTEM_PROMPT;
+      return NpcPromptBuilder.CHAT_SYSTEM_PROMPT;
    }
 
    private static String fallbackLine(MillVillager villager, String languageCode) {
