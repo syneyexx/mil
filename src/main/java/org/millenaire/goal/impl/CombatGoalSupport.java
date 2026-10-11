@@ -20,12 +20,15 @@ final class CombatGoalSupport {
          return false;
       }
 
-      if (!(v.getMainHandItem().getItem() instanceof BowItem)) {
+      boolean hasBow = v.getMainHandItem().getItem() instanceof BowItem;
+      boolean hasGun = org.millenaire.compat.tacz.TaczWeaponCompat.isGun(v.getMainHandItem());
+      if (!hasBow && !hasGun) {
          return false;
       }
 
       double d = Math.sqrt(distSq);
-      return d > 5.0 && d < 20.0;
+      double max = hasGun ? 32.0 : 20.0;
+      return d > 5.0 && d < max;
    }
 
    static boolean tickCombat(

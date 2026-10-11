@@ -51,7 +51,9 @@
   ],
   "spawn_weight": 0,
   "initial_inventory": {
-    "minecraft:leather_helmet": 1
+    "minecraft:leather_helmet": 1,
+    "tacz:modern_kinetic_gun": 1,
+    "tacz:ammo_box": 1
   },
   "gender": "male",
   "first_name_list": "men_names",

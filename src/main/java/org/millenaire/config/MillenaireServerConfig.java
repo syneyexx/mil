@@ -223,16 +223,16 @@ public final class MillenaireServerConfig {
             }
          )
          .translation("millenaire.config.generateHamlets")
-         .define("generateHamlets", false);
+         .define("generateHamlets", true);
       this.minVillageDistance = builder.comment("Minimum distance between two villages (blocks)")
          .translation("millenaire.config.minVillageDistance")
-         .defineInRange("minVillageDistance", 500, 300, 1000);
+         .defineInRange("minVillageDistance", 350, 300, 1000);
       this.minLoneBuildingDistance = builder.comment("Minimum distance between two lone buildings (blocks)")
          .translation("millenaire.config.minLoneBuildingDistance")
-         .defineInRange("minLoneBuildingDistance", 500, 300, 1000);
+         .defineInRange("minLoneBuildingDistance", 320, 300, 1000);
       this.minVillageLoneBuildingDistance = builder.comment("Minimum distance between a village and a lone building (blocks)")
          .translation("millenaire.config.minVillageLoneBuildingDistance")
-         .defineInRange("minVillageLoneBuildingDistance", 250, 100, 800);
+         .defineInRange("minVillageLoneBuildingDistance", 180, 100, 800);
       this.spawnProtectionRadius = builder.comment(
             "Protected area around world spawn where nothing generates (blocks). Default 0 so settlements may form near spawn."
          )
@@ -277,10 +277,10 @@ public final class MillenaireServerConfig {
          .defineInRange("worldgenRegionSizeChunks", 32, 8, 128);
       this.worldgenSettlementDensity = builder.comment("Probability a region attempts a full village (0-1). Slightly higher for dense biome packs.")
          .translation("millenaire.config.worldgenSettlementDensity")
-         .defineInRange("worldgenSettlementDensity", 0.55D, 0.0D, 1.0D);
+         .defineInRange("worldgenSettlementDensity", 0.72D, 0.0D, 1.0D);
       this.worldgenLoneBuildingDensity = builder.comment("Probability a region attempts a lone building when no village is selected (0-1)")
          .translation("millenaire.config.worldgenLoneBuildingDensity")
-         .defineInRange("worldgenLoneBuildingDensity", 0.22D, 0.0D, 1.0D);
+         .defineInRange("worldgenLoneBuildingDensity", 0.40D, 0.0D, 1.0D);
       this.worldgenHamletDensity = builder.comment("Reserved density weight for hamlet satellite planning (0-1)")
          .translation("millenaire.config.worldgenHamletDensity")
          .defineInRange("worldgenHamletDensity", 0.5D, 0.0D, 1.0D);
@@ -288,7 +288,7 @@ public final class MillenaireServerConfig {
             "Minimum spacing between planned settlements (blocks). Effective spacing is max(this, minVillageDistance)."
          )
          .translation("millenaire.config.worldgenMinimumSettlementSpacing")
-         .defineInRange("worldgenMinimumSettlementSpacing", 500, 200, 2000);
+         .defineInRange("worldgenMinimumSettlementSpacing", 350, 200, 2000);
       this.worldgenProtectedSpawnRadius = builder.comment(
             "Additional protected radius around world spawn (blocks). Effective protection is max(this, spawnProtectionRadius). Default 0."
          )
@@ -307,7 +307,7 @@ public final class MillenaireServerConfig {
          .define("starterVillageType", "koninkrijk");
       this.starterSearchRadius = builder.comment("Max search radius from the initial shared spawn for the starter settlement (blocks)")
          .translation("millenaire.config.starterSearchRadius")
-         .defineInRange("starterSearchRadius", 384, 64, 1024);
+         .defineInRange("starterSearchRadius", 512, 64, 1024);
       this.nearSpawnBoostRadius = builder.comment(
             "Within this radius of world spawn, Phase 4 prioritizes finishing already-loaded settlement footprints (no force-load)."
          )
@@ -567,9 +567,9 @@ public final class MillenaireServerConfig {
       this.banditRaidRadius = builder.comment("TODO: Radius for bandit raids (blocks). 0 = disabled.")
          .translation("millenaire.config.banditRaidRadius")
          .defineInRange("banditRaidRadius", 1500, 0, 2000);
-      this.raidingRate = builder.comment("TODO: % chance per night of a raid attempt. 0 = disabled.")
+      this.raidingRate = builder.comment("% chance per night of a raid attempt. 0 = disabled.")
          .translation("millenaire.config.raidingRate")
-         .defineInRange("raidingRate", 20, 0, 100);
+         .defineInRange("raidingRate", 35, 0, 100);
       builder.pop();
       builder.comment("Automatic conversion of legacy 1.12 content packs dropped into millenaire-custom/").push("legacy");
       this.legacyAutoConvert = builder.comment(

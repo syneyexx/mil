@@ -1463,6 +1463,20 @@
       "selling_price": 100,
       "category": "misc",
       "target_quantity": 1
+    },
+    {
+      "id": "tacz_modern_kinetic_gun",
+      "item": "tacz:modern_kinetic_gun",
+      "selling_price": 220,
+      "category": "weapons",
+      "target_quantity": 1
+    },
+    {
+      "id": "tacz_ak47",
+      "item": "tacz:ak47",
+      "selling_price": 280,
+      "category": "weapons",
+      "target_quantity": 1
     }
   ]
 }

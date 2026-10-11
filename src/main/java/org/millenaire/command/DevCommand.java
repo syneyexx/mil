@@ -45,6 +45,7 @@ public final class DevCommand {
       ComputeCommand.registerUnder(dev);
       BiomeCoverageCommand.registerUnder(dev);
       BountyHunterDevCommand.registerUnder(dev);
+      StarterSettlementCommand.registerUnder(dev);
       dispatcher.register((LiteralArgumentBuilder)Commands.literal("millenaire").then(dev));
    }
 }

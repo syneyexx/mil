@@ -3,7 +3,9 @@
   "biome_tags": [
     "#c:is_plains",
     "#millenaire:is_meadow",
-    "#c:is_birch_forest"
+    "#c:is_birch_forest",
+    "#c:is_forest",
+    "#c:is_hill"
   ],
   "name": "Koninkrijk",
   "weight": 8,

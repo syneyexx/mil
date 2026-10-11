@@ -72,6 +72,19 @@ public final class StarterSettlementSavedData extends SavedData {
       this.setDirty();
    }
 
+   /**
+    * Clears sticky failure / incomplete state so {@link StarterSettlementService} can try again.
+    * Does not remove an already-spawned village.
+    */
+   public void prepareRetry() {
+      this.gaveUp = false;
+      this.attempts = 0;
+      this.placed = false;
+      this.villageId = null;
+      this.centre = null;
+      this.setDirty();
+   }
+
    @Nullable
    public UUID villageId() {
       return this.villageId;

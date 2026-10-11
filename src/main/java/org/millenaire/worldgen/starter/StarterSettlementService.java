@@ -2,12 +2,15 @@ package org.millenaire.worldgen.starter;
 
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.levelgen.Heightmap.Types;
 import org.millenaire.Millenaire;
+import org.millenaire.compat.ClimateBiomeFallback;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillageType;
@@ -23,8 +26,8 @@ import org.slf4j.Logger;
  */
 public final class StarterSettlementService {
    private static final Logger LOGGER = LogUtils.getLogger();
-   private static final int MAX_ATTEMPTS = 40;
-   private static final int SITES_PER_TICK = 8;
+   private static final int MAX_ATTEMPTS = 240;
+   private static final int SITES_PER_TICK = 10;
    private static final int RING_STEP = 16;
 
    private StarterSettlementService() {
@@ -80,7 +83,7 @@ public final class StarterSettlementService {
 
       // Prefer the spawn column first, then expanding rings.
       if (attemptsBefore == 0) {
-         if (tryPlaceAt(level, data, villageType, cultureId, origin)) {
+         if (tryPlaceAt(level, data, villageType, cultureId, origin, true)) {
             return;
          }
          tried++;
@@ -99,7 +102,7 @@ public final class StarterSettlementService {
             BlockPos candidate = new BlockPos(x, y, z);
             tried++;
             data.incrementAttempts();
-            if (tryPlaceAt(level, data, villageType, cultureId, candidate)) {
+            if (tryPlaceAt(level, data, villageType, cultureId, candidate, true)) {
                return;
             }
          }
@@ -115,18 +118,48 @@ public final class StarterSettlementService {
       }
    }
 
+   /**
+    * Clears sticky give-up / incomplete state and immediately retries placement.
+    *
+    * @return true if a retry was armed (or placement succeeded this call)
+    */
+   public static boolean retry(ServerLevel level) {
+      if (level == null || !level.dimension().equals(Level.OVERWORLD)) {
+         return false;
+      }
+      StarterSettlementSavedData data = StarterSettlementSavedData.get(level);
+      ResourceLocation cultureId = starterCultureId();
+      if (hasExistingCultureVillage(level, cultureId)) {
+         data.markSatisfiedExisting();
+         LOGGER.info("[Millenaire] Starter retry skipped — {} village already present", cultureId);
+         return false;
+      }
+      data.prepareRetry();
+      tick(level);
+      return !data.hasGaveUp();
+   }
+
    private static boolean tryPlaceAt(
       ServerLevel level,
       StarterSettlementSavedData data,
       VillageType villageType,
       ResourceLocation cultureId,
-      BlockPos candidate
+      BlockPos candidate,
+      boolean ignoreCultureBiome
    ) {
-      if (!villageType.matchesBiome(level.getBiome(candidate))) {
+      Holder<Biome> biome = level.getBiome(candidate);
+      if (ClimateBiomeFallback.isExcluded(biome)) {
+         LOGGER.debug("[Millenaire] Starter reject {} — excluded biome", candidate.toShortString());
+         return false;
+      }
+      // Starter placement intentionally ignores culture biome tags so spawn is not stuck
+      // when the shared spawn is outside plains/meadow. Natural Gabbers still use biome_tags.
+      if (!ignoreCultureBiome && !villageType.matchesBiome(biome)) {
          return false;
       }
       Component siteError = VillageSpawner.validateSite(level, candidate, villageType);
       if (siteError != null) {
+         LOGGER.debug("[Millenaire] Starter site reject {}: {}", candidate.toShortString(), siteError.getString());
          return false;
       }
       Component failure = VillageSpawner.spawnVillage(level, candidate, villageType, 0);
