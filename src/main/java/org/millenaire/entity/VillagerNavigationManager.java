@@ -498,12 +498,19 @@ public class VillagerNavigationManager implements VillagerNavDriver {
       if (this.asyncPathPending) {
          return true;
       }
-      if (!org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+      if (!org.millenaire.perf.tick.ServerTickGovernor.hasEntityAdmissionTime()) {
+         org.millenaire.perf.tick.ServerTickGovernor.noteEntityAsyncRejectedOldDeadline();
+         return false;
+      }
+      if (!org.millenaire.perf.tick.ServerTickGovernor.tryConsumeCaptureBudget(0L)) {
+         org.millenaire.perf.tick.ServerTickGovernor.noteEntitySyncFallback();
          return false;
       }
       BlockPos from = villager.blockPosition();
+      long captureStart = System.nanoTime();
       org.millenaire.perf.path.NavRegionSnapshot snapshot =
          org.millenaire.perf.path.NavRegionSnapshot.capture(level, from, dest, 24);
+      org.millenaire.perf.tick.ServerTickGovernor.tryConsumeCaptureBudget(System.nanoTime() - captureStart);
       long generation = ++this.asyncPathGeneration;
       this.asyncPathPending = true;
       UUID uuid = villager.getUUID();
@@ -513,8 +520,11 @@ public class VillagerNavigationManager implements VillagerNavDriver {
       });
       if (!submitted) {
          this.asyncPathPending = false;
+         org.millenaire.perf.tick.ServerTickGovernor.noteEntityAsyncQueueFull();
+         org.millenaire.perf.tick.ServerTickGovernor.noteEntitySyncFallback();
          return false;
       }
+      org.millenaire.perf.tick.ServerTickGovernor.noteEntityAsyncAccepted();
       return true;
    }
 

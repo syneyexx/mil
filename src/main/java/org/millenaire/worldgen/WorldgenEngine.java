@@ -133,6 +133,15 @@ public final class WorldgenEngine {
       WorldgenContentSnapshot.clearReady();
    }
 
+   /** Materialization deadline plus the governor phase deadline (when inside the Post window). */
+   private static boolean hasTime() {
+      return MaterializationTickBudget.hasTime() && org.millenaire.perf.tick.ServerTickGovernor.hasTimeIfInPost();
+   }
+
+   private static boolean hasTimeAndOps() {
+      return MaterializationTickBudget.hasOps() && hasTime();
+   }
+
    public static void onServerTick(ServerLevel overworld) {
       if (!isEnabled() || overworld == null) {
          return;
@@ -180,7 +189,7 @@ public final class WorldgenEngine {
       } catch (IllegalStateException e) {
          return;
       }
-      if (boostRadius <= 0 || !MaterializationTickBudget.hasTime()) {
+      if (boostRadius <= 0 || !hasTime()) {
          return;
       }
       var spawn = level.getSharedSpawnPos();
@@ -191,7 +200,7 @@ public final class WorldgenEngine {
       int kicks = 0;
       int maxKicks = Math.max(2, MillenaireServerConfig.SERVER.worldgenPlanningBudget.getAsInt());
       for (SettlementPlan plan : near) {
-         if (kicks >= maxKicks || !MaterializationTickBudget.hasTime()) {
+         if (kicks >= maxKicks || !hasTime()) {
             break;
          }
          if (plan.status().isTerminalFailure() || plan.activated()) {
@@ -347,13 +356,13 @@ public final class WorldgenEngine {
       for (Long packed : plan.reservedChunks()) {
          ChunkPos cp = new ChunkPos(packed);
          if (level.hasChunk(cp.x, cp.z) && !plan.isChunkFullyMaterialized(packed)) {
-            if (!MaterializationTickBudget.hasTimeAndOps()) {
+            if (!hasTimeAndOps()) {
                enqueueMaterialize(level, cp, plan);
                WorldgenPlanningQueue.get().offerMaterializeTouch(plan.region(), cp);
                continue;
             }
             materializeNow(level, cp, plan);
-            if (!MaterializationTickBudget.hasTimeAndOps()) {
+            if (!hasTimeAndOps()) {
                break;
             }
          }
@@ -369,7 +378,7 @@ public final class WorldgenEngine {
          Math.max(2, planBudget)
       );
       for (WorldgenPlanningQueue.Item item : items) {
-         if (!MaterializationTickBudget.hasTime()) {
+         if (!hasTime()) {
             break;
          }
          switch (item.kind()) {
@@ -402,7 +411,7 @@ public final class WorldgenEngine {
                   queue.offerLayout(plan.region(), item.chunkPos());
                   break;
                }
-               if (!MaterializationTickBudget.hasTimeAndOps()) {
+               if (!hasTimeAndOps()) {
                   enqueueMaterialize(level, item.chunkPos(), plan);
                   break;
                }
@@ -449,7 +458,7 @@ public final class WorldgenEngine {
       int limit = MillenaireServerConfig.SERVER.worldgenResumeQueueBudget.getAsInt();
       List<MaterializationResumeQueue.Item> items = store.resumeQueue().peekRoundRobin(limit);
       for (MaterializationResumeQueue.Item item : items) {
-         if (!MaterializationTickBudget.hasTimeAndOps()) {
+         if (!hasTimeAndOps()) {
             break;
          }
          SettlementPlan plan = store.getPlan(item.planId());
@@ -521,7 +530,7 @@ public final class WorldgenEngine {
             activationWatch.remove(plan.planId());
          }
          activationRoundRobin = start + i + 1;
-         if (!MaterializationTickBudget.hasTime()) {
+         if (!hasTime()) {
             break;
          }
       }
@@ -542,7 +551,7 @@ public final class WorldgenEngine {
       }
       MaterializationTickBudget.ensureTick(level.getGameTime());
       progressPlan(level, plan, new ChunkPos(plan.center()));
-      SettlementPlanSavedData.get(level).markDirtyPlan();
+      SettlementPlanSavedData.get(level).markDirtyPlan(plan.planId());
    }
 
    /** Queue a chunk for later materialization (chunk-load safe). */
@@ -556,7 +565,7 @@ public final class WorldgenEngine {
       }
       if (!ColonizationMaterializationGate.allowPhysicalMutation(level, plan)) {
          plan.progressFor(packed).setBlockReason("colonization_unpaid_or_blocked");
-         store.markDirtyPlan();
+         store.markDirtyPlan(plan.planId());
          return;
       }
       store.resumeQueue().offer(plan.planId(), packed);
@@ -575,7 +584,7 @@ public final class WorldgenEngine {
       }
       if (!ColonizationMaterializationGate.allowPhysicalMutation(level, plan)) {
          plan.progressFor(packed).setBlockReason("colonization_unpaid_or_blocked");
-         store.markDirtyPlan();
+         store.markDirtyPlan(plan.planId());
          return;
       }
       store.resumeQueue().offer(plan.planId(), packed);
@@ -583,9 +592,9 @@ public final class WorldgenEngine {
       if (materializedThisTick.contains(dedupeKey)) {
          return;
       }
-      if (!MaterializationTickBudget.hasTimeAndOps()) {
+      if (!hasTimeAndOps()) {
          plan.progressFor(packed).setBlockReason("budget_exhausted");
-         store.markDirtyPlan();
+         store.markDirtyPlan(plan.planId());
          return;
       }
       materializedThisTick.add(dedupeKey);
@@ -605,7 +614,7 @@ public final class WorldgenEngine {
       }
       if (plan.status() != SettlementPlanStatus.PHYSICAL_COMPLETE) {
          plan.forceStatus(SettlementPlanStatus.PHYSICAL_COMPLETE);
-         SettlementPlanSavedData.get(level).markDirtyPlan();
+         SettlementPlanSavedData.get(level).markDirtyPlan(plan.planId());
       }
       watchActivation(plan.planId());
    }

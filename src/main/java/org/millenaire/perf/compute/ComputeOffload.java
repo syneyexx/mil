@@ -6,6 +6,9 @@ import org.millenaire.config.MillenaireServerConfig;
  * Config-backed kill switches for compute offload phases.
  */
 public final class ComputeOffload {
+   /** Max completed results held for server-thread apply; oldest are dropped beyond this. */
+   public static final int MAILBOX_CAPACITY = 512;
+
    private ComputeOffload() {
    }
 

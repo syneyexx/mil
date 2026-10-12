@@ -13,6 +13,7 @@ class MillenaireComputePoolTest {
    @AfterEach
    void tearDown() {
       MillenaireComputePool.shutdown();
+      ComputeMailbox.get().clear();
       ComputeMetrics.reset();
    }
 
@@ -46,5 +47,55 @@ class MillenaireComputePoolTest {
       MillenaireComputePool.shutdown();
       assertFalse(MillenaireComputePool.isRunning());
       assertFalse(MillenaireComputePool.submit(() -> level -> true));
+   }
+
+   @Test
+   void mailboxCapsCompletedQueueAndDropsOldest() {
+      ComputeMailbox mailbox = ComputeMailbox.get();
+      mailbox.clear();
+      int over = 10;
+      for (int i = 0; i < ComputeOffload.MAILBOX_CAPACITY + over; i++) {
+         assertTrue(mailbox.offer(level -> true));
+      }
+      assertEquals(ComputeOffload.MAILBOX_CAPACITY, mailbox.pending());
+      assertEquals(over, ComputeMetrics.RESULTS_DROPPED_FULL.get());
+      assertFalse(mailbox.offer(null));
+      mailbox.clear();
+      assertEquals(0, mailbox.pending());
+   }
+
+   @Test
+   void shutdownAdvancesSessionEpoch() {
+      int before = MillenaireComputePool.sessionEpoch();
+      MillenaireComputePool.start(1);
+      assertTrue(MillenaireComputePool.sessionEpoch() > before);
+   }
+
+   @Test
+   void staleEpochResultIsNotOfferedToMailbox() throws Exception {
+      MillenaireComputePool.start(1);
+      ComputeMailbox.get().clear();
+      CountDownLatch started = new CountDownLatch(1);
+      CountDownLatch release = new CountDownLatch(1);
+      CountDownLatch finished = new CountDownLatch(1);
+      assertTrue(MillenaireComputePool.submit(() -> {
+         started.countDown();
+         try {
+            release.await(3, TimeUnit.SECONDS);
+         } catch (InterruptedException ignored) {
+            // shutdownNow interrupts the worker; the result must still be discarded.
+         }
+         finished.countDown();
+         return level -> true;
+      }));
+      assertTrue(started.await(3, TimeUnit.SECONDS));
+      MillenaireComputePool.shutdown();
+      release.countDown();
+      assertTrue(finished.await(3, TimeUnit.SECONDS));
+      for (int i = 0; i < 40 && ComputeMetrics.RESULTS_DROPPED_EPOCH.get() < 1; i++) {
+         Thread.sleep(25);
+      }
+      assertEquals(0, ComputeMailbox.get().pending());
+      assertEquals(1, ComputeMetrics.RESULTS_DROPPED_EPOCH.get());
    }
 }

@@ -18,6 +18,7 @@ public final class MillenaireComputePool {
    private static final Logger LOGGER = LogUtils.getLogger();
    private static final AtomicInteger THREAD_SEQ = new AtomicInteger();
    private static final int QUEUE_CAPACITY = 256;
+   private static final AtomicInteger SESSION_EPOCH = new AtomicInteger();
 
    @Nullable
    private static volatile ThreadPoolExecutor executor;
@@ -53,9 +54,19 @@ public final class MillenaireComputePool {
       LOGGER.info("[Millenaire] Compute pool started ({} workers, queue={})", threads, QUEUE_CAPACITY);
    }
 
+   /** Current session epoch; results from jobs submitted under an older epoch are discarded. */
+   public static int sessionEpoch() {
+      return SESSION_EPOCH.get();
+   }
+
+   static void advanceEpoch() {
+      SESSION_EPOCH.incrementAndGet();
+   }
+
    public static synchronized void shutdown() {
       ExecutorService pool = executor;
       executor = null;
+      advanceEpoch();
       ComputeMailbox.get().clear();
       if (pool == null) {
          return;
@@ -110,8 +121,9 @@ public final class MillenaireComputePool {
          ComputeMetrics.JOBS_REJECTED.incrementAndGet();
          return false;
       }
+      int epoch = SESSION_EPOCH.get();
       try {
-         pool.execute(() -> runJob(job));
+         pool.execute(() -> runJob(job, epoch));
          ComputeMetrics.JOBS_SUBMITTED.incrementAndGet();
          return true;
       } catch (RejectedExecutionException e) {
@@ -120,13 +132,17 @@ public final class MillenaireComputePool {
       }
    }
 
-   private static void runJob(ComputeJob job) {
+   private static void runJob(ComputeJob job, int epoch) {
       long start = System.nanoTime();
       try {
          ComputeResult result = job.call();
          ComputeMetrics.JOBS_COMPLETED.incrementAndGet();
          if (result != null) {
-            ComputeMailbox.get().offer(result);
+            if (epoch == SESSION_EPOCH.get()) {
+               ComputeMailbox.get().offer(result);
+            } else {
+               ComputeMetrics.RESULTS_DROPPED_EPOCH.incrementAndGet();
+            }
          }
       } catch (Throwable t) {
          ComputeMetrics.JOBS_FAILED.incrementAndGet();

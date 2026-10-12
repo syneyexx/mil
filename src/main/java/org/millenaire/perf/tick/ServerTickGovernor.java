@@ -14,6 +14,9 @@ import org.millenaire.worldgen.materialize.MaterializationTickBudget;
 public final class ServerTickGovernor {
    private static final double EMA_ALPHA = 0.08;
    private static final long IDEAL_TICK_NANOS = 50_000_000L;
+   /** Deferrable Post work keeps only this much once the ideal tick is already spent before Post. */
+   private static final int RECOVERY_GLOBAL_MS = 2;
+   private static final long MIN_ENTITY_ADMISSION_NANOS = 5_000_000L;
 
    /** Immutable config view refreshed on ModConfigEvent / first use. */
    private record ConfigSnapshot(
@@ -103,6 +106,18 @@ public final class ServerTickGovernor {
    private static long entityBudgetGameTime = Long.MIN_VALUE;
    private static int entityGoalPickRemaining;
 
+   // Entity-phase admission (Pre -> Post window). Never read Post's deadlines from the previous tick.
+   private static long entityTickId;
+   private static long entityDeadlineNanos;
+   private static long entityCaptureBudgetNanos;
+   private static long syncPathBudgetNanos;
+   private static long entityAsyncAccepted;
+   private static long entityAsyncRejectedOldDeadline;
+   private static long entityAsyncQueueFull;
+   private static long entityCaptureExhausted;
+   private static long entitySyncFallback;
+   private static boolean postWindowOpen;
+
    private static long globalDeadlineNanos;
    private static long sharedDeadlineNanos;
    private static long phaseDeadlineNanos;
@@ -159,7 +174,91 @@ public final class ServerTickGovernor {
 
    /** Wall-clock mark at {@code ServerTickEvent.Pre} for remaining-tick awareness. */
    public static void markServerTickStart() {
-      serverTickStartNanos = System.nanoTime();
+      long now = System.nanoTime();
+      serverTickStartNanos = now;
+      entityTickId++;
+      ConfigSnapshot cfg = config;
+      long windowNanos = Math.max(MIN_ENTITY_ADMISSION_NANOS, (long)cfg.softMspt() * 750_000L);
+      entityDeadlineNanos = now + windowNanos;
+      long pathBudgetNanos = Math.max(1, pathBudgetMs()) * 1_000_000L;
+      double scale = publishedPressure == TickPressure.HEALTHY ? 1.0 : 0.5;
+      entityCaptureBudgetNanos = (long)(pathBudgetNanos * scale);
+      syncPathBudgetNanos = (long)(pathBudgetNanos * 2L * scale);
+   }
+
+   private static int pathBudgetMs() {
+      try {
+         return MillenaireServerConfig.SERVER.pathMaxSearchMs.getAsInt();
+      } catch (IllegalStateException e) {
+         return 4;
+      }
+   }
+
+   /** Monotonic id of the current Pre->Post entity window (0 before the first Pre). */
+   public static long entityTickId() {
+      return entityTickId;
+   }
+
+   /**
+    * True only while the current tick's entity window (opened at Pre, closed at Post end) still has
+    * admission time. Entity code must use this instead of {@link #hasTime()}, which reflects the
+    * previous tick's Post deadlines.
+    */
+   public static boolean hasEntityAdmissionTime() {
+      if (!enabled()) {
+         return true;
+      }
+      return entityTickId != 0L && System.nanoTime() < entityDeadlineNanos;
+   }
+
+   /** True when the capture budget for this entity window is not yet exhausted. */
+   public static boolean hasCaptureBudget() {
+      return !enabled() || entityCaptureBudgetNanos > 0L;
+   }
+
+   /** Consume capture time; returns false (and counts exhaustion) when no budget was left. */
+   public static boolean tryConsumeCaptureBudget(long nanos) {
+      if (!enabled()) {
+         return true;
+      }
+      if (entityCaptureBudgetNanos <= 0L) {
+         entityCaptureExhausted++;
+         return false;
+      }
+      entityCaptureBudgetNanos -= Math.max(0L, nanos);
+      return true;
+   }
+
+   /** Consume sync fallback path-search time; returns false when the tick's sync allowance is spent. */
+   public static boolean tryConsumeSyncPathBudget(long nanos) {
+      if (!enabled()) {
+         return true;
+      }
+      if (syncPathBudgetNanos <= 0L) {
+         return false;
+      }
+      syncPathBudgetNanos -= Math.max(0L, nanos);
+      return true;
+   }
+
+   public static void noteEntityAsyncAccepted() {
+      entityAsyncAccepted++;
+   }
+
+   public static void noteEntityAsyncRejectedOldDeadline() {
+      entityAsyncRejectedOldDeadline++;
+   }
+
+   public static void noteEntityAsyncQueueFull() {
+      entityAsyncQueueFull++;
+   }
+
+   public static void noteEntityCaptureExhausted() {
+      entityCaptureExhausted++;
+   }
+
+   public static void noteEntitySyncFallback() {
+      entitySyncFallback++;
    }
 
    public static void beginTick(ServerLevel level) {
@@ -179,6 +278,7 @@ public final class ServerTickGovernor {
       }
       if (tickGameTime != gameTime) {
          tickGameTime = gameTime;
+         postWindowOpen = true;
          long now = System.nanoTime();
          lastPhaseNanos = now;
          tickStartNanos = now;
@@ -244,6 +344,10 @@ public final class ServerTickGovernor {
 
       long remainingIdeal = IDEAL_TICK_NANOS - alreadyUsedNanos;
       int remainingMs = (int)Math.max(0L, remainingIdeal / 1_000_000L);
+      if (remainingMs <= 0) {
+         // Ideal tick already spent: deferrable work drops to a small recovery slice, not the full floor.
+         return Math.max(1, Math.min(minMs, RECOVERY_GLOBAL_MS));
+      }
       // Leave a little headroom for vanilla tail / other mods after our Post work.
       int fromRemaining = Math.max(minMs, remainingMs - 2);
       ms = Math.min(ms, fromRemaining);
@@ -256,6 +360,11 @@ public final class ServerTickGovernor {
       return Math.max(minMs, Math.min(configured, ms));
    }
 
+   /** Effective global ms for the given pre-Post spend (test hook for adaptive floor behavior). */
+   static int computeEffectiveGlobalMsForTest(int configured, long alreadyUsedNanos, TickPressure pressure) {
+      return computeEffectiveGlobalMs(configured, alreadyUsedNanos, pressure);
+   }
+
    public static void enter(TickPhase phase) {
       if (phase == null) {
          return;
@@ -264,10 +373,22 @@ public final class ServerTickGovernor {
       phaseNanos[currentPhase.ordinal()] += Math.max(0L, now - lastPhaseNanos);
       lastPhaseNanos = now;
       popProfilerSection();
+      TickPhase previous = currentPhase;
+      long unusedWorldgenNanos = previous == TickPhase.WORLDGEN ? Math.max(0L, phaseDeadlineNanos - now) : 0L;
       currentPhase = phase;
       pushProfilerSection(phase);
       phaseStartNanos = now;
-      phaseDeadlineNanos = phaseQuotaDeadline(phase, now);
+      long deadline = phaseQuotaDeadline(phase, now);
+      if (phase == TickPhase.HIGHWAY && unusedWorldgenNanos > 0L) {
+         // Unused WORLDGEN slice flows to HIGHWAY, still capped by the global deadline.
+         deadline = Math.min(globalDeadlineNanos, deadline + unusedWorldgenNanos);
+      }
+      phaseDeadlineNanos = deadline;
+      if (phase == TickPhase.WORLDGEN || phase == TickPhase.HIGHWAY) {
+         MaterializationTickBudget.setDeadlineNanos(Math.min(globalDeadlineNanos, deadline));
+      } else if (previous == TickPhase.WORLDGEN || previous == TickPhase.HIGHWAY) {
+         MaterializationTickBudget.setDeadlineNanos(globalDeadlineNanos);
+      }
    }
 
    private static void pushProfilerSection(TickPhase phase) {
@@ -338,6 +459,14 @@ public final class ServerTickGovernor {
          return now < globalDeadlineNanos;
       }
       return now < sharedDeadlineNanos;
+   }
+
+   /**
+    * Like {@link #hasTime()} but only constrains work inside the Post window; callers that can also run
+    * from events between ticks (chunk load, commands) keep their own deadline there.
+    */
+   public static boolean hasTimeIfInPost() {
+      return !postWindowOpen || hasTime();
    }
 
    /**
@@ -436,6 +565,8 @@ public final class ServerTickGovernor {
       lastPhaseNanos = now;
       popProfilerSection();
       activeProfiler = null;
+      postWindowOpen = false;
+      entityDeadlineNanos = 0L;
 
       long postSpentNanos = Math.max(0L, now - tickStartNanos);
       double postSpentMs = postSpentNanos / 1_000_000.0;
@@ -515,7 +646,19 @@ public final class ServerTickGovernor {
          .append(String.format("%.1f", postSpentEmaMs))
          .append(' ')
          .append(MaterializationTickBudget.diagnostic())
-         .append(' ')
+         .append(" entityAdm={id=")
+         .append(entityTickId)
+         .append(",async=")
+         .append(entityAsyncAccepted)
+         .append(",oldDl=")
+         .append(entityAsyncRejectedOldDeadline)
+         .append(",qFull=")
+         .append(entityAsyncQueueFull)
+         .append(",capEx=")
+         .append(entityCaptureExhausted)
+         .append(",syncFb=")
+         .append(entitySyncFallback)
+         .append("} ")
          .append(PathRequestQueue.diagnostic())
          .append(' ')
          .append(org.millenaire.perf.sense.CombatSenseCache.diagnostic())
@@ -594,6 +737,12 @@ public final class ServerTickGovernor {
       postSpentEmaMs = 0.0;
       entityBudgetGameTime = Long.MIN_VALUE;
       entityGoalPickRemaining = 0;
+      entityTickId = 0L;
+      entityDeadlineNanos = 0L;
+      entityCaptureBudgetNanos = 0L;
+      syncPathBudgetNanos = 0L;
+      entityAsyncAccepted = entityAsyncRejectedOldDeadline = entityAsyncQueueFull = entityCaptureExhausted = entitySyncFallback = 0L;
+      postWindowOpen = false;
       entityNearAccum = entityMidAccum = entityFarAccum = entityFarSleepAccum = entityGoalPickDeferredAccum = 0;
       entityNearReported = entityMidReported = entityFarReported = entityFarSleepReported = entityGoalPickDeferredReported = 0;
       entityAiNanosAccum = entityAiNanosReported = 0L;

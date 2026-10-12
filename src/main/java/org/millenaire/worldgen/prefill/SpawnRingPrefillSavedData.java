@@ -28,15 +28,19 @@ public final class SpawnRingPrefillSavedData extends SavedData {
       GAVE_UP
    }
 
+   public static final int MAX_REGION_CELL_OFFSET = 8;
+
    private Phase phase = Phase.IDLE;
    private int radiusBlocks;
    private int regionIndex;
+   /** Cursor 0..8 into the current region's 3x3 centre-chunk cells; absent in older saves (defaults to 0). */
+   private int regionCellOffset;
    private int drainTicks;
    @Nullable
    private BlockPos spawnAnchor;
    private final List<Long> regionPacked = new ArrayList<>();
 
-   private SpawnRingPrefillSavedData() {
+   SpawnRingPrefillSavedData() {
    }
 
    public static Factory<SpawnRingPrefillSavedData> factory() {
@@ -76,8 +80,21 @@ public final class SpawnRingPrefillSavedData extends SavedData {
       this.setDirty();
    }
 
+   public int regionCellOffset() {
+      return this.regionCellOffset;
+   }
+
+   public void setRegionCellOffset(int regionCellOffset) {
+      int clamped = Math.max(0, Math.min(MAX_REGION_CELL_OFFSET, regionCellOffset));
+      if (clamped != this.regionCellOffset) {
+         this.regionCellOffset = clamped;
+         this.setDirty();
+      }
+   }
+
    public void incrementRegionIndex() {
       this.regionIndex++;
+      this.regionCellOffset = 0;
       this.setDirty();
    }
 
@@ -110,6 +127,7 @@ public final class SpawnRingPrefillSavedData extends SavedData {
          this.regionPacked.addAll(packed);
       }
       this.regionIndex = 0;
+      this.regionCellOffset = 0;
       this.drainTicks = 0;
       this.setDirty();
    }
@@ -127,6 +145,7 @@ public final class SpawnRingPrefillSavedData extends SavedData {
       this.phase = Phase.IDLE;
       this.radiusBlocks = 0;
       this.regionIndex = 0;
+      this.regionCellOffset = 0;
       this.drainTicks = 0;
       this.spawnAnchor = null;
       this.regionPacked.clear();
@@ -138,6 +157,7 @@ public final class SpawnRingPrefillSavedData extends SavedData {
       tag.putString("phase", this.phase.name());
       tag.putInt("radius", this.radiusBlocks);
       tag.putInt("regionIndex", this.regionIndex);
+      tag.putInt("regionCellOffset", this.regionCellOffset);
       tag.putInt("drainTicks", this.drainTicks);
       if (this.spawnAnchor != null) {
          tag.putLong("spawnAnchor", this.spawnAnchor.asLong());
@@ -152,7 +172,7 @@ public final class SpawnRingPrefillSavedData extends SavedData {
       return tag;
    }
 
-   private static SpawnRingPrefillSavedData load(CompoundTag tag) {
+   static SpawnRingPrefillSavedData load(CompoundTag tag) {
       SpawnRingPrefillSavedData data = new SpawnRingPrefillSavedData();
       try {
          data.phase = Phase.valueOf(tag.getString("phase"));
@@ -161,6 +181,7 @@ public final class SpawnRingPrefillSavedData extends SavedData {
       }
       data.radiusBlocks = tag.getInt("radius");
       data.regionIndex = tag.getInt("regionIndex");
+      data.regionCellOffset = Math.max(0, Math.min(MAX_REGION_CELL_OFFSET, tag.getInt("regionCellOffset")));
       data.drainTicks = tag.getInt("drainTicks");
       if (tag.contains("spawnAnchor")) {
          data.spawnAnchor = BlockPos.of(tag.getLong("spawnAnchor"));

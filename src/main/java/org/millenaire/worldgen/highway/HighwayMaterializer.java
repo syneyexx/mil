@@ -35,6 +35,10 @@ public final class HighwayMaterializer {
    private HighwayMaterializer() {
    }
 
+   private static boolean hasTimeAndOps() {
+      return MaterializationTickBudget.hasTimeAndOps() && org.millenaire.perf.tick.ServerTickGovernor.hasTimeIfInPost();
+   }
+
    public static void tick(ServerLevel level) {
       if (!HighwayDiscoveryService.isEnabled() || level == null) {
          return;
@@ -52,7 +56,7 @@ public final class HighwayMaterializer {
       int start = routes.roundRobinCursor() % ordered.size();
       int processed = 0;
       for (int i = 0; i < ordered.size() && processed < MAX_ROUTES_PER_TICK; i++) {
-         if (!MaterializationTickBudget.hasTimeAndOps()) {
+         if (!hasTimeAndOps()) {
             break;
          }
          HighwayRoute route = ordered.get((start + i) % ordered.size());
@@ -127,7 +131,7 @@ public final class HighwayMaterializer {
       int scanned = 0;
 
       for (int i = route.cursor(); i < route.waypoints().size() && scanned < MAX_CELLS_SCAN; i++) {
-         if (!MaterializationTickBudget.hasTimeAndOps()) {
+         if (!hasTimeAndOps()) {
             route.setStatus(HighwayRoute.Status.PARTIAL);
             route.setBlockReason("budget_exhausted");
             return;

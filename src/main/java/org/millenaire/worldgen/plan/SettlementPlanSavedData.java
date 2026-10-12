@@ -164,6 +164,12 @@ public class SettlementPlanSavedData extends SavedData {
       this.setDirty();
    }
 
+   /**
+    * Invalidates every cached plan NBT. Prefer {@link #markDirtyPlan(UUID)} or {@link #markStoreDirty()}.
+    *
+    * @deprecated re-serializes all plans on the next save; pass the mutated plan id instead
+    */
+   @Deprecated
    public void markDirtyPlan() {
       this.dirtyPlanIds.addAll(this.plansById.keySet());
       this.setDirty();
@@ -173,6 +179,11 @@ public class SettlementPlanSavedData extends SavedData {
       if (planId != null) {
          this.dirtyPlanIds.add(planId);
       }
+      this.setDirty();
+   }
+
+   /** Store-level change (e.g. resume queue) that does not invalidate any cached plan NBT. */
+   public void markStoreDirty() {
       this.setDirty();
    }
 

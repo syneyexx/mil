@@ -37,6 +37,12 @@ public final class SpawnRingPrefillService {
    private static final Logger LOGGER = LogUtils.getLogger();
    private static final int MAX_DRAIN_TICKS = 20 * 60 * 15; // 15 minutes wall-ish at 20 tps
    private static final int CENTRE_CHUNK_RING = 1; // 3x3 around region centre
+   private static final int CENTRE_CELL_SIDE = CENTRE_CHUNK_RING * 2 + 1;
+   private static final int CENTRE_CELL_COUNT = CENTRE_CELL_SIDE * CENTRE_CELL_SIDE;
+   /** Max new chunk loads/tickets per ensureFootprintLoaded call. */
+   private static final int MAX_FOOTPRINT_CHUNKS_PER_CALL = 8;
+   /** Cap on force-load tickets held across all prefill plans. */
+   private static final int MAX_HELD_TICKETS = 256;
 
    /** planId -> chunks currently force-loaded for prefill. */
    private static final Map<UUID, Set<ChunkPos>> HELD_TICKETS = new HashMap<>();
@@ -45,6 +51,8 @@ public final class SpawnRingPrefillService {
    private static long ringSetDataIdentity = Long.MIN_VALUE;
    /** Throttle ensureFootprintLoaded per plan (every 20 drain ticks). */
    private static final Map<UUID, Integer> LAST_FOOTPRINT_DRAIN_TICK = new HashMap<>();
+   /** planId -> next index into the plan's ordered footprint chunk list. */
+   private static final Map<UUID, Integer> FOOTPRINT_CURSOR = new HashMap<>();
 
    private SpawnRingPrefillService() {
    }
@@ -54,6 +62,7 @@ public final class SpawnRingPrefillService {
       RING_REGION_SET.clear();
       ringSetDataIdentity = Long.MIN_VALUE;
       LAST_FOOTPRINT_DRAIN_TICK.clear();
+      FOOTPRINT_CURSOR.clear();
    }
 
    public static void onWorldReady(ServerLevel level) {
@@ -224,25 +233,34 @@ public final class SpawnRingPrefillService {
          return;
       }
       int generated = 0;
-      while (data.regionIndex() < data.regionCount() && generated < budget) {
+      while (data.regionIndex() < data.regionCount()) {
          if (!ServerTickGovernor.hasTime() || !MaterializationTickBudget.hasTime()) {
-            break;
+            return;
          }
          long packed = data.regionPacked().get(data.regionIndex());
          SettlementRegionKey region = SettlementRegionKey.fromPacked(packed);
          int cx = region.centerChunkX(regionSize);
          int cz = region.centerChunkZ(regionSize);
-         for (int dx = -CENTRE_CHUNK_RING; dx <= CENTRE_CHUNK_RING && generated < budget; dx++) {
-            for (int dz = -CENTRE_CHUNK_RING; dz <= CENTRE_CHUNK_RING && generated < budget; dz++) {
-               if (!ServerTickGovernor.hasTime() || !MaterializationTickBudget.hasTime()) {
+         int cell = Math.max(0, Math.min(CENTRE_CELL_COUNT - 1, data.regionCellOffset()));
+         while (cell < CENTRE_CELL_COUNT) {
+            int chunkX = cx + (cell / CENTRE_CELL_SIDE) - CENTRE_CHUNK_RING;
+            int chunkZ = cz + (cell % CENTRE_CELL_SIDE) - CENTRE_CHUNK_RING;
+            // Chunks already available cost nothing; only sync generation/loads spend the budget.
+            if (!level.hasChunk(chunkX, chunkZ)) {
+               if (generated >= budget || !ServerTickGovernor.hasTime() || !MaterializationTickBudget.hasTime()) {
+                  data.setRegionCellOffset(cell);
                   return;
                }
-               level.getChunk(cx + dx, cz + dz);
+               level.getChunk(chunkX, chunkZ);
                generated++;
             }
+            cell++;
          }
          WorldgenPlanningQueue.get().offerPlanRegion(region, new ChunkPos(cx, cz));
          data.incrementRegionIndex();
+         if (generated >= budget) {
+            break;
+         }
       }
       if (data.regionIndex() >= data.regionCount()) {
          data.setPhase(Phase.DRAINING);
@@ -389,6 +407,41 @@ public final class SpawnRingPrefillService {
    }
 
    private static void ensureFootprintLoaded(ServerLevel level, SettlementPlan plan) {
+      List<ChunkPos> chunks = footprintChunks(plan);
+      if (chunks.isEmpty()) {
+         return;
+      }
+      UUID planId = plan.planId();
+      Set<ChunkPos> held = HELD_TICKETS.computeIfAbsent(planId, id -> new HashSet<>());
+      int heldTotal = heldTicketCount();
+      int index = Math.max(0, FOOTPRINT_CURSOR.getOrDefault(planId, 0));
+      if (index >= chunks.size()) {
+         index = 0;
+      }
+      Set<ChunkPos> toAdd = new HashSet<>();
+      while (index < chunks.size() && toAdd.size() < MAX_FOOTPRINT_CHUNKS_PER_CALL) {
+         ChunkPos cp = chunks.get(index);
+         if (held.contains(cp)) {
+            index++;
+            continue;
+         }
+         if (heldTotal + toAdd.size() >= MAX_HELD_TICKETS) {
+            break;
+         }
+         level.getChunk(cp.x, cp.z);
+         toAdd.add(cp);
+         index++;
+      }
+      FOOTPRINT_CURSOR.put(planId, index >= chunks.size() ? 0 : index);
+      if (!toAdd.isEmpty()) {
+         BlockPos anchor = plan.center() != null ? plan.center() : level.getSharedSpawnPos();
+         VillageChunkLoader.forceVillageChunks(level, anchor, toAdd);
+         held.addAll(toAdd);
+      }
+   }
+
+   /** Footprint chunks ordered nearest-centre first so the cursor loads the most important chunks early. */
+   private static List<ChunkPos> footprintChunks(SettlementPlan plan) {
       Set<ChunkPos> chunks = new HashSet<>();
       Set<Long> reserved = plan.reservedChunks();
       if (reserved != null && !reserved.isEmpty()) {
@@ -398,35 +451,46 @@ public final class SpawnRingPrefillService {
             }
          }
       }
-      if (chunks.isEmpty() && plan.center() != null) {
-         ChunkPos centre = new ChunkPos(plan.center());
+      ChunkPos centre = plan.center() != null ? new ChunkPos(plan.center()) : null;
+      if (chunks.isEmpty() && centre != null) {
          for (int dx = -CENTRE_CHUNK_RING; dx <= CENTRE_CHUNK_RING; dx++) {
             for (int dz = -CENTRE_CHUNK_RING; dz <= CENTRE_CHUNK_RING; dz++) {
                chunks.add(new ChunkPos(centre.x + dx, centre.z + dz));
             }
          }
       }
-      BlockPos anchor = plan.center() != null ? plan.center() : level.getSharedSpawnPos();
-      for (ChunkPos cp : chunks) {
-         level.getChunk(cp.x, cp.z);
-      }
-      Set<ChunkPos> held = HELD_TICKETS.computeIfAbsent(plan.planId(), id -> new HashSet<>());
-      Set<ChunkPos> toAdd = new HashSet<>();
-      for (ChunkPos cp : chunks) {
-         if (!held.contains(cp)) {
-            toAdd.add(cp);
+      List<ChunkPos> ordered = new ArrayList<>(chunks);
+      ordered.sort((a, b) -> {
+         if (centre != null) {
+            int cmp = Long.compare(distSq(a, centre), distSq(b, centre));
+            if (cmp != 0) {
+               return cmp;
+            }
          }
+         return Long.compare(a.toLong(), b.toLong());
+      });
+      return ordered;
+   }
+
+   private static long distSq(ChunkPos a, ChunkPos b) {
+      long dx = (long)a.x - b.x;
+      long dz = (long)a.z - b.z;
+      return dx * dx + dz * dz;
+   }
+
+   private static int heldTicketCount() {
+      int total = 0;
+      for (Set<ChunkPos> set : HELD_TICKETS.values()) {
+         total += set.size();
       }
-      if (!toAdd.isEmpty()) {
-         VillageChunkLoader.forceVillageChunks(level, anchor, toAdd);
-         held.addAll(toAdd);
-      }
+      return total;
    }
 
    private static void releasePlanTickets(ServerLevel level, SettlementPlan plan) {
       if (plan == null || plan.planId() == null) {
          return;
       }
+      FOOTPRINT_CURSOR.remove(plan.planId());
       Set<ChunkPos> held = HELD_TICKETS.remove(plan.planId());
       if (held == null || held.isEmpty()) {
          return;
@@ -443,5 +507,6 @@ public final class SpawnRingPrefillService {
          VillageChunkLoader.releaseVillageChunks(level, anchor, entry.getValue());
       }
       HELD_TICKETS.clear();
+      FOOTPRINT_CURSOR.clear();
    }
 }
