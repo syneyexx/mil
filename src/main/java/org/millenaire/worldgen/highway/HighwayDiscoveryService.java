@@ -312,6 +312,7 @@ public final class HighwayDiscoveryService {
          boolean hub = bestByFaction.containsValue(node);
          if (node.factionHub() != hub) {
             node.setFactionHub(hub);
+            store.bumpTopologyRevision();
             store.setDirty();
          }
       }

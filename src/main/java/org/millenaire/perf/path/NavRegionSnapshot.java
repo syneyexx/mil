@@ -10,6 +10,7 @@ import java.util.PriorityQueue;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;
@@ -18,7 +19,9 @@ import net.minecraft.world.level.pathfinder.Path;
  * Immutable walkability capture for async entity A* (no ServerLevel on workers).
  */
 public final class NavRegionSnapshot {
-   private static final int MAX_SPAN = 96;
+   private static final int MAX_SPAN = 64;
+   /** Column whose chunk was not loaded at capture time; impassable (never force-load for async A*). */
+   static final int UNLOADED = Integer.MIN_VALUE;
    private static final int[][] DIRS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
    private final int minX;
    private final int minZ;
@@ -53,14 +56,30 @@ public final class NavRegionSnapshot {
       int sizeX = maxX - minX + 1;
       int sizeZ = maxZ - minZ + 1;
       int[] ground = new int[sizeX * sizeZ];
+      int cachedChunkX = Integer.MIN_VALUE;
+      int cachedChunkZ = Integer.MIN_VALUE;
+      LevelChunk cachedChunk = null;
       for (int z = 0; z < sizeZ; z++) {
          for (int x = 0; x < sizeX; x++) {
             int wx = minX + x;
             int wz = minZ + z;
-            ground[z * sizeX + x] = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, wx, wz);
+            int chunkX = wx >> 4;
+            int chunkZ = wz >> 4;
+            if (chunkX != cachedChunkX || chunkZ != cachedChunkZ) {
+               cachedChunkX = chunkX;
+               cachedChunkZ = chunkZ;
+               cachedChunk = level.getChunkSource().getChunkNow(chunkX, chunkZ);
+            }
+            ground[z * sizeX + x] = cachedChunk == null
+               ? UNLOADED
+               : cachedChunk.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, wx & 15, wz & 15);
          }
       }
       return new NavRegionSnapshot(minX, minZ, sizeX, sizeZ, ground);
+   }
+
+   static NavRegionSnapshot ofGrid(int minX, int minZ, int sizeX, int sizeZ, int[] groundY) {
+      return new NavRegionSnapshot(minX, minZ, sizeX, sizeZ, groundY);
    }
 
    public Path findPath(BlockPos from, BlockPos to) {
@@ -68,7 +87,7 @@ public final class NavRegionSnapshot {
       int sz = from.getZ() - this.minZ;
       int tx = to.getX() - this.minX;
       int tz = to.getZ() - this.minZ;
-      if (!inBounds(sx, sz) || !inBounds(tx, tz)) {
+      if (!inBounds(sx, sz) || !inBounds(tx, tz) || yAt(sx, sz) == UNLOADED || yAt(tx, tz) == UNLOADED) {
          return null;
       }
       PriorityQueue<long[]> open = new PriorityQueue<>(Comparator.comparingLong(a -> a[0]));
@@ -102,7 +121,7 @@ public final class NavRegionSnapshot {
             }
             int cy = yAt(cx, cz);
             int ny = yAt(nx, nz);
-            if (Math.abs(ny - cy) > 1) {
+            if (ny == UNLOADED || Math.abs(ny - cy) > 1) {
                continue;
             }
             long nk = pack(nx, nz);

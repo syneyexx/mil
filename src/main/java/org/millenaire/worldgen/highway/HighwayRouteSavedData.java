@@ -23,6 +23,12 @@ public final class HighwayRouteSavedData extends SavedData {
    public static final int SCHEMA = 1;
    private final Map<UUID, HighwayRoute> routes = new HashMap<>();
    private int roundRobinCursor;
+   private long topologyRevision;
+   private long statusRevision;
+   private List<HighwayRoute> activeCache;
+   private long activeCacheRevision = -1L;
+   private List<HighwayRoute> connectedCache;
+   private long connectedCacheRevision = -1L;
 
    public static Factory<HighwayRouteSavedData> factory() {
       return new Factory<>(HighwayRouteSavedData::new, (tag, registries) -> load(tag), null);
@@ -32,6 +38,52 @@ public final class HighwayRouteSavedData extends SavedData {
       ServerLevel overworld = level.getServer().getLevel(Level.OVERWORLD);
       ServerLevel storage = overworld != null ? overworld : level;
       return storage.getDataStorage().computeIfAbsent(factory(), DATA_NAME);
+   }
+
+   /** Bumps when routes are added or removed; not persisted. */
+   public long topologyRevision() {
+      return this.topologyRevision;
+   }
+
+   /** Bumps on topology change or when a route status moves between active and terminal. */
+   public long statusRevision() {
+      return this.statusRevision;
+   }
+
+   public void notifyStatusChanged() {
+      this.statusRevision++;
+   }
+
+   /** Routes still needing materialization (not CONNECTED/FAILED), sorted by id. */
+   public List<HighwayRoute> activeRoutes() {
+      if (this.activeCache == null || this.activeCacheRevision != this.statusRevision) {
+         List<HighwayRoute> active = new ArrayList<>();
+         for (HighwayRoute route : this.routes.values()) {
+            if (route.status() != HighwayRoute.Status.CONNECTED && route.status() != HighwayRoute.Status.FAILED) {
+               active.add(route);
+            }
+         }
+         active.sort(Comparator.comparing(HighwayRoute::routeId));
+         this.activeCache = List.copyOf(active);
+         this.activeCacheRevision = this.statusRevision;
+      }
+      return this.activeCache;
+   }
+
+   /** Fully materialized routes, sorted by id. Cached until {@link #statusRevision()} changes. */
+   public List<HighwayRoute> connectedRoutes() {
+      if (this.connectedCache == null || this.connectedCacheRevision != this.statusRevision) {
+         List<HighwayRoute> connected = new ArrayList<>();
+         for (HighwayRoute route : this.routes.values()) {
+            if (route.status() == HighwayRoute.Status.CONNECTED) {
+               connected.add(route);
+            }
+         }
+         connected.sort(Comparator.comparing(HighwayRoute::routeId));
+         this.connectedCache = List.copyOf(connected);
+         this.connectedCacheRevision = this.statusRevision;
+      }
+      return this.connectedCache;
    }
 
    public Collection<HighwayRoute> allRoutes() {
@@ -61,6 +113,8 @@ public final class HighwayRouteSavedData extends SavedData {
          return;
       }
       this.routes.put(route.routeId(), route);
+      this.topologyRevision++;
+      this.statusRevision++;
       this.trimConnected();
       this.setDirty();
    }
@@ -100,6 +154,8 @@ public final class HighwayRouteSavedData extends SavedData {
       completed.sort(Comparator.naturalOrder());
       for (int i = 0; i < completed.size() - 256; i++) {
          this.routes.remove(completed.get(i));
+         this.topologyRevision++;
+         this.statusRevision++;
       }
    }
 

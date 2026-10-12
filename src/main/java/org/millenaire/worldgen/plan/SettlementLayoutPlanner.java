@@ -231,7 +231,7 @@ public final class SettlementLayoutPlanner {
             plan.forceStatus(SettlementPlanStatus.RESERVED);
          }
          SettlementPlanSavedData.get(level).reindexChunks(plan);
-         SettlementPlanSavedData.get(level).markDirtyPlan();
+         SettlementPlanSavedData.get(level).markDirtyPlan(plan.planId());
          session.phase = WorldgenLayoutSessions.Phase.DONE;
          WorldgenLayoutSessions.remove(plan.planId());
          return true;

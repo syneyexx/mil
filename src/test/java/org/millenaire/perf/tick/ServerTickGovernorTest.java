@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.millenaire.worldgen.materialize.MaterializationTickBudget;
 
 class ServerTickGovernorTest {
    @AfterEach
@@ -78,6 +79,24 @@ class ServerTickGovernorTest {
    }
 
    @Test
+   void reservedGoalPickSliceFavoursStarvedVillagers() {
+      long gameTime = 77L;
+      int budget = ServerTickGovernor.entityGoalPickBudgetPerTick();
+      int reserve = budget / 4;
+      int fresh = budget - reserve;
+      for (int i = 0; i < fresh; i++) {
+         assertTrue(ServerTickGovernor.tryConsumeEntityGoalPick(gameTime, false, 0));
+      }
+      if (reserve > 0) {
+         assertFalse(ServerTickGovernor.tryConsumeEntityGoalPick(gameTime, false, 0), "fresh villager cannot use reserve");
+         assertTrue(
+            ServerTickGovernor.tryConsumeEntityGoalPick(gameTime, false, ServerTickGovernor.STARVED_GOAL_PICK_STREAK),
+            "starved villager uses reserved slice"
+         );
+      }
+   }
+
+   @Test
    void adaptiveBudgetShrinksWhenPreTickAlreadyHot() {
       long now = System.nanoTime();
       // Pretend ~45 ms already elapsed before Post.
@@ -110,5 +129,80 @@ class ServerTickGovernorTest {
          ServerTickGovernor.pressure() == TickPressure.SOFT || ServerTickGovernor.pressure() == TickPressure.HARD,
          "pressure=" + ServerTickGovernor.pressure()
       );
+   }
+
+   @Test
+   void entityAdmissionOpensAtPreAndClosesAtPostEnd() {
+      assertFalse(ServerTickGovernor.hasEntityAdmissionTime(), "no Pre seen yet");
+      ServerTickGovernor.markServerTickStart();
+      assertEquals(1L, ServerTickGovernor.entityTickId());
+      assertTrue(ServerTickGovernor.hasEntityAdmissionTime());
+      ServerTickGovernor.beginTick(400L);
+      ServerTickGovernor.endTick();
+      assertFalse(ServerTickGovernor.hasEntityAdmissionTime(), "window closed after Post");
+      ServerTickGovernor.markServerTickStart();
+      assertEquals(2L, ServerTickGovernor.entityTickId());
+      assertTrue(ServerTickGovernor.hasEntityAdmissionTime());
+   }
+
+   @Test
+   void entityAdmissionIgnoresPreviousPostDeadline() {
+      ServerTickGovernor.beginTick(410L);
+      // Post deadlines from this tick are long gone by the time the next entity loop runs.
+      long spinUntil = System.nanoTime() + 14_000_000L;
+      while (System.nanoTime() < spinUntil) {
+         // busy wait
+      }
+      assertFalse(ServerTickGovernor.hasTime());
+      ServerTickGovernor.endTick();
+      ServerTickGovernor.markServerTickStart();
+      assertTrue(ServerTickGovernor.hasEntityAdmissionTime());
+   }
+
+   @Test
+   void captureBudgetExhaustsAndCounts() {
+      ServerTickGovernor.markServerTickStart();
+      assertTrue(ServerTickGovernor.tryConsumeCaptureBudget(0L));
+      assertTrue(ServerTickGovernor.tryConsumeCaptureBudget(Long.MAX_VALUE / 4));
+      assertFalse(ServerTickGovernor.tryConsumeCaptureBudget(1L));
+      assertTrue(ServerTickGovernor.diagnostic().contains("capEx=1"), ServerTickGovernor.diagnostic());
+      ServerTickGovernor.markServerTickStart();
+      assertTrue(ServerTickGovernor.tryConsumeCaptureBudget(1L), "budget refills at next Pre");
+   }
+
+   @Test
+   void entityCountersAppearInDiagnostic() {
+      ServerTickGovernor.noteEntityAsyncAccepted();
+      ServerTickGovernor.noteEntityAsyncRejectedOldDeadline();
+      ServerTickGovernor.noteEntityAsyncQueueFull();
+      ServerTickGovernor.noteEntitySyncFallback();
+      String diag = ServerTickGovernor.diagnostic();
+      assertTrue(diag.contains("async=1,oldDl=1,qFull=1,capEx=0,syncFb=1"), diag);
+   }
+
+   @Test
+   void adaptiveFloorDropsToRecoveryWhenIdealTickSpent() {
+      assertEquals(2, ServerTickGovernor.computeEffectiveGlobalMsForTest(12, 60_000_000L, TickPressure.HEALTHY));
+      assertEquals(2, ServerTickGovernor.computeEffectiveGlobalMsForTest(12, 50_000_000L, TickPressure.HARD));
+      assertTrue(ServerTickGovernor.computeEffectiveGlobalMsForTest(12, 45_000_000L, TickPressure.HEALTHY) >= 6);
+      assertEquals(12, ServerTickGovernor.computeEffectiveGlobalMsForTest(12, 0L, TickPressure.HEALTHY));
+   }
+
+   @Test
+   void worldgenAndHighwaySetHierarchicalMaterializationDeadline() {
+      ServerTickGovernor.beginTick(500L);
+      ServerTickGovernor.enter(TickPhase.WORLDGEN);
+      long afterWorldgenEnter = System.nanoTime();
+      long worldgenDeadline = MaterializationTickBudget.deadlineNanos();
+      assertTrue(worldgenDeadline <= afterWorldgenEnter + 2_000_000L, "worldgen quota caps materialization");
+
+      ServerTickGovernor.enter(TickPhase.HIGHWAY);
+      long afterHighwayEnter = System.nanoTime();
+      long highwayDeadline = MaterializationTickBudget.deadlineNanos();
+      assertTrue(highwayDeadline >= worldgenDeadline, "unused worldgen slice carries to highway");
+      assertTrue(highwayDeadline <= afterHighwayEnter + 3_000_000L);
+
+      ServerTickGovernor.enter(TickPhase.BOSS_QUEST_MAP);
+      assertTrue(MaterializationTickBudget.deadlineNanos() >= highwayDeadline, "global deadline restored after highway");
    }
 }

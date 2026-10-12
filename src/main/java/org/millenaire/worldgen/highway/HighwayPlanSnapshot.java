@@ -36,7 +36,8 @@ public final class HighwayPlanSnapshot {
    private final int baseNeighbors;
    private final List<NodeView> nodes;
    private final List<RouteView> routes;
-   private final Map<UUID, SettlementPlan> plansById;
+   private final Map<UUID, HighwayAttachmentData> attachmentsByPlanId;
+   private final long topologyRevision;
 
    public HighwayPlanSnapshot(
       long worldSeed,
@@ -44,21 +45,23 @@ public final class HighwayPlanSnapshot {
       int baseNeighbors,
       List<NodeView> nodes,
       List<RouteView> routes,
-      Map<UUID, SettlementPlan> plansById
+      Map<UUID, HighwayAttachmentData> attachmentsByPlanId,
+      long topologyRevision
    ) {
       this.worldSeed = worldSeed;
       this.maxDist = maxDist;
       this.baseNeighbors = baseNeighbors;
       this.nodes = List.copyOf(nodes);
       this.routes = List.copyOf(routes);
-      this.plansById = Map.copyOf(plansById);
+      this.attachmentsByPlanId = Map.copyOf(attachmentsByPlanId);
+      this.topologyRevision = topologyRevision;
    }
 
    public static HighwayPlanSnapshot capture(ServerLevel level, HighwayNodeSavedData nodes, HighwayRouteSavedData routes) {
       int maxDist = MillenaireServerConfig.SERVER.highwayMaxLinkDistance.getAsInt();
       int baseNeighbors = MillenaireServerConfig.SERVER.highwayMaxNeighbors.getAsInt();
       List<NodeView> nodeViews = new ArrayList<>();
-      Map<UUID, SettlementPlan> plans = new HashMap<>();
+      Map<UUID, HighwayAttachmentData> attachments = new HashMap<>();
       SettlementPlanSavedData store = SettlementPlanSavedData.get(level);
       for (HighwayNode n : nodes.allNodes()) {
          nodeViews.add(new NodeView(
@@ -70,9 +73,9 @@ public final class HighwayPlanSnapshot {
             n.planId()
          ));
          if (n.planId() != null) {
-            SettlementPlan plan = store.getPlan(n.planId());
+            SettlementPlan plan = attachments.containsKey(n.planId()) ? null : store.getPlan(n.planId());
             if (plan != null) {
-               plans.put(n.planId(), plan);
+               attachments.put(n.planId(), HighwayAttachmentData.capture(plan));
             }
          }
       }
@@ -80,7 +83,7 @@ public final class HighwayPlanSnapshot {
       for (HighwayRoute r : routes.allRoutes()) {
          routeViews.add(new RouteView(r.fromNodeKey(), r.toNodeKey(), r.status()));
       }
-      return new HighwayPlanSnapshot(level.getSeed(), maxDist, baseNeighbors, nodeViews, routeViews, plans);
+      return new HighwayPlanSnapshot(level.getSeed(), maxDist, baseNeighbors, nodeViews, routeViews, attachments, revisionOf(nodes, routes));
    }
 
    public long worldSeed() {
@@ -103,9 +106,25 @@ public final class HighwayPlanSnapshot {
       return this.routes;
    }
 
+   public long topologyRevision() {
+      return this.topologyRevision;
+   }
+
+   public long configKey() {
+      return configKey(this.maxDist, this.baseNeighbors);
+   }
+
    @Nullable
-   public SettlementPlan plan(@Nullable UUID id) {
-      return id == null ? null : this.plansById.get(id);
+   public HighwayAttachmentData attachment(@Nullable UUID planId) {
+      return planId == null ? null : this.attachmentsByPlanId.get(planId);
+   }
+
+   public static long revisionOf(HighwayNodeSavedData nodes, HighwayRouteSavedData routes) {
+      return nodes.topologyRevision() + routes.topologyRevision();
+   }
+
+   public static long configKey(int maxDist, int baseNeighbors) {
+      return ((long)maxDist << 32) ^ (baseNeighbors & 0xFFFFFFFFL);
    }
 
    public Set<String> linkedKeys() {

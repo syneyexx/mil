@@ -153,6 +153,8 @@ public class MillVillager extends PathfinderMob {
    private VillagerTask lastTrackedTask;
    private int suffocationGraceTicks;
    private int waterTicks;
+   private long lastWaterProbeGameTime = Long.MIN_VALUE;
+   private int goalPickDeferredStreak;
    private boolean inRicePaddy;
    private long lastRicePaddyBlockKey = Long.MIN_VALUE;
    private long lastSafetyProbeBlockKey = Long.MIN_VALUE;
@@ -1178,15 +1180,22 @@ public class MillVillager extends PathfinderMob {
       }
       if (!this.level().isClientSide() && this.goalScheduler != null && safetyProbe) {
          if (this.isInWater()) {
-            this.waterTicks += farSleep ? 40 : 1;
+            long probeTime = this.level().getGameTime();
+            int elapsed = this.lastWaterProbeGameTime == Long.MIN_VALUE
+               ? 1
+               : (int)Math.max(1L, Math.min(40L, probeTime - this.lastWaterProbeGameTime));
+            this.lastWaterProbeGameTime = probeTime;
+            this.waterTicks += elapsed;
             if (this.waterTicks > 100) {
                int safeY = this.level().getHeight(Types.MOTION_BLOCKING_NO_LEAVES, this.blockPosition().getX(), this.blockPosition().getZ());
                this.teleportTo(this.blockPosition().getX() + 0.5, safeY, this.blockPosition().getZ() + 0.5);
                LOGGER.debug("[Millénaire] Anti-drowning: {} TP surface (in water for {} ticks)", this.getVillagerTypeId(), this.waterTicks);
                this.waterTicks = 0;
+               this.lastWaterProbeGameTime = Long.MIN_VALUE;
             }
          } else {
             this.waterTicks = 0;
+            this.lastWaterProbeGameTime = Long.MIN_VALUE;
          }
       }
 
@@ -1256,19 +1265,29 @@ public class MillVillager extends PathfinderMob {
             allowGoalPick = false;
          }
          boolean urgentAi = this.isHired() || this.isCompanion() || this.getAttackTarget() != null;
-         if (allowGoalPick
-            && !org.millenaire.perf.tick.ServerTickGovernor.tryConsumeEntityGoalPick(this.level().getGameTime(), urgentAi)) {
-            allowGoalPick = false;
+         if (allowGoalPick) {
+            if (org.millenaire.perf.tick.ServerTickGovernor.tryConsumeEntityGoalPick(
+               this.level().getGameTime(), urgentAi, this.goalPickDeferredStreak
+            )) {
+               this.goalPickDeferredStreak = 0;
+            } else {
+               this.goalPickDeferredStreak = Math.min(this.goalPickDeferredStreak + 1, 1000);
+               allowGoalPick = false;
+            }
          }
          if (!allowGoalPick) {
             org.millenaire.perf.tick.ServerTickGovernor.noteAiCadenceSkipped();
          }
+         boolean farSleepUrgent = urgentAi
+            || this.hurtTime > 0
+            || this.isSelling()
+            || ctx != null && ctx.village() != null && (ctx.village().isUnderAttack() || ctx.village().isRaidActiveOrSuffering());
          if (ctx != null) {
-            this.goalScheduler.tick(ctx, allowGoalPick, allowCombatScan);
+            this.goalScheduler.tick(ctx, allowGoalPick, allowCombatScan, farSleep && !farSleepUrgent);
          }
 
          Village navVillage = ctx != null ? ctx.village() : null;
-         boolean hasTask = this.goalScheduler.getCurrentTask() != null;
+         boolean hasTask = this.goalScheduler.getCurrentTask() != null && !this.goalScheduler.isFarSleepPaused();
          boolean allowNav = hasTask || (allowGoalPick && entityLod.allowIdleNavigation());
          if (allowNav) {
             this.navManager.tick(this, navVillage);

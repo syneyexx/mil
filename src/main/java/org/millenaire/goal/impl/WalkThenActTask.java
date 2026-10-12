@@ -81,6 +81,11 @@ abstract class WalkThenActTask extends ProgressAwareTask {
    }
 
    @Override
+   public boolean isFarSleepPausable() {
+      return this.phase == WalkThenActTask.Phase.WALKING;
+   }
+
+   @Override
    public TravelPhase getTravelPhase() {
       return this.phase == WalkThenActTask.Phase.WALKING ? TravelPhase.TRAVELLING : TravelPhase.AT_DESTINATION;
    }

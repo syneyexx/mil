@@ -12,7 +12,6 @@ import java.util.Set;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
 import org.millenaire.building.BuildingId;
 import org.millenaire.config.MillenaireServerConfig;
@@ -37,10 +36,22 @@ public class VillageManager {
    /** Coalesce VillageSavedData.setDirty to reduce full-NBT autosave hitch frequency. */
    private static final int DIRTY_COALESCE_TICKS = 20;
    private boolean pendingSavedDataDirty;
+   /** Full activation/LOD/dirty reconcile of every village once per this many ticks (hash-sliced). */
+   private static final int RECONCILE_INTERVAL_TICKS = 20;
+   /**
+    * Villages needing per-tick work: active (Near/Mid), raid-urgent, or force-loading/force-active
+    * awaiting chunks. Everything else is Far data-only and visited via {@link #farBackgroundSlots}.
+    */
+   private final Set<Village> hotVillages = Collections.newSetFromMap(new IdentityHashMap<>());
+   private final VillageTickSlots<Village> reconcileSlots = new VillageTickSlots<>();
+   private final VillageTickSlots<Village> farBackgroundSlots = new VillageTickSlots<>();
+   private final ArrayList<Village> hotScratch = new ArrayList<>();
+   private boolean slotsDirty = true;
 
    public void addVillage(Village village) {
       this.villages.put(village.getId(), village);
-      org.millenaire.map.sync.SettlementMapSyncService.markDirty();
+      this.slotsDirty = true;
+      org.millenaire.map.sync.SettlementMapSyncService.markDirty(village.getId());
    }
 
    /**
@@ -58,6 +69,10 @@ public class VillageManager {
       }
 
       this.villages.remove(id);
+      if (village != null) {
+         this.hotVillages.remove(village);
+      }
+      this.slotsDirty = true;
       org.millenaire.map.sync.SettlementMapSyncService.markRemoved(id);
    }
 
@@ -72,6 +87,8 @@ public class VillageManager {
 
    public void clear() {
       this.villages.clear();
+      this.hotVillages.clear();
+      this.slotsDirty = true;
    }
 
    @Nullable
@@ -241,8 +258,20 @@ public class VillageManager {
          farBgInterval = Math.max(1, MillenaireServerConfig.SERVER.farBackgroundTickInterval.getAsInt());
       } catch (IllegalStateException ignored) {
       }
-      for (Village v : this.villages.values()) {
-         this.tickVillageActivation(level, v);
+
+      boolean fullReconcile = this.slotsDirty || this.farBackgroundSlots.interval() != farBgInterval;
+      if (fullReconcile) {
+         this.rebuildSlots(farBgInterval);
+      }
+      // Activation/LOD discovery for non-hot villages: hash-sliced (or a one-off full pass after add/remove).
+      anyDirty |= this.reconcileInactive(level, fullReconcile ? this.villages.values() : this.reconcileSlots.due(gameTime));
+
+      int hotAtStart = this.hotVillages.size();
+      this.hotScratch.clear();
+      this.hotScratch.addAll(this.hotVillages);
+      for (int hi = 0; hi < this.hotScratch.size(); hi++) {
+         Village v = this.hotScratch.get(hi);
+         this.tickVillageActivation(level, v, false);
          VillageSimulationLod lod = VillageSimulationLod.resolve(level, v);
          ServerTickGovernor.noteLod(lod);
 
@@ -289,6 +318,33 @@ public class VillageManager {
          }
          if (v.consumeDirty()) {
             anyDirty = true;
+         }
+      }
+
+      // Far, non-hot villages: due-slot background only (no per-tick touch of every Far village).
+      List<Village> farDue = this.farBackgroundSlots.due(gameTime);
+      int farRan = 0;
+      for (int fi = 0; fi < farDue.size(); fi++) {
+         Village v = farDue.get(fi);
+         if (this.hotVillages.contains(v) || this.isHotCandidate(v)) {
+            continue;
+         }
+         v.backgroundTick(level);
+         farRan++;
+         if (v.consumeDirty()) {
+            anyDirty = true;
+         }
+         if (v.isRaidActiveOrSuffering()) {
+            this.hotVillages.add(v);
+         }
+      }
+      int farIdle = Math.max(0, this.villages.size() - hotAtStart);
+      ServerTickGovernor.noteFarDataOnlyVillages(farIdle, Math.max(0, farIdle - farRan));
+
+      for (int hi = 0; hi < this.hotScratch.size(); hi++) {
+         Village v = this.hotScratch.get(hi);
+         if (!this.isHotCandidate(v)) {
+            this.hotVillages.remove(v);
          }
       }
 
@@ -359,7 +415,36 @@ public class VillageManager {
       }
    }
 
-   private void tickVillageActivation(ServerLevel level, Village v) {
+   private boolean isHotCandidate(Village v) {
+      return v.isActive() || v.isRaidActiveOrSuffering() || v.isChunksForceLoaded() || v.isForceActive();
+   }
+
+   private void rebuildSlots(int farBgInterval) {
+      this.slotsDirty = false;
+      this.reconcileSlots.rebuild(this.villages.values(), VillageSimulationLod::villageHash, RECONCILE_INTERVAL_TICKS);
+      this.farBackgroundSlots.rebuild(this.villages.values(), VillageSimulationLod::villageHash, farBgInterval);
+      this.hotVillages.removeIf(v -> this.villages.get(v.getId()) != v);
+   }
+
+   /** Re-evaluate activation for villages not on the hot path; promote to hot when work appears. */
+   private boolean reconcileInactive(ServerLevel level, Collection<Village> candidates) {
+      boolean anyDirty = false;
+      for (Village v : candidates) {
+         if (this.hotVillages.contains(v)) {
+            continue;
+         }
+         this.tickVillageActivation(level, v, true);
+         if (v.consumeDirty()) {
+            anyDirty = true;
+         }
+         if (this.isHotCandidate(v)) {
+            this.hotVillages.add(v);
+         }
+      }
+      return anyDirty;
+   }
+
+   private void tickVillageActivation(ServerLevel level, Village v, boolean ignoreStagger) {
       boolean forceLoadEnabled = (Boolean)MillenaireServerConfig.SERVER.forceLoadVillages.get();
       if (!forceLoadEnabled && !v.isForceActive()) {
          if (v.isChunksForceLoaded()) {
@@ -376,15 +461,9 @@ public class VillageManager {
          } else {
             // Amortize player-distance scans: each village at most once every 5 ticks.
             int stagger = Math.floorMod(VillageSimulationLod.villageHash(v), 5);
-            if (Math.floorMod(level.getGameTime(), 5L) == stagger) {
-               double nearestDistSq = Double.MAX_VALUE;
-
-               for (ServerPlayer player : level.players()) {
-                  double distSq = player.blockPosition().distSqr(v.getCenter());
-                  if (distSq < nearestDistSq) {
-                     nearestDistSq = distSq;
-                  }
-               }
+            if (ignoreStagger || Math.floorMod(level.getGameTime(), 5L) == stagger) {
+               BlockPos center = v.getCenter();
+               double nearestDistSq = LevelTickCache.nearestPlayerDistSqToBlock(level, center.getX(), center.getY(), center.getZ());
 
                double keepRadiusSq = (double)Village.getKeepActiveRadius() * Village.getKeepActiveRadius();
                double unloadRadiusSq = (double)Village.getUnloadRadius() * Village.getUnloadRadius();

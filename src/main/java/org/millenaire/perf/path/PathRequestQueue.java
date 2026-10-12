@@ -7,6 +7,10 @@ import org.millenaire.config.MillenaireServerConfig;
  * Global cap on new entity path searches started per server tick.
  * Rejects excess starts so sync A* cannot storm the main thread.
  * <p>
+ * Rejected starts are not retained: callers (e.g. {@code MillPathNavigation}) return a null path and the nav
+ * manager's own cooldown/backoff retries later, so a full queue never turns into unbounded sync A*.
+ * Cumulative counters survive tick resets for diagnostics.
+ * <p>
  * Resets when {@link #ensureTick(long)} sees a new gameTime — call from entity path
  * creation (entity loop runs before {@code ServerTickEvent.Post}).
  */
@@ -15,6 +19,8 @@ public final class PathRequestQueue {
    private static int startsThisTick;
    private static int rejectsThisTick;
    private static int coalescedThisTick;
+   private static long totalStarts;
+   private static long totalRejects;
    private static final IntOpenHashSet inFlight = new IntOpenHashSet();
 
    private PathRequestQueue() {
@@ -50,10 +56,12 @@ public final class PathRequestQueue {
       }
       if (startsThisTick >= maxStartsPerTick()) {
          rejectsThisTick++;
+         totalRejects++;
          return false;
       }
       inFlight.add(entityId);
       startsThisTick++;
+      totalStarts++;
       return true;
    }
 
@@ -67,6 +75,14 @@ public final class PathRequestQueue {
 
    public static int rejectsThisTick() {
       return rejectsThisTick;
+   }
+
+   public static long totalStarts() {
+      return totalStarts;
+   }
+
+   public static long totalRejects() {
+      return totalRejects;
    }
 
    public static int coalescedThisTick() {
@@ -86,6 +102,8 @@ public final class PathRequestQueue {
          + coalescedThisTick
          + ",inFlight="
          + inFlight.size()
+         + ",totalRejects="
+         + totalRejects
          + ",max="
          + maxStartsPerTick()
          + '}';
@@ -96,6 +114,8 @@ public final class PathRequestQueue {
       startsThisTick = 0;
       rejectsThisTick = 0;
       coalescedThisTick = 0;
+      totalStarts = 0L;
+      totalRejects = 0L;
       inFlight.clear();
    }
 }

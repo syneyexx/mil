@@ -64,7 +64,7 @@ public final class SettlementActivator {
       }
       if (!plan.hasMandatoryCentre() && !plan.loneBuilding()) {
          plan.markFailed(SettlementFailureReason.MISSING_MANDATORY_BUILDING, "activation_no_centre");
-         SettlementPlanSavedData.get(level).markDirtyPlan();
+         SettlementPlanSavedData.get(level).markDirtyPlan(plan.planId());
          return false;
       }
 
@@ -87,7 +87,7 @@ public final class SettlementActivator {
          VillageType villageType = ModCultures.getVillageType(plan.villageTypeId());
          if (villageType == null) {
             plan.markFailed(SettlementFailureReason.ACTIVATION_FAILURE, "missing_village_type");
-            SettlementPlanSavedData.get(level).markDirtyPlan();
+            SettlementPlanSavedData.get(level).markDirtyPlan(plan.planId());
             return false;
          }
 
@@ -122,7 +122,7 @@ public final class SettlementActivator {
                }
             }
             savedData.setDirty();
-            SettlementPlanSavedData.get(level).markDirtyPlan();
+            SettlementPlanSavedData.get(level).markDirtyPlan(plan.planId());
          }
 
          // Register buildings in small steps under the shared time budget.
@@ -130,7 +130,7 @@ public final class SettlementActivator {
          while (index < plan.buildings().size()) {
             if (!MaterializationTickBudget.hasTime()) {
                plan.setActivationBuildingIndex(index);
-               SettlementPlanSavedData.get(level).markDirtyPlan();
+               SettlementPlanSavedData.get(level).markDirtyPlan(plan.planId());
                return false;
             }
             PlannedBuilding pb = plan.buildings().get(index);
@@ -171,7 +171,7 @@ public final class SettlementActivator {
             }
             index++;
             plan.setActivationBuildingIndex(index);
-            SettlementPlanSavedData.get(level).markDirtyPlan();
+            SettlementPlanSavedData.get(level).markDirtyPlan(plan.planId());
          }
 
          if (!plan.inventoriesInitialized()) {
@@ -190,7 +190,7 @@ public final class SettlementActivator {
                }
             }
             plan.setInventoriesInitialized(true);
-            SettlementPlanSavedData.get(level).markDirtyPlan();
+            SettlementPlanSavedData.get(level).markDirtyPlan(plan.planId());
          }
 
          if (!plan.loneBuilding() && Boolean.TRUE.equals(org.millenaire.config.MillenaireServerConfig.SERVER.buildPaths.get())) {
@@ -205,7 +205,7 @@ public final class SettlementActivator {
                LOGGER.warn("[Millenaire] Path activation mark deferred for {}: {}", plan.planId(), pathEx.getMessage());
             }
             plan.setActivationPathsPending(false);
-            SettlementPlanSavedData.get(level).markDirtyPlan();
+            SettlementPlanSavedData.get(level).markDirtyPlan(plan.planId());
          }
 
          if (!plan.isEmptyFounding()) {
@@ -229,7 +229,7 @@ public final class SettlementActivator {
          LOGGER.error("[Millenaire] Activation failed for plan {}", plan.planId(), e);
          WorldgenMetrics.ACTIVATION_FAILURES.incrementAndGet();
          plan.markFailed(SettlementFailureReason.ACTIVATION_FAILURE, e.getClass().getSimpleName() + ": " + e.getMessage());
-         SettlementPlanSavedData.get(level).markDirtyPlan();
+         SettlementPlanSavedData.get(level).markDirtyPlan(plan.planId());
          return false;
       }
    }
@@ -238,7 +238,7 @@ public final class SettlementActivator {
       plan.setActivated(true);
       plan.setActivationPathsPending(false);
       plan.forceStatus(SettlementPlanStatus.ACTIVE);
-      SettlementPlanSavedData.get(level).markDirtyPlan();
+      SettlementPlanSavedData.get(level).markDirtyPlan(plan.planId());
       WorldgenMetrics.ACTIVATIONS.incrementAndGet();
    }
 

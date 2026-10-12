@@ -161,6 +161,10 @@ public class Millenaire {
    private static VillageSpawnQueue spawnQueueInstance;
    private static volatile boolean naturalSpawnSuppressed = false;
 
+   private static boolean tailSectionHasTime(ServerLevel overworld) {
+      return overworld == null || org.millenaire.perf.tick.ServerTickGovernor.hasTime();
+   }
+
    public static void setNaturalSpawnSuppressed(boolean suppressed) {
       naturalSpawnSuppressed = suppressed;
    }
@@ -545,23 +549,48 @@ public class Millenaire {
 
          boolean tailHasTime = overworld == null || org.millenaire.perf.tick.ServerTickGovernor.hasTime();
          if (tailHasTime) {
+            // Each section re-checks the deadline so one slow section defers the rest instead of stacking.
+            boolean tailDeferred = false;
             org.millenaire.chat.NpcChatService.tickSessions(event.getServer());
-            org.millenaire.companion.CompanionLifecycle.tick(event.getServer());
-
-            for (ServerPlayer player : event.getServer().getPlayerList().getPlayers()) {
-               ServerLevel playerLevel = player.serverLevel();
-               QuestManager.tickQuests(player, playerLevel);
-               QuestManager.tickSpecialActions(player, playerLevel);
+            if (tailSectionHasTime(overworld)) {
+               org.millenaire.companion.CompanionLifecycle.tick(event.getServer());
+            } else {
+               tailDeferred = true;
             }
 
-            WaypointVisualizationManager.tick(event.getServer());
-            if (overworld != null && overworld.getGameTime() % 20L == 0L) {
-               VillageMapMarkerService.processAllPlayers(event.getServer());
+            if (!tailDeferred && tailSectionHasTime(overworld)) {
+               for (ServerPlayer player : event.getServer().getPlayerList().getPlayers()) {
+                  ServerLevel playerLevel = player.serverLevel();
+                  QuestManager.tickQuests(player, playerLevel);
+                  QuestManager.tickSpecialActions(player, playerLevel);
+               }
+            } else {
+               tailDeferred = true;
             }
-            org.millenaire.map.sync.SettlementMapSyncService.tick(event.getServer());
+
+            if (!tailDeferred && tailSectionHasTime(overworld)) {
+               WaypointVisualizationManager.tick(event.getServer());
+            } else {
+               tailDeferred = true;
+            }
+            if (!tailDeferred && tailSectionHasTime(overworld)) {
+               if (overworld != null && overworld.getGameTime() % 20L == 0L) {
+                  VillageMapMarkerService.processAllPlayers(event.getServer());
+               }
+               org.millenaire.map.sync.SettlementMapSyncService.tick(event.getServer());
+            } else {
+               tailDeferred = true;
+            }
             // Backfill Millenaire village waystones for existing worlds (every ~30s).
-            if (overworld != null && overworld.getGameTime() % 600L == 0L) {
-               org.millenaire.compat.WaystoneVillagePlacer.tickBackfill(overworld);
+            if (!tailDeferred && tailSectionHasTime(overworld)) {
+               if (overworld != null && overworld.getGameTime() % 600L == 0L) {
+                  org.millenaire.compat.WaystoneVillagePlacer.tickBackfill(overworld);
+               }
+            } else {
+               tailDeferred = true;
+            }
+            if (tailDeferred) {
+               org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.BOSS_QUEST_MAP);
             }
          } else {
             org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.BOSS_QUEST_MAP);

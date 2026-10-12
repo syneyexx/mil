@@ -75,7 +75,7 @@ public final class ChunkSettlementMaterializer {
          ChunkMaterializationProgress blocked = plan.progressFor(packed);
          blocked.setStatus(ChunkMaterializationProgress.Status.BLOCKED);
          blocked.setBlockReason("colonization_unpaid_or_blocked");
-         SettlementPlanSavedData.get(level).markDirtyPlan();
+         SettlementPlanSavedData.get(level).markDirtyPlan(plan.planId());
          return PassResult.IDLE;
       }
 
@@ -85,7 +85,7 @@ public final class ChunkSettlementMaterializer {
          ChunkMaterializationProgress progress = plan.progressFor(packed);
          progress.setStatus(ChunkMaterializationProgress.Status.BLOCKED);
          progress.setBlockReason("budget_exhausted");
-         SettlementPlanSavedData.get(level).markDirtyPlan();
+         SettlementPlanSavedData.get(level).markDirtyPlan(plan.planId());
          return PassResult.BUDGET_EXHAUSTED;
       }
 
@@ -216,7 +216,7 @@ public final class ChunkSettlementMaterializer {
                   plan.forceStatus(SettlementPlanStatus.PHYSICAL_COMPLETE);
                }
             }
-            store.markDirtyPlan();
+            store.markDirtyPlan(plan.planId());
             return PassResult.COMPLETE;
          }
 
@@ -232,7 +232,7 @@ public final class ChunkSettlementMaterializer {
                   MaterializationTickBudget.diagnostic()
                );
             }
-            store.markDirtyPlan();
+            store.markDirtyPlan(plan.planId());
             return PassResult.BUDGET_EXHAUSTED;
          }
 
@@ -240,14 +240,14 @@ public final class ChunkSettlementMaterializer {
          if (!unitBlocked) {
             progress.setBlockReason(anyProgress ? "partial" : "waiting_units");
          }
-         store.markDirtyPlan();
+         store.markDirtyPlan(plan.planId());
          return anyProgress ? PassResult.PROGRESS : PassResult.IDLE;
       } catch (Exception e) {
          LOGGER.error("[Millenaire] Materialization failed for plan {} chunk {}", plan.planId(), chunk, e);
          progress.setStatus(ChunkMaterializationProgress.Status.FAILED);
          progress.setBlockReason(e.getClass().getSimpleName() + ": " + e.getMessage());
          plan.markFailed(SettlementFailureReason.CHUNK_MATERIALIZATION_FAILURE, e.getClass().getSimpleName() + ": " + e.getMessage());
-         store.markDirtyPlan();
+         store.markDirtyPlan(plan.planId());
          return PassResult.FAILED;
       }
    }

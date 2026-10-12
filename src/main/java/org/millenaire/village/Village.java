@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -76,6 +77,9 @@ public class Village {
    private final VillageWaypointGraph waypointGraph = new VillageWaypointGraph();
    private final VillagePathManager pathManager = new VillagePathManager();
    private final List<BuildingInstance> buildings = new ArrayList<>();
+   /** Buildings whose construction task currently holds a builder reservation (avoids full building scans). */
+   private final Set<BuildingInstance> buildingsWithConstructionReservation = Collections.newSetFromMap(new IdentityHashMap<>());
+   private final List<BuildingInstance> reservationScratch = new ArrayList<>();
    private final Map<UUID, VillagerRecord> villagerRecords = new LinkedHashMap<>();
    private int cachedDefenderCount = -1;
    private final Map<UUID, Integer> missingCounts = new HashMap<>();
@@ -863,6 +867,30 @@ public class Village {
       return this.huntUnreachable.contains(p.getX(), p.getY(), p.getZ(), now);
    }
 
+   /** Track a building whose construction task was just reserved (avoids full building scans). */
+   public void noteConstructionReservation(BuildingInstance building) {
+      if (building != null) {
+         this.buildingsWithConstructionReservation.add(building);
+      }
+   }
+
+   public void clearConstructionReservation(BuildingInstance building) {
+      if (building != null) {
+         this.buildingsWithConstructionReservation.remove(building);
+      }
+   }
+
+   /** Rebuild reservation index after load or bulk mutation. */
+   public void rebuildConstructionReservationIndex() {
+      this.buildingsWithConstructionReservation.clear();
+      for (BuildingInstance b : this.buildings) {
+         ConstructionTask task = b.getConstructionTask();
+         if (task != null && task.isReserved()) {
+            this.buildingsWithConstructionReservation.add(b);
+         }
+      }
+   }
+
    public void markDirty() {
       this.dirty = true;
    }
@@ -1408,29 +1436,27 @@ public class Village {
          }
       }
 
-      // Only walk buildings when at least one construction reservation is active.
-      boolean anyConstructionReservation = false;
-      for (BuildingInstance b : this.buildings) {
-         ConstructionTask task = b.getConstructionTask();
-         if (task != null && task.isReserved()) {
-            anyConstructionReservation = true;
-            break;
-         }
-      }
-      if (anyConstructionReservation) {
-         for (BuildingInstance b : this.buildings) {
+      // Only walk buildings that currently hold a construction reservation (maintained set).
+      if (!this.buildingsWithConstructionReservation.isEmpty()) {
+         this.reservationScratch.clear();
+         this.reservationScratch.addAll(this.buildingsWithConstructionReservation);
+         for (int ri = 0; ri < this.reservationScratch.size(); ri++) {
+            BuildingInstance b = this.reservationScratch.get(ri);
             ConstructionTask task = b.getConstructionTask();
-            if (task != null && task.isReserved()) {
-               UUID builderUuid = task.getReservedBuilder();
-               if (level.getEntity(builderUuid) == null) {
-                  task.tickReservation();
-                  if (task.isReservationExpired(200)) {
-                     task.releaseReservation();
-                     this.dirty = true;
-                  }
-               } else {
-                  task.resetReservationAge();
+            if (task == null || !task.isReserved()) {
+               this.buildingsWithConstructionReservation.remove(b);
+               continue;
+            }
+            UUID builderUuid = task.getReservedBuilder();
+            if (level.getEntity(builderUuid) == null) {
+               task.tickReservation();
+               if (task.isReservationExpired(RESERVATION_EXPIRY_TICKS)) {
+                  task.releaseReservation();
+                  this.buildingsWithConstructionReservation.remove(b);
+                  this.dirty = true;
                }
+            } else {
+               task.resetReservationAge();
             }
          }
       }
@@ -1530,7 +1556,9 @@ public class Village {
       if (Math.floorMod(level.getGameTime() + villageHash, 10) == 0) {
          VillageSellerDispatcher.checkSeller(level, this);
       }
-      if (level.getGameTime() % 100L == 50L && allowMarkets) {
+      // Per-village due offset so markets don't all fire on gameTime%100==50 under load.
+      int marketDueOffset = Math.floorMod(villageHash, 100);
+      if (Math.floorMod(level.getGameTime(), 100L) == marketDueOffset && allowMarkets) {
          boolean isDaytime = !TickConstants.isNight(level);
 
          for (BuildingInstance b : this.buildings) {
@@ -1635,7 +1663,7 @@ public class Village {
       this.ownerUUID = uuid;
       this.ownerName = name;
       this.markDirty();
-      org.millenaire.map.sync.SettlementMapSyncService.markDirty();
+      org.millenaire.map.sync.SettlementMapSyncService.markDirty(this.getId());
    }
 
    /**

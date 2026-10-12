@@ -239,10 +239,10 @@ public final class ColonizationService {
          plan.setFoundingFactionId(parent.getFactionId().asString());
          boolean laidOut = SettlementLayoutPlanner.ensureLayout(level, plan);
          if (!laidOut || plan.status().isTerminalFailure() || plan.buildings().isEmpty()) {
-            plans.markDirtyPlan();
+            plans.markDirtyPlan(plan.planId());
             continue;
          }
-         plans.markDirtyPlan();
+         plans.markDirtyPlan(plan.planId());
 
          ColonizationOperation op = new ColonizationOperation(
             opId,
@@ -268,7 +268,7 @@ public final class ColonizationService {
                op.refundOutstanding().isEmpty() ? "insufficient_resources" : "insufficient_resources;refund_outstanding"
             );
             plan.progressFor(new ChunkPos(plan.center()).toLong()).setBlockReason("colonization_unpaid_or_blocked");
-            SettlementPlanSavedData.get(level).markDirtyPlan();
+            SettlementPlanSavedData.get(level).markDirtyPlan(plan.planId());
             stateBlock(level, parent, "insufficient_resources");
             return null;
          }

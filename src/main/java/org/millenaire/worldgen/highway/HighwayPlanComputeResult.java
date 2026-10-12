@@ -9,12 +9,12 @@ import org.slf4j.Logger;
 /**
  * Applies offloaded highway link plans on the server thread.
  */
-public record HighwayPlanComputeResult(List<HighwayRoute> planned, long generation) implements ComputeResult {
+public record HighwayPlanComputeResult(List<HighwayRoute> planned, long generation, long revision, long configKey) implements ComputeResult {
    private static final Logger LOGGER = LogUtils.getLogger();
 
    @Override
    public boolean apply(ServerLevel level) {
-      if (!HighwayMaterializer.completeAsyncPlan(this.generation)) {
+      if (!HighwayMaterializer.completeAsyncPlan(this.generation, this.revision, this.configKey)) {
          return false;
       }
       if (this.planned == null || this.planned.isEmpty()) {

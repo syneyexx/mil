@@ -114,7 +114,7 @@ public final class ColonizationMaterializationGate {
       if (op.factionId() != null && !op.factionId().isBlank()) {
          plan.setFoundingFactionId(op.factionId());
       }
-      SettlementPlanSavedData.get(level).markDirtyPlan();
+      SettlementPlanSavedData.get(level).markDirtyPlan(plan.planId());
    }
 
    @Nullable
@@ -146,7 +146,7 @@ public final class ColonizationMaterializationGate {
       }
       if (found != null && plan.colonizationOperationId() == null) {
          plan.setColonizationOperationId(found.operationId());
-         SettlementPlanSavedData.get(level).markDirtyPlan();
+         SettlementPlanSavedData.get(level).markDirtyPlan(plan.planId());
       }
       return found;
    }

@@ -12,6 +12,8 @@ public final class ComputeMetrics {
    public static final AtomicLong JOBS_FAILED = new AtomicLong();
    public static final AtomicLong RESULTS_APPLIED = new AtomicLong();
    public static final AtomicLong RESULTS_DROPPED_STALE = new AtomicLong();
+   public static final AtomicLong RESULTS_DROPPED_FULL = new AtomicLong();
+   public static final AtomicLong RESULTS_DROPPED_EPOCH = new AtomicLong();
    public static final AtomicLong APPLY_NANOS = new AtomicLong();
    public static final AtomicLong WORKER_NANOS = new AtomicLong();
 
@@ -31,6 +33,10 @@ public final class ComputeMetrics {
          + RESULTS_APPLIED.get()
          + " stale="
          + RESULTS_DROPPED_STALE.get()
+         + " droppedFull="
+         + RESULTS_DROPPED_FULL.get()
+         + " droppedEpoch="
+         + RESULTS_DROPPED_EPOCH.get()
          + " applyMs="
          + APPLY_NANOS.get() / 1_000_000L
          + " workerMs="
@@ -46,6 +52,8 @@ public final class ComputeMetrics {
       JOBS_FAILED.set(0L);
       RESULTS_APPLIED.set(0L);
       RESULTS_DROPPED_STALE.set(0L);
+      RESULTS_DROPPED_FULL.set(0L);
+      RESULTS_DROPPED_EPOCH.set(0L);
       APPLY_NANOS.set(0L);
       WORKER_NANOS.set(0L);
    }

@@ -12,6 +12,7 @@ import org.millenaire.diagnostics.NavEvent;
 import org.millenaire.diagnostics.NavigationCounters;
 import org.millenaire.entity.MillVillager;
 import org.millenaire.perf.sense.CombatSenseCache;
+import org.millenaire.perf.tick.EntitySimulationLod;
 import org.millenaire.village.Village;
 import org.slf4j.Logger;
 
@@ -36,6 +37,7 @@ public class GoalScheduler {
    private int idleBackoff = 0;
    private int idleBackoffDelay = 1;
    private int leisureRecheckCooldown = 0;
+   private boolean farSleepPaused;
 
    public int getTaskTicks() {
       return this.taskTicks;
@@ -70,8 +72,16 @@ public class GoalScheduler {
     * @param allowCombatScan when false, skip combat-urgent canStart preemption scans.
     */
    public void tick(@Nullable GoalContext ctx, boolean allowGoalPick, boolean allowCombatScan) {
+      this.tick(ctx, allowGoalPick, allowCombatScan, false);
+   }
+
+   /**
+    * @param farSleepPause when true, a non-urgent pure-travel task is not ticked this game tick (never completed or
+    *        failed by the pause itself; watchdog counters do not advance).
+    */
+   public void tick(@Nullable GoalContext ctx, boolean allowGoalPick, boolean allowCombatScan, boolean farSleepPause) {
       try {
-         this.tickInternal(ctx, allowGoalPick, allowCombatScan);
+         this.tickInternal(ctx, allowGoalPick, allowCombatScan, farSleepPause);
       } catch (Exception e) {
          LOGGER.error(
             "[Millenaire] Exception in GoalScheduler.tick() — goal={}, task={} — forced reset",
@@ -98,7 +108,13 @@ public class GoalScheduler {
       }
    }
 
-   private void tickInternal(@Nullable GoalContext ctx, boolean allowGoalPick, boolean allowCombatScan) {
+   /** True when the last tick skipped the current task because of Far-sleep travel pause. */
+   public boolean isFarSleepPaused() {
+      return this.farSleepPaused && this.currentTask != null;
+   }
+
+   private void tickInternal(@Nullable GoalContext ctx, boolean allowGoalPick, boolean allowCombatScan, boolean farSleepPause) {
+      this.farSleepPaused = false;
       if (this.currentTask != null && this.currentTask.isFinished()) {
          this.currentTask.stop(ctx, StopReason.COMPLETED);
          if (ctx != null) {
@@ -199,6 +215,16 @@ public class GoalScheduler {
 
          if (this.currentTask.consumeProgress()) {
             this.taskTicks = 0;
+         }
+
+         if (EntitySimulationLod.shouldPauseTask(
+            farSleepPause,
+            false,
+            this.currentGoal != null && this.currentGoal.isCombatUrgent(),
+            this.currentGoal != null && this.currentTask.isFarSleepPausable()
+         )) {
+            this.farSleepPaused = true;
+            return;
          }
 
          this.taskTicks++;

@@ -653,6 +653,7 @@ public class VillageSavedData extends SavedData {
                   LOGGER.error("Error loading building index {} of village {} — building ignored", new Object[]{j, i, e});
                }
             }
+            village.rebuildConstructionReservationIndex();
 
             ListTag villagersList = villageTag.getList("villagers", 10);
 

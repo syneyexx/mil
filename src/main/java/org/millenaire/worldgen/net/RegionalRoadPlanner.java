@@ -97,33 +97,40 @@ public final class RegionalRoadPlanner {
     * never the townhall centre when buildings occupy it.
     */
    public static BlockPos attachmentPoint(SettlementPlan plan, BlockPos toward) {
+      List<BlockPos> roadPoints = new ArrayList<>();
+      for (var road : plan.roads()) {
+         roadPoints.addAll(road.waypoints());
+      }
+      return attachmentPoint(plan.center(), plan.radius(), roadPoints, toward);
+   }
+
+   /** Immutable-input variant for off-thread planning. */
+   public static BlockPos attachmentPoint(BlockPos center, int planRadius, List<BlockPos> roadPoints, BlockPos toward) {
       BlockPos best = null;
       double bestScore = Double.MAX_VALUE;
-      for (var road : plan.roads()) {
-         for (BlockPos p : road.waypoints()) {
-            double towardDist = p.distSqr(toward);
-            double centerDist = p.distSqr(plan.center());
-            // Prefer points near the rim facing the neighbour.
-            double score = towardDist - centerDist * 0.25;
-            if (score < bestScore) {
-               bestScore = score;
-               best = p;
-            }
+      for (BlockPos p : roadPoints) {
+         double towardDist = p.distSqr(toward);
+         double centerDist = p.distSqr(center);
+         // Prefer points near the rim facing the neighbour.
+         double score = towardDist - centerDist * 0.25;
+         if (score < bestScore) {
+            bestScore = score;
+            best = p;
          }
       }
       if (best != null) {
          return best;
       }
-      int radius = Math.max(8, plan.radius() - 4);
-      double dx = toward.getX() - plan.center().getX();
-      double dz = toward.getZ() - plan.center().getZ();
+      int radius = Math.max(8, planRadius - 4);
+      double dx = toward.getX() - center.getX();
+      double dz = toward.getZ() - center.getZ();
       double len = Math.sqrt(dx * dx + dz * dz);
       if (len < 1.0) {
-         return plan.center().offset(radius, 0, 0);
+         return center.offset(radius, 0, 0);
       }
-      int x = plan.center().getX() + (int)Math.round(dx / len * radius);
-      int z = plan.center().getZ() + (int)Math.round(dz / len * radius);
-      return new BlockPos(x, plan.center().getY(), z);
+      int x = center.getX() + (int)Math.round(dx / len * radius);
+      int z = center.getZ() + (int)Math.round(dz / len * radius);
+      return new BlockPos(x, center.getY(), z);
    }
 
    private static List<BlockPos> coarseWaypoints(BlockPos from, BlockPos to, RandomSource rng) {
