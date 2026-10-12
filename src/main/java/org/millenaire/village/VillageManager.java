@@ -1,8 +1,10 @@
 package org.millenaire.village;
 
 import com.mojang.logging.LogUtils;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +20,7 @@ import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillageType;
 import org.millenaire.faction.FactionLifecycle;
 import org.millenaire.living.LivingVillagesLifecycle;
+import org.millenaire.perf.tick.LevelTickCache;
 import org.millenaire.perf.tick.ServerTickGovernor;
 import org.millenaire.perf.tick.TickPhase;
 import org.millenaire.perf.tick.VillageSimulationLod;
@@ -204,14 +207,17 @@ public class VillageManager {
    public void tick(ServerLevel level) {
       boolean anyDirty = false;
       long gameTime = level.getGameTime();
-      java.util.ArrayList<Village> nearDue = new java.util.ArrayList<>();
-      java.util.ArrayList<Village> midDue = new java.util.ArrayList<>();
+      LevelTickCache.ensure(level);
+      ArrayList<Village> nearDue = new ArrayList<>();
+      ArrayList<Village> midDue = new ArrayList<>();
+      Set<Village> nearDueSet = Collections.newSetFromMap(new IdentityHashMap<>());
+      Set<Village> midDueSet = Collections.newSetFromMap(new IdentityHashMap<>());
 
       // Drain previously deferred Near villages first (round-robin fairness).
       if (!this.nearLodDeferred.isEmpty()) {
          for (VillageId id : this.nearLodDeferred) {
             Village deferred = this.villages.get(id);
-            if (deferred != null && deferred.isActive()) {
+            if (deferred != null && deferred.isActive() && nearDueSet.add(deferred)) {
                nearDue.add(deferred);
             }
          }
@@ -222,7 +228,7 @@ public class VillageManager {
       if (!this.midLodDeferred.isEmpty()) {
          for (VillageId id : this.midLodDeferred) {
             Village deferred = this.villages.get(id);
-            if (deferred != null && deferred.isActive() && !midDue.contains(deferred)) {
+            if (deferred != null && deferred.isActive() && midDueSet.add(deferred)) {
                midDue.add(deferred);
             }
          }
@@ -242,13 +248,13 @@ public class VillageManager {
 
          int villageHash = VillageSimulationLod.villageHash(v);
 
-         if (lod == VillageSimulationLod.NEAR && v.isActive() && !nearDue.contains(v)) {
+         if (lod == VillageSimulationLod.NEAR && v.isActive() && nearDueSet.add(v)) {
             nearDue.add(v);
          } else if (
             lod == VillageSimulationLod.MID
                && v.isActive()
                && lod.shouldRunFullTick(gameTime, villageHash)
-               && !midDue.contains(v)
+               && midDueSet.add(v)
          ) {
             midDue.add(v);
          }

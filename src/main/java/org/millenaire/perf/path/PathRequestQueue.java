@@ -1,7 +1,6 @@
 package org.millenaire.perf.path;
 
-import java.util.HashSet;
-import java.util.Set;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import org.millenaire.config.MillenaireServerConfig;
 
 /**
@@ -16,7 +15,7 @@ public final class PathRequestQueue {
    private static int startsThisTick;
    private static int rejectsThisTick;
    private static int coalescedThisTick;
-   private static final Set<Integer> inFlight = new HashSet<>();
+   private static final IntOpenHashSet inFlight = new IntOpenHashSet();
 
    private PathRequestQueue() {
    }

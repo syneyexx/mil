@@ -40,6 +40,10 @@ public class VillageSavedData extends SavedData {
    private static final Logger LOGGER = LogUtils.getLogger();
    private static final int CURRENT_VERSION = 6;
    private static final String DATA_NAME = "millenaire_villages";
+   private static final Factory<VillageSavedData> FACTORY = new Factory<>(VillageSavedData::new, (tag, registries) -> load(tag), null);
+   /** Per-level cache — avoids allocating a new Factory + map lookup on every hot-path call. */
+   private static final Map<net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level>, VillageSavedData> LEVEL_CACHE =
+      new java.util.concurrent.ConcurrentHashMap<>();
    private final VillageManager villageManager;
    private final List<VillageSavedData.LoneBuildingEntry> loneBuildingPositions = new ArrayList<>();
    private final Set<String> globalTags = new HashSet<>();
@@ -51,11 +55,23 @@ public class VillageSavedData extends SavedData {
    }
 
    public static Factory<VillageSavedData> factory() {
-      return new Factory<>(VillageSavedData::new, (tag, registries) -> load(tag), null);
+      return FACTORY;
    }
 
    public static VillageSavedData get(ServerLevel level) {
-      return (VillageSavedData)level.getDataStorage().computeIfAbsent(factory(), "millenaire_villages");
+      net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> key = level.dimension();
+      VillageSavedData cached = LEVEL_CACHE.get(key);
+      if (cached != null) {
+         return cached;
+      }
+      VillageSavedData data = (VillageSavedData)level.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
+      LEVEL_CACHE.put(key, data);
+      return data;
+   }
+
+   /** Drop cached references when the server stops so the next world load rebinds cleanly. */
+   public static void clearLevelCache() {
+      LEVEL_CACHE.clear();
    }
 
    public VillageManager getVillageManager() {

@@ -1,7 +1,6 @@
 package org.millenaire.perf.tick;
 
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.entity.MillVillager;
@@ -65,13 +64,7 @@ public enum EntitySimulationLod {
             return NEAR;
          }
       }
-      double nearest = Double.MAX_VALUE;
-      for (ServerPlayer player : level.players()) {
-         double distSq = player.distanceToSqr(entity);
-         if (distSq < nearest) {
-            nearest = distSq;
-         }
-      }
+      double nearest = LevelTickCache.nearestPlayerDistSq(level, entity);
       double mid = midDistance();
       double far = Math.max(mid + 1.0, farDistance());
       if (nearest <= mid * mid) {

@@ -28,8 +28,6 @@ public final class CombatSenseCache {
    private static final PerVillageTickCache<List<Monster>> MONSTERS = new PerVillageTickCache<>(10);
    private static final PerVillageTickCache<List<LivingEntity>> HOSTILES = new PerVillageTickCache<>(10);
    private static final PerVillageTickCache<List<MillVillager>> ALLIES = new PerVillageTickCache<>(10);
-   private static int refreshCount;
-   private static int cacheHits;
 
    private CombatSenseCache() {
    }
@@ -37,7 +35,6 @@ public final class CombatSenseCache {
    public static List<Monster> monsters(ServerLevel level, Village village) {
       UUID id = village.getId().uuid();
       return MONSTERS.get(id, level.getGameTime(), () -> {
-         refreshCount++;
          VillageType vType = ModCultures.getVillageType(village.getVillageTypeId());
          int radius = (vType != null ? vType.radius() : 90) + 16;
          BlockPos c = village.getCenter();
@@ -48,8 +45,7 @@ public final class CombatSenseCache {
 
    public static List<LivingEntity> hostiles(ServerLevel level, Village village, MillVillager self) {
       UUID id = village.getId().uuid();
-      List<LivingEntity> cached = HOSTILES.get(id, level.getGameTime(), () -> {
-         refreshCount++;
+      return HOSTILES.get(id, level.getGameTime(), () -> {
          VillageType vType = ModCultures.getVillageType(village.getVillageTypeId());
          int radius = (vType != null ? vType.radius() : 90) + 16;
          BlockPos c = village.getCenter();
@@ -60,14 +56,11 @@ public final class CombatSenseCache {
          }
          return List.copyOf(found);
       });
-      cacheHits++;
-      return cached;
    }
 
    public static List<MillVillager> nearbyVillagers(ServerLevel level, Village village) {
       UUID id = village.getId().uuid();
       return ALLIES.get(id, level.getGameTime(), () -> {
-         refreshCount++;
          VillageType vType = ModCultures.getVillageType(village.getVillageTypeId());
          int radius = Math.max(80, (vType != null ? vType.radius() : 90) + 16);
          BlockPos c = village.getCenter();
@@ -145,11 +138,16 @@ public final class CombatSenseCache {
    }
 
    public static String diagnostic() {
-      return "sense={refresh=" + refreshCount + ",hits=" + cacheHits + '}';
+      return "sense={hits="
+         + (MONSTERS.hits() + HOSTILES.hits() + ALLIES.hits())
+         + ",misses="
+         + (MONSTERS.misses() + HOSTILES.misses() + ALLIES.misses())
+         + '}';
    }
 
    public static void resetForTest() {
-      refreshCount = 0;
-      cacheHits = 0;
+      MONSTERS.resetMetrics();
+      HOSTILES.resetMetrics();
+      ALLIES.resetMetrics();
    }
 }

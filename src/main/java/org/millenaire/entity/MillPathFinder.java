@@ -157,13 +157,14 @@ public class MillPathFinder extends PathFinder {
    private Path reconstructPath(Node point, BlockPos targetPos, boolean reachesTarget) {
       List<Node> list = Lists.newArrayList();
       Node node = point;
-      list.add(0, point);
+      list.add(point);
 
       while (node.cameFrom != null) {
          node = node.cameFrom;
-         list.add(0, node);
+         list.add(node);
       }
 
+      java.util.Collections.reverse(list);
       return new Path(list, targetPos, reachesTarget);
    }
 }

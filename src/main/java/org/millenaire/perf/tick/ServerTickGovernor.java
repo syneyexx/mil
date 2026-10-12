@@ -1,5 +1,8 @@
 package org.millenaire.perf.tick;
 
+import javax.annotation.Nullable;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.profiling.ProfilerFiller;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.perf.path.PathRequestQueue;
 import org.millenaire.worldgen.materialize.MaterializationTickBudget;
@@ -11,6 +14,58 @@ import org.millenaire.worldgen.materialize.MaterializationTickBudget;
 public final class ServerTickGovernor {
    private static final double EMA_ALPHA = 0.08;
    private static final long IDEAL_TICK_NANOS = 50_000_000L;
+
+   /** Immutable config view refreshed on ModConfigEvent / first use. */
+   private record ConfigSnapshot(
+      boolean enabled,
+      boolean adaptiveBudget,
+      int globalBudgetMs,
+      int adaptiveMinGlobalMs,
+      int phaseApplyMs,
+      int phaseVillageNearMs,
+      int phaseVillageMidMs,
+      int phaseAiSupportMs,
+      int phaseCivMs,
+      int phaseWorldgenMs,
+      int phaseHighwayMs,
+      int phaseTailMs,
+      int entityGoalPickBudget,
+      int softMspt,
+      int hardMspt
+   ) {
+      static ConfigSnapshot defaults() {
+         return new ConfigSnapshot(true, true, 12, 6, 2, 4, 2, 1, 1, 2, 1, 1, 32, 40, 48);
+      }
+
+      static ConfigSnapshot readLive() {
+         try {
+            return new ConfigSnapshot(
+               Boolean.TRUE.equals(MillenaireServerConfig.SERVER.tickGovernorEnabled.get()),
+               Boolean.TRUE.equals(MillenaireServerConfig.SERVER.tickAdaptiveBudgetEnabled.get()),
+               Math.max(1, MillenaireServerConfig.SERVER.tickGlobalBudgetMs.getAsInt()),
+               Math.max(1, MillenaireServerConfig.SERVER.tickAdaptiveMinGlobalMs.getAsInt()),
+               Math.max(1, MillenaireServerConfig.SERVER.tickPhaseApplyMs.getAsInt()),
+               Math.max(1, MillenaireServerConfig.SERVER.tickPhaseVillageNearMs.getAsInt()),
+               Math.max(1, MillenaireServerConfig.SERVER.tickPhaseVillageMidMs.getAsInt()),
+               Math.max(1, MillenaireServerConfig.SERVER.tickPhaseAiSupportMs.getAsInt()),
+               Math.max(1, MillenaireServerConfig.SERVER.tickPhaseCivMs.getAsInt()),
+               Math.max(0, MillenaireServerConfig.SERVER.tickPhaseWorldgenMs.getAsInt()),
+               Math.max(0, MillenaireServerConfig.SERVER.tickPhaseHighwayMs.getAsInt()),
+               Math.max(1, MillenaireServerConfig.SERVER.tickPhaseTailMs.getAsInt()),
+               Math.max(1, MillenaireServerConfig.SERVER.entityGoalPickBudgetPerTick.getAsInt()),
+               MillenaireServerConfig.SERVER.tickSoftMsptThreshold.getAsInt(),
+               MillenaireServerConfig.SERVER.tickHardMsptThreshold.getAsInt()
+            );
+         } catch (IllegalStateException e) {
+            return defaults();
+         }
+      }
+   }
+
+   private static volatile ConfigSnapshot config = ConfigSnapshot.defaults();
+   private static boolean profilerSectionOpen;
+   @Nullable
+   private static ProfilerFiller activeProfiler;
 
    private static long tickGameTime = Long.MIN_VALUE;
    private static TickPhase currentPhase = TickPhase.APPLY;
@@ -65,28 +120,21 @@ public final class ServerTickGovernor {
    private ServerTickGovernor() {
    }
 
+   /** Refresh cached config values (call from ModConfigEvent / server start). */
+   public static void refreshConfigSnapshot() {
+      config = ConfigSnapshot.readLive();
+   }
+
    public static boolean enabled() {
-      try {
-         return Boolean.TRUE.equals(MillenaireServerConfig.SERVER.tickGovernorEnabled.get());
-      } catch (IllegalStateException e) {
-         return true;
-      }
+      return config.enabled();
    }
 
    public static boolean adaptiveBudgetEnabled() {
-      try {
-         return Boolean.TRUE.equals(MillenaireServerConfig.SERVER.tickAdaptiveBudgetEnabled.get());
-      } catch (IllegalStateException e) {
-         return true;
-      }
+      return config.adaptiveBudget();
    }
 
    public static int globalBudgetMs() {
-      try {
-         return Math.max(1, MillenaireServerConfig.SERVER.tickGlobalBudgetMs.getAsInt());
-      } catch (IllegalStateException e) {
-         return 12;
-      }
+      return config.globalBudgetMs();
    }
 
    public static int effectiveGlobalBudgetMs() {
@@ -98,32 +146,28 @@ public final class ServerTickGovernor {
    }
 
    public static int phaseWorldgenMs() {
-      try {
-         return Math.max(0, MillenaireServerConfig.SERVER.tickPhaseWorldgenMs.getAsInt());
-      } catch (IllegalStateException e) {
-         return 2;
-      }
+      return config.phaseWorldgenMs();
    }
 
    public static int phaseHighwayMs() {
-      try {
-         return Math.max(0, MillenaireServerConfig.SERVER.tickPhaseHighwayMs.getAsInt());
-      } catch (IllegalStateException e) {
-         return 1;
-      }
+      return config.phaseHighwayMs();
    }
 
    public static int entityGoalPickBudgetPerTick() {
-      try {
-         return Math.max(1, MillenaireServerConfig.SERVER.entityGoalPickBudgetPerTick.getAsInt());
-      } catch (IllegalStateException e) {
-         return 32;
-      }
+      return config.entityGoalPickBudget();
    }
 
    /** Wall-clock mark at {@code ServerTickEvent.Pre} for remaining-tick awareness. */
    public static void markServerTickStart() {
       serverTickStartNanos = System.nanoTime();
+   }
+
+   public static void beginTick(ServerLevel level) {
+      if (level != null) {
+         LevelTickCache.ensure(level);
+         activeProfiler = level.getProfiler();
+         beginTick(level.getGameTime());
+      }
    }
 
    public static void beginTick(long gameTime) {
@@ -196,13 +240,7 @@ public final class ServerTickGovernor {
       if (!adaptiveBudgetEnabled()) {
          return ms;
       }
-      int minMs;
-      try {
-         minMs = Math.max(1, MillenaireServerConfig.SERVER.tickAdaptiveMinGlobalMs.getAsInt());
-      } catch (IllegalStateException e) {
-         minMs = 6;
-      }
-      minMs = Math.min(minMs, configured);
+      int minMs = Math.min(config.adaptiveMinGlobalMs(), configured);
 
       long remainingIdeal = IDEAL_TICK_NANOS - alreadyUsedNanos;
       int remainingMs = (int)Math.max(0L, remainingIdeal / 1_000_000L);
@@ -225,9 +263,31 @@ public final class ServerTickGovernor {
       long now = System.nanoTime();
       phaseNanos[currentPhase.ordinal()] += Math.max(0L, now - lastPhaseNanos);
       lastPhaseNanos = now;
+      popProfilerSection();
       currentPhase = phase;
+      pushProfilerSection(phase);
       phaseStartNanos = now;
       phaseDeadlineNanos = phaseQuotaDeadline(phase, now);
+   }
+
+   private static void pushProfilerSection(TickPhase phase) {
+      ProfilerFiller profiler = activeProfiler;
+      if (profiler == null || phase == null) {
+         return;
+      }
+      profiler.push("millenaire:" + phase.name().toLowerCase());
+      profilerSectionOpen = true;
+   }
+
+   private static void popProfilerSection() {
+      if (!profilerSectionOpen) {
+         return;
+      }
+      ProfilerFiller profiler = activeProfiler;
+      if (profiler != null) {
+         profiler.pop();
+      }
+      profilerSectionOpen = false;
    }
 
    private static long phaseQuotaDeadline(TickPhase phase, long now) {
@@ -254,28 +314,16 @@ public final class ServerTickGovernor {
    }
 
    private static int phaseQuotaMs(TickPhase phase) {
-      try {
-         return switch (phase) {
-            case APPLY -> Math.max(1, MillenaireServerConfig.SERVER.tickPhaseApplyMs.getAsInt());
-            case VILLAGE_NEAR -> Math.max(1, MillenaireServerConfig.SERVER.tickPhaseVillageNearMs.getAsInt());
-            case VILLAGE_MID -> Math.max(1, MillenaireServerConfig.SERVER.tickPhaseVillageMidMs.getAsInt());
-            case AI_SUPPORT -> Math.max(1, MillenaireServerConfig.SERVER.tickPhaseAiSupportMs.getAsInt());
-            case CIV_FACTION -> Math.max(1, MillenaireServerConfig.SERVER.tickPhaseCivMs.getAsInt());
-            case WORLDGEN -> Math.max(1, phaseWorldgenMs());
-            case HIGHWAY -> Math.max(1, phaseHighwayMs());
-            case BOSS_QUEST_MAP -> Math.max(1, MillenaireServerConfig.SERVER.tickPhaseTailMs.getAsInt());
-         };
-      } catch (IllegalStateException e) {
-         return switch (phase) {
-            case APPLY -> 2;
-            case VILLAGE_NEAR -> 4;
-            case VILLAGE_MID -> 2;
-            case AI_SUPPORT, CIV_FACTION -> 1;
-            case WORLDGEN -> 2;
-            case HIGHWAY -> 1;
-            case BOSS_QUEST_MAP -> 1;
-         };
-      }
+      return switch (phase) {
+         case APPLY -> config.phaseApplyMs();
+         case VILLAGE_NEAR -> config.phaseVillageNearMs();
+         case VILLAGE_MID -> config.phaseVillageMidMs();
+         case AI_SUPPORT -> config.phaseAiSupportMs();
+         case CIV_FACTION -> config.phaseCivMs();
+         case WORLDGEN -> Math.max(1, phaseWorldgenMs());
+         case HIGHWAY -> Math.max(1, phaseHighwayMs());
+         case BOSS_QUEST_MAP -> config.phaseTailMs();
+      };
    }
 
    public static boolean hasTime() {
@@ -386,6 +434,8 @@ public final class ServerTickGovernor {
       long now = System.nanoTime();
       phaseNanos[currentPhase.ordinal()] += Math.max(0L, now - lastPhaseNanos);
       lastPhaseNanos = now;
+      popProfilerSection();
+      activeProfiler = null;
 
       long postSpentNanos = Math.max(0L, now - tickStartNanos);
       double postSpentMs = postSpentNanos / 1_000_000.0;
@@ -413,16 +463,8 @@ public final class ServerTickGovernor {
 
    private static void updateNextPressure(long postSpentNanos, long alreadyUsedNanos) {
       long totalApprox = postSpentNanos + alreadyUsedNanos;
-      int softMs;
-      int hardMs;
-      try {
-         softMs = MillenaireServerConfig.SERVER.tickSoftMsptThreshold.getAsInt();
-         hardMs = MillenaireServerConfig.SERVER.tickHardMsptThreshold.getAsInt();
-      } catch (IllegalStateException e) {
-         softMs = 40;
-         hardMs = 48;
-      }
-      hardMs = Math.max(softMs + 1, hardMs);
+      int softMs = config.softMspt();
+      int hardMs = Math.max(softMs + 1, config.hardMspt());
 
       TickPressure measured;
       long allowanceNanos = (long)effectiveGlobalMs * 1_000_000L;
@@ -571,8 +613,11 @@ public final class ServerTickGovernor {
       activeVillages = 0;
       dataOnlyVillages = 0;
       backgroundTickSkipped = 0;
+      popProfilerSection();
+      activeProfiler = null;
       PathRequestQueue.resetForTest();
       MaterializationTickBudget.reset();
+      LevelTickCache.resetForTest();
    }
 
    /** Test helper: simulate wall time already used before Post. */

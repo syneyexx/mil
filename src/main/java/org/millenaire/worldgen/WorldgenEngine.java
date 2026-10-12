@@ -151,7 +151,9 @@ public final class WorldgenEngine {
             WorldgenMetrics.snapshot()
          );
       }
-      VillageTerrainMapCache.purgeStale(overworld.getGameTime());
+      if (overworld.getGameTime() % 100L == 0L) {
+         VillageTerrainMapCache.purgeStale(overworld.getGameTime());
+      }
    }
 
    /**

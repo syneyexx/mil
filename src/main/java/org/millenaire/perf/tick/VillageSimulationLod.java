@@ -1,7 +1,7 @@
 package org.millenaire.perf.tick;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.village.Village;
 
@@ -52,14 +52,11 @@ public enum VillageSimulationLod {
    }
 
    public static double nearestPlayerDistSq(ServerLevel level, Village village) {
-      double nearest = Double.MAX_VALUE;
-      for (ServerPlayer player : level.players()) {
-         double distSq = player.blockPosition().distSqr(village.getCenter());
-         if (distSq < nearest) {
-            nearest = distSq;
-         }
+      if (village == null || village.getCenter() == null) {
+         return Double.MAX_VALUE;
       }
-      return nearest;
+      BlockPos c = village.getCenter();
+      return LevelTickCache.nearestPlayerDistSqToBlock(level, c.getX(), c.getY(), c.getZ());
    }
 
    private static double keepNearRadius() {

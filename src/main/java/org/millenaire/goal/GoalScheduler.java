@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import net.minecraft.resources.ResourceLocation;
-import org.millenaire.TickConstants;
 import org.millenaire.diagnostics.NavEvent;
 import org.millenaire.diagnostics.NavigationCounters;
 import org.slf4j.Logger;
@@ -265,7 +264,7 @@ public class GoalScheduler {
          return true;
       }
 
-      boolean isNight = TickConstants.isNight(ctx.level());
+      boolean isNight = org.millenaire.perf.tick.LevelTickCache.isNight(ctx.level());
       return isNight && !goal.canBeDoneAtNight() ? false : isNight || goal.canBeDoneInDayTime();
    }
 

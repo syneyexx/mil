@@ -5,6 +5,31 @@
 **Input:** Claude-analyse (ticks / worldgen / bestaande opt-systemen), geverifieerd tegen bron.  
 **Invarianten:** niet-destructief; gedrag gelijk tenzij config-gated; geen SavedData-schema-breuk; RNG-volgorde worldgen ongewijzigd; combat-reactie ≤ ~5 ticks trager, nooit bij damage.
 
+### Implementatiestatus (Wave 2 start)
+
+| ID | Status |
+|----|--------|
+| A1 VillageSavedData cache | **done** |
+| A2 config snapshot | **done** |
+| A3 profiler push/pop | **done** |
+| B1–B8 villager fixed costs (paddy, safety, LOD buffer, cloth dirty, pickup scatter, nanoTime sample, sleep/night cache) | **done** (GoalContext reuse overgeslagen — record; goedkoop na A1) |
+| C1 isNight via LevelTickCache | **done** |
+| C5 PursueWantedPlayer `level.players()` | **done** |
+| C6 HiredEscort opponent cache 10t | **done** |
+| C2–C4 combat-scan cadence / cooldown arrays | open (middel risico) |
+| D1 IdentityHashSet due-lists | **done** |
+| D2 spelerpositiebuffer (LevelTickCache) | **done** |
+| D3–D7 Village.tick slices / 2e LOD-ring | open |
+| E1 prefill tijd-gate | **done** (hasTime; nog geen ticket-only FULL path) |
+| E2 ring LongOpenHashSet + footprint cadence 20t | **done** |
+| E3–E6 engine heap / chunk-index / materializeKey | open |
+| F1 chunkIndexRanges in materializer | **done** (alleen zonder preserve-ground prepend) |
+| F2 section batch writes | open (config-gated later) |
+| G1 reconstructPath reverse | **done** |
+| G2 IntOpenHashSet path queue | **done** |
+| G6 echte cache hit/miss | **done** |
+| G3–G5/G7–G8 async validate / AbortPolicy / TickPressure AI | open |
+
 ---
 
 ## 0. Diagnose (uit code, niet uit docs)
