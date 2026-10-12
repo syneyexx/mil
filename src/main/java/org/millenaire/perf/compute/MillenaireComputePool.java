@@ -36,6 +36,8 @@ public final class MillenaireComputePool {
          t.setPriority(Thread.NORM_PRIORITY - 1);
          return t;
       };
+      // AbortPolicy: reject so callers (entity path / village path) fall back to sync / backoff.
+      // Do not use CallerRuns — that would run compute on the server thread under load.
       ThreadPoolExecutor pool = new ThreadPoolExecutor(
          threads,
          threads,

@@ -194,6 +194,7 @@ public class Millenaire {
          }
          if (event.getConfig().getType() == Type.SERVER) {
             org.millenaire.chat.NpcChatConfigMigration.migrateLoadedServerConfig();
+            org.millenaire.perf.tick.ServerTickGovernor.refreshConfigSnapshot();
          }
       });
       ModBlocks.register(modEventBus);
@@ -444,6 +445,9 @@ public class Millenaire {
          org.millenaire.worldgen.highway.HighwayMaterializer.onServerStopping();
          org.millenaire.perf.compute.MillenaireComputePool.shutdown();
          org.millenaire.map.sync.SettlementMapSyncService.onServerStopping();
+         VillageSavedData.clearLevelCache();
+         org.millenaire.perf.tick.LevelTickCache.clear();
+         org.millenaire.worldgen.prefill.SpawnRingPrefillService.clearTransientState();
          if (spawnQueueInstance != null) {
             spawnQueueInstance.reset();
          }
@@ -488,7 +492,7 @@ public class Millenaire {
          TestPlayerManager.acknowledgeChunkBatch();
          ServerLevel overworld = event.getServer().getLevel(Level.OVERWORLD);
          if (overworld != null) {
-            org.millenaire.perf.tick.ServerTickGovernor.beginTick(overworld.getGameTime());
+            org.millenaire.perf.tick.ServerTickGovernor.beginTick(overworld);
             // Apply completed worker results before village/worldgen consume shared budgets.
             org.millenaire.perf.tick.ServerTickGovernor.enter(org.millenaire.perf.tick.TickPhase.APPLY);
             if (org.millenaire.perf.compute.MillenaireComputePool.isRunning()) {
@@ -614,6 +618,7 @@ public class Millenaire {
                   } catch (IllegalStateException ignored) {
                   }
                   org.millenaire.perf.compute.MillenaireComputePool.start(workers);
+                  org.millenaire.perf.tick.ServerTickGovernor.refreshConfigSnapshot();
                   org.millenaire.chat.NpcChatService.bootstrap();
                   org.millenaire.map.sync.SettlementMapSyncService.onServerStarting(event.getServer());
                   ContentDirectoryManager.init(event.getServer());

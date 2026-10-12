@@ -5,7 +5,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.phys.AABB;
 import org.millenaire.combat.CombatHelper;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.culture.ModCultures;
@@ -81,25 +80,26 @@ public class PursueWantedPlayerGoal implements VillagerGoal {
          return null;
       }
       WantedTier minTier = onSightTier();
-      AABB box = villager.getBoundingBox().inflate(ACQUIRE_RADIUS);
-      ServerPlayer best = null;
       double bestSq = ACQUIRE_RADIUS * ACQUIRE_RADIUS;
-      for (ServerPlayer player : level.getEntitiesOfClass(ServerPlayer.class, box)) {
+      ServerPlayer best = null;
+      // Players are few — walk level.players() instead of an AABB entity query per villager.
+      for (ServerPlayer player : level.players()) {
          if (!CombatHelper.isPlayerTargetable(player)) {
             continue;
          }
          if (village.isControlledBy(player.getUUID())) {
             continue;
          }
+         double d = villager.distanceToSqr(player);
+         if (d > bestSq) {
+            continue;
+         }
          WantedTier tier = CultureBountySavedData.get(level).getManager().getTier(player.getUUID(), cultureId);
          if (!tier.isAtLeast(minTier)) {
             continue;
          }
-         double d = villager.distanceToSqr(player);
-         if (d < bestSq) {
-            bestSq = d;
-            best = player;
-         }
+         bestSq = d;
+         best = player;
       }
       return best;
    }

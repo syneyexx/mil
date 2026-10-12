@@ -43,6 +43,13 @@ public final class WorldgenEngine {
    /** Chunks already materialized this game tick — avoids TOUCH + resume double work. */
    private static final Set<Long> materializedThisTick = new LinkedHashSet<>();
    private static long materializeDedupeTick = Long.MIN_VALUE;
+   /** Cached near-spawn kick list; rebuilt when spawn moves >16 or plan count changes. */
+   private static List<SettlementPlan> nearSpawnCache = List.of();
+   private static int nearSpawnCacheX = Integer.MIN_VALUE;
+   private static int nearSpawnCacheZ = Integer.MIN_VALUE;
+   private static int nearSpawnCachePlanCount = -1;
+   private static int nearSpawnCacheRadius = -1;
+   private static long lastActivationFullScanTick = Long.MIN_VALUE;
 
    private WorldgenEngine() {
    }
@@ -55,9 +62,12 @@ public final class WorldgenEngine {
    }
 
    private static long materializeKey(UUID planId, long chunkPacked) {
-      return planId.getMostSignificantBits()
-         ^ planId.getLeastSignificantBits() * 31L
-         ^ chunkPacked;
+      long a = planId.getMostSignificantBits();
+      long b = planId.getLeastSignificantBits();
+      // Mix plan bits with chunk packed — less collision-prone than plain XOR.
+      long h = a * 31L + b;
+      h = h * 31L + chunkPacked;
+      return h ^ (h >>> 32);
    }
 
    public static boolean isEnabled() {
@@ -117,6 +127,9 @@ public final class WorldgenEngine {
       MaterializationTickBudget.reset();
       activationWatch.clear();
       activationRoundRobin = 0;
+      nearSpawnCache = List.of();
+      nearSpawnCachePlanCount = -1;
+      lastActivationFullScanTick = Long.MIN_VALUE;
       WorldgenContentSnapshot.clearReady();
    }
 
@@ -151,7 +164,9 @@ public final class WorldgenEngine {
             WorldgenMetrics.snapshot()
          );
       }
-      VillageTerrainMapCache.purgeStale(overworld.getGameTime());
+      if (overworld.getGameTime() % 100L == 0L) {
+         VillageTerrainMapCache.purgeStale(overworld.getGameTime());
+      }
    }
 
    /**
@@ -168,8 +183,44 @@ public final class WorldgenEngine {
       if (boostRadius <= 0 || !MaterializationTickBudget.hasTime()) {
          return;
       }
-      long radiusSq = (long)boostRadius * boostRadius;
       var spawn = level.getSharedSpawnPos();
+      List<SettlementPlan> near = nearSpawnPlans(level, store, spawn, boostRadius);
+      if (near.isEmpty()) {
+         return;
+      }
+      int kicks = 0;
+      int maxKicks = Math.max(2, MillenaireServerConfig.SERVER.worldgenPlanningBudget.getAsInt());
+      for (SettlementPlan plan : near) {
+         if (kicks >= maxKicks || !MaterializationTickBudget.hasTime()) {
+            break;
+         }
+         if (plan.status().isTerminalFailure() || plan.activated()) {
+            continue;
+         }
+         if (plan.status() == SettlementPlanStatus.PHYSICAL_COMPLETE
+            || plan.status() == SettlementPlanStatus.ACTIVATING) {
+            watchActivation(plan.planId());
+            continue;
+         }
+         kickPlanExecution(level, plan);
+         kicks++;
+      }
+   }
+
+   private static List<SettlementPlan> nearSpawnPlans(
+      ServerLevel level, SettlementPlanSavedData store, net.minecraft.core.BlockPos spawn, int boostRadius
+   ) {
+      int planCount = store.planCount();
+      boolean spawnMoved = Math.abs(spawn.getX() - nearSpawnCacheX) > 16 || Math.abs(spawn.getZ() - nearSpawnCacheZ) > 16;
+      boolean stale = level.getGameTime() % 100L == 0L;
+      if (!spawnMoved
+         && !stale
+         && nearSpawnCacheRadius == boostRadius
+         && nearSpawnCachePlanCount == planCount
+         && nearSpawnCache != null) {
+         return nearSpawnCache;
+      }
+      long radiusSq = (long)boostRadius * boostRadius;
       List<SettlementPlan> near = new ArrayList<>();
       for (SettlementPlan plan : store.plansView()) {
          if (plan.status().isTerminalFailure() || plan.activated()) {
@@ -190,24 +241,13 @@ public final class WorldgenEngine {
          }
          near.add(plan);
       }
-      if (near.isEmpty()) {
-         return;
-      }
       near.sort(Comparator.comparing(SettlementPlan::planId));
-      int kicks = 0;
-      int maxKicks = Math.max(2, MillenaireServerConfig.SERVER.worldgenPlanningBudget.getAsInt());
-      for (SettlementPlan plan : near) {
-         if (kicks >= maxKicks || !MaterializationTickBudget.hasTime()) {
-            break;
-         }
-         if (plan.status() == SettlementPlanStatus.PHYSICAL_COMPLETE
-            || plan.status() == SettlementPlanStatus.ACTIVATING) {
-            watchActivation(plan.planId());
-            continue;
-         }
-         kickPlanExecution(level, plan);
-         kicks++;
-      }
+      nearSpawnCache = List.copyOf(near);
+      nearSpawnCacheX = spawn.getX();
+      nearSpawnCacheZ = spawn.getZ();
+      nearSpawnCachePlanCount = planCount;
+      nearSpawnCacheRadius = boostRadius;
+      return nearSpawnCache;
    }
 
    /**
@@ -436,11 +476,16 @@ public final class WorldgenEngine {
 
    private static void activateDuePlans(ServerLevel overworld, SettlementPlanSavedData store) {
       List<SettlementPlan> candidates = new ArrayList<>();
+      // Full scan only when watch is empty, and at most every 40 ticks (watchActivation fills it sooner).
       if (activationWatch.isEmpty()) {
-         for (SettlementPlan plan : store.plansView()) {
-            if ((plan.status() == SettlementPlanStatus.PHYSICAL_COMPLETE || plan.status() == SettlementPlanStatus.ACTIVATING)
-               && plan.isPhysicallyComplete()) {
-               activationWatch.add(plan.planId());
+         long t = overworld.getGameTime();
+         if (lastActivationFullScanTick == Long.MIN_VALUE || t - lastActivationFullScanTick >= 40L) {
+            lastActivationFullScanTick = t;
+            for (SettlementPlan plan : store.plansView()) {
+               if ((plan.status() == SettlementPlanStatus.PHYSICAL_COMPLETE || plan.status() == SettlementPlanStatus.ACTIVATING)
+                  && plan.isPhysicallyComplete()) {
+                  activationWatch.add(plan.planId());
+               }
             }
          }
       }

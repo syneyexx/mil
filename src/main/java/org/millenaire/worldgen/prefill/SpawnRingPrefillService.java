@@ -1,6 +1,7 @@
 package org.millenaire.worldgen.prefill;
 
 import com.mojang.logging.LogUtils;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,9 +15,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import org.millenaire.config.MillenaireServerConfig;
+import org.millenaire.perf.tick.ServerTickGovernor;
 import org.millenaire.village.VillageChunkLoader;
 import org.millenaire.worldgen.WorldgenEngine;
 import org.millenaire.worldgen.content.WorldgenContentSnapshot;
+import org.millenaire.worldgen.materialize.MaterializationTickBudget;
 import org.millenaire.worldgen.plan.SettlementPlan;
 import org.millenaire.worldgen.plan.SettlementPlanSavedData;
 import org.millenaire.worldgen.plan.SettlementPlanStatus;
@@ -37,8 +40,20 @@ public final class SpawnRingPrefillService {
 
    /** planId -> chunks currently force-loaded for prefill. */
    private static final Map<UUID, Set<ChunkPos>> HELD_TICKETS = new HashMap<>();
+   /** Cached ring-region packed keys for O(1) isRingPlan checks. */
+   private static final LongOpenHashSet RING_REGION_SET = new LongOpenHashSet();
+   private static long ringSetDataIdentity = Long.MIN_VALUE;
+   /** Throttle ensureFootprintLoaded per plan (every 20 drain ticks). */
+   private static final Map<UUID, Integer> LAST_FOOTPRINT_DRAIN_TICK = new HashMap<>();
 
    private SpawnRingPrefillService() {
+   }
+
+   public static void clearTransientState() {
+      HELD_TICKETS.clear();
+      RING_REGION_SET.clear();
+      ringSetDataIdentity = Long.MIN_VALUE;
+      LAST_FOOTPRINT_DRAIN_TICK.clear();
    }
 
    public static void onWorldReady(ServerLevel level) {
@@ -210,12 +225,18 @@ public final class SpawnRingPrefillService {
       }
       int generated = 0;
       while (data.regionIndex() < data.regionCount() && generated < budget) {
+         if (!ServerTickGovernor.hasTime() || !MaterializationTickBudget.hasTime()) {
+            break;
+         }
          long packed = data.regionPacked().get(data.regionIndex());
          SettlementRegionKey region = SettlementRegionKey.fromPacked(packed);
          int cx = region.centerChunkX(regionSize);
          int cz = region.centerChunkZ(regionSize);
          for (int dx = -CENTRE_CHUNK_RING; dx <= CENTRE_CHUNK_RING && generated < budget; dx++) {
             for (int dz = -CENTRE_CHUNK_RING; dz <= CENTRE_CHUNK_RING && generated < budget; dz++) {
+               if (!ServerTickGovernor.hasTime() || !MaterializationTickBudget.hasTime()) {
+                  return;
+               }
                level.getChunk(cx + dx, cz + dz);
                generated++;
             }
@@ -250,18 +271,25 @@ public final class SpawnRingPrefillService {
       }
 
       SettlementPlanSavedData store = SettlementPlanSavedData.get(level);
+      ensureRingSet(data);
       int kicks = 0;
       int open = 0;
+      int drainTick = data.drainTicks();
       for (SettlementPlan plan : store.plansView()) {
          if (!isRingPlan(plan, data)) {
             continue;
          }
          if (plan.activated() || plan.status() == SettlementPlanStatus.ACTIVE || plan.status().isTerminalFailure()) {
             releasePlanTickets(level, plan);
+            LAST_FOOTPRINT_DRAIN_TICK.remove(plan.planId());
             continue;
          }
          open++;
-         ensureFootprintLoaded(level, plan);
+         Integer last = LAST_FOOTPRINT_DRAIN_TICK.get(plan.planId());
+         if (last == null || drainTick - last >= 20) {
+            ensureFootprintLoaded(level, plan);
+            LAST_FOOTPRINT_DRAIN_TICK.put(plan.planId(), drainTick);
+         }
          if (kicks < kicksBudget) {
             WorldgenEngine.kickPlanExecution(level, plan);
             kicks++;
@@ -336,12 +364,28 @@ public final class SpawnRingPrefillService {
       return open;
    }
 
+   private static void ensureRingSet(SpawnRingPrefillSavedData data) {
+      // regionCount + first packed as a cheap identity; rebuild when the list changes.
+      long identity = ((long)data.regionCount() << 32)
+         ^ (data.regionCount() > 0 ? data.regionPacked().get(0) : 0L);
+      if (identity == ringSetDataIdentity && RING_REGION_SET.size() == data.regionCount()) {
+         return;
+      }
+      RING_REGION_SET.clear();
+      for (Long packed : data.regionPacked()) {
+         if (packed != null) {
+            RING_REGION_SET.add(packed.longValue());
+         }
+      }
+      ringSetDataIdentity = identity;
+   }
+
    private static boolean isRingPlan(SettlementPlan plan, SpawnRingPrefillSavedData data) {
       if (plan == null || plan.region() == null || data.regionCount() == 0) {
          return false;
       }
-      long packed = plan.region().packed();
-      return data.regionPacked().contains(packed);
+      ensureRingSet(data);
+      return RING_REGION_SET.contains(plan.region().packed());
    }
 
    private static void ensureFootprintLoaded(ServerLevel level, SettlementPlan plan) {

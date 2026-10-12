@@ -72,6 +72,10 @@ public final class SettlementLayoutPlanner {
             );
          }
          int columns = MillenaireServerConfig.SERVER.worldgenTerrainColumnsPerTick.getAsInt();
+         if (org.millenaire.perf.tick.ServerTickGovernor.pressure()
+            == org.millenaire.perf.tick.TickPressure.HEALTHY) {
+            columns = Math.min(4096, columns * 2);
+         }
          // Soft deadline: share the tick's MaterializationTickBudget deadline (no fresh budget).
          if (!MaterializationTickBudget.hasTime()) {
             return false;

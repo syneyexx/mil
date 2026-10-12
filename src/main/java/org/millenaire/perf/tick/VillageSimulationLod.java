@@ -1,7 +1,7 @@
 package org.millenaire.perf.tick;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.village.Village;
 
@@ -44,22 +44,39 @@ public enum VillageSimulationLod {
          return NEAR;
       }
       double nearestSq = nearestPlayerDistSq(level, village);
+      double inner = innerNearRadius();
       double nearRadius = keepNearRadius();
+      // Optional inner ring: only villages inside {@code inner} are NEAR; keepActive..inner = MID.
+      if (inner > 0.0) {
+         if (nearestSq <= inner * inner) {
+            return NEAR;
+         }
+         if (nearestSq <= nearRadius * nearRadius) {
+            return MID;
+         }
+         return MID;
+      }
       if (nearestSq <= nearRadius * nearRadius) {
          return NEAR;
       }
       return MID;
    }
 
-   public static double nearestPlayerDistSq(ServerLevel level, Village village) {
-      double nearest = Double.MAX_VALUE;
-      for (ServerPlayer player : level.players()) {
-         double distSq = player.blockPosition().distSqr(village.getCenter());
-         if (distSq < nearest) {
-            nearest = distSq;
-         }
+   /** 0 = disabled (NEAR = keepActiveRadius). When &gt; 0, true NEAR uses this radius. */
+   public static double innerNearRadius() {
+      try {
+         return Math.max(0, MillenaireServerConfig.SERVER.villageLodInnerNearRadius.getAsInt());
+      } catch (IllegalStateException e) {
+         return 0.0;
       }
-      return nearest;
+   }
+
+   public static double nearestPlayerDistSq(ServerLevel level, Village village) {
+      if (village == null || village.getCenter() == null) {
+         return Double.MAX_VALUE;
+      }
+      BlockPos c = village.getCenter();
+      return LevelTickCache.nearestPlayerDistSqToBlock(level, c.getX(), c.getY(), c.getZ());
    }
 
    private static double keepNearRadius() {

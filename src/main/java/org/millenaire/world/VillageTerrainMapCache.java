@@ -60,6 +60,10 @@ public final class VillageTerrainMapCache {
       }
       MaterializationTickBudget.ensureTick(level.getGameTime());
       int columns = MillenaireServerConfig.SERVER.worldgenTerrainColumnsPerTick.getAsInt();
+      if (org.millenaire.perf.tick.ServerTickGovernor.pressure()
+         == org.millenaire.perf.tick.TickPressure.HEALTHY) {
+         columns = Math.min(4096, columns * 2);
+      }
       long deadline = System.nanoTime() + MillenaireServerConfig.SERVER.worldgenTickTimeBudgetMs.getAsInt() * 1_000_000L;
       // Growth shares the server thread — never generate distant columns.
       VillageTerrainMap.ScanSession.Status status = entry.scan.advance(level, columns, deadline, false);

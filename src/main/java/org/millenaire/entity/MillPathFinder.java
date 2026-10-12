@@ -37,6 +37,14 @@ public class MillPathFinder extends PathFinder {
    private static long searchTimeBudgetNanos() {
       try {
          int ms = org.millenaire.config.MillenaireServerConfig.SERVER.pathMaxSearchMs.getAsInt();
+         if (Boolean.TRUE.equals(org.millenaire.config.MillenaireServerConfig.SERVER.tickPressureScalesAi.get())) {
+            org.millenaire.perf.tick.TickPressure p = org.millenaire.perf.tick.ServerTickGovernor.pressure();
+            if (p == org.millenaire.perf.tick.TickPressure.HARD) {
+               ms = Math.max(1, ms / 2);
+            } else if (p == org.millenaire.perf.tick.TickPressure.SOFT) {
+               ms = Math.max(1, (ms * 3) / 4);
+            }
+         }
          return Math.max(500_000L, ms * 1_000_000L);
       } catch (IllegalStateException e) {
          return DEFAULT_SEARCH_TIME_BUDGET_NANOS;
@@ -157,13 +165,14 @@ public class MillPathFinder extends PathFinder {
    private Path reconstructPath(Node point, BlockPos targetPos, boolean reachesTarget) {
       List<Node> list = Lists.newArrayList();
       Node node = point;
-      list.add(0, point);
+      list.add(point);
 
       while (node.cameFrom != null) {
          node = node.cameFrom;
-         list.add(0, node);
+         list.add(node);
       }
 
+      java.util.Collections.reverse(list);
       return new Path(list, targetPos, reachesTarget);
    }
 }

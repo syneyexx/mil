@@ -154,6 +154,9 @@ public class MillVillager extends PathfinderMob {
    private int suffocationGraceTicks;
    private int waterTicks;
    private boolean inRicePaddy;
+   private long lastRicePaddyBlockKey = Long.MIN_VALUE;
+   private long lastSafetyProbeBlockKey = Long.MIN_VALUE;
+   private int lastClothInventoryModCount = Integer.MIN_VALUE;
    private int sleepDebtTicks;
    private boolean guiPreviewMode;
    private boolean roadShopTraveler;
@@ -1130,16 +1133,23 @@ public class MillVillager extends PathfinderMob {
    }
 
    public void tick() {
-      this.inRicePaddy = this.computeInRicePaddy();
+      BlockPos feetNow = this.blockPosition();
+      long feetKey = feetNow.asLong();
+      if (feetKey != this.lastRicePaddyBlockKey) {
+         this.lastRicePaddyBlockKey = feetKey;
+         this.inRicePaddy = this.computeInRicePaddy(feetNow);
+      }
       super.tick();
 
       long entityAiStartNanos = 0L;
-      if (!this.level().isClientSide()) {
+      boolean sampleAiNanos = !this.level().isClientSide() && (this.getId() & 7) == (this.tickCount & 7);
+      if (sampleAiNanos) {
          entityAiStartNanos = System.nanoTime();
       }
 
       org.millenaire.perf.tick.EntitySimulationLod entityLod = org.millenaire.perf.tick.EntitySimulationLod.NEAR;
       if (!this.level().isClientSide() && this.level() instanceof net.minecraft.server.level.ServerLevel serverForLod) {
+         org.millenaire.perf.tick.LevelTickCache.ensure(serverForLod);
          entityLod = org.millenaire.perf.tick.EntitySimulationLod.resolve(serverForLod, this);
          org.millenaire.perf.tick.ServerTickGovernor.noteEntityLod(entityLod);
       }
@@ -1159,7 +1169,13 @@ public class MillVillager extends PathfinderMob {
       }
 
       // Far sleep: amortize anti-drown / suffocation block probes (still rescue, just not every tick).
-      boolean safetyProbe = !farSleep || this.tickCount % 40 == 0;
+      // Near/Mid: re-probe on block change or every 4 ticks (was every tick).
+      boolean safetyProbe = farSleep
+         ? this.tickCount % 40 == 0
+         : feetKey != this.lastSafetyProbeBlockKey || (this.tickCount & 3) == 0;
+      if (safetyProbe) {
+         this.lastSafetyProbeBlockKey = feetKey;
+      }
       if (!this.level().isClientSide() && this.goalScheduler != null && safetyProbe) {
          if (this.isInWater()) {
             this.waterTicks += farSleep ? 40 : 1;
@@ -1196,7 +1212,11 @@ public class MillVillager extends PathfinderMob {
       if (!this.level().isClientSide() && this.tickCount % 20 == 0 && this.villagerTypeId != null) {
          VillagerType vType = ModCultures.getVillagerType(this.villagerTypeId);
          if (vType != null) {
-            this.updateClothTextures(vType);
+            int mod = this.inventory.modCount();
+            if (mod != this.lastClothInventoryModCount) {
+               this.lastClothInventoryModCount = mod;
+               this.updateClothTextures(vType);
+            }
          }
       }
 
@@ -1227,7 +1247,8 @@ public class MillVillager extends PathfinderMob {
       if (!this.level().isClientSide() && this.goalScheduler != null) {
          GoalContext ctx = this.buildGoalContext();
          boolean allowGoalPick = entityLod.allowGoalPick(this.level().getGameTime(), this.getId());
-         boolean allowCombatScan = entityLod.allowCombatScan(this.level().getGameTime(), this.getId());
+         boolean allowCombatScan = org.millenaire.perf.tick.EntitySimulationLod.forceCombatScan(this)
+            || entityLod.allowCombatScan(this.level().getGameTime(), this.getId());
          // When Entity LOD is off, fall back to distance cadence. When LOD is on, Mid/Far already stagger.
          if (!org.millenaire.perf.tick.EntitySimulationLod.enabled()
             && this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel
@@ -1296,8 +1317,9 @@ public class MillVillager extends PathfinderMob {
          }
       }
 
-      if (entityAiStartNanos != 0L) {
-         org.millenaire.perf.tick.ServerTickGovernor.noteEntityAiNanos(System.nanoTime() - entityAiStartNanos);
+      if (sampleAiNanos && entityAiStartNanos != 0L) {
+         // Sampled 1/8 villagers/ticks; scale so diagnostics stay roughly comparable.
+         org.millenaire.perf.tick.ServerTickGovernor.noteEntityAiNanos((System.nanoTime() - entityAiStartNanos) * 8L);
       }
    }
 
@@ -1313,8 +1335,7 @@ public class MillVillager extends PathfinderMob {
       return !this.inRicePaddy && super.canSwimInFluidType(type);
    }
 
-   private boolean computeInRicePaddy() {
-      BlockPos feet = this.blockPosition();
+   private boolean computeInRicePaddy(BlockPos feet) {
       return !isRicePaddy(this.level(), feet) ? false : this.level().getFluidState(feet.above()).isEmpty();
    }
 
@@ -1343,8 +1364,15 @@ public class MillVillager extends PathfinderMob {
    }
 
    private void tickSleepDebt() {
-      boolean isNight = TickConstants.isNight(this.level());
-      long dayTime = this.level().getDayTime() % 24000L;
+      boolean isNight;
+      long dayTime;
+      if (this.level() instanceof ServerLevel serverLevel) {
+         isNight = org.millenaire.perf.tick.LevelTickCache.isNight(serverLevel);
+         dayTime = org.millenaire.perf.tick.LevelTickCache.dayTimeInCycle(serverLevel);
+      } else {
+         isNight = TickConstants.isNight(this.level());
+         dayTime = this.level().getDayTime() % 24000L;
+      }
       boolean asleep = this.isSleeping() || this.isVillagerSleeping();
       this.sleepDebtTicks = nextSleepDebt(this.sleepDebtTicks, asleep, isNight, dayTime);
    }
@@ -1458,8 +1486,11 @@ public class MillVillager extends PathfinderMob {
 
    private void tickPassivePickup() {
       // Stagger across 40 ticks so idle villagers do not all scan item entities together.
-      if (this.tickCount % 40 == Math.floorMod(this.getUUID().hashCode(), 40)) {
-         if (!TickConstants.isNight(this.level())) {
+      if (this.tickCount % 40 == Math.floorMod(this.getId(), 40)) {
+         boolean night = this.level() instanceof ServerLevel serverLevel
+            ? org.millenaire.perf.tick.LevelTickCache.isNight(serverLevel)
+            : TickConstants.isNight(this.level());
+         if (!night) {
             VillagerType vtype = ModCultures.getVillagerType(this.getVillagerTypeId());
             if (vtype != null && !vtype.resolvedCollectGoods().isEmpty()) {
                AABB scanBox = this.getBoundingBox().inflate(5.0, 30.0, 5.0);

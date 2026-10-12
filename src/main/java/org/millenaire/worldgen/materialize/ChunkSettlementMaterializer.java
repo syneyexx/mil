@@ -360,7 +360,8 @@ public final class ChunkSettlementMaterializer {
          }
       }
 
-      List<PlacementStep> steps = resolveBuildingSteps(level, plan, origin, building.rotation());
+      ResolvedSteps resolved = resolveBuildingSteps(level, plan, origin, building.rotation());
+      List<PlacementStep> steps = resolved.steps();
       int minX = chunk.getMinBlockX();
       int maxX = chunk.getMaxBlockX();
       int minZ = chunk.getMinBlockZ();
@@ -368,69 +369,68 @@ public final class ChunkSettlementMaterializer {
       int cursor = progress.buildingPlacementCursor(building.buildingId());
       int scanned = 0;
       boolean budgetExhausted = false;
+      int[] chunkIndices = indicesForWorldChunk(resolved, origin, chunk);
 
-      // Direct index access — list order is stable (no world-dependent filtering).
-      for (int index = cursor; index < steps.size(); index++) {
-         if (++scanned > MAX_STEP_SCAN_PER_PASS) {
-            progress.setBuildingPlacementCursor(building.buildingId(), index);
-            budgetExhausted = true;
-            break;
+      if (chunkIndices != null) {
+         int pos = 0;
+         while (pos < chunkIndices.length && chunkIndices[pos] < cursor) {
+            pos++;
          }
-         if (!MaterializationTickBudget.hasTimeAndOps()) {
-            progress.setBuildingPlacementCursor(building.buildingId(), index);
-            budgetExhausted = true;
-            break;
-         }
-         PlacementStep step = steps.get(index);
-         BlockPos worldPos = step.relativePos().offset(origin);
-         if (worldPos.getX() < minX || worldPos.getX() > maxX || worldPos.getZ() < minZ || worldPos.getZ() > maxZ) {
-            progress.setBuildingPlacementCursor(building.buildingId(), index + 1);
-            continue;
-         }
-         // Runtime world check — must not remove steps from the compiled list.
-         if (BuildingPlacer.isNoOpAirStep(level, origin, step, plan.groundLevel())) {
-            progress.setBuildingPlacementCursor(building.buildingId(), index + 1);
-            continue;
-         }
-         if (step.phase() == PlacementPhase.DELETION) {
-            // Never re-delete on ambiguous legacy resume — treat as already progressed.
-            if (progress.legacyAmbiguous()) {
+         for (; pos < chunkIndices.length; pos++) {
+            int index = chunkIndices[pos];
+            if (++scanned > MAX_STEP_SCAN_PER_PASS) {
+               progress.setBuildingPlacementCursor(building.buildingId(), index);
+               budgetExhausted = true;
+               break;
+            }
+            if (!MaterializationTickBudget.hasTimeAndOps()) {
+               progress.setBuildingPlacementCursor(building.buildingId(), index);
+               budgetExhausted = true;
+               break;
+            }
+            PlacementStep step = steps.get(index);
+            BlockPos worldPos = step.relativePos().offset(origin);
+            if (worldPos.getX() < minX || worldPos.getX() > maxX || worldPos.getZ() < minZ || worldPos.getZ() > maxZ) {
                progress.setBuildingPlacementCursor(building.buildingId(), index + 1);
                continue;
             }
-            if (!level.getBlockState(worldPos).isAir()) {
-               if (!MaterializationTickBudget.tryConsumeOp()) {
-                  progress.setBuildingPlacementCursor(building.buildingId(), index);
-                  budgetExhausted = true;
-                  break;
-               }
-               level.setBlock(worldPos, Blocks.AIR.defaultBlockState(), 2);
-               ops++;
+            WorkOutcome stepOut = applyPlacementStep(
+               level, origin, plan, progress, building.buildingId(), true, index, step, worldPos
+            );
+            ops += stepOut.ops();
+            if (stepOut.budgetExhausted()) {
+               budgetExhausted = true;
+               break;
             }
-            progress.setBuildingPlacementCursor(building.buildingId(), index + 1);
-            continue;
          }
-         BlockState state = step.blockState();
-         if (state.isAir()) {
-            progress.setBuildingPlacementCursor(building.buildingId(), index + 1);
-            continue;
+      } else {
+         // Direct index access — list order is stable (no world-dependent filtering).
+         for (int index = cursor; index < steps.size(); index++) {
+            if (++scanned > MAX_STEP_SCAN_PER_PASS) {
+               progress.setBuildingPlacementCursor(building.buildingId(), index);
+               budgetExhausted = true;
+               break;
+            }
+            if (!MaterializationTickBudget.hasTimeAndOps()) {
+               progress.setBuildingPlacementCursor(building.buildingId(), index);
+               budgetExhausted = true;
+               break;
+            }
+            PlacementStep step = steps.get(index);
+            BlockPos worldPos = step.relativePos().offset(origin);
+            if (worldPos.getX() < minX || worldPos.getX() > maxX || worldPos.getZ() < minZ || worldPos.getZ() > maxZ) {
+               progress.setBuildingPlacementCursor(building.buildingId(), index + 1);
+               continue;
+            }
+            WorkOutcome stepOut = applyPlacementStep(
+               level, origin, plan, progress, building.buildingId(), true, index, step, worldPos
+            );
+            ops += stepOut.ops();
+            if (stepOut.budgetExhausted()) {
+               budgetExhausted = true;
+               break;
+            }
          }
-         BlockState fixed = BuildingPlacer.applyFacingGuess(
-            level, worldPos, state, step.guessChestFacing(), step.guessTorchFacing(), step.guessFurnaceFacing()
-         );
-         BlockState current = level.getBlockState(worldPos);
-         if (alreadyCorrect(level, worldPos, current, fixed)) {
-            progress.setBuildingPlacementCursor(building.buildingId(), index + 1);
-            continue;
-         }
-         if (!MaterializationTickBudget.tryConsumeOp()) {
-            progress.setBuildingPlacementCursor(building.buildingId(), index);
-            budgetExhausted = true;
-            break;
-         }
-         level.setBlock(worldPos, fixed, 2);
-         ops++;
-         progress.setBuildingPlacementCursor(building.buildingId(), index + 1);
       }
 
       if (!budgetExhausted) {
@@ -446,14 +446,160 @@ public final class ChunkSettlementMaterializer {
       return WorkOutcome.budget(ops);
    }
 
-   private static List<PlacementStep> resolveBuildingSteps(
+   private static WorkOutcome applyPlacementStep(
+      ServerLevel level,
+      BlockPos origin,
+      BuildingPlan plan,
+      ChunkMaterializationProgress progress,
+      java.util.UUID unitId,
+      boolean building,
+      int index,
+      PlacementStep step,
+      BlockPos worldPos
+   ) {
+      int ops = 0;
+      // Runtime world check — must not remove steps from the compiled list.
+      if (BuildingPlacer.isNoOpAirStep(level, origin, step, plan.groundLevel())) {
+         if (building) {
+            progress.setBuildingPlacementCursor(unitId, index + 1);
+         } else {
+            progress.setWallPlacementCursor(unitId, index + 1);
+         }
+         return WorkOutcome.done(0);
+      }
+      if (step.phase() == PlacementPhase.DELETION) {
+         if (progress.legacyAmbiguous()) {
+            if (building) {
+               progress.setBuildingPlacementCursor(unitId, index + 1);
+            } else {
+               progress.setWallPlacementCursor(unitId, index + 1);
+            }
+            return WorkOutcome.done(0);
+         }
+         if (!level.getBlockState(worldPos).isAir()) {
+            if (!MaterializationTickBudget.tryConsumeOp()) {
+               if (building) {
+                  progress.setBuildingPlacementCursor(unitId, index);
+               } else {
+                  progress.setWallPlacementCursor(unitId, index);
+               }
+               return WorkOutcome.budget(0);
+            }
+            FastSectionBlockWriter.setBlock(level, worldPos, Blocks.AIR.defaultBlockState());
+            ops++;
+         }
+         if (building) {
+            progress.setBuildingPlacementCursor(unitId, index + 1);
+         } else {
+            progress.setWallPlacementCursor(unitId, index + 1);
+         }
+         return WorkOutcome.done(ops);
+      }
+      BlockState state = step.blockState();
+      if (state.isAir()) {
+         if (building) {
+            progress.setBuildingPlacementCursor(unitId, index + 1);
+         } else {
+            progress.setWallPlacementCursor(unitId, index + 1);
+         }
+         return WorkOutcome.done(0);
+      }
+      BlockState fixed = BuildingPlacer.applyFacingGuess(
+         level, worldPos, state, step.guessChestFacing(), step.guessTorchFacing(), step.guessFurnaceFacing()
+      );
+      BlockState current = level.getBlockState(worldPos);
+      if (alreadyCorrect(level, worldPos, current, fixed)) {
+         if (building) {
+            progress.setBuildingPlacementCursor(unitId, index + 1);
+         } else {
+            progress.setWallPlacementCursor(unitId, index + 1);
+         }
+         return WorkOutcome.done(0);
+      }
+      if (!MaterializationTickBudget.tryConsumeOp()) {
+         if (building) {
+            progress.setBuildingPlacementCursor(unitId, index);
+         } else {
+            progress.setWallPlacementCursor(unitId, index);
+         }
+         return WorkOutcome.budget(0);
+      }
+      FastSectionBlockWriter.setBlock(level, worldPos, fixed);
+      if (building) {
+         progress.setBuildingPlacementCursor(unitId, index + 1);
+      } else {
+         progress.setWallPlacementCursor(unitId, index + 1);
+      }
+      return WorkOutcome.done(1);
+   }
+
+   private record ResolvedSteps(List<PlacementStep> steps, @javax.annotation.Nullable java.util.Map<Long, int[]> chunkIndexRanges) {
+   }
+
+   private static ResolvedSteps resolveBuildingSteps(
       ServerLevel level, BuildingPlan plan, BlockPos origin, net.minecraft.world.level.block.Rotation rotation
    ) {
       CompiledPlacementStepsCache.Key key = new CompiledPlacementStepsCache.Key(plan.id(), rotation, plan.groundLevel());
       CompiledPlacementStepsCache.CompiledSteps compiled = CompiledPlacementStepsCache.getOrCompute(
          key, () -> BuildingPlacer.compileTemplateStepsStable(level, plan, rotation)
       );
-      return BuildingPlacer.mergePreserveGround(level, plan, origin, rotation, compiled.steps());
+      List<PlacementStep> merged = BuildingPlacer.mergePreserveGround(level, plan, origin, rotation, compiled.steps());
+      // Ranges index the cached template list; only valid when merge did not prepend ground steps.
+      java.util.Map<Long, int[]> ranges = merged == compiled.steps() ? compiled.chunkIndexRanges() : null;
+      return new ResolvedSteps(merged, ranges);
+   }
+
+   /**
+    * Build a dense ascending index list of steps that may land in {@code chunk}, using cached
+    * relative-chunk buckets when available; otherwise returns null (caller falls back to linear scan).
+    */
+   @javax.annotation.Nullable
+   private static int[] indicesForWorldChunk(
+      ResolvedSteps resolved, BlockPos origin, ChunkPos chunk
+   ) {
+      if (resolved.chunkIndexRanges() == null || resolved.chunkIndexRanges().isEmpty()) {
+         return null;
+      }
+      int minX = chunk.getMinBlockX();
+      int maxX = chunk.getMaxBlockX();
+      int minZ = chunk.getMinBlockZ();
+      int maxZ = chunk.getMaxBlockZ();
+      int relMinX = minX - origin.getX();
+      int relMaxX = maxX - origin.getX();
+      int relMinZ = minZ - origin.getZ();
+      int relMaxZ = maxZ - origin.getZ();
+      java.util.ArrayList<Integer> gathered = new java.util.ArrayList<>();
+      for (int rcx = relMinX >> 4; rcx <= relMaxX >> 4; rcx++) {
+         for (int rcz = relMinZ >> 4; rcz <= relMaxZ >> 4; rcz++) {
+            int[] part = resolved.chunkIndexRanges().get(ChunkPos.asLong(rcx, rcz));
+            if (part == null) {
+               continue;
+            }
+            for (int idx : part) {
+               gathered.add(idx);
+            }
+         }
+      }
+      if (gathered.isEmpty()) {
+         return new int[0];
+      }
+      gathered.sort(Integer::compare);
+      // Deduplicate (overlapping relative buckets are rare but cheap to clean).
+      int[] out = new int[gathered.size()];
+      int n = 0;
+      int prev = Integer.MIN_VALUE;
+      for (int idx : gathered) {
+         if (idx != prev) {
+            out[n++] = idx;
+            prev = idx;
+         }
+      }
+      if (n == out.length) {
+         return out;
+      }
+      int[] trimmed = new int[n];
+      System.arraycopy(out, 0, trimmed, 0, n);
+      return trimmed;
    }
 
    private static boolean alreadyCorrect(ServerLevel level, BlockPos pos, BlockState current, BlockState desired) {
@@ -494,6 +640,7 @@ public final class ChunkSettlementMaterializer {
       int cursor = building ? progress.terrainBuildingCursor(unitId) : progress.terrainWallCursor(unitId);
       int maxMod = MillenaireServerConfig.SERVER.worldgenMaximumTerrainModification.getAsInt();
       int ops = 0;
+      BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
 
       for (int cell = cursor; cell < total; cell++) {
          if (!MaterializationTickBudget.hasTimeAndOps()) {
@@ -511,9 +658,9 @@ public final class ChunkSettlementMaterializer {
             continue;
          }
          for (int y = baseY + 1; y <= Math.min(surface + plan.height(), baseY + plan.height() + 4); y++) {
-            BlockPos p = new BlockPos(x, y, z);
-            if (!level.getBlockState(p).isAir()) {
-               if (level.getBlockEntity(p) != null) {
+            mutable.set(x, y, z);
+            if (!level.getBlockState(mutable).isAir()) {
+               if (level.getBlockEntity(mutable) != null) {
                   continue;
                }
                if (!MaterializationTickBudget.tryConsumeOp()) {
@@ -524,12 +671,13 @@ public final class ChunkSettlementMaterializer {
                   }
                   return WorkOutcome.budget(ops);
                }
-               level.setBlock(p, Blocks.AIR.defaultBlockState(), 2);
+               FastSectionBlockWriter.setBlock(level, mutable, Blocks.AIR.defaultBlockState());
                ops++;
             }
          }
-         BlockPos ground = new BlockPos(x, baseY, z);
-         if (level.getBlockState(ground).isAir() || level.getBlockState(ground).canBeReplaced()) {
+         mutable.set(x, baseY, z);
+         BlockState groundState = level.getBlockState(mutable);
+         if (groundState.isAir() || groundState.canBeReplaced()) {
             if (!MaterializationTickBudget.tryConsumeOp()) {
                if (building) {
                   progress.setTerrainBuildingCursor(unitId, cell);
@@ -538,11 +686,11 @@ public final class ChunkSettlementMaterializer {
                }
                return WorkOutcome.budget(ops);
             }
-            BlockState filler = level.getBlockState(new BlockPos(x, Math.max(level.getMinBuildHeight(), baseY - 1), z));
+            BlockState filler = level.getBlockState(mutable.set(x, Math.max(level.getMinBuildHeight(), baseY - 1), z));
             if (filler.isAir()) {
                filler = Blocks.DIRT.defaultBlockState();
             }
-            level.setBlock(ground, filler, 2);
+            FastSectionBlockWriter.setBlock(level, mutable.set(x, baseY, z), filler);
             ops++;
          }
          if (building) {
@@ -658,7 +806,8 @@ public final class ChunkSettlementMaterializer {
          }
       }
 
-      List<PlacementStep> steps = resolveBuildingSteps(level, plan, origin, wall.rotation());
+      ResolvedSteps resolved = resolveBuildingSteps(level, plan, origin, wall.rotation());
+      List<PlacementStep> steps = resolved.steps();
       int minX = chunk.getMinBlockX();
       int maxX = chunk.getMaxBlockX();
       int minZ = chunk.getMinBlockZ();
@@ -666,63 +815,63 @@ public final class ChunkSettlementMaterializer {
       int cursor = progress.wallPlacementCursor(wall.segmentId());
       int scanned = 0;
       boolean budgetExhausted = false;
+      int[] chunkIndices = indicesForWorldChunk(resolved, origin, chunk);
 
-      for (int index = cursor; index < steps.size(); index++) {
-         if (++scanned > MAX_STEP_SCAN_PER_PASS) {
-            progress.setWallPlacementCursor(wall.segmentId(), index);
-            budgetExhausted = true;
-            break;
+      if (chunkIndices != null) {
+         int pos = 0;
+         while (pos < chunkIndices.length && chunkIndices[pos] < cursor) {
+            pos++;
          }
-         if (!MaterializationTickBudget.hasTimeAndOps()) {
-            progress.setWallPlacementCursor(wall.segmentId(), index);
-            return WorkOutcome.budget(ops);
-         }
-         PlacementStep step = steps.get(index);
-         BlockPos worldPos = step.relativePos().offset(origin);
-         if (worldPos.getX() < minX || worldPos.getX() > maxX || worldPos.getZ() < minZ || worldPos.getZ() > maxZ) {
-            progress.setWallPlacementCursor(wall.segmentId(), index + 1);
-            continue;
-         }
-         if (BuildingPlacer.isNoOpAirStep(level, origin, step, plan.groundLevel())) {
-            progress.setWallPlacementCursor(wall.segmentId(), index + 1);
-            continue;
-         }
-         if (step.phase() == PlacementPhase.DELETION) {
-            if (progress.legacyAmbiguous()) {
+         for (; pos < chunkIndices.length; pos++) {
+            int index = chunkIndices[pos];
+            if (++scanned > MAX_STEP_SCAN_PER_PASS) {
+               progress.setWallPlacementCursor(wall.segmentId(), index);
+               budgetExhausted = true;
+               break;
+            }
+            if (!MaterializationTickBudget.hasTimeAndOps()) {
+               progress.setWallPlacementCursor(wall.segmentId(), index);
+               return WorkOutcome.budget(ops);
+            }
+            PlacementStep step = steps.get(index);
+            BlockPos worldPos = step.relativePos().offset(origin);
+            if (worldPos.getX() < minX || worldPos.getX() > maxX || worldPos.getZ() < minZ || worldPos.getZ() > maxZ) {
                progress.setWallPlacementCursor(wall.segmentId(), index + 1);
                continue;
             }
-            if (!level.getBlockState(worldPos).isAir()) {
-               if (!MaterializationTickBudget.tryConsumeOp()) {
-                  progress.setWallPlacementCursor(wall.segmentId(), index);
-                  return WorkOutcome.budget(ops);
-               }
-               level.setBlock(worldPos, Blocks.AIR.defaultBlockState(), 2);
-               ops++;
+            WorkOutcome stepOut = applyPlacementStep(
+               level, origin, plan, progress, wall.segmentId(), false, index, step, worldPos
+            );
+            ops += stepOut.ops();
+            if (stepOut.budgetExhausted()) {
+               return WorkOutcome.budget(ops);
             }
-            progress.setWallPlacementCursor(wall.segmentId(), index + 1);
-            continue;
          }
-         BlockState state = step.blockState();
-         if (state.isAir()) {
-            progress.setWallPlacementCursor(wall.segmentId(), index + 1);
-            continue;
+      } else {
+         for (int index = cursor; index < steps.size(); index++) {
+            if (++scanned > MAX_STEP_SCAN_PER_PASS) {
+               progress.setWallPlacementCursor(wall.segmentId(), index);
+               budgetExhausted = true;
+               break;
+            }
+            if (!MaterializationTickBudget.hasTimeAndOps()) {
+               progress.setWallPlacementCursor(wall.segmentId(), index);
+               return WorkOutcome.budget(ops);
+            }
+            PlacementStep step = steps.get(index);
+            BlockPos worldPos = step.relativePos().offset(origin);
+            if (worldPos.getX() < minX || worldPos.getX() > maxX || worldPos.getZ() < minZ || worldPos.getZ() > maxZ) {
+               progress.setWallPlacementCursor(wall.segmentId(), index + 1);
+               continue;
+            }
+            WorkOutcome stepOut = applyPlacementStep(
+               level, origin, plan, progress, wall.segmentId(), false, index, step, worldPos
+            );
+            ops += stepOut.ops();
+            if (stepOut.budgetExhausted()) {
+               return WorkOutcome.budget(ops);
+            }
          }
-         BlockState fixed = BuildingPlacer.applyFacingGuess(
-            level, worldPos, state, step.guessChestFacing(), step.guessTorchFacing(), step.guessFurnaceFacing()
-         );
-         BlockState current = level.getBlockState(worldPos);
-         if (alreadyCorrect(level, worldPos, current, fixed)) {
-            progress.setWallPlacementCursor(wall.segmentId(), index + 1);
-            continue;
-         }
-         if (!MaterializationTickBudget.tryConsumeOp()) {
-            progress.setWallPlacementCursor(wall.segmentId(), index);
-            return WorkOutcome.budget(ops);
-         }
-         level.setBlock(worldPos, fixed, 2);
-         ops++;
-         progress.setWallPlacementCursor(wall.segmentId(), index + 1);
       }
 
       if (budgetExhausted) {
