@@ -120,6 +120,31 @@ public final class WorldgenDiagCommand {
                      );
                   return 1;
                })
+         )
+         .then(
+            Commands.literal("prefill")
+               .executes(ctx -> {
+                  ServerLevel level = ctx.getSource().getLevel();
+                  String line = org.millenaire.worldgen.prefill.SpawnRingPrefillService.statusLine(level);
+                  ctx.getSource().sendSuccess(() -> Component.literal(line), false);
+                  return 1;
+               })
+               .then(
+                  Commands.literal("retry")
+                     .executes(ctx -> {
+                        ServerLevel level = ctx.getSource().getLevel();
+                        org.millenaire.worldgen.prefill.SpawnRingPrefillService.retry(level);
+                        ctx.getSource()
+                           .sendSuccess(
+                              () -> Component.literal(
+                                 "Spawn-ring prefill reset. "
+                                    + org.millenaire.worldgen.prefill.SpawnRingPrefillService.statusLine(level)
+                              ),
+                              true
+                           );
+                        return 1;
+                     })
+               )
          );
 
       dispatcher.register(Commands.literal("millenaire").then(root));

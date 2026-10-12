@@ -8,6 +8,9 @@ import org.millenaire.config.MillenaireServerConfig;
 /**
  * Amortizes heavy goal-pick / leisure scans for villagers far from players.
  * Combat and active tasks still tick every frame via {@link org.millenaire.goal.GoalScheduler}.
+ * <p>
+ * When {@link EntitySimulationLod} is enabled, Mid/Far staggering is handled there;
+ * this helper is only applied from {@code MillVillager} as a fallback when entity LOD is off.
  */
 public final class VillagerAiCadence {
    private VillagerAiCadence() {

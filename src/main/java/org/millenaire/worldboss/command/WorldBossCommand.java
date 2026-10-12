@@ -3,6 +3,7 @@ package org.millenaire.worldboss.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.logging.LogUtils;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -10,6 +11,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
+import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.worldboss.ActiveWorldBossEvent;
 import org.millenaire.worldboss.WorldBossDefinition;
 import org.millenaire.worldboss.WorldBossDefinitionRegistry;
@@ -17,14 +19,20 @@ import org.millenaire.worldboss.WorldBossEligibility;
 import org.millenaire.worldboss.WorldBossEventPlanner;
 import org.millenaire.worldboss.WorldBossEventSavedData;
 import org.millenaire.worldboss.WorldBossTimerLogic;
+import org.slf4j.Logger;
 
 public final class WorldBossCommand {
+   private static final Logger LOGGER = LogUtils.getLogger();
+
    private WorldBossCommand() {
    }
 
    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
       LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("worldboss")
          .requires(source -> source.hasPermission(2))
+         .executes(ctx -> status(ctx.getSource()))
+         .then(Commands.literal("on").executes(ctx -> setEnabled(ctx.getSource(), true)))
+         .then(Commands.literal("off").executes(ctx -> setEnabled(ctx.getSource(), false)))
          .then(Commands.literal("status").executes(ctx -> status(ctx.getSource())))
          .then(Commands.literal("next").executes(ctx -> next(ctx.getSource())))
          .then(
@@ -41,6 +49,22 @@ public final class WorldBossCommand {
 
       dispatcher.register(Commands.literal("millenaire").then(root));
       dispatcher.register(root);
+   }
+
+   private static int setEnabled(CommandSourceStack source, boolean enabled) {
+      MillenaireServerConfig.SERVER.worldBossEventsEnabled.set(enabled);
+      try {
+         MillenaireServerConfig.SERVER.worldBossEventsEnabled.save();
+      } catch (Exception e) {
+         LOGGER.warn("Updated worldBossEvents.enabled in memory but failed to save serverconfig: {}", e.toString());
+      }
+      source.sendSuccess(
+         () -> Component.translatable(
+            enabled ? "millenaire.worldboss.command.enabled" : "millenaire.worldboss.command.disabled"
+         ),
+         true
+      );
+      return 1;
    }
 
    private static int status(CommandSourceStack source) {

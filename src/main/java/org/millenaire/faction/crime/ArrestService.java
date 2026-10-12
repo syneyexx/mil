@@ -1,5 +1,8 @@
 package org.millenaire.faction.crime;
 
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -13,20 +16,26 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerRespawnEvent;
 import org.millenaire.building.BuildingInstance;
 import org.millenaire.building.BuildingPurpose;
 import org.millenaire.building.SpecialPoint;
+import org.millenaire.combat.CombatHelper;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.culture.Culture;
 import org.millenaire.culture.ModCultures;
-import org.millenaire.culture.VillagerType;
 import org.millenaire.entity.MillVillager;
 import org.millenaire.village.Village;
+import org.millenaire.village.VillageId;
 
 /**
- * Soft-death arrest: when a guard would kill a wanted player, confiscate items and jail them.
+ * Soft-death arrest: when a MillVillager of a bounty culture would kill a wanted player,
+ * confiscate items and jail them (instead of vanilla death/respawn).
  */
 public final class ArrestService {
+   private static final Map<UUID, PendingRespawnJail> PENDING_RESPAWN_JAIL = new ConcurrentHashMap<>();
+
    private ArrestService() {
    }
 
@@ -40,38 +49,153 @@ public final class ArrestService {
       if (!(player.level() instanceof ServerLevel level)) {
          return;
       }
+      if (!CombatHelper.isPlayerTargetable(player)) {
+         return;
+      }
       LivingEntity attackerEntity = event.getSource().getEntity() instanceof LivingEntity le ? le : null;
-      if (!(attackerEntity instanceof MillVillager guard)) {
+      if (!(attackerEntity instanceof MillVillager villager)) {
          return;
       }
-      VillagerType type = guard.getVillagerTypeId() != null ? ModCultures.getVillagerType(guard.getVillagerTypeId()) : null;
-      if (type == null || !type.isHelpInAttacks()) {
+      ArrestContext ctx = resolveArrestContext(level, player, villager);
+      if (ctx == null) {
          return;
       }
-      Village village = guard.getVillageId() != null ? Village.resolve(level, guard.getVillageId()) : null;
+      boolean creativePath = player.isCreative();
+      float remaining = player.getHealth() - event.getNewDamage();
+      boolean wouldKill = remaining <= 0.0F;
+      if (creativePath) {
+         // Creative often absorbs/zeros damage; any positive hit from the bounty culture counts.
+         wouldKill = event.getNewDamage() > 0.0F;
+      }
+      if (!wouldKill) {
+         return;
+      }
+      event.setNewDamage(0.0F);
+      performArrest(level, player, ctx.village(), ctx.cultureId());
+   }
+
+   /**
+    * Creative / missed-damage path: call after a MillVillager melee/ranged attack attempt.
+    * Arrests when the player is WANTED+ for the villager's culture and treatCreativeAsSurvival applies.
+    */
+   public static boolean tryArrestFromVillagerAttack(ServerLevel level, ServerPlayer player, MillVillager villager) {
+      if (!isEnabled() || level == null || player == null || villager == null) {
+         return false;
+      }
+      if (!CombatHelper.isPlayerTargetable(player)) {
+         return false;
+      }
+      if (!player.isCreative()) {
+         return false;
+      }
+      ArrestContext ctx = resolveArrestContext(level, player, villager);
+      if (ctx == null) {
+         return false;
+      }
+      performArrest(level, player, ctx.village(), ctx.cultureId());
+      return true;
+   }
+
+   public static void onLivingDeath(LivingDeathEvent event) {
+      if (!isEnabled()) {
+         return;
+      }
+      if (!(event.getEntity() instanceof ServerPlayer player)) {
+         return;
+      }
+      if (!(player.level() instanceof ServerLevel level)) {
+         return;
+      }
+      if (!CombatHelper.isPlayerTargetable(player)) {
+         return;
+      }
+      if (!(event.getSource().getEntity() instanceof MillVillager villager)) {
+         return;
+      }
+      ArrestContext ctx = resolveArrestContext(level, player, villager);
+      if (ctx == null) {
+         return;
+      }
+      event.setCanceled(true);
+      player.setHealth(Math.max(1.0F, player.getMaxHealth() * 0.5F));
+      performArrest(level, player, ctx.village(), ctx.cultureId());
+   }
+
+   public static void onPlayerRespawn(PlayerRespawnEvent event) {
+      if (!(event.getEntity() instanceof ServerPlayer player)) {
+         return;
+      }
+      PendingRespawnJail pending = PENDING_RESPAWN_JAIL.remove(player.getUUID());
+      if (pending == null) {
+         return;
+      }
+      if (!(player.level() instanceof ServerLevel level)) {
+         return;
+      }
+      Village village = Village.resolve(level, new VillageId(pending.villageUuid()));
+      BlockPos jailPos = village != null ? resolveJailPos(village) : pending.fallbackPos();
+      if (jailPos == null) {
+         jailPos = pending.fallbackPos();
+      }
+      if (jailPos != null) {
+         player.teleportTo(jailPos.getX() + 0.5, jailPos.getY() + 0.1, jailPos.getZ() + 0.5);
+      }
+      player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 200, 1));
+      player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 200, 1));
+      if (village != null) {
+         long lockTicks = arrestLockSeconds() * 20L;
+         PlayerArrestSavedData.get(level)
+            .put(
+               new PlayerArrestSavedData.ArrestRecord(
+                  player.getUUID(),
+                  pending.cultureId(),
+                  pending.villageUuid(),
+                  level.getGameTime() + lockTicks,
+                  resolveEvidenceChest(village),
+                  jailPos
+               )
+            );
+      }
+      Culture culture = ModCultures.getCulture(pending.cultureId());
+      String name = culture != null && culture.displayName() != null ? culture.displayName() : pending.cultureId().getPath();
+      player.sendSystemMessage(Component.translatable("millenaire.crime.arrested", name));
+      BountyHudSync.sync(level, player);
+   }
+
+   @Nullable
+   private static ArrestContext resolveArrestContext(ServerLevel level, ServerPlayer player, MillVillager villager) {
+      if (isAlreadyArrested(level, player)) {
+         return null;
+      }
+      Village village = villager.getVillageId() != null ? Village.resolve(level, villager.getVillageId()) : null;
       if (village == null || village.getCultureId() == null) {
-         return;
+         return null;
       }
       if (village.isControlledBy(player.getUUID())) {
-         return;
+         return null;
       }
-      WantedTier tier = CultureBountySavedData.get(level).getManager().getTier(player.getUUID(), village.getCultureId());
+      ResourceLocation cultureId = village.getCultureId();
+      WantedTier tier = CultureBountySavedData.get(level).getManager().getTier(player.getUUID(), cultureId);
       if (!tier.isAtLeast(WantedTier.WANTED)) {
-         return;
+         return null;
       }
-      float remaining = player.getHealth() - event.getNewDamage();
-      if (remaining > 0.0F) {
-         return;
-      }
-      // Intercept lethal blow.
-      event.setNewDamage(0.0F);
-      performArrest(level, player, village, village.getCultureId());
+      return new ArrestContext(village, cultureId);
+   }
+
+   private static boolean isAlreadyArrested(ServerLevel level, ServerPlayer player) {
+      PlayerArrestSavedData.ArrestRecord record = PlayerArrestSavedData.get(level).get(player.getUUID());
+      return record != null && level.getGameTime() < record.arrestedUntilGameTime();
    }
 
    public static void performArrest(ServerLevel level, ServerPlayer player, Village village, ResourceLocation cultureId) {
+      if (isAlreadyArrested(level, player)) {
+         return;
+      }
       BlockPos chestPos = resolveEvidenceChest(village);
       BlockPos jailPos = resolveJailPos(village);
-      depositInventory(level, player, chestPos);
+      if (!player.isCreative()) {
+         depositInventory(level, player, chestPos);
+      }
 
       player.setHealth(Math.max(player.getHealth(), player.getMaxHealth() * 0.5F));
       player.removeAllEffects();
@@ -84,7 +208,6 @@ public final class ArrestService {
          player.teleportTo(c.getX() + 0.5, c.getY() + 1.0, c.getZ() + 0.5);
       }
 
-      // Clear combat targeting from nearby guards.
       for (MillVillager v : level.getEntitiesOfClass(MillVillager.class, player.getBoundingBox().inflate(64.0))) {
          if (v.getAttackTarget() == player) {
             v.setAttackTarget(null);
@@ -242,5 +365,11 @@ public final class ArrestService {
       } catch (IllegalStateException e) {
          return 0;
       }
+   }
+
+   private record ArrestContext(Village village, ResourceLocation cultureId) {
+   }
+
+   private record PendingRespawnJail(ResourceLocation cultureId, UUID villageUuid, @Nullable BlockPos fallbackPos) {
    }
 }

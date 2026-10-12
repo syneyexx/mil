@@ -29,8 +29,9 @@ public final class RoadTravelerShopScheduler {
       if (!enabled() || level == null) {
          return;
       }
+      // Runs after VillageManager (still in AI_SUPPORT phase accounting); do not re-enter an earlier phase.
       if (!org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
-         org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.VILLAGE_NEAR);
+         org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.AI_SUPPORT);
          return;
       }
       long now = level.getGameTime();
@@ -40,7 +41,7 @@ public final class RoadTravelerShopScheduler {
       lastTickGameTime = now;
       int budget = 2;
       for (Village village : VillageSavedData.get(level).getVillageManager().getAllVillages()) {
-         if (budget <= 0) {
+         if (budget <= 0 || !org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
             break;
          }
          if (!org.millenaire.civilization.settlement.PlayerSettlementFoundingService.isSovereignPlayerSettlement(level, village)) {

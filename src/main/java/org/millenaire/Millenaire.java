@@ -34,9 +34,11 @@ import net.neoforged.neoforge.common.world.chunk.RegisterTicketControllersEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent.Pre;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerRespawnEvent;
 import net.neoforged.neoforge.event.level.ChunkEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
@@ -398,6 +400,8 @@ public class Millenaire {
       goalRegistry.freezeBuiltins();
       goalRegistryInstance = goalRegistry;
       NeoForge.EVENT_BUS.addListener(EventPriority.HIGH, false, Pre.class, org.millenaire.faction.crime.ArrestService::onLivingDamagePre);
+      NeoForge.EVENT_BUS.addListener(EventPriority.HIGH, false, LivingDeathEvent.class, org.millenaire.faction.crime.ArrestService::onLivingDeath);
+      NeoForge.EVENT_BUS.addListener(PlayerRespawnEvent.class, org.millenaire.faction.crime.ArrestService::onPlayerRespawn);
       NeoForge.EVENT_BUS.addListener(Pre.class, event -> {
          if (event.getSource().getEntity() instanceof ServerPlayer attacker && event.getEntity() instanceof ServerPlayer) {
             ItemStack weapon = attacker.getMainHandItem();
@@ -419,6 +423,7 @@ public class Millenaire {
          WorldgenDiagCommand.register(event.getDispatcher());
          org.millenaire.worldgen.highway.HighwayCommand.register(event.getDispatcher());
          org.millenaire.command.NpcChatModelCommand.register(event);
+         org.millenaire.command.GossipCommand.register(event);
          org.millenaire.companion.CompanionCommand.register(event);
          org.millenaire.worldboss.command.WorldBossCommand.register(event.getDispatcher());
       });
@@ -475,6 +480,9 @@ public class Millenaire {
       });
       VillageSpawnQueue spawnQueue = new VillageSpawnQueue();
       spawnQueueInstance = spawnQueue;
+      NeoForge.EVENT_BUS.addListener(ServerTickEvent.Pre.class, event -> {
+         org.millenaire.perf.tick.ServerTickGovernor.markServerTickStart();
+      });
       NeoForge.EVENT_BUS.addListener(ServerTickEvent.Post.class, event -> {
          UsageReporter.tryReport(event.getServer());
          TestPlayerManager.acknowledgeChunkBatch();
@@ -506,6 +514,7 @@ public class Millenaire {
                WorldgenEngine.onServerTick(overworld);
             }
             org.millenaire.worldgen.starter.StarterSettlementService.tick(overworld);
+            org.millenaire.worldgen.prefill.SpawnRingPrefillService.tick(overworld);
             org.millenaire.perf.tick.ServerTickGovernor.enter(org.millenaire.perf.tick.TickPhase.HIGHWAY);
             if (org.millenaire.worldgen.highway.HighwayEngine.isEnabled()) {
                org.millenaire.worldgen.highway.HighwayEngine.tick(overworld);
@@ -653,6 +662,7 @@ public class Millenaire {
                      VillageRehydrator.rehydrateAll(overworld);
                      FactionLifecycle.onWorldReady(overworld);
                      org.millenaire.worldgen.starter.StarterSettlementService.onWorldReady(overworld);
+                     org.millenaire.worldgen.prefill.SpawnRingPrefillService.onWorldReady(overworld);
                      this.initVillagerGoals(overworld);
                   }
                } catch (Exception e) {

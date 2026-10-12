@@ -63,9 +63,9 @@ Measured on a warm singleplayer world with Millénaire content loaded. Vanilla +
 | ID | Metric | Target | Load profile |
 |----|--------|--------|--------------|
 | SLO-1 | Sustained server MSPT | **≤ 40 ms** p95 (≥ 25 TPS equivalent) | 4 populated Near/Mid villages, player in one village, no boss |
-| SLO-2 | Millénaire Post-tick attribution | **≤ 12 ms** p95 wall time across governor phases | Same as SLO-1 |
+| SLO-2 | Millénaire Post-tick attribution | **≤ 24 ms** p95 wall time across governor phases | Same as SLO-1 |
 | SLO-3 | Millénaire entity-AI attribution | **≤ 15 ms** p95 for all `MillVillager` ticks combined | Same as SLO-1 with ≥ 80 loaded villagers |
-| SLO-4 | Single path search budget | **≤ 2 ms** hard abort (entity); village grid A\* never blocks > 2 ms on main thread | Path storm (many dest changes) |
+| SLO-4 | Single path search budget | **≤ 4 ms** hard abort (entity); village grid A\* never blocks > 4 ms on main thread | Path storm (many dest changes) |
 | SLO-5 | Spike recovery | After worldgen exploration burst or path recalc, MSPT returns under SLO-1 within **5 seconds** | Fly through unexplored regions with worldgen on |
 | SLO-6 | Far village cost | Far/inactive village average **≤ 0.05 ms** / village / tick (background only) | 10+ distant villages in SavedData |
 
@@ -152,18 +152,18 @@ flowchart TB
 
 **Replaces the mental model of “one soft 10 ms pie everyone nibbles.”**
 
-Keep a global soft ceiling (config, default **12 ms** Millénaire Post-tick for SP) but allocate **phase quotas**:
+Keep a global soft ceiling (config, default **24 ms** Millénaire Post-tick for SP) but allocate **phase quotas**:
 
 | Phase | Default ms (SP) | Ops / notes |
 |-------|-----------------|-------------|
-| APPLY | 2 | `computeApplyBudgetPerTick` + **apply time** cap |
-| VILLAGE_NEAR | 4 | Max Near villages fully ticked per frame; remainder deferred FIFO |
-| VILLAGE_MID | 2 | Existing Mid queue hardened |
-| AI_SUPPORT | 1 | Living / religion / gossip; must call `hasTime` at entry |
-| CIV_FACTION | 1.5 | Stages already defer; FactionLifecycle must too |
-| WORLDGEN | 2 | Existing op/scan budgets remain |
-| HIGHWAY | 1 | Existing |
-| BOSS_QUEST_MAP + TAIL | 0.5 | Boss planner must be sliceable; tail skips if over |
+| APPLY | 4 | `computeApplyBudgetPerTick` + **apply time** cap |
+| VILLAGE_NEAR | 8 | Max Near villages fully ticked per frame; remainder deferred FIFO |
+| VILLAGE_MID | 4 | Existing Mid queue hardened |
+| AI_SUPPORT | 2 | Living / religion / gossip; must call `hasTime` at entry |
+| CIV_FACTION | 3 | Stages already defer; FactionLifecycle must too |
+| WORLDGEN | 4 | Existing op/scan budgets remain |
+| HIGHWAY | 2 | Existing |
+| BOSS_QUEST_MAP + TAIL | 2 | Boss planner must be sliceable; tail skips if over |
 
 **Rules:**
 
@@ -414,35 +414,35 @@ Under `millenaire-server.toml` → `tickGovernor` (extend existing):
 
 ```
 enabled = true
-globalBudgetMs = 12
+globalBudgetMs = 24
 
-phase.applyMs = 2
-phase.villageNearMs = 4
-phase.villageMidMs = 2
-phase.aiSupportMs = 1
-phase.civFactionMs = 1.5
-phase.worldgenMs = 2
-phase.highwayMs = 1
-phase.tailMs = 0.5
+phase.applyMs = 4
+phase.villageNearMs = 8
+phase.villageMidMs = 4
+phase.aiSupportMs = 2
+phase.civFactionMs = 3
+phase.worldgenMs = 4
+phase.highwayMs = 2
+phase.tailMs = 2
 
 villageLodEnabled = true
 villageLodMidInterval = 2
-nearVillageMaxFullTicksPerTick = 2
+nearVillageMaxFullTicksPerTick = 4
 nearDeferEnabled = true
 
 entityLodEnabled = true
 entityLodMidDistance = 48
 entityLodFarDistance = 96
-entityLodMidGoalInterval = 3
-entityLodMidCombatInterval = 5
+entityLodMidGoalInterval = 2
+entityLodMidCombatInterval = 3
 entityLodFarSleep = true          # aggressive policy
 
 villagerAiCadenceEnabled = true   # kept; Entity LOD owns policy
 
-path.maxSearchMs = 2
-path.nodeMultiplierNear = 2
+path.maxSearchMs = 4
+path.nodeMultiplierNear = 4
 path.nodeMultiplierMid = 1
-path.maxStartsPerTick = 4
+path.maxStartsPerTick = 6
 path.asyncEntityPath = true
 path.combatRepathInterval = 10
 

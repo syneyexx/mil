@@ -1133,13 +1133,22 @@ public class MillVillager extends PathfinderMob {
       this.inRicePaddy = this.computeInRicePaddy();
       super.tick();
 
+      long entityAiStartNanos = 0L;
+      if (!this.level().isClientSide()) {
+         entityAiStartNanos = System.nanoTime();
+      }
+
       org.millenaire.perf.tick.EntitySimulationLod entityLod = org.millenaire.perf.tick.EntitySimulationLod.NEAR;
       if (!this.level().isClientSide() && this.level() instanceof net.minecraft.server.level.ServerLevel serverForLod) {
          entityLod = org.millenaire.perf.tick.EntitySimulationLod.resolve(serverForLod, this);
+         org.millenaire.perf.tick.ServerTickGovernor.noteEntityLod(entityLod);
       }
       boolean ambientOk = entityLod.allowAmbientWork();
       boolean farSleep = entityLod == org.millenaire.perf.tick.EntitySimulationLod.FAR
          && org.millenaire.perf.tick.EntitySimulationLod.farSleepEnabled();
+      if (!this.level().isClientSide() && farSleep) {
+         org.millenaire.perf.tick.ServerTickGovernor.noteEntityFarSleep();
+      }
 
       if (!this.level().isClientSide() && this.suffocationGraceTicks > 0) {
          this.suffocationGraceTicks--;
@@ -1219,10 +1228,15 @@ public class MillVillager extends PathfinderMob {
          GoalContext ctx = this.buildGoalContext();
          boolean allowGoalPick = entityLod.allowGoalPick(this.level().getGameTime(), this.getId());
          boolean allowCombatScan = entityLod.allowCombatScan(this.level().getGameTime(), this.getId());
-         // Keep near-player cadence helper for Mid when Entity LOD disabled / NEAR.
-         if (entityLod == org.millenaire.perf.tick.EntitySimulationLod.NEAR
+         // When Entity LOD is off, fall back to distance cadence. When LOD is on, Mid/Far already stagger.
+         if (!org.millenaire.perf.tick.EntitySimulationLod.enabled()
             && this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel
             && !org.millenaire.perf.tick.VillagerAiCadence.allowGoalPick(serverLevel, this)) {
+            allowGoalPick = false;
+         }
+         boolean urgentAi = this.isHired() || this.isCompanion() || this.getAttackTarget() != null;
+         if (allowGoalPick
+            && !org.millenaire.perf.tick.ServerTickGovernor.tryConsumeEntityGoalPick(this.level().getGameTime(), urgentAi)) {
             allowGoalPick = false;
          }
          if (!allowGoalPick) {
@@ -1280,6 +1294,10 @@ public class MillVillager extends PathfinderMob {
          if (ambientOk) {
             this.tickPassivePickup();
          }
+      }
+
+      if (entityAiStartNanos != 0L) {
+         org.millenaire.perf.tick.ServerTickGovernor.noteEntityAiNanos(System.nanoTime() - entityAiStartNanos);
       }
    }
 

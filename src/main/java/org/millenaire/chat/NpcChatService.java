@@ -57,10 +57,21 @@ public final class NpcChatService {
       if (SESSIONS.isEmpty()) {
          return;
       }
+      if (!org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+         org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.BOSS_QUEST_MAP);
+         return;
+      }
       double leaveRange = MillenaireServerConfig.SERVER.effectiveNpcChatLeaveRange();
       Iterator<Map.Entry<UUID, NpcChatSession>> it = SESSIONS.entrySet().iterator();
+      int processed = 0;
       while (it.hasNext()) {
+         // Keep distance/leave checks bounded under pressure; resume next tick.
+         if (processed > 0 && !org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+            org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.BOSS_QUEST_MAP);
+            break;
+         }
          Map.Entry<UUID, NpcChatSession> entry = it.next();
+         processed++;
          ServerPlayer player = server.getPlayerList().getPlayer(entry.getKey());
          NpcChatSession session = entry.getValue();
          if (player == null) {
@@ -93,7 +104,7 @@ public final class NpcChatService {
       }
 
       // Bounded transient mind pruning occasionally (not every tick).
-      if (server.getTickCount() % 1200 == 0) {
+      if (server.getTickCount() % 1200 == 0 && org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
          ServerLevel overworld = server.overworld();
          if (overworld != null) {
             NpcMindSavedData.get(overworld).pruneTransientMinds(overworld.getGameTime());

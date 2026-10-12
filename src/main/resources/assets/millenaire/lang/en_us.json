@@ -5225,6 +5225,10 @@
   "command.millenaire.npcchat.probe.base": "Configured baseUrl: %s",
   "command.millenaire.npcchat.probe.ok": "LM Studio reachable (%s models listed, %sms).",
   "command.millenaire.npcchat.probe.fail": "LM Studio probe failed (%s, %sms). Start the local server and load a model.",
+  "command.millenaire.gossip.status.on": "NPC gossip is ON (daily spread and new rumors from chat).",
+  "command.millenaire.gossip.status.off": "NPC gossip is OFF (no daily spread; no new rumors from chat).",
+  "command.millenaire.gossip.enabled": "NPC gossip enabled.",
+  "command.millenaire.gossip.disabled": "NPC gossip disabled.",
   "command.millenaire.companion.disabled": "Companion system is disabled in server config.",
   "command.millenaire.companion.already_active": "You already have an active companion. Dismiss them first.",
   "command.millenaire.companion.no_village": "No Millénaire village nearby to bond a companion.",
@@ -5806,6 +5810,8 @@
   "millenaire.worldboss.command.spawn_failed": "World boss event failed: could not find a spawn location. Move away from villages/dense trees and try again.",
   "millenaire.worldboss.command.no_active": "No active world boss event.",
   "millenaire.worldboss.command.ended": "Active world boss event ending safely.",
+  "millenaire.worldboss.command.enabled": "World boss events enabled. New events may schedule; any active boss continues under the disable policy when turned off.",
+  "millenaire.worldboss.command.disabled": "World boss events disabled. No new events will start; active bosses follow the configured disable policy (default: force depart).",
   "millenaire.item.hemelkern.tooltip": "Heart of a fallen sky watcher. Crafts a Sky Lantern.",
   "millenaire.item.hemelfragment.tooltip": "Shattered ivory-gold remnant of the Hemelwachter."
 }

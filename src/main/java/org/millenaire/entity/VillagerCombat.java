@@ -213,6 +213,15 @@ public final class VillagerCombat {
             return true;
          case MELEE:
             target.hurt(this.villager.damageSources().mobAttack(this.villager), this.getAttackStrength());
+            if (target instanceof ServerPlayer sp
+               && this.villager.level() instanceof ServerLevel attackLevel
+               && org.millenaire.faction.crime.ArrestService.tryArrestFromVillagerAttack(attackLevel, sp, this.villager)) {
+               this.setAttackCooldown(20);
+               this.villager.swing(InteractionHand.MAIN_HAND);
+               this.pursuitTicks = 0;
+               this.villager.setAttackTarget(null);
+               return true;
+            }
             this.setAttackCooldown(20);
             this.villager.swing(InteractionHand.MAIN_HAND);
             this.pursuitTicks = 0;

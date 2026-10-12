@@ -28,6 +28,9 @@ public final class NpcGossipScheduler {
    }
 
    public static void tick(ServerLevel level) {
+      if (!Boolean.TRUE.equals(MillenaireServerConfig.SERVER.npcChatGossip.get())) {
+         return;
+      }
       NpcMindSavedData data = NpcMindSavedData.get(level);
       long currentDay = level.getDayTime() / 24000L;
       if (currentDay <= data.getLastGossipDay()) {
@@ -54,6 +57,7 @@ public final class NpcGossipScheduler {
          return false;
       }
       VillageManager manager = VillageSavedData.get(level).getVillageManager();
+      Map<UUID, Village> villagerIndex = buildVillagerIndex(manager);
       Map<ResourceLocation, List<NpcRumor>> byCulture = new HashMap<>();
       for (NpcRumor rumor : data.getRumors().values()) {
          if (rumor.isActive()) {
@@ -63,11 +67,19 @@ public final class NpcGossipScheduler {
 
       for (Map.Entry<ResourceLocation, List<NpcRumor>> entry : byCulture.entrySet()) {
          for (NpcRumor rumor : entry.getValue()) {
+            if (!org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+               org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.AI_SUPPORT);
+               return false;
+            }
             if (!NpcGossipRules.maySpreadToday(currentDay, rumor.createdDay())) {
                continue;
             }
-            spreadSameVillage(level, manager, data, rumor, currentDay);
-            spreadCrossVillage(level, manager, data, rumor, currentDay);
+            spreadSameVillage(level, manager, data, rumor, currentDay, villagerIndex);
+            if (!org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+               org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.AI_SUPPORT);
+               return false;
+            }
+            spreadCrossVillage(level, manager, data, rumor, currentDay, villagerIndex);
          }
       }
 
@@ -76,14 +88,21 @@ public final class NpcGossipScheduler {
       return true;
    }
 
-   private static void spreadSameVillage(ServerLevel level, VillageManager manager, NpcMindSavedData data, NpcRumor rumor, long currentDay) {
+   private static void spreadSameVillage(
+      ServerLevel level,
+      VillageManager manager,
+      NpcMindSavedData data,
+      NpcRumor rumor,
+      long currentDay,
+      Map<UUID, Village> villagerIndex
+   ) {
       Map<VillageId, List<UUID>> knowersByVillage = new HashMap<>();
       for (Map.Entry<UUID, NpcMind> entry : data.getMinds().entrySet()) {
          NpcRumorKnowledge k = entry.getValue().getKnowledge(rumor.id());
          if (k == null) {
             continue;
          }
-         Village village = findVillageForVillager(manager, entry.getKey());
+         Village village = villagerIndex.get(entry.getKey());
          if (village == null || !village.getCultureId().equals(rumor.cultureId())) {
             continue;
          }
@@ -131,7 +150,14 @@ public final class NpcGossipScheduler {
       }
    }
 
-   private static void spreadCrossVillage(ServerLevel level, VillageManager manager, NpcMindSavedData data, NpcRumor rumor, long currentDay) {
+   private static void spreadCrossVillage(
+      ServerLevel level,
+      VillageManager manager,
+      NpcMindSavedData data,
+      NpcRumor rumor,
+      long currentDay,
+      Map<UUID, Village> villagerIndex
+   ) {
       int radius = MillenaireServerConfig.SERVER.backgroundRadius.getAsInt();
       if (radius <= 0) {
          return;
@@ -176,7 +202,7 @@ public final class NpcGossipScheduler {
          if (entry.getValue().getKnowledge(rumor.id()) == null) {
             continue;
          }
-         Village village = findVillageForVillager(manager, entry.getKey());
+         Village village = villagerIndex.get(entry.getKey());
          if (village == null) {
             continue;
          }
@@ -192,7 +218,7 @@ public final class NpcGossipScheduler {
       knowers = NpcGossipRules.sortedUuids(knowers);
       Random random = new Random(rumor.id() * 31L + currentDay * 131L + knowers.get(0).hashCode());
       UUID knowerId = knowers.get(random.nextInt(knowers.size()));
-      Village knowerVillage = findVillageForVillager(manager, knowerId);
+      Village knowerVillage = villagerIndex.get(knowerId);
       VillagerRecord knower = knowerVillage != null ? knowerVillage.getVillagerRecord(knowerId) : null;
       if (knower == null) {
          return;
@@ -337,13 +363,14 @@ public final class NpcGossipScheduler {
    }
 
    @Nullable
-   private static Village findVillageForVillager(VillageManager manager, UUID villagerId) {
+   private static Map<UUID, Village> buildVillagerIndex(VillageManager manager) {
+      Map<UUID, Village> index = new HashMap<>();
       for (Village village : manager.getAllVillages()) {
-         if (village.getVillagerRecord(villagerId) != null) {
-            return village;
+         for (UUID villagerId : village.getVillagerRecords().keySet()) {
+            index.putIfAbsent(villagerId, village);
          }
       }
-      return null;
+      return index;
    }
 
    private static boolean isChildRecord(VillagerRecord record) {

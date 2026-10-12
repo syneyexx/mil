@@ -37,6 +37,11 @@ public final class MillenaireServerConfig {
    public final ConfigValue<String> starterVillageType;
    public final IntValue starterSearchRadius;
    public final IntValue nearSpawnBoostRadius;
+   public final BooleanValue worldgenPrefillEnabled;
+   public final IntValue worldgenPrefillRadiusBlocks;
+   public final IntValue worldgenPrefillChunksPerTick;
+   public final IntValue worldgenPrefillPlanKicksPerTick;
+   public final BooleanValue worldgenPrefillWaitForStarter;
    public final IntValue worldgenMaximumSettlementFootprint;
    public final BooleanValue worldgenAllowHillyTerrain;
    public final IntValue worldgenMaximumTerrainSlope;
@@ -237,6 +242,11 @@ public final class MillenaireServerConfig {
    public final IntValue pathNodeMultiplier;
    public final IntValue pathMaxStartsPerTick;
    public final IntValue tickGlobalBudgetMs;
+   public final BooleanValue tickAdaptiveBudgetEnabled;
+   public final IntValue tickAdaptiveMinGlobalMs;
+   public final IntValue tickSoftMsptThreshold;
+   public final IntValue tickHardMsptThreshold;
+   public final IntValue entityGoalPickBudgetPerTick;
    public final IntValue tickPhaseApplyMs;
    public final IntValue tickPhaseVillageNearMs;
    public final IntValue tickPhaseVillageMidMs;
@@ -346,12 +356,19 @@ public final class MillenaireServerConfig {
          )
          .translation("millenaire.config.worldgenLegacyFallback")
          .define("worldgenLegacyFallback", false);
-      this.worldgenRegionSizeChunks = builder.comment("Region grid size in chunks for candidate distribution (independent of village radius)")
+      this.worldgenRegionSizeChunks = builder.comment(
+            new String[]{
+               "Region grid size in chunks for candidate distribution (independent of village radius).",
+               "24 chunks ≈ 384 blocks — with min spacing 350 this targets roughly one village every 350–450 blocks."
+            }
+         )
          .translation("millenaire.config.worldgenRegionSizeChunks")
-         .defineInRange("worldgenRegionSizeChunks", 32, 8, 128);
-      this.worldgenSettlementDensity = builder.comment("Probability a region attempts a full village (0-1). Slightly higher for dense biome packs.")
+         .defineInRange("worldgenRegionSizeChunks", 24, 8, 128);
+      this.worldgenSettlementDensity = builder.comment(
+            "Probability a region attempts a full village (0-1). High default so most regions try; spacing still enforces the 350 floor."
+         )
          .translation("millenaire.config.worldgenSettlementDensity")
-         .defineInRange("worldgenSettlementDensity", 0.72D, 0.0D, 1.0D);
+         .defineInRange("worldgenSettlementDensity", 0.92D, 0.0D, 1.0D);
       this.worldgenLoneBuildingDensity = builder.comment("Probability a region attempts a lone building when no village is selected (0-1)")
          .translation("millenaire.config.worldgenLoneBuildingDensity")
          .defineInRange("worldgenLoneBuildingDensity", 0.40D, 0.0D, 1.0D);
@@ -386,7 +403,29 @@ public final class MillenaireServerConfig {
             "Within this radius of world spawn, Phase 4 prioritizes finishing already-loaded settlement footprints (no force-load)."
          )
          .translation("millenaire.config.nearSpawnBoostRadius")
-         .defineInRange("nearSpawnBoostRadius", 512, 0, 2048);
+         .defineInRange("nearSpawnBoostRadius", 1024, 0, 2048);
+      this.worldgenPrefillEnabled = builder.comment(
+            new String[]{
+               "On new worlds, budgeted-prefill settlement regions around spawn so players join a populated ring",
+               "that then grows outward via normal exploration. Uses Phase 4 plan/materialize/activate (not VillageSpawner)."
+            }
+         )
+         .translation("millenaire.config.worldgenPrefillEnabled")
+         .define("worldgenPrefillEnabled", true);
+      this.worldgenPrefillRadiusBlocks = builder.comment("Radius around world spawn (blocks) to prefill with Phase 4 settlement regions")
+         .translation("millenaire.config.worldgenPrefillRadiusBlocks")
+         .defineInRange("worldgenPrefillRadiusBlocks", 1024, 256, 2048);
+      this.worldgenPrefillChunksPerTick = builder.comment("Max chunks to sync-generate per tick while prefill is chunking the spawn ring")
+         .translation("millenaire.config.worldgenPrefillChunksPerTick")
+         .defineInRange("worldgenPrefillChunksPerTick", 16, 1, 64);
+      this.worldgenPrefillPlanKicksPerTick = builder.comment("Max Phase 4 plan kicks per tick while draining the prefill ring")
+         .translation("millenaire.config.worldgenPrefillPlanKicksPerTick")
+         .defineInRange("worldgenPrefillPlanKicksPerTick", 4, 1, 32);
+      this.worldgenPrefillWaitForStarter = builder.comment(
+            "Wait until the starter settlement is placed (or gave up / disabled) before starting spawn-ring prefill"
+         )
+         .translation("millenaire.config.worldgenPrefillWaitForStarter")
+         .define("worldgenPrefillWaitForStarter", true);
       this.worldgenMaximumSettlementFootprint = builder.comment("Soft cap on planned settlement radius used for reservation (blocks)")
          .translation("millenaire.config.worldgenMaximumSettlementFootprint")
          .defineInRange("worldgenMaximumSettlementFootprint", 120, 32, 256);
@@ -497,7 +536,7 @@ public final class MillenaireServerConfig {
             "Soft wall-clock budget (ms) for optional worldgen work per server tick; combines with op/scan budgets"
          )
          .translation("millenaire.config.worldgenTickTimeBudgetMs")
-         .defineInRange("worldgenTickTimeBudgetMs", 10, 1, 50);
+         .defineInRange("worldgenTickTimeBudgetMs", 20, 1, 50);
       this.worldgenTerrainColumnsPerTick = builder.comment("Max terrain-map columns scanned per tick while building a resumable layout map")
          .translation("millenaire.config.worldgenTerrainColumnsPerTick")
          .defineInRange("worldgenTerrainColumnsPerTick", 256, 8, 4096);
@@ -725,7 +764,7 @@ public final class MillenaireServerConfig {
          .defineInRange("leaveRange", 6, 4, 10);
       this.npcChatGossip = builder.comment("Allow same-culture rumor spreading from free chat")
          .translation("millenaire.config.npcChat.gossip")
-         .define("gossip", true);
+         .define("gossip", false);
       this.npcChatGossipExpiryDays = builder.comment("Days before an inactive rumor expires")
          .translation("millenaire.config.npcChat.gossipExpiryDays")
          .defineInRange("gossipExpiryDays", 30, 7, 120);
@@ -1115,6 +1154,7 @@ public final class MillenaireServerConfig {
       builder.comment(
             new String[]{
                "Tick Governor + Simulation LOD — soft shared deadline across Millenaire phases.",
+               "Defaults favor desktop/SP headroom; adaptive HEALTHY/SOFT/HARD pressure remains the safety net.",
                "Does not remove features; amortizes far/mid work and adds fair deferral under load.",
                "Uses worldgenTickTimeBudgetMs as the shared soft wall-clock budget."
             }
@@ -1137,7 +1177,7 @@ public final class MillenaireServerConfig {
          .defineInRange("villagerAiMidDistance", 48, 16, 256);
       this.villagerAiMidInterval = builder.comment("Goal-pick interval for distant villagers")
          .translation("millenaire.config.tickGovernor.villagerAiMidInterval")
-         .defineInRange("villagerAiMidInterval", 3, 1, 20);
+         .defineInRange("villagerAiMidInterval", 2, 1, 20);
       this.factionLifecycleStagingEnabled = builder.comment(
             "When civilization orchestrator is off, stage FactionLifecycle managers like civ stages"
          )
@@ -1155,7 +1195,7 @@ public final class MillenaireServerConfig {
             "Max Near villages that may run full Village.tick per server tick (rest deferred FIFO)"
          )
          .translation("millenaire.config.tickGovernor.nearVillageMaxFullTicksPerTick")
-         .defineInRange("nearVillageMaxFullTicksPerTick", 2, 1, 32);
+         .defineInRange("nearVillageMaxFullTicksPerTick", 4, 1, 32);
       this.entityLodEnabled = builder.comment("Distance LOD for loaded villagers (Near / Mid / Far sleep)")
          .translation("millenaire.config.tickGovernor.entityLodEnabled")
          .define("entityLodEnabled", true);
@@ -1170,50 +1210,69 @@ public final class MillenaireServerConfig {
          .define("entityLodFarSleep", true);
       this.entityLodMidCombatInterval = builder.comment("Combat canStart scan interval for Mid-distance villagers")
          .translation("millenaire.config.tickGovernor.entityLodMidCombatInterval")
-         .defineInRange("entityLodMidCombatInterval", 5, 1, 40);
+         .defineInRange("entityLodMidCombatInterval", 3, 1, 40);
       this.pathMaxSearchMs = builder.comment("Hard wall-clock abort for entity A* path searches (ms)")
          .translation("millenaire.config.tickGovernor.pathMaxSearchMs")
-         .defineInRange("pathMaxSearchMs", 2, 1, 25);
+         .defineInRange("pathMaxSearchMs", 4, 1, 25);
       this.pathNodeMultiplier = builder.comment("MillPathNavigation node budget multiplier (was 8)")
          .translation("millenaire.config.tickGovernor.pathNodeMultiplier")
-         .defineInRange("pathNodeMultiplier", 2, 1, 8);
+         .defineInRange("pathNodeMultiplier", 4, 1, 8);
       this.pathMaxStartsPerTick = builder.comment(
             "Max new entity path searches started per server tick globally (PathRequestQueue)"
          )
          .translation("millenaire.config.tickGovernor.pathMaxStartsPerTick")
-         .defineInRange("pathMaxStartsPerTick", 2, 1, 32);
+         .defineInRange("pathMaxStartsPerTick", 6, 1, 32);
       this.tickGlobalBudgetMs = builder.comment("Global Millenaire Post-tick soft ceiling (ms); includes WORLDGEN reserve")
          .translation("millenaire.config.tickGovernor.globalBudgetMs")
-         .defineInRange("globalBudgetMs", 12, 4, 50);
+         .defineInRange("globalBudgetMs", 24, 4, 50);
+      this.tickAdaptiveBudgetEnabled = builder.comment(
+            "Scale Post-tick allowance from remaining tick time and recent MSPT pressure (HEALTHY/SOFT/HARD)"
+         )
+         .translation("millenaire.config.tickGovernor.adaptiveBudgetEnabled")
+         .define("adaptiveBudgetEnabled", true);
+      this.tickAdaptiveMinGlobalMs = builder.comment("Floor for adaptive effective globalMs under HARD pressure")
+         .translation("millenaire.config.tickGovernor.adaptiveMinGlobalMs")
+         .defineInRange("adaptiveMinGlobalMs", 12, 2, 20);
+      this.tickSoftMsptThreshold = builder.comment("Approximate total tick ms (pre-Post + Millenaire) that enters SOFT pressure")
+         .translation("millenaire.config.tickGovernor.softMsptThreshold")
+         .defineInRange("softMsptThreshold", 45, 20, 80);
+      this.tickHardMsptThreshold = builder.comment("Approximate total tick ms that enters HARD pressure")
+         .translation("millenaire.config.tickGovernor.hardMsptThreshold")
+         .defineInRange("hardMsptThreshold", 55, 25, 100);
+      this.entityGoalPickBudgetPerTick = builder.comment(
+            "Max non-urgent villager goal-pick starts per tick across the entity swarm (hired/companion/combat always allowed)"
+         )
+         .translation("millenaire.config.tickGovernor.entityGoalPickBudgetPerTick")
+         .defineInRange("entityGoalPickBudgetPerTick", 64, 4, 256);
       this.tickPhaseApplyMs = builder.comment("APPLY phase quota (ms)")
          .translation("millenaire.config.tickGovernor.phaseApplyMs")
-         .defineInRange("phaseApplyMs", 2, 1, 20);
+         .defineInRange("phaseApplyMs", 4, 1, 20);
       this.tickPhaseVillageNearMs = builder.comment("VILLAGE_NEAR phase quota (ms)")
          .translation("millenaire.config.tickGovernor.phaseVillageNearMs")
-         .defineInRange("phaseVillageNearMs", 4, 1, 30);
+         .defineInRange("phaseVillageNearMs", 8, 1, 30);
       this.tickPhaseVillageMidMs = builder.comment("VILLAGE_MID phase quota (ms)")
          .translation("millenaire.config.tickGovernor.phaseVillageMidMs")
-         .defineInRange("phaseVillageMidMs", 2, 1, 20);
+         .defineInRange("phaseVillageMidMs", 4, 1, 20);
       this.tickPhaseAiSupportMs = builder.comment("AI_SUPPORT phase quota (ms)")
          .translation("millenaire.config.tickGovernor.phaseAiSupportMs")
-         .defineInRange("phaseAiSupportMs", 1, 1, 20);
+         .defineInRange("phaseAiSupportMs", 2, 1, 20);
       this.tickPhaseCivMs = builder.comment("CIV_FACTION phase quota (ms)")
          .translation("millenaire.config.tickGovernor.phaseCivMs")
-         .defineInRange("phaseCivMs", 2, 1, 20);
+         .defineInRange("phaseCivMs", 3, 1, 20);
       this.tickPhaseWorldgenMs = builder.comment("WORLDGEN reserved phase quota (ms); earlier phases cannot consume this")
          .translation("millenaire.config.tickGovernor.phaseWorldgenMs")
-         .defineInRange("phaseWorldgenMs", 2, 1, 20);
+         .defineInRange("phaseWorldgenMs", 4, 1, 20);
       this.tickPhaseHighwayMs = builder.comment("HIGHWAY reserved phase quota (ms)")
          .translation("millenaire.config.tickGovernor.phaseHighwayMs")
-         .defineInRange("phaseHighwayMs", 1, 1, 20);
+         .defineInRange("phaseHighwayMs", 2, 1, 20);
       this.tickPhaseTailMs = builder.comment("BOSS_QUEST_MAP / TAIL phase quota (ms)")
          .translation("millenaire.config.tickGovernor.phaseTailMs")
-         .defineInRange("phaseTailMs", 1, 1, 20);
+         .defineInRange("phaseTailMs", 2, 1, 20);
       this.farBackgroundTickInterval = builder.comment(
             "Ticks between backgroundTick for inactive/Far villages (raid-active always runs)"
          )
          .translation("millenaire.config.tickGovernor.farBackgroundTickInterval")
-         .defineInRange("farBackgroundTickInterval", 20, 1, 200);
+         .defineInRange("farBackgroundTickInterval", 10, 1, 200);
       builder.pop();
 
       builder.comment(
@@ -1228,7 +1287,7 @@ public final class MillenaireServerConfig {
          .push("worldBossEvents");
       this.worldBossEventsEnabled = builder.comment("Master switch for world boss events")
          .translation("millenaire.config.worldBossEvents.enabled")
-         .define("enabled", true);
+         .define("enabled", false);
       this.worldBossCadenceMode = builder.comment("DAYS (default) or ACTIVE_PLAYTIME")
          .translation("millenaire.config.worldBossEvents.cadenceMode")
          .define("cadenceMode", "DAYS");

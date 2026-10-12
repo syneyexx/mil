@@ -19,7 +19,7 @@ public final class WorldBossEligibility {
       try {
          return Boolean.TRUE.equals(MillenaireServerConfig.SERVER.worldBossEventsEnabled.get());
       } catch (IllegalStateException e) {
-         return true;
+         return false;
       }
    }
 

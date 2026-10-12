@@ -37,6 +37,12 @@ Server config lives in the NeoForge Millénaire server config (keys under `gener
 - `worldgenGenerateRegionalRoads` — plans continuous inter-settlement routes; places adjacent cells when chunks are loaded
 - `worldgenGenerateBridges` — resumable water crossings; a route is never `CONNECTED` after a half-built bridge
 
+### Tick performance
+
+- Soft Post-tick board (`tickGovernor.*`): per-phase ms quotas, WORLDGEN/HIGHWAY reserve, adaptive `effMs` under HEALTHY/SOFT/HARD pressure (default Post ceiling ~24 ms)
+- Village Near/Mid deferral + entity LOD / Far sleep + swarm `entityGoalPickBudgetPerTick`
+- Diagnostics: `/millenaire dev tick status|metrics|dump` — see `docs/TICK_PERFORMANCE_ARCHITECTURE.md` and `docs/TICK_PERFORMANCE_LOCAL_VALIDATION.md`
+
 ### Living Villages / requests
 
 - `livingVillagesEnabled`, `villageRequestsEnabled`
@@ -46,10 +52,10 @@ Server config lives in the NeoForge Millénaire server config (keys under `gener
 
 ### World Boss Events
 
-- `worldBossEvents.enabled` — master switch (disabling stops new events; SavedData retained; active-boss policy `force_depart` / `leave`)
+- `worldBossEvents.enabled` — master switch, default off (disabling stops new events; SavedData retained; active-boss policy `force_depart` / `leave`)
 - Interval `intervalMinTicks` / `intervalMaxTicks` (default 72000–108000 ≈ 60–90 min at 20 TPS; lag stretches wall-clock time)
 - One world timer; eligible survival/adventure Overworld players; extensible boss pool (Hemelwachter registered)
-- Admin: `/millenaire worldboss status|next|start [id]|trigger|end|list`
+- Admin: `/millenaire worldboss on|off|status|next|start [id]|trigger|end|list`
 - See `docs/WORLD_BOSS_EVENTS_ARCHITECTURE.md`, `docs/WORLD_BOSS_EVENTS_IMPLEMENTATION.md`, `docs/WORLD_BOSS_EVENTS_LOCAL_VALIDATION.md`
 
 ### Religion

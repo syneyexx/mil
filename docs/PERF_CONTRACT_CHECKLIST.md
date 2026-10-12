@@ -32,3 +32,6 @@ Copy into the PR description:
 - CombatSenseCache + Mid async entity paths
 - VillageWorkSlice under budget
 - Settlement map deltas + client name-tag LOD + dirty coalesce (see wave 5)
+- Adaptive `effMs` + HEALTHY/SOFT/HARD pressure (Pre-tick remaining awareness)
+- Entity swarm goal-pick budget + entity LOD/sleep/`entityAiMs` telemetry
+- Gossip villager index + mid-loop `hasTime`; chat session early-exit; civ relationship decay gated

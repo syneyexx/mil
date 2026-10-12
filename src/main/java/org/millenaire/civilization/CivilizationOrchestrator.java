@@ -79,8 +79,12 @@ public final class CivilizationOrchestrator {
          reconcileMemberships(overworld, state);
       });
 
-      // Relationship decay is lightweight and safe every orchestrator pass (manager has its own internal cadence).
-      safe(overworld, "relationships", () -> RelationshipSavedData.get(overworld).getRelationshipManager().tickDecay(overworld));
+      // Relationship decay has its own cadence, but still respect CIV budget under pressure.
+      if (org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+         safe(overworld, "relationships", () -> RelationshipSavedData.get(overworld).getRelationshipManager().tickDecay(overworld));
+      } else {
+         org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.CIV_FACTION);
+      }
 
       stageWork |= runIfDue(overworld, state, CivilizationStage.ECONOMY, gameTime, CivilizationConfig.STAGE_ECONOMY_INTERVAL, () -> {
          EconomySavedData.get(overworld).getTradeManager().tick(overworld);

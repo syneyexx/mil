@@ -52,6 +52,33 @@ public final class MaterializationTickBudget {
       deadlineNanos = nanos;
    }
 
+   /**
+    * Scale planning/discovery budgets under tick pressure while keeping materialize ops usable for apply progress.
+    * Call after {@link #ensureTick(long)} when the governor publishes pressure for this tick.
+    */
+   public static void applyPressureScale(double materializeScale, double discoveryScale) {
+      double mat = clamp01(materializeScale);
+      double disc = clamp01(discoveryScale);
+      if (mat >= 0.999 && disc >= 0.999) {
+         return;
+      }
+      remainingOps = Math.max(1, (int)Math.floor(remainingOps * mat));
+      remainingScanCandidates = Math.max(1, (int)Math.floor(remainingScanCandidates * disc));
+      remainingPlanSteps = Math.max(1, (int)Math.floor(remainingPlanSteps * disc));
+      // Activations stay available so catch-up can finish already-planned work.
+      remainingActivations = Math.max(1, (int)Math.floor(remainingActivations * Math.max(mat, 0.5)));
+   }
+
+   private static double clamp01(double v) {
+      if (v < 0.0) {
+         return 0.0;
+      }
+      if (v > 1.0) {
+         return 1.0;
+      }
+      return v;
+   }
+
    public static boolean hasTime() {
       return System.nanoTime() < deadlineNanos;
    }

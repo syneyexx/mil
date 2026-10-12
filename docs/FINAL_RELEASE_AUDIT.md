@@ -48,7 +48,7 @@
 | L-02 | Autonomous founding requires already-loaded destination chunks |
 | L-03 | Cross-SavedData crash consistency is best-effort with recovery flags — not exactly-once |
 | L-04 | Bridge placement is procedural, not template-pack based |
-| L-05 | Runtime performance and gameplay balance unverified |
+| L-05 | Runtime perf mitigations landed (adaptive Post budget, entity swarm goal-pick cap, entity AI attribution, phase EMA/peak, pressure-scaled materialization). Formal SLO p95 still requires operator evidence via `docs/TICK_PERFORMANCE_LOCAL_VALIDATION.md` §5 — not auto-closed without Spark/S1–S4 paste |
 | L-06 | Player-block provenance incomplete — road guard is conservative, not omniscient |
 | L-07 | Authorize-colonization never enables the master switch; founding stays default-off |
 | L-08 | Backlog: exporter scan budgets, VillageRequest recovery, book snapshot rate limits, published-key per-entry TTL |

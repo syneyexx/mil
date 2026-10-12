@@ -5347,6 +5347,8 @@
   "millenaire.worldboss.command.spawn_failed": "Worldboss-event mislukt: geen spawnlocatie gevonden. Ga verder van dorpen/dicht bos en probeer opnieuw.",
   "millenaire.worldboss.command.no_active": "Geen actief worldboss-event.",
   "millenaire.worldboss.command.ended": "Actief worldboss-event wordt veilig beëindigd.",
+  "millenaire.worldboss.command.enabled": "Worldboss-events ingeschakeld. Nieuwe events kunnen gepland worden; bij uitschakelen blijft een actieve boss onder het disable-beleid.",
+  "millenaire.worldboss.command.disabled": "Worldboss-events uitgeschakeld. Er starten geen nieuwe events; actieve bosses volgen het geconfigureerde disable-beleid (standaard: force depart).",
   "millenaire.item.hemelkern.tooltip": "Hart van een gevelde hemelwachter. Maakt een Hemellantaarn.",
   "millenaire.item.hemelfragment.tooltip": "Gebroken ivoor-gouden restant van de Hemelwachter.",
   "message.millenaire.companion.chat_thinking": "%s luistert…",

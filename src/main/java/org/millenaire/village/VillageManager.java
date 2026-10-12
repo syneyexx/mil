@@ -260,10 +260,17 @@ public class VillageManager {
          }
 
          // Far/inactive: data-only — stagger backgroundTick (raid-urgent always runs).
+         // Under budget pressure, skip non-urgent Near/Mid background so full Near ticks keep the pie.
          boolean raidUrgent = v.isRaidActiveOrSuffering();
          boolean runBackground;
-         if (raidUrgent || lod == VillageSimulationLod.NEAR || (lod == VillageSimulationLod.MID && v.isActive())) {
+         if (raidUrgent) {
             runBackground = true;
+         } else if (lod == VillageSimulationLod.NEAR || (lod == VillageSimulationLod.MID && v.isActive())) {
+            runBackground = ServerTickGovernor.hasTime();
+            if (!runBackground) {
+               ServerTickGovernor.noteBackgroundTickSkipped();
+               ServerTickGovernor.noteDefer(TickPhase.VILLAGE_NEAR);
+            }
          } else {
             int stagger = Math.floorMod(villageHash, farBgInterval);
             runBackground = Math.floorMod(gameTime, farBgInterval) == stagger;

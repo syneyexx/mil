@@ -1,5 +1,7 @@
 package org.millenaire.perf.tick;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.AfterEach;
@@ -33,6 +35,11 @@ class ServerTickGovernorTest {
       assertTrue(diag.contains("villages={active=1,dataOnly=1"), diag);
       assertTrue(diag.contains("pathQ="), diag);
       assertTrue(diag.contains("globalMs="), diag);
+      assertTrue(diag.contains("effMs="), diag);
+      assertTrue(diag.contains("pressure="), diag);
+      assertTrue(diag.contains("/ema"), diag);
+      assertTrue(diag.contains("entityLod="), diag);
+      assertTrue(diag.contains("entityAiMs="), diag);
    }
 
    @Test
@@ -42,5 +49,66 @@ class ServerTickGovernorTest {
       ServerTickGovernor.noteDefer(TickPhase.WORLDGEN);
       String diag = ServerTickGovernor.diagnostic();
       assertTrue(diag.contains("worldgen=") && diag.contains("/d2"), diag);
+   }
+
+   @Test
+   void entityAiAttributionSnapshotsAcrossBeginTick() {
+      ServerTickGovernor.noteEntityLod(EntitySimulationLod.NEAR);
+      ServerTickGovernor.noteEntityLod(EntitySimulationLod.FAR);
+      ServerTickGovernor.noteEntityFarSleep();
+      ServerTickGovernor.noteEntityAiNanos(2_500_000L);
+      ServerTickGovernor.beginTick(10L);
+
+      assertEquals(1, ServerTickGovernor.entityNearReported());
+      assertTrue(ServerTickGovernor.entityAiNanosReported() >= 2_500_000L);
+      String diag = ServerTickGovernor.diagnostic();
+      assertTrue(diag.contains("entityLod={near=1"), diag);
+      assertTrue(diag.contains("entityAiMs=2") || diag.contains("entityAiMs=3"), diag);
+   }
+
+   @Test
+   void entityGoalPickBudgetDefersNonUrgent() {
+      long gameTime = 42L;
+      int budget = ServerTickGovernor.entityGoalPickBudgetPerTick();
+      for (int i = 0; i < budget; i++) {
+         assertTrue(ServerTickGovernor.tryConsumeEntityGoalPick(gameTime, false));
+      }
+      assertFalse(ServerTickGovernor.tryConsumeEntityGoalPick(gameTime, false));
+      assertTrue(ServerTickGovernor.tryConsumeEntityGoalPick(gameTime, true), "urgent always allowed");
+   }
+
+   @Test
+   void adaptiveBudgetShrinksWhenPreTickAlreadyHot() {
+      long now = System.nanoTime();
+      // Pretend ~45 ms already elapsed before Post.
+      ServerTickGovernor.setServerTickStartForTest(now - 45_000_000L);
+      ServerTickGovernor.beginTick(100L);
+      assertTrue(
+         ServerTickGovernor.effectiveGlobalBudgetMs() <= ServerTickGovernor.globalBudgetMs(),
+         "effective=" + ServerTickGovernor.effectiveGlobalBudgetMs()
+      );
+      assertTrue(ServerTickGovernor.effectiveGlobalBudgetMs() <= 8, "effective=" + ServerTickGovernor.effectiveGlobalBudgetMs());
+   }
+
+   @Test
+   void pressureEscalatesAfterSustainedOverspend() {
+      // Drive HARD via endTick totals with a fake pre-spend.
+      for (int i = 0; i < 3; i++) {
+         long t = 200L + i;
+         long start = System.nanoTime();
+         ServerTickGovernor.setServerTickStartForTest(start - 49_000_000L);
+         ServerTickGovernor.beginTick(t);
+         // Spin a little so postSpent is non-trivial.
+         long spinUntil = System.nanoTime() + 2_000_000L;
+         while (System.nanoTime() < spinUntil) {
+            // busy wait
+         }
+         ServerTickGovernor.endTick();
+      }
+      ServerTickGovernor.beginTick(300L);
+      assertTrue(
+         ServerTickGovernor.pressure() == TickPressure.SOFT || ServerTickGovernor.pressure() == TickPressure.HARD,
+         "pressure=" + ServerTickGovernor.pressure()
+      );
    }
 }
