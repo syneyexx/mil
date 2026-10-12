@@ -529,7 +529,11 @@ public class VillagerNavigationManager implements VillagerNavDriver {
       if (this.destination.distSqr(dest) > DEST_CHANGE_THRESHOLD_SQ) {
          return false;
       }
-      if (path == null) {
+      if (path == null
+         || !org.millenaire.perf.path.NavRegionSnapshot.validateWalkability(
+            (ServerLevel)villager.level(), path, 4
+         )) {
+         // Invalid / unwalkable async result — cooldown then allow sync retry next request.
          this.pathfindCooldown = pathfindBackoffTicks(this.pathfindBackoffLevel);
          this.pathfindBackoffLevel++;
          return true;

@@ -11,7 +11,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import org.millenaire.TickConstants;
 import org.millenaire.building.BuildingInstance;
 import org.millenaire.building.BuildingPlan;
 import org.millenaire.building.SpecialPoint;
@@ -31,43 +30,47 @@ public final class VillageSellerDispatcher {
    }
 
    public static void checkSeller(ServerLevel level, Village village) {
-      if (level.getGameTime() % 10L == 0L) {
-         cleanupActiveSellers(village);
-         if (!TickConstants.isNight(level)) {
-            if (!village.isUnderAttack()) {
-               if (village.areChestsLocked()) {
-                  BlockPos center = village.getCenter();
-                  Player nearestPlayer = level.getNearestPlayer(center.getX(), center.getY(), center.getZ(), 100.0, false);
-                  if (nearestPlayer != null) {
-                     if (nearestPlayer instanceof ServerPlayer) {
-                        if (!village.isControlledBy(nearestPlayer.getUUID())) {
-                           int rep = village.getCombinedReputation(level, nearestPlayer.getUUID());
-                           if (rep >= -1024) {
-                              Map<BlockPos, MillVillager> activeSellers = village.getActiveSellers();
-
-                              for (BuildingInstance b : village.getBuildings()) {
-                                 if (b.isOperational()) {
-                                    BuildingPlan plan = ModCultures.getBuildingPlan(b.getPlanId());
-                                    if (plan != null && plan.shopId() != null) {
-                                       List<SpecialPoint> sellingPoints = b.getPointsByType("sellingPos");
-                                       if (sellingPoints.isEmpty()) {
-                                          BlockPos fallback = b.getFirstPointPos("sleepingPos");
-                                          if (fallback != null) {
-                                             dispatchIfNeeded(level, village, b, fallback, nearestPlayer, activeSellers);
-                                          }
-                                       } else {
-                                          for (SpecialPoint sp : sellingPoints) {
-                                             dispatchIfNeeded(level, village, b, sp.pos(), nearestPlayer, activeSellers);
-                                          }
-                                       }
-                                    }
-                                 }
-                              }
-                           }
-                        }
-                     }
-                  }
-               }
+      // Cadence is applied by Village.tick (villageId-scattered every 10 ticks).
+      cleanupActiveSellers(village);
+      if (org.millenaire.perf.tick.LevelTickCache.isNight(level)) {
+         return;
+      }
+      if (village.isUnderAttack()) {
+         return;
+      }
+      if (!village.areChestsLocked()) {
+         return;
+      }
+      BlockPos center = village.getCenter();
+      Player nearestPlayer = level.getNearestPlayer(center.getX(), center.getY(), center.getZ(), 100.0, false);
+      if (!(nearestPlayer instanceof ServerPlayer)) {
+         return;
+      }
+      if (village.isControlledBy(nearestPlayer.getUUID())) {
+         return;
+      }
+      int rep = village.getCombinedReputation(level, nearestPlayer.getUUID());
+      if (rep < -1024) {
+         return;
+      }
+      Map<BlockPos, MillVillager> activeSellers = village.getActiveSellers();
+      for (BuildingInstance b : village.getBuildings()) {
+         if (!b.isOperational()) {
+            continue;
+         }
+         BuildingPlan plan = ModCultures.getBuildingPlan(b.getPlanId());
+         if (plan == null || plan.shopId() == null) {
+            continue;
+         }
+         List<SpecialPoint> sellingPoints = b.getPointsByType("sellingPos");
+         if (sellingPoints.isEmpty()) {
+            BlockPos fallback = b.getFirstPointPos("sleepingPos");
+            if (fallback != null) {
+               dispatchIfNeeded(level, village, b, fallback, nearestPlayer, activeSellers);
+            }
+         } else {
+            for (SpecialPoint sp : sellingPoints) {
+               dispatchIfNeeded(level, village, b, sp.pos(), nearestPlayer, activeSellers);
             }
          }
       }

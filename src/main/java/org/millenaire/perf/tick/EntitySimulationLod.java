@@ -47,10 +47,42 @@ public enum EntitySimulationLod {
    }
 
    public static int midCombatInterval() {
+      int base;
       try {
-         return Math.max(1, MillenaireServerConfig.SERVER.entityLodMidCombatInterval.getAsInt());
+         base = Math.max(1, MillenaireServerConfig.SERVER.entityLodMidCombatInterval.getAsInt());
       } catch (IllegalStateException e) {
-         return 5;
+         base = 5;
+      }
+      return scaleInterval(base);
+   }
+
+   /** Near combat-urgent scan interval (always 1 when hurt / targeting). */
+   public static int nearCombatInterval() {
+      int base;
+      try {
+         base = Math.max(1, MillenaireServerConfig.SERVER.entityLodNearCombatInterval.getAsInt());
+      } catch (IllegalStateException e) {
+         base = 3;
+      }
+      return scaleInterval(base);
+   }
+
+   private static int scaleInterval(int base) {
+      if (!pressureScalesAi()) {
+         return base;
+      }
+      return switch (ServerTickGovernor.pressure()) {
+         case HARD -> Math.min(40, base * 2);
+         case SOFT -> Math.min(40, (base * 3 + 1) / 2);
+         case HEALTHY -> base;
+      };
+   }
+
+   private static boolean pressureScalesAi() {
+      try {
+         return Boolean.TRUE.equals(MillenaireServerConfig.SERVER.tickPressureScalesAi.get());
+      } catch (IllegalStateException e) {
+         return true;
       }
    }
 
@@ -85,21 +117,32 @@ public enum EntitySimulationLod {
          return false;
       }
       int interval = VillagerAiCadence.midInterval();
+      if (pressureScalesAi() && ServerTickGovernor.pressure() == TickPressure.HARD) {
+         interval = Math.min(40, interval * 2);
+      }
       int stagger = Math.floorMod(entityId, interval);
       return Math.floorMod(gameTime, interval) == stagger;
    }
 
    /** Combat urgent canStart scans (not active combat ticks). */
    public boolean allowCombatScan(long gameTime, int entityId) {
-      if (this == NEAR) {
-         return true;
-      }
       if (this == FAR && farSleepEnabled()) {
          return false;
       }
-      int interval = midCombatInterval();
+      int interval = this == NEAR ? nearCombatInterval() : midCombatInterval();
+      if (interval <= 1) {
+         return true;
+      }
       int stagger = Math.floorMod(entityId, interval);
       return Math.floorMod(gameTime, interval) == stagger;
+   }
+
+   /**
+    * Always allow combat scan when the villager is hurt or already has a target
+    * (overrides Near/Mid cadence).
+    */
+   public static boolean forceCombatScan(MillVillager villager) {
+      return villager != null && (villager.getAttackTarget() != null || villager.hurtTime > 0);
    }
 
    /** Expensive ambient work: leaf clear, mob aggro pulse, passive pickup. */

@@ -1247,7 +1247,8 @@ public class MillVillager extends PathfinderMob {
       if (!this.level().isClientSide() && this.goalScheduler != null) {
          GoalContext ctx = this.buildGoalContext();
          boolean allowGoalPick = entityLod.allowGoalPick(this.level().getGameTime(), this.getId());
-         boolean allowCombatScan = entityLod.allowCombatScan(this.level().getGameTime(), this.getId());
+         boolean allowCombatScan = org.millenaire.perf.tick.EntitySimulationLod.forceCombatScan(this)
+            || entityLod.allowCombatScan(this.level().getGameTime(), this.getId());
          // When Entity LOD is off, fall back to distance cadence. When LOD is on, Mid/Far already stagger.
          if (!org.millenaire.perf.tick.EntitySimulationLod.enabled()
             && this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel

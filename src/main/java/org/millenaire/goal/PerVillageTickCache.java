@@ -1,9 +1,13 @@
 package org.millenaire.goal;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
+/**
+ * Main-thread-only per-village TTL cache (combat sense / gather). Not used from workers.
+ */
 public final class PerVillageTickCache<T> {
    private static final long DEFAULT_EXPIRY_TICKS = 12000L;
    private static final long DEFAULT_CLEANUP_INTERVAL = 2400L;
@@ -11,7 +15,7 @@ public final class PerVillageTickCache<T> {
    private final long expiryTicks;
    private final long cleanupInterval;
    private long lastCleanupTick = 0L;
-   private final ConcurrentHashMap<UUID, PerVillageTickCache.Entry<T>> entries = new ConcurrentHashMap<>();
+   private final Map<UUID, PerVillageTickCache.Entry<T>> entries = new HashMap<>();
    private int hits;
    private int misses;
 

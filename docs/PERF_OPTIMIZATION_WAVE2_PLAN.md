@@ -16,19 +16,25 @@
 | C1 isNight via LevelTickCache | **done** |
 | C5 PursueWantedPlayer `level.players()` | **done** |
 | C6 HiredEscort opponent cache 10t | **done** |
-| C2–C4 combat-scan cadence / cooldown arrays | open (middel risico) |
+| C2–C4 combat-scan cadence / cooldown arrays / idleBackoff | **done** |
 | D1 IdentityHashSet due-lists | **done** |
 | D2 spelerpositiebuffer (LevelTickCache) | **done** |
-| D3–D7 Village.tick slices / 2e LOD-ring | open |
+| D3–D7 Village.tick slices / optional inner LOD / seller scatter / battle gate | **done** |
 | E1 prefill tijd-gate | **done** (hasTime; nog geen ticket-only FULL path) |
 | E2 ring LongOpenHashSet + footprint cadence 20t | **done** |
-| E3–E6 engine heap / chunk-index / materializeKey | open |
+| E3–E6 near-spawn cache / activation scan cadence / materializeKey mix | **done** (chunk→plans index bestond al) |
 | F1 chunkIndexRanges in materializer | **done** (alleen zonder preserve-ground prepend) |
-| F2 section batch writes | open (config-gated later) |
+| F2 section batch writes | **done** (`worldgenFastSectionWrites`, default off) |
 | G1 reconstructPath reverse | **done** |
 | G2 IntOpenHashSet path queue | **done** |
+| G3 async walkability validate | **done** |
+| G4 AbortPolicy → sync fallback (bestaand reject-pad, gedocumenteerd) | **done** |
+| G5 pathMaxSearchMs onder HARD | **done** |
 | G6 echte cache hit/miss | **done** |
-| G3–G5/G7–G8 async validate / AbortPolicy / TickPressure AI | open |
+| G7 PerVillageTickCache → HashMap (main-only) | **done** |
+| G8 TickPressure schaalt AI (`tickPressureScalesAi`) | **done** |
+| H1 dirty-per-plan NBT cache op save | **done** |
+| H2 terrain scan nanoTime/16 + HEALTHY ×2 kolommen | **done** |
 
 ---
 

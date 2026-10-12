@@ -44,11 +44,31 @@ public enum VillageSimulationLod {
          return NEAR;
       }
       double nearestSq = nearestPlayerDistSq(level, village);
+      double inner = innerNearRadius();
       double nearRadius = keepNearRadius();
+      // Optional inner ring: only villages inside {@code inner} are NEAR; keepActive..inner = MID.
+      if (inner > 0.0) {
+         if (nearestSq <= inner * inner) {
+            return NEAR;
+         }
+         if (nearestSq <= nearRadius * nearRadius) {
+            return MID;
+         }
+         return MID;
+      }
       if (nearestSq <= nearRadius * nearRadius) {
          return NEAR;
       }
       return MID;
+   }
+
+   /** 0 = disabled (NEAR = keepActiveRadius). When &gt; 0, true NEAR uses this radius. */
+   public static double innerNearRadius() {
+      try {
+         return Math.max(0, MillenaireServerConfig.SERVER.villageLodInnerNearRadius.getAsInt());
+      } catch (IllegalStateException e) {
+         return 0.0;
+      }
    }
 
    public static double nearestPlayerDistSq(ServerLevel level, Village village) {

@@ -1,15 +1,15 @@
 package org.millenaire.perf.path;
 
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;
@@ -19,6 +19,7 @@ import net.minecraft.world.level.pathfinder.Path;
  */
 public final class NavRegionSnapshot {
    private static final int MAX_SPAN = 96;
+   private static final int[][] DIRS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
    private final int minX;
    private final int minZ;
    private final int sizeX;
@@ -70,16 +71,16 @@ public final class NavRegionSnapshot {
       if (!inBounds(sx, sz) || !inBounds(tx, tz)) {
          return null;
       }
-      record Key(int x, int z) {
-      }
       PriorityQueue<long[]> open = new PriorityQueue<>(Comparator.comparingLong(a -> a[0]));
-      Map<Long, Long> came = new HashMap<>();
-      Map<Long, Integer> gScore = new HashMap<>();
+      Long2LongOpenHashMap came = new Long2LongOpenHashMap();
+      came.defaultReturnValue(Long.MIN_VALUE);
+      Long2IntOpenHashMap gScore = new Long2IntOpenHashMap();
+      gScore.defaultReturnValue(Integer.MAX_VALUE);
       long start = pack(sx, sz);
       long goal = pack(tx, tz);
       gScore.put(start, 0);
       open.add(new long[]{heuristic(sx, sz, tx, tz), start});
-      Set<Long> closed = new HashSet<>();
+      LongOpenHashSet closed = new LongOpenHashSet();
       int expands = 0;
       final int maxExpands = 4000;
       while (!open.isEmpty() && expands++ < maxExpands) {
@@ -93,8 +94,7 @@ public final class NavRegionSnapshot {
          }
          int cx = (int)(key >> 32);
          int cz = (int)key;
-         int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
-         for (int[] d : dirs) {
+         for (int[] d : DIRS) {
             int nx = cx + d[0];
             int nz = cz + d[1];
             if (!inBounds(nx, nz)) {
@@ -107,8 +107,8 @@ public final class NavRegionSnapshot {
             }
             long nk = pack(nx, nz);
             int step = d[0] != 0 && d[1] != 0 ? 14 : 10;
-            int tentative = gScore.getOrDefault(key, Integer.MAX_VALUE) + step;
-            if (tentative < gScore.getOrDefault(nk, Integer.MAX_VALUE)) {
+            int tentative = gScore.get(key) + step;
+            if (tentative < gScore.get(nk)) {
                came.put(nk, key);
                gScore.put(nk, tentative);
                open.add(new long[]{tentative + heuristic(nx, nz, tx, tz), nk});
@@ -118,7 +118,39 @@ public final class NavRegionSnapshot {
       return null;
    }
 
-   private Path reconstruct(Map<Long, Long> came, long key, BlockPos target) {
+   /**
+    * Cheap main-thread validation of an async path: sample every {@code stride} node for solid ground
+    * and passable feet/head air. Returns false when the path should be discarded.
+    */
+   public static boolean validateWalkability(ServerLevel level, Path path, int stride) {
+      if (level == null || path == null || path.getNodeCount() == 0) {
+         return false;
+      }
+      int step = Math.max(1, stride);
+      BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
+      for (int i = 0; i < path.getNodeCount(); i += step) {
+         Node node = path.getNode(i);
+         if (node == null) {
+            return false;
+         }
+         mutable.set(node.x, node.y - 1, node.z);
+         BlockState below = level.getBlockState(mutable);
+         if (below.isAir() || below.getCollisionShape(level, mutable).isEmpty()) {
+            // Allow water/fluid surfaces loosely — only reject total voids.
+            if (!below.getFluidState().isEmpty()) {
+               continue;
+            }
+            return false;
+         }
+         mutable.set(node.x, node.y, node.z);
+         if (level.getBlockState(mutable).isSuffocating(level, mutable)) {
+            return false;
+         }
+      }
+      return true;
+   }
+
+   private Path reconstruct(Long2LongOpenHashMap came, long key, BlockPos target) {
       List<Node> nodes = new ArrayList<>();
       long cur = key;
       while (true) {
@@ -126,8 +158,8 @@ public final class NavRegionSnapshot {
          int z = (int)cur;
          int y = yAt(x, z);
          nodes.add(new Node(this.minX + x, y, this.minZ + z));
-         Long prev = came.get(cur);
-         if (prev == null) {
+         long prev = came.get(cur);
+         if (prev == Long.MIN_VALUE) {
             break;
          }
          cur = prev;

@@ -1408,18 +1408,29 @@ public class Village {
          }
       }
 
+      // Only walk buildings when at least one construction reservation is active.
+      boolean anyConstructionReservation = false;
       for (BuildingInstance b : this.buildings) {
          ConstructionTask task = b.getConstructionTask();
          if (task != null && task.isReserved()) {
-            UUID builderUuid = task.getReservedBuilder();
-            if (level.getEntity(builderUuid) == null) {
-               task.tickReservation();
-               if (task.isReservationExpired(200)) {
-                  task.releaseReservation();
-                  this.dirty = true;
+            anyConstructionReservation = true;
+            break;
+         }
+      }
+      if (anyConstructionReservation) {
+         for (BuildingInstance b : this.buildings) {
+            ConstructionTask task = b.getConstructionTask();
+            if (task != null && task.isReserved()) {
+               UUID builderUuid = task.getReservedBuilder();
+               if (level.getEntity(builderUuid) == null) {
+                  task.tickReservation();
+                  if (task.isReservationExpired(200)) {
+                     task.releaseReservation();
+                     this.dirty = true;
+                  }
+               } else {
+                  task.resetReservationAge();
                }
-            } else {
-               task.resetReservationAge();
             }
          }
       }
@@ -1498,7 +1509,8 @@ public class Village {
          }
       }
 
-      if (level.getGameTime() % 20L == 10L) {
+      if (level.getGameTime() % 20L == 10L
+         && (this.isUnderAttack() || this.isRaidActiveOrSuffering() || this.chestLocked || this.cachedDefenderCount == 0)) {
          this.checkBattleStatus(level, VillageSavedData.get(level));
       }
 
@@ -1514,7 +1526,10 @@ public class Village {
          this.updatePens(level, false);
       }
 
-      VillageSellerDispatcher.checkSeller(level, this);
+      // Scatter seller dispatch across villages (outer gate); dispatcher itself is ungated.
+      if (Math.floorMod(level.getGameTime() + villageHash, 10) == 0) {
+         VillageSellerDispatcher.checkSeller(level, this);
+      }
       if (level.getGameTime() % 100L == 50L && allowMarkets) {
          boolean isDaytime = !TickConstants.isNight(level);
 

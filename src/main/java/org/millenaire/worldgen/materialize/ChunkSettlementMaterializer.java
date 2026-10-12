@@ -485,7 +485,7 @@ public final class ChunkSettlementMaterializer {
                }
                return WorkOutcome.budget(0);
             }
-            level.setBlock(worldPos, Blocks.AIR.defaultBlockState(), 2);
+            FastSectionBlockWriter.setBlock(level, worldPos, Blocks.AIR.defaultBlockState());
             ops++;
          }
          if (building) {
@@ -524,7 +524,7 @@ public final class ChunkSettlementMaterializer {
          }
          return WorkOutcome.budget(0);
       }
-      level.setBlock(worldPos, fixed, 2);
+      FastSectionBlockWriter.setBlock(level, worldPos, fixed);
       if (building) {
          progress.setBuildingPlacementCursor(unitId, index + 1);
       } else {
@@ -671,7 +671,7 @@ public final class ChunkSettlementMaterializer {
                   }
                   return WorkOutcome.budget(ops);
                }
-               level.setBlock(mutable, Blocks.AIR.defaultBlockState(), 2);
+               FastSectionBlockWriter.setBlock(level, mutable, Blocks.AIR.defaultBlockState());
                ops++;
             }
          }
@@ -690,7 +690,7 @@ public final class ChunkSettlementMaterializer {
             if (filler.isAir()) {
                filler = Blocks.DIRT.defaultBlockState();
             }
-            level.setBlock(mutable.set(x, baseY, z), filler, 2);
+            FastSectionBlockWriter.setBlock(level, mutable.set(x, baseY, z), filler);
             ops++;
          }
          if (building) {

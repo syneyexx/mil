@@ -4,8 +4,10 @@ import com.mojang.logging.LogUtils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import net.minecraft.core.HolderLookup.Provider;
@@ -33,6 +35,9 @@ public class SettlementPlanSavedData extends SavedData {
    private final Map<Long, List<UUID>> chunkIndex = new HashMap<>();
    /** Reverse index: planId → chunk keys currently listed in {@link #chunkIndex}. */
    private final Map<UUID, List<Long>> planChunkKeys = new HashMap<>();
+   /** Cached NBT per plan — only dirty plans are re-serialized on {@link #save}. */
+   private final Map<UUID, CompoundTag> planNbtCache = new HashMap<>();
+   private final Set<UUID> dirtyPlanIds = new HashSet<>();
    private final MaterializationResumeQueue resumeQueue = new MaterializationResumeQueue();
    private int schemaVersion = SCHEMA;
    private int progressSchemaVersion = SettlementPlan.PROGRESS_SCHEMA_VERSION;
@@ -91,7 +96,7 @@ public class SettlementPlanSavedData extends SavedData {
       this.plansById.put(plan.planId(), plan);
       this.regionIndex.put(plan.region().packed(), plan.planId());
       this.reindexChunks(plan);
-      this.setDirty();
+      this.markDirtyPlan(plan.planId());
    }
 
    /**
@@ -154,10 +159,20 @@ public class SettlementPlanSavedData extends SavedData {
       this.regionIndex.remove(plan.region().packed(), planId);
       clearPlanFromChunkIndex(planId);
       this.resumeQueue.removePlan(planId);
+      this.planNbtCache.remove(planId);
+      this.dirtyPlanIds.remove(planId);
       this.setDirty();
    }
 
    public void markDirtyPlan() {
+      this.dirtyPlanIds.addAll(this.plansById.keySet());
+      this.setDirty();
+   }
+
+   public void markDirtyPlan(UUID planId) {
+      if (planId != null) {
+         this.dirtyPlanIds.add(planId);
+      }
       this.setDirty();
    }
 
@@ -240,8 +255,17 @@ public class SettlementPlanSavedData extends SavedData {
       root.putInt("progressSchema", this.progressSchemaVersion);
       ListTag list = new ListTag();
       for (SettlementPlan plan : this.plansById.values()) {
-         list.add(plan.save());
+         UUID id = plan.planId();
+         CompoundTag cached = this.planNbtCache.get(id);
+         if (cached == null || this.dirtyPlanIds.contains(id)) {
+            cached = plan.save();
+            this.planNbtCache.put(id, cached);
+            this.dirtyPlanIds.remove(id);
+         }
+         list.add(cached.copy());
       }
+      // Drop cache entries for removed plans.
+      this.planNbtCache.keySet().retainAll(this.plansById.keySet());
       root.put("plans", list);
       root.put("resumeQueue", this.resumeQueue.save());
       return root;

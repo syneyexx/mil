@@ -214,7 +214,8 @@ public class VillageTerrainMap {
          this.status = Status.IN_PROGRESS;
          int scanned = 0;
          while (this.cursorLx < this.size) {
-            if (scanned >= maxColumns || System.nanoTime() >= deadlineNanos) {
+            // Sample wall-clock every 16 columns — nanoTime per column dominated the scan.
+            if (scanned >= maxColumns || ((scanned & 15) == 0 && System.nanoTime() >= deadlineNanos)) {
                return this.status;
             }
             int wx = this.origin.getX() + this.cursorLx;

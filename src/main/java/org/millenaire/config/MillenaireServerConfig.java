@@ -226,6 +226,7 @@ public final class MillenaireServerConfig {
    public final BooleanValue tickGovernorEnabled;
    public final BooleanValue villageLodEnabled;
    public final IntValue villageLodMidInterval;
+   public final IntValue villageLodInnerNearRadius;
    public final BooleanValue villagerAiCadenceEnabled;
    public final IntValue villagerAiMidDistance;
    public final IntValue villagerAiMidInterval;
@@ -238,6 +239,9 @@ public final class MillenaireServerConfig {
    public final IntValue entityLodFarDistance;
    public final BooleanValue entityLodFarSleep;
    public final IntValue entityLodMidCombatInterval;
+   public final IntValue entityLodNearCombatInterval;
+   public final BooleanValue tickPressureScalesAi;
+   public final BooleanValue worldgenFastSectionWrites;
    public final IntValue pathMaxSearchMs;
    public final IntValue pathNodeMultiplier;
    public final IntValue pathMaxStartsPerTick;
@@ -543,6 +547,11 @@ public final class MillenaireServerConfig {
       this.worldgenPlacementStepCacheSize = builder.comment("Bounded cache of immutable compiled placement steps (per plan/rotation)")
          .translation("millenaire.config.worldgenPlacementStepCacheSize")
          .defineInRange("worldgenPlacementStepCacheSize", 64, 8, 512);
+      this.worldgenFastSectionWrites = builder.comment(
+            "Use LevelChunkSection.setBlockState for bulk placement (falls back to setBlock for block-entities/waterlogged/POI)"
+         )
+         .translation("millenaire.config.worldgenFastSectionWrites")
+         .define("worldgenFastSectionWrites", false);
       this.worldgenDetailedDiagnostics = builder.comment("Verbose worldgen planning/materialization logs (opt-in)")
          .translation("millenaire.config.worldgenDetailedDiagnostics")
          .define("worldgenDetailedDiagnostics", false);
@@ -1196,6 +1205,11 @@ public final class MillenaireServerConfig {
          )
          .translation("millenaire.config.tickGovernor.nearVillageMaxFullTicksPerTick")
          .defineInRange("nearVillageMaxFullTicksPerTick", 4, 1, 32);
+      this.villageLodInnerNearRadius = builder.comment(
+            "Optional true-NEAR ring (blocks). 0 = off (NEAR = keepActiveRadius). When >0, only villages inside this radius are NEAR; keepActive..inner stay MID."
+         )
+         .translation("millenaire.config.tickGovernor.villageLodInnerNearRadius")
+         .defineInRange("villageLodInnerNearRadius", 0, 0, 512);
       this.entityLodEnabled = builder.comment("Distance LOD for loaded villagers (Near / Mid / Far sleep)")
          .translation("millenaire.config.tickGovernor.entityLodEnabled")
          .define("entityLodEnabled", true);
@@ -1211,6 +1225,16 @@ public final class MillenaireServerConfig {
       this.entityLodMidCombatInterval = builder.comment("Combat canStart scan interval for Mid-distance villagers")
          .translation("millenaire.config.tickGovernor.entityLodMidCombatInterval")
          .defineInRange("entityLodMidCombatInterval", 3, 1, 40);
+      this.entityLodNearCombatInterval = builder.comment(
+            "Combat canStart scan interval for Near villagers (hurt/target always scans immediately)"
+         )
+         .translation("millenaire.config.tickGovernor.entityLodNearCombatInterval")
+         .defineInRange("entityLodNearCombatInterval", 3, 1, 20);
+      this.tickPressureScalesAi = builder.comment(
+            "Under SOFT/HARD TickPressure, stretch combat-scan / Mid goal-pick intervals and shrink pathMaxSearchMs"
+         )
+         .translation("millenaire.config.tickGovernor.tickPressureScalesAi")
+         .define("tickPressureScalesAi", true);
       this.pathMaxSearchMs = builder.comment("Hard wall-clock abort for entity A* path searches (ms)")
          .translation("millenaire.config.tickGovernor.pathMaxSearchMs")
          .defineInRange("pathMaxSearchMs", 4, 1, 25);
