@@ -211,6 +211,11 @@ abstract class AbstractTransportTask extends ProgressAwareTask {
    }
 
    @Override
+   public boolean isFarSleepPausable() {
+      return this.state == AbstractTransportTask.State.WALKING_TO_SOURCE || this.state == AbstractTransportTask.State.WALKING_TO_DEST;
+   }
+
+   @Override
    public TravelPhase getTravelPhase() {
       return switch (this.state) {
          case WALKING_TO_SOURCE, WALKING_TO_DEST -> TravelPhase.TRAVELLING;

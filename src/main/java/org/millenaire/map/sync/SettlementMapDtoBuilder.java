@@ -1,6 +1,8 @@
 package org.millenaire.map.sync;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -56,6 +58,54 @@ public final class SettlementMapDtoBuilder {
          }
       }
       return out;
+   }
+
+   /** Upserts plus ids the client should drop (missing or not visible to this player). */
+   public record Delta(List<SettlementMapEntry> upserts, List<UUID> removed) {
+   }
+
+   /**
+    * Builds DTOs for {@code dirtyIds} only; visibility flags are computed per dirty village.
+    * Dirty ids that no longer exist or are not visible are returned as removals.
+    */
+   public static Delta buildDeltaForPlayer(ServerLevel overworld, ServerPlayer player, int revision, Collection<UUID> dirtyIds) {
+      List<SettlementMapEntry> upserts = new ArrayList<>();
+      Set<UUID> removed = new LinkedHashSet<>();
+      if (overworld == null || player == null || dirtyIds == null || dirtyIds.isEmpty()) {
+         return new Delta(upserts, new ArrayList<>(removed));
+      }
+      UUID playerId = player.getUUID();
+      Set<VillageId> discovered = PlayerCultureReputation.get(overworld).getDiscoveredVillages(playerId);
+      CivilizationSavedData civ = CivilizationSavedData.get(overworld);
+      boolean showLone = Boolean.TRUE.equals(MillenaireServerConfig.SERVER.mapSyncShowLoneBuildings.get());
+      boolean includeBounds = Boolean.TRUE.equals(MillenaireServerConfig.SERVER.mapSyncIncludeApproxBounds.get());
+      ResourceLocation overworldDim = Level.OVERWORLD.location();
+      var manager = VillageSavedData.get(overworld).getVillageManager();
+
+      for (UUID id : dirtyIds) {
+         Village village = manager.getVillage(new VillageId(id));
+         if (village == null) {
+            removed.add(id);
+            continue;
+         }
+         boolean controlled = village.isControlledBy(playerId);
+         boolean sovereign = PlayerSettlementFoundingService.isSovereignPlayerSettlement(overworld, village)
+            && village.getOwnerUUID() != null
+            && village.getOwnerUUID().equals(playerId);
+         boolean lone = village.isLoneBuilding();
+         boolean isDiscovered = discovered.contains(village.getId());
+         if (!SettlementMapVisibility.shouldInclude(isDiscovered, controlled, sovereign, lone, showLone)) {
+            removed.add(id);
+            continue;
+         }
+         SettlementMapEntry entry = toEntry(village, overworldDim, civ, revision, controlled, sovereign, lone, includeBounds);
+         if (entry != null) {
+            upserts.add(entry);
+         } else {
+            removed.add(id);
+         }
+      }
+      return new Delta(upserts, new ArrayList<>(removed));
    }
 
    @Nullable

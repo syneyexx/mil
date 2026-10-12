@@ -3,8 +3,10 @@ package org.millenaire.worldgen.highway.travel;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import net.minecraft.core.HolderLookup.Provider;
@@ -33,6 +35,17 @@ public final class RoadJourneySavedData extends SavedData {
 
    public Collection<RoadJourney> all() {
       return List.copyOf(this.journeys.values());
+   }
+
+   /** Route ids that currently have an EN_ROUTE journey. */
+   public Set<UUID> activeJourneyRouteIds() {
+      Set<UUID> ids = new HashSet<>();
+      for (RoadJourney j : this.journeys.values()) {
+         if (j.phase() == RoadJourney.Phase.EN_ROUTE) {
+            ids.add(j.routeId());
+         }
+      }
+      return ids;
    }
 
    public int size() {

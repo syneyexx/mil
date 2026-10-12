@@ -14,7 +14,6 @@ import net.minecraft.server.level.ServerLevel;
 import org.millenaire.worldgen.highway.HighwayPlanSnapshot.NodeView;
 import org.millenaire.worldgen.highway.HighwayPlanSnapshot.RouteView;
 import org.millenaire.worldgen.net.RegionalRoadPlanner;
-import org.millenaire.worldgen.plan.SettlementPlan;
 import org.millenaire.worldgen.plan.WorldgenSeeds;
 
 /**
@@ -155,9 +154,11 @@ public final class HighwayGraphPlanner {
 
    static BlockPos attachmentPoint(NodeView node, BlockPos toward, HighwayPlanSnapshot snap) {
       if (node.planId() != null) {
-         SettlementPlan plan = snap.plan(node.planId());
-         if (plan != null) {
-            return RegionalRoadPlanner.attachmentPoint(plan, toward);
+         HighwayAttachmentData attachment = snap.attachment(node.planId());
+         if (attachment != null) {
+            return RegionalRoadPlanner.attachmentPoint(
+               attachment.center(), attachment.radius(), attachment.attachmentPoints(), toward
+            );
          }
       }
       int radius = Math.max(8, node.radiusHint() - 4);

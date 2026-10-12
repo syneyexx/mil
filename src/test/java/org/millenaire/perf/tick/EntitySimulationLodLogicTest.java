@@ -48,4 +48,13 @@ class EntitySimulationLodLogicTest {
          assertFalse(EntitySimulationLod.MID.allowCombatScan(stagger + 1L, entityId));
       }
    }
+
+   @Test
+   void farSleepPausesOnlyNonUrgentPausableTasks() {
+      assertTrue(EntitySimulationLod.shouldPauseTask(true, false, false, true));
+      assertFalse(EntitySimulationLod.shouldPauseTask(false, false, false, true), "not far sleeping");
+      assertFalse(EntitySimulationLod.shouldPauseTask(true, true, false, true), "urgent villager context");
+      assertFalse(EntitySimulationLod.shouldPauseTask(true, false, true, true), "combat-urgent goal");
+      assertFalse(EntitySimulationLod.shouldPauseTask(true, false, false, false), "task not pausable (build/transfer/trade)");
+   }
 }

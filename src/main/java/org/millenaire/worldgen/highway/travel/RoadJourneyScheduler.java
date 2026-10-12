@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import javax.annotation.Nullable;
@@ -63,18 +64,27 @@ public final class RoadJourneyScheduler {
       if (store.size() >= max || !MaterializationTickBudget.hasTime()) {
          return;
       }
+      List<HighwayRoute> candidates = HighwayRouteSavedData.get(level).connectedRoutes();
+      if (candidates.isEmpty()) {
+         return;
+      }
+      long gameTime = level.getGameTime();
+      Set<UUID> activeRoutes = null;
       List<HighwayRoute> connected = new ArrayList<>();
-      for (HighwayRoute route : HighwayRouteSavedData.get(level).allRoutes()) {
-         if (route.status() == HighwayRoute.Status.CONNECTED
-            && !store.onCooldown(route.routeId(), level.getGameTime(), ROUTE_COOLDOWN)
-            && !hasActiveJourney(store, route.routeId())) {
+      for (HighwayRoute route : candidates) {
+         if (store.onCooldown(route.routeId(), gameTime, ROUTE_COOLDOWN)) {
+            continue;
+         }
+         if (activeRoutes == null) {
+            activeRoutes = store.activeJourneyRouteIds();
+         }
+         if (!activeRoutes.contains(route.routeId())) {
             connected.add(route);
          }
       }
       if (connected.isEmpty()) {
          return;
       }
-      connected.sort(Comparator.comparing(r -> r.routeId()));
       HighwayRoute route = connected.get(ThreadLocalRandom.current().nextInt(connected.size()));
       RoadJourneyKind kind = pickKind(level.getGameTime());
       ResourceLocation typeId = pickVillagerType(kind);
@@ -101,15 +111,6 @@ public final class RoadJourneyScheduler {
       store.put(journey);
       store.setCooldown(route.routeId(), level.getGameTime() + ROUTE_COOLDOWN);
       LOGGER.debug("[Millenaire] Highway journey {} ({}) on route {}", journey.journeyId(), kind, route.routeId());
-   }
-
-   private static boolean hasActiveJourney(RoadJourneySavedData store, UUID routeId) {
-      for (RoadJourney j : store.all()) {
-         if (routeId.equals(j.routeId()) && j.phase() == RoadJourney.Phase.EN_ROUTE) {
-            return true;
-         }
-      }
-      return false;
    }
 
    private static void advanceJourneys(ServerLevel level, RoadJourneySavedData store) {
@@ -333,8 +334,8 @@ public final class RoadJourneyScheduler {
       String toKey = "millenaire:" + destVillage.getId().uuid();
       HighwayRouteSavedData routes = HighwayRouteSavedData.get(level);
       HighwayRoute match = null;
-      for (HighwayRoute route : routes.allRoutes()) {
-         if (route.status() == HighwayRoute.Status.CONNECTED && route.connects(fromKey, toKey)) {
+      for (HighwayRoute route : routes.connectedRoutes()) {
+         if (route.connects(fromKey, toKey)) {
             match = route;
             break;
          }

@@ -29,6 +29,7 @@ public final class HighwayNodeSavedData extends SavedData {
    private final Map<String, HighwayNode> nodes = new HashMap<>();
    private final Set<Long> pendingChunks = new LinkedHashSet<>();
    private int millenaireScanCursor;
+   private long topologyRevision;
 
    public static Factory<HighwayNodeSavedData> factory() {
       return new Factory<>(HighwayNodeSavedData::new, (tag, registries) -> load(tag), null);
@@ -38,6 +39,15 @@ public final class HighwayNodeSavedData extends SavedData {
       ServerLevel overworld = level.getServer().getLevel(Level.OVERWORLD);
       ServerLevel storage = overworld != null ? overworld : level;
       return storage.getDataStorage().computeIfAbsent(factory(), DATA_NAME);
+   }
+
+   /** Bumps when node set or planning-relevant node fields change; not persisted. */
+   public long topologyRevision() {
+      return this.topologyRevision;
+   }
+
+   public void bumpTopologyRevision() {
+      this.topologyRevision++;
    }
 
    public Collection<HighwayNode> allNodes() {
@@ -59,24 +69,40 @@ public final class HighwayNodeSavedData extends SavedData {
       }
       HighwayNode existing = this.nodes.get(node.key());
       if (existing != null) {
-         existing.setCenter(node.center());
-         existing.setRadiusHint(node.radiusHint());
-         if (node.factionHub()) {
+         boolean changed = false;
+         if (!existing.center().equals(node.center())) {
+            existing.setCenter(node.center());
+            changed = true;
+         }
+         int radius = Math.max(8, node.radiusHint());
+         if (existing.radiusHint() != radius) {
+            existing.setRadiusHint(radius);
+            changed = true;
+         }
+         if (node.factionHub() && !existing.factionHub()) {
             existing.setFactionHub(true);
+            changed = true;
          }
          if (node.millenaireVillageId() != null) {
             existing.setMillenaireVillageId(node.millenaireVillageId());
          }
          if (node.planId() != null) {
+            if (!node.planId().equals(existing.planId())) {
+               changed = true;
+            }
             existing.setPlanId(node.planId());
          }
          if (node.structureId() != null) {
             existing.setStructureId(node.structureId());
          }
+         if (changed) {
+            this.topologyRevision++;
+         }
          this.setDirty();
          return false;
       }
       this.nodes.put(node.key(), node);
+      this.topologyRevision++;
       this.trimIfNeeded();
       this.setDirty();
       return true;
@@ -152,6 +178,7 @@ public final class HighwayNodeSavedData extends SavedData {
       int remove = this.nodes.size() - TRIM_TARGET;
       for (int i = 0; i < unlinked.size() && i < remove; i++) {
          this.nodes.remove(unlinked.get(i).key());
+         this.topologyRevision++;
       }
    }
 

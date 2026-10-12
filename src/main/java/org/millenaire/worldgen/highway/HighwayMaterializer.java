@@ -1,7 +1,9 @@
 package org.millenaire.worldgen.highway;
 
 import com.mojang.logging.LogUtils;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -31,6 +33,11 @@ public final class HighwayMaterializer {
    private static boolean lookupBound;
    private static volatile boolean asyncPlanInFlight;
    private static volatile long asyncPlanGeneration;
+   private static volatile long lastPlannedRevision = -1L;
+   private static volatile long lastPlannedConfigKey = -1L;
+   private static final long WAITING_CHUNKS_BACKOFF_TICKS = 40L;
+   private static final long BLOCKED_BACKOFF_TICKS = 100L;
+   private static final Map<UUID, Long> routeRetryAt = new HashMap<>();
 
    private HighwayMaterializer() {
    }
@@ -49,68 +56,114 @@ public final class HighwayMaterializer {
 
       maybePlanLinks(level, nodes, routes);
 
-      List<HighwayRoute> ordered = List.copyOf(routes.allRoutes());
-      if (ordered.isEmpty()) {
+      List<HighwayRoute> active = routes.activeRoutes();
+      if (active.isEmpty()) {
          return;
       }
-      int start = routes.roundRobinCursor() % ordered.size();
-      int processed = 0;
-      for (int i = 0; i < ordered.size() && processed < MAX_ROUTES_PER_TICK; i++) {
+      long now = level.getGameTime();
+      int size = active.size();
+      int start = routes.roundRobinCursor() % size;
+      int visited = 0;
+      int consumed = 0;
+      boolean statusChanged = false;
+      for (int i = 0; i < size && visited < MAX_ROUTES_PER_TICK; i++) {
          if (!hasTimeAndOps()) {
             break;
          }
-         HighwayRoute route = ordered.get((start + i) % ordered.size());
-         if (route.status() == HighwayRoute.Status.CONNECTED || route.status() == HighwayRoute.Status.FAILED) {
-            continue;
+         HighwayRoute route = active.get((start + i) % size);
+         consumed = i + 1;
+         Long retryAt = routeRetryAt.get(route.routeId());
+         if (retryAt != null) {
+            if (now < retryAt) {
+               continue;
+            }
+            routeRetryAt.remove(route.routeId());
          }
+         HighwayRoute.Status before = route.status();
          advanceRoute(level, nodes, route);
          routes.setDirty();
-         processed++;
+         visited++;
+         HighwayRoute.Status after = route.status();
+         if (after == HighwayRoute.Status.WAITING_CHUNKS) {
+            routeRetryAt.put(route.routeId(), now + WAITING_CHUNKS_BACKOFF_TICKS);
+         } else if (after == HighwayRoute.Status.BLOCKED) {
+            routeRetryAt.put(route.routeId(), now + BLOCKED_BACKOFF_TICKS);
+         }
+         if (isTerminal(before) != isTerminal(after)) {
+            statusChanged = true;
+         }
       }
-      routes.setRoundRobinCursor(start + processed);
+      routes.setRoundRobinCursor(start + consumed);
+      if (statusChanged) {
+         routes.notifyStatusChanged();
+         routeRetryAt.keySet().removeIf(id -> {
+            HighwayRoute r = routes.get(id);
+            return r == null || isTerminal(r.status());
+         });
+      }
+   }
+
+   private static boolean isTerminal(HighwayRoute.Status status) {
+      return status == HighwayRoute.Status.CONNECTED || status == HighwayRoute.Status.FAILED;
    }
 
    private static void maybePlanLinks(ServerLevel level, HighwayNodeSavedData nodes, HighwayRouteSavedData routes) {
+      if (asyncPlanInFlight) {
+         return;
+      }
+      long revision = HighwayPlanSnapshot.revisionOf(nodes, routes);
+      long configKey = HighwayPlanSnapshot.configKey(
+         MillenaireServerConfig.SERVER.highwayMaxLinkDistance.getAsInt(),
+         MillenaireServerConfig.SERVER.highwayMaxNeighbors.getAsInt()
+      );
+      if (revision == lastPlannedRevision && configKey == lastPlannedConfigKey) {
+         return;
+      }
       if (ComputeOffload.highwayPlan()) {
-         if (asyncPlanInFlight) {
-            return;
-         }
          HighwayPlanSnapshot snapshot = HighwayPlanSnapshot.capture(level, nodes, routes);
          long generation = ++asyncPlanGeneration;
          asyncPlanInFlight = true;
          boolean submitted = MillenaireComputePool.submit(() -> {
             List<HighwayRoute> planned = HighwayGraphPlanner.planFromSnapshot(snapshot);
-            return new HighwayPlanComputeResult(planned, generation);
+            return new HighwayPlanComputeResult(planned, generation, snapshot.topologyRevision(), snapshot.configKey());
          });
-         if (!submitted) {
-            asyncPlanInFlight = false;
-            List<HighwayRoute> planned = HighwayGraphPlanner.planNewLinks(level, nodes, routes);
-            for (HighwayRoute route : planned) {
-               routes.put(route);
-               LOGGER.debug("[Millenaire] Highway planned {} -> {} ({} cells)", route.fromNodeKey(), route.toNodeKey(), route.waypoints().size());
-            }
+         if (submitted) {
+            return;
          }
-         return;
+         asyncPlanInFlight = false;
       }
+      planSync(level, nodes, routes, revision, configKey);
+   }
+
+   private static void planSync(
+      ServerLevel level, HighwayNodeSavedData nodes, HighwayRouteSavedData routes, long revision, long configKey
+   ) {
       List<HighwayRoute> planned = HighwayGraphPlanner.planNewLinks(level, nodes, routes);
       for (HighwayRoute route : planned) {
          routes.put(route);
          LOGGER.debug("[Millenaire] Highway planned {} -> {} ({} cells)", route.fromNodeKey(), route.toNodeKey(), route.waypoints().size());
       }
+      lastPlannedRevision = revision;
+      lastPlannedConfigKey = configKey;
    }
 
    /** Called from {@link HighwayPlanComputeResult#apply}; returns false when stale. */
-   public static boolean completeAsyncPlan(long generation) {
+   public static boolean completeAsyncPlan(long generation, long revision, long configKey) {
       if (generation != asyncPlanGeneration) {
          return false;
       }
       asyncPlanInFlight = false;
+      lastPlannedRevision = revision;
+      lastPlannedConfigKey = configKey;
       return true;
    }
 
    public static void onServerStopping() {
       asyncPlanInFlight = false;
       asyncPlanGeneration++;
+      lastPlannedRevision = -1L;
+      lastPlannedConfigKey = -1L;
+      routeRetryAt.clear();
    }
 
    private static void ensureLookupBound() {

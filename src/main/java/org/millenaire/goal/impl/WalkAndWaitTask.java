@@ -99,6 +99,11 @@ public abstract class WalkAndWaitTask implements VillagerTask {
    }
 
    @Override
+   public boolean isFarSleepPausable() {
+      return !this.arrived;
+   }
+
+   @Override
    public TravelPhase getTravelPhase() {
       return TaskLabels.phaseFor(this.arrived);
    }

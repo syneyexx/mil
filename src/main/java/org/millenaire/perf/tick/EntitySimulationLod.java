@@ -153,6 +153,16 @@ public enum EntitySimulationLod {
       return true;
    }
 
+   /**
+    * Whether a Far-sleeping villager may skip ticking its current task this game tick.
+    * Never completes or fails the task; callers must keep logical watchdog counters unchanged.
+    *
+    * @param urgentContext hired / companion / combat / hurt / selling / village under attack
+    */
+   public static boolean shouldPauseTask(boolean farSleep, boolean urgentContext, boolean combatUrgentGoal, boolean taskPausable) {
+      return farSleep && !urgentContext && !combatUrgentGoal && taskPausable;
+   }
+
    /** Navigation while idle (no current task). */
    public boolean allowIdleNavigation() {
       if (this == FAR && farSleepEnabled()) {

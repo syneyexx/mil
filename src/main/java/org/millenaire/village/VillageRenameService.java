@@ -45,7 +45,7 @@ public final class VillageRenameService {
       String oldName = village.getVillageName();
       village.setVillageName(name);
       village.markDirty();
-      org.millenaire.map.sync.SettlementMapSyncService.markDirty();
+      org.millenaire.map.sync.SettlementMapSyncService.markDirty(village.getId());
       if (PlayerSettlementFoundingService.isSovereignPlayerSettlement(level, village) && village.getFactionId() != null) {
          Faction faction = FactionSavedData.get(level).getFactionManager().getFaction(village.getFactionId());
          if (faction != null && faction.getType() == FactionType.PLAYER) {

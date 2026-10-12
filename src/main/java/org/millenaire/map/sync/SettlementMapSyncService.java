@@ -1,8 +1,10 @@
 package org.millenaire.map.sync;
 
 import com.mojang.logging.LogUtils;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -27,8 +29,9 @@ public final class SettlementMapSyncService {
    private static final int MAX_ENTRIES_PER_PACKET = 200;
 
    private static int revision;
-   private static boolean dirty;
-   private static final Set<UUID> removedIds = new HashSet<>();
+   private static final SettlementMapPending pending = new SettlementMapPending();
+   /** Per-player pending deltas whose send failed; merged into the next push so unsent players are not skipped. */
+   private static final Map<UUID, SettlementMapPending> retryByPlayer = new HashMap<>();
    private static String worldToken = "";
 
    private SettlementMapSyncService() {
@@ -36,25 +39,32 @@ public final class SettlementMapSyncService {
 
    public static void onServerStarting(MinecraftServer server) {
       revision = 1;
-      dirty = true;
-      removedIds.clear();
+      pending.clear();
+      pending.markFull();
+      retryByPlayer.clear();
       worldToken = buildWorldToken(server);
    }
 
    public static void onServerStopping() {
-      dirty = false;
-      removedIds.clear();
+      pending.clear();
+      retryByPlayer.clear();
       worldToken = "";
    }
 
+   /** Full resync of every visible entry on the next push; prefer {@link #markDirty(VillageId)}. */
    public static void markDirty() {
-      dirty = true;
+      pending.markFull();
+   }
+
+   public static void markDirty(VillageId id) {
+      if (id != null) {
+         pending.markDirty(id.uuid());
+      }
    }
 
    public static void markRemoved(VillageId id) {
       if (id != null) {
-         removedIds.add(id.uuid());
-         markDirty();
+         pending.markRemoved(id.uuid());
       }
    }
 
@@ -71,29 +81,74 @@ public final class SettlementMapSyncService {
    }
 
    public static void tick(MinecraftServer server) {
-      if (!isEnabled() || server == null || !dirty) {
+      if (!isEnabled() || server == null || (pending.isEmpty() && retryByPlayer.isEmpty())) {
          return;
       }
       ServerLevel overworld = server.getLevel(Level.OVERWORLD);
       if (overworld == null || overworld.getGameTime() % COALESCE_INTERVAL_TICKS != 0L) {
          return;
       }
-      List<UUID> removed = List.copyOf(removedIds);
-      removedIds.clear();
-      dirty = false;
+      List<ServerPlayer> players = server.getPlayerList().getPlayers();
+      if (!retryByPlayer.isEmpty()) {
+         Set<UUID> online = new HashSet<>();
+         for (ServerPlayer player : players) {
+            online.add(player.getUUID());
+         }
+         retryByPlayer.keySet().retainAll(online);
+      }
+      SettlementMapPending batch = pending.copy();
       revision++;
-      // Periodic updates use deltas; login/full resync still uses sendSnapshot.
-      for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+      // Periodic updates use dirty-id deltas; login/full resync still uses sendSnapshot.
+      for (ServerPlayer player : players) {
+         SettlementMapPending toSend = batch;
+         SettlementMapPending retry = retryByPlayer.remove(player.getUUID());
+         if (retry != null) {
+            toSend = batch.copy();
+            toSend.merge(retry);
+         }
+         if (toSend.isEmpty()) {
+            continue;
+         }
          try {
-            List<SettlementMapEntry> upserts = SettlementMapDtoBuilder.buildForPlayer(overworld, player, revision);
-            PacketDistributor.sendToPlayer(
-               player,
-               new SettlementMapDeltaPayload(worldToken, revision, upserts, removed),
-               new CustomPacketPayload[0]
-            );
+            sendDelta(overworld, player, toSend);
          } catch (Exception e) {
+            retryByPlayer.put(player.getUUID(), toSend.copy());
             LOGGER.warn("[Millenaire] Settlement map sync failed for {}: {}", player.getGameProfile().getName(), e.toString());
          }
+      }
+      // Cleared only after every player was attempted; failures live in retryByPlayer.
+      pending.clear();
+   }
+
+   private static void sendDelta(ServerLevel overworld, ServerPlayer player, SettlementMapPending toSend) {
+      List<SettlementMapEntry> upserts;
+      Set<UUID> removedSet = new java.util.LinkedHashSet<>(toSend.removedIds());
+      if (toSend.isFull()) {
+         upserts = SettlementMapDtoBuilder.buildForPlayer(overworld, player, revision);
+      } else {
+         SettlementMapDtoBuilder.Delta delta =
+            SettlementMapDtoBuilder.buildDeltaForPlayer(overworld, player, revision, toSend.dirtyIds());
+         upserts = delta.upserts();
+         removedSet.addAll(delta.removed());
+      }
+      List<UUID> removed = new java.util.ArrayList<>(removedSet);
+      if (upserts.isEmpty() && removed.isEmpty()) {
+         return;
+      }
+      List<List<SettlementMapEntry>> upChunks = SettlementMapPending.chunk(upserts, MAX_ENTRIES_PER_PACKET);
+      List<List<UUID>> rmChunks = SettlementMapPending.chunk(removed, MAX_ENTRIES_PER_PACKET);
+      int parts = Math.max(upChunks.size(), rmChunks.size());
+      for (int i = 0; i < parts; i++) {
+         PacketDistributor.sendToPlayer(
+            player,
+            new SettlementMapDeltaPayload(
+               worldToken,
+               revision,
+               i < upChunks.size() ? upChunks.get(i) : List.of(),
+               i < rmChunks.size() ? rmChunks.get(i) : List.of()
+            ),
+            new CustomPacketPayload[0]
+         );
       }
    }
 

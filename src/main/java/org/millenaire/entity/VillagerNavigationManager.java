@@ -519,6 +519,7 @@ public class VillagerNavigationManager implements VillagerNavDriver {
          return new org.millenaire.perf.path.EntityPathComputeResult(uuid, generation, dest, walkSpeed, path);
       });
       if (!submitted) {
+         // Compute queue full: caller falls back to sync A*, which is still capped by PathRequestQueue.
          this.asyncPathPending = false;
          org.millenaire.perf.tick.ServerTickGovernor.noteEntityAsyncQueueFull();
          org.millenaire.perf.tick.ServerTickGovernor.noteEntitySyncFallback();

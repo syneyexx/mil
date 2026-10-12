@@ -57,4 +57,16 @@ class PathRequestQueueTest {
       assertTrue(d.contains("pathQ={"), d);
       assertTrue(d.contains("starts="), d);
    }
+
+   @Test
+   void rejectedStartsAreNotRetainedButCountedCumulatively() {
+      PathRequestQueue.ensureTick(20L);
+      assertTrue(PathRequestQueue.tryBeginSearch(1, 20L));
+      assertTrue(PathRequestQueue.tryBeginSearch(2, 20L));
+      assertFalse(PathRequestQueue.tryBeginSearch(3, 20L));
+      PathRequestQueue.ensureTick(21L);
+      assertEquals(0, PathRequestQueue.inFlightCount());
+      assertEquals(1L, PathRequestQueue.totalRejects());
+      assertEquals(2L, PathRequestQueue.totalStarts());
+   }
 }

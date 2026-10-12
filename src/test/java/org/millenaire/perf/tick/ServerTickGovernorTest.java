@@ -79,6 +79,24 @@ class ServerTickGovernorTest {
    }
 
    @Test
+   void reservedGoalPickSliceFavoursStarvedVillagers() {
+      long gameTime = 77L;
+      int budget = ServerTickGovernor.entityGoalPickBudgetPerTick();
+      int reserve = budget / 4;
+      int fresh = budget - reserve;
+      for (int i = 0; i < fresh; i++) {
+         assertTrue(ServerTickGovernor.tryConsumeEntityGoalPick(gameTime, false, 0));
+      }
+      if (reserve > 0) {
+         assertFalse(ServerTickGovernor.tryConsumeEntityGoalPick(gameTime, false, 0), "fresh villager cannot use reserve");
+         assertTrue(
+            ServerTickGovernor.tryConsumeEntityGoalPick(gameTime, false, ServerTickGovernor.STARVED_GOAL_PICK_STREAK),
+            "starved villager uses reserved slice"
+         );
+      }
+   }
+
+   @Test
    void adaptiveBudgetShrinksWhenPreTickAlreadyHot() {
       long now = System.nanoTime();
       // Pretend ~45 ms already elapsed before Post.

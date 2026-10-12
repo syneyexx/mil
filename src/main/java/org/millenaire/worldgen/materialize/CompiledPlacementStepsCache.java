@@ -41,16 +41,43 @@ public final class CompiledPlacementStepsCache {
    private CompiledPlacementStepsCache() {
    }
 
+   private static long compileMisses;
+   private static long compileNanos;
+   private static long approxBytes;
+
    public static synchronized CompiledSteps getOrCompute(Key key, java.util.function.Supplier<List<PlacementStep>> compiler) {
       CompiledSteps hit = CACHE.get(key);
       if (hit != null) {
          return hit;
       }
+      // Compile outside the critical section? Kept synchronized for cache coherency; track cost for telemetry.
+      long start = System.nanoTime();
       List<PlacementStep> steps = compiler.get();
       Map<Long, int[]> byChunk = bucketByRelativeChunk(steps);
       CompiledSteps compiled = new CompiledSteps(steps, byChunk);
       CACHE.put(key, compiled);
+      long took = Math.max(0L, System.nanoTime() - start);
+      compileMisses++;
+      compileNanos += took;
+      // Rough footprint: steps * ~48 bytes + index arrays.
+      approxBytes += (long)steps.size() * 48L;
+      for (int[] idxs : byChunk.values()) {
+         approxBytes += (long)idxs.length * 4L;
+      }
       return compiled;
+   }
+
+   /** Cumulative compile-miss count (main-thread). */
+   public static synchronized long compileMisses() {
+      return compileMisses;
+   }
+
+   public static synchronized long compileNanos() {
+      return compileNanos;
+   }
+
+   public static synchronized long approxCachedBytes() {
+      return approxBytes;
    }
 
    /**

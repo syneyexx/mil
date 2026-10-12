@@ -168,6 +168,9 @@ public final class ServerTickGovernor {
       return config.phaseHighwayMs();
    }
 
+   /** Consecutive goal-pick denials after which a villager may use the reserved budget slice. */
+   public static final int STARVED_GOAL_PICK_STREAK = 2;
+
    public static int entityGoalPickBudgetPerTick() {
       return config.entityGoalPickBudget();
    }
@@ -494,6 +497,16 @@ public final class ServerTickGovernor {
       }
    }
 
+   /** Bulk Far data-only accounting for villages skipped by the active-set hot path. */
+   public static void noteFarDataOnlyVillages(int count, int backgroundSkipped) {
+      if (count <= 0) {
+         return;
+      }
+      farVillages += count;
+      dataOnlyVillages += count;
+      backgroundTickSkipped += Math.max(0, backgroundSkipped);
+   }
+
    public static void noteEntityLod(EntitySimulationLod lod) {
       if (lod == null) {
          return;
@@ -520,11 +533,24 @@ public final class ServerTickGovernor {
     * Urgent villagers (hired / companion / in combat) always pass.
     */
    public static boolean tryConsumeEntityGoalPick(long gameTime, boolean urgent) {
+      return tryConsumeEntityGoalPick(gameTime, urgent, Integer.MAX_VALUE);
+   }
+
+   /**
+    * Same as {@link #tryConsumeEntityGoalPick(long, boolean)} with age priority: the last quarter of the per-tick
+    * budget is reserved for villagers already deferred {@link #STARVED_GOAL_PICK_STREAK}+ times, so fixed entity
+    * iteration order cannot starve the same Mid NPCs.
+    */
+   public static boolean tryConsumeEntityGoalPick(long gameTime, boolean urgent, int deferredStreak) {
       ensureEntityBudgetTick(gameTime);
       if (urgent || !enabled()) {
          return true;
       }
       if (entityGoalPickRemaining <= 0) {
+         entityGoalPickDeferredAccum++;
+         return false;
+      }
+      if (deferredStreak < STARVED_GOAL_PICK_STREAK && entityGoalPickRemaining <= entityGoalPickBudgetPerTick() / 4) {
          entityGoalPickDeferredAccum++;
          return false;
       }

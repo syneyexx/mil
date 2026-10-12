@@ -34,6 +34,14 @@ public interface VillagerTask {
       return id == null ? null : Component.translatable("goal.millenaire." + id.getPath());
    }
 
+   /**
+    * Far-sleep may skip ticking this task (pure travel only). Must stay false for anything that
+    * aborts on missing players, trades, builds, transfers, or combat — those keep ticking.
+    */
+   default boolean isFarSleepPausable() {
+      return false;
+   }
+
    default void reportProgress() {
    }
 

@@ -86,22 +86,36 @@ public final class CivilizationOrchestrator {
          org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.CIV_FACTION);
       }
 
+      // Multi-manager stages check hasTime between units so one stage cannot run unbounded
+      // after the CIV deadline is spent (remaining units soft-skip until next due).
       stageWork |= runIfDue(overworld, state, CivilizationStage.ECONOMY, gameTime, CivilizationConfig.STAGE_ECONOMY_INTERVAL, () -> {
          EconomySavedData.get(overworld).getTradeManager().tick(overworld);
-         NeedsTradeBridge.syncNeedsToEconomy(overworld, state);
-         TradeCorridorService.refreshDisruptions(overworld);
+         if (org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+            NeedsTradeBridge.syncNeedsToEconomy(overworld, state);
+         }
+         if (org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+            TradeCorridorService.refreshDisruptions(overworld);
+         }
       });
 
       stageWork |= runIfDue(overworld, state, CivilizationStage.POLITICS, gameTime, CivilizationConfig.STAGE_POLITICS_INTERVAL, () -> {
          PoliticsSavedData.get(overworld).getPoliticsManager().tick(overworld);
-         CivilizationEventBridge.publishPoliticsChanges(overworld, state);
+         if (org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+            CivilizationEventBridge.publishPoliticsChanges(overworld, state);
+         }
       });
 
       stageWork |= runIfDue(overworld, state, CivilizationStage.DIPLOMACY, gameTime, CivilizationConfig.STAGE_DIPLOMACY_INTERVAL, () -> {
          DiplomacySavedData.get(overworld).getDiplomaticManager().tick(overworld);
-         org.millenaire.faction.diplomacy.DiplomaticAiEvaluator.tick(overworld);
-         InteractionTicker.tick(overworld);
-         CivilizationEventBridge.publishDiplomacyChanges(overworld, state);
+         if (org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+            org.millenaire.faction.diplomacy.DiplomaticAiEvaluator.tick(overworld);
+         }
+         if (org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+            InteractionTicker.tick(overworld);
+         }
+         if (org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+            CivilizationEventBridge.publishDiplomacyChanges(overworld, state);
+         }
       });
 
       stageWork |= runIfDue(overworld, state, CivilizationStage.MILITARY, gameTime, CivilizationConfig.STAGE_MILITARY_INTERVAL, () -> {
@@ -110,10 +124,18 @@ public final class CivilizationOrchestrator {
 
       stageWork |= runIfDue(overworld, state, CivilizationStage.WAR, gameTime, CivilizationConfig.STAGE_WAR_INTERVAL, () -> {
          WarSavedData.get(overworld).getWarManager().tick(overworld);
-         TerritorySavedData.get(overworld).getTerritoryManager().tick(overworld);
-         ConflictSavedData.get(overworld).getConflictManager().tick(overworld);
-         CivilizationEventBridge.publishWarChanges(overworld, state);
-         org.millenaire.faction.crime.BountyRaidScheduler.tick(overworld);
+         if (org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+            TerritorySavedData.get(overworld).getTerritoryManager().tick(overworld);
+         }
+         if (org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+            ConflictSavedData.get(overworld).getConflictManager().tick(overworld);
+         }
+         if (org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+            CivilizationEventBridge.publishWarChanges(overworld, state);
+         }
+         if (org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+            org.millenaire.faction.crime.BountyRaidScheduler.tick(overworld);
+         }
       });
 
       stageWork |= runIfDue(overworld, state, CivilizationStage.DEMOGRAPHICS, gameTime, CivilizationConfig.STAGE_DEMOGRAPHICS_INTERVAL, () -> {
