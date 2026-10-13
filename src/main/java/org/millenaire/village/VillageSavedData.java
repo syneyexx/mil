@@ -37,7 +37,7 @@ import org.slf4j.Logger;
 
 public class VillageSavedData extends SavedData {
    private static final Logger LOGGER = LogUtils.getLogger();
-   private static final int CURRENT_VERSION = 7;
+   private static final int CURRENT_VERSION = 8;
    private static final String DATA_NAME = "millenaire_villages";
    private final VillageManager villageManager;
    private final List<VillageSavedData.LoneBuildingEntry> loneBuildingPositions = new ArrayList<>();
@@ -112,7 +112,7 @@ public class VillageSavedData extends SavedData {
          UUID villageUuid = village.getId().uuid();
 
          try {
-            CompoundTag villageTag = this.saveVillage(village);
+            CompoundTag villageTag = this.saveVillage(village, registries);
             this.lastGoodVillageTags.put(villageUuid, villageTag);
             villagesList.add(villageTag);
          } catch (Exception e) {
@@ -144,7 +144,7 @@ public class VillageSavedData extends SavedData {
          }
       }
 
-      root.putInt("version", 7);
+      root.putInt("version", CURRENT_VERSION);
       root.put("villages", villagesList);
       ListTag lbList = new ListTag();
 
@@ -174,7 +174,7 @@ public class VillageSavedData extends SavedData {
       return root;
    }
 
-   private CompoundTag saveVillage(Village village) {
+   private CompoundTag saveVillage(Village village, Provider registries) {
       CompoundTag villageTag = new CompoundTag();
       villageTag.putUUID("id", village.getId().uuid());
       villageTag.putString("culture", village.getCultureId().toString());
@@ -318,6 +318,7 @@ public class VillageSavedData extends SavedData {
       villageTag.putLong("lastGoodsRefresh", village.getLastGoodsRefresh());
       villageTag.putBoolean("chestLocked", village.areChestsLocked());
       VillageTreasuryService.saveLedger(villageTag, village);
+      villageTag.put("needs", village.getNeedService().save(registries));
       Village.PendingProject pending = village.getPendingProject();
       if (pending != null) {
          CompoundTag pendingTag = new CompoundTag();
@@ -520,7 +521,7 @@ public class VillageSavedData extends SavedData {
       VillageSavedData data = new VillageSavedData();
       int version = root.contains("version") ? root.getInt("version") : 0;
       LOGGER.info("Loading VillageSavedData version {}", version);
-      if (version > 7) {
+      if (version > CURRENT_VERSION) {
          LOGGER.warn(
             "This save was written by a newer Millenaire build (save version {} > supported {}). Unknown data will be dropped and the next save will downgrade the file. Back up the world before continuing.",
             version,
@@ -874,6 +875,9 @@ public class VillageSavedData extends SavedData {
             }
             if (villageTag.contains("religion_tension")) {
                village.setReligionTension(villageTag.getInt("religion_tension"));
+            }
+            if (villageTag.contains("needs")) {
+               village.getNeedService().load(villageTag.getCompound("needs"), net.minecraft.core.RegistryAccess.EMPTY);
             }
             // v6 → v7: assign FaithInstance UUIDs lazily on first ReligionService touch;
             // one-shot NPC faith affiliation when migration flag present.

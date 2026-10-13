@@ -56,6 +56,7 @@ public final class VillageBookService {
       sections.add(ConstructionPanelGenerator.generateConstructions(village, player));
       sections.add(ConstructionPanelGenerator.generateProjects(village, player));
       sections.add(ConstructionPanelGenerator.generateResources(village, effectiveLevel));
+      sections.add(org.millenaire.village.panel.NeedsPanelGenerator.generate(village, effectiveLevel));
       sections.add(MilitaryPanelGenerator.generateMilitary(village, effectiveLevel));
       sections.add(org.millenaire.village.panel.ReligionPanelGenerator.generate(village, effectiveLevel, player));
       sections.add(VillageOverviewPanelGenerator.generateChronicle(village));

@@ -88,6 +88,7 @@ public final class DebugCommand {
                Commands.literal("perf")
                   .executes(DebugCommand::perfSnapshot)
                   .then(Commands.literal("reset").executes(DebugCommand::perfReset))
+                  .then(Commands.literal("plan").executes(DebugCommand::planGateStatus))
             )
       );
       parent.then(Commands.literal("verbose").executes(DebugCommand::toggleVerbose));
@@ -569,6 +570,13 @@ public final class DebugCommand {
       TickPerfCounters.reset();
       CommandSourceStack source = ctx.getSource();
       source.sendSuccess(() -> Component.literal("Tick perf counters reset."), false);
+      return 1;
+   }
+
+   private static int planGateStatus(CommandContext<CommandSourceStack> ctx) {
+      CommandSourceStack source = ctx.getSource();
+      source.sendSuccess(() -> Component.literal(org.millenaire.perf.plan.BackgroundWorkGate.get().statusLine()), false);
+      source.sendSuccess(() -> Component.literal(TickPerfCounters.snapshot()), false);
       return 1;
    }
 

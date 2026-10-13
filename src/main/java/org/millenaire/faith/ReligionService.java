@@ -89,12 +89,14 @@ public final class ReligionService {
       // Advance ritual gathering/running presence checks (bounded)
       RitualCoordinator.tickActiveRituals(level, data, 2);
 
-      // Submit dirty village plans (coalesced, one inflight each)
+      // Submit dirty village plans (coalesced, one inflight each). Candidate budget, not only successes.
       int submits = 0;
-      for (UUID villageId : ReligionPlanner.get().pollDirtyVillages()) {
-         if (submits >= 2) {
+      int candidates = 0;
+      for (UUID villageId : ReligionPlanner.get().pollDirtyVillages(8)) {
+         if (candidates >= 8 || submits >= 2) {
             break;
          }
+         candidates++;
          Village village = findVillage(level, villageId);
          if (village == null) {
             ReligionPlanner.get().clearDirty(villageId);

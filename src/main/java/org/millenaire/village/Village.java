@@ -137,6 +137,7 @@ public class Village {
    private final List<VillageEvent> chronicle = new ArrayList<>();
    private final List<VillageHistoryEntry> history = new ArrayList<>();
    private final List<VillageTreasuryService.LedgerEntry> treasuryLedger = new ArrayList<>();
+   private final org.millenaire.economy.NeedService needService = new org.millenaire.economy.NeedService(this);
    private long historyStartTick = -1L;
    private int panelTickCounter;
    private long lastGoodsRefresh;
@@ -1403,6 +1404,7 @@ public class Village {
          VillageDiplomacyHelper.regenerateDiplomacyPointsForPlayers(level, this);
          RaidManager.attemptPlanNewRaid(this, level);
          org.millenaire.faith.ReligionService.onVillageNightEdge(level, this);
+         org.millenaire.economy.EconomyService.onVillageNightEdge(level, this);
          this.markDirty();
       }
       // Festival starts are staggered across early night ticks (not all villages at once).
@@ -1438,6 +1440,8 @@ public class Village {
          LocalMerchantHelper.attemptMerchantMoves(level, this);
       }
       VillageTreasuryService.applySimulatedDailyTax(level, this);
+      org.millenaire.faith.ReligionService.onVillageNightEdge(level, this);
+      org.millenaire.economy.EconomyService.onVillageNightEdge(level, this);
 
       this.pathManager.nightlyRecheck(level, this);
    }
@@ -1851,6 +1855,10 @@ public class Village {
 
    public void clearCampIllagers() {
       this.campIllagerUuids.clear();
+   }
+
+   public org.millenaire.economy.NeedService getNeedService() {
+      return this.needService;
    }
 
    public long getLastNightActionDay() {

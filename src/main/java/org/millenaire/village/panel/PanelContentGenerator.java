@@ -74,6 +74,7 @@ public final class PanelContentGenerator {
          case HALL_OF_FAME -> new PanelContent(PanelType.HALL_OF_FAME, "panel.millenaire.panel_type.hall_of_fame", List.of(), true, null);
          case CHRONICLE -> VillageOverviewPanelGenerator.generateChronicle(village);
          case RELIGION -> ReligionPanelGenerator.generate(village, level, player);
+         case NEEDS -> NeedsPanelGenerator.generate(village, level);
          case BANK -> level != null ? BankPanelGenerator.generate(level, village) : generateStubControlled(village, PanelType.BANK, "panel.millenaire.bank.title");
       };
    }
