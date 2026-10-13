@@ -112,6 +112,15 @@ public final class MillenaireServerConfig {
    public final IntValue warDamageBlocksPerTick;
    public final IntValue warDamageBlocksPerWave;
    public final IntValue warThDamageCap;
+   public final IntValue planGateMaxInFlightTotal;
+   public final IntValue planGateMaxPerDomain;
+   public final IntValue planGateCommitUnitsPerTick;
+   public final IntValue planGateCandidateUnitsPerTick;
+   public final BooleanValue economySimulationEnabled;
+   public final BooleanValue logisticsSimulationEnabled;
+   public final IntValue economyPlannerThreads;
+   public final IntValue economyMaxNeedsPerVillage;
+   public final IntValue logisticsMaxContractsPerVillage;
 
    public static int getDefaultClearMargin() {
       try {
@@ -538,6 +547,39 @@ public final class MillenaireServerConfig {
       this.warThDamageCap = builder.comment("Soft warDamageLevel cap for town hall (never demolished)")
          .translation("millenaire.config.warThDamageCap")
          .defineInRange("thDamageCap", 40, 0, 100);
+      builder.pop();
+      builder.comment("Shared background planning gate (religion/war/roads/economy) — keeps Minecraft ticks light")
+         .push("planGate");
+      this.planGateMaxInFlightTotal = builder.comment("Max concurrent background plan jobs across all domains")
+         .translation("millenaire.config.planGateMaxInFlightTotal")
+         .defineInRange("maxInFlightTotal", 4, 1, 8);
+      this.planGateMaxPerDomain = builder.comment("Soft per-domain in-flight cap (starvation may relax)")
+         .translation("millenaire.config.planGateMaxPerDomain")
+         .defineInRange("maxPerDomain", 2, 1, 4);
+      this.planGateCommitUnitsPerTick = builder.comment("Shared server-thread commit units per tick for applying plan results")
+         .translation("millenaire.config.planGateCommitUnitsPerTick")
+         .defineInRange("commitUnitsPerTick", 8, 1, 32);
+      this.planGateCandidateUnitsPerTick = builder.comment("Shared candidate-examination budget per tick (search work, not only successes)")
+         .translation("millenaire.config.planGateCandidateUnitsPerTick")
+         .defineInRange("candidateUnitsPerTick", 64, 8, 256);
+      builder.pop();
+      builder.comment("Village needs / production planning / inter-village logistics (off-tick planning)")
+         .push("economy");
+      this.economySimulationEnabled = builder.comment("Enable need tracking and async production planning")
+         .translation("millenaire.config.economySimulationEnabled")
+         .define("enabled", true);
+      this.logisticsSimulationEnabled = builder.comment("Enable reservation ledger and delivery contracts")
+         .translation("millenaire.config.logisticsSimulationEnabled")
+         .define("logisticsEnabled", true);
+      this.economyPlannerThreads = builder.comment("Background economy planner threads")
+         .translation("millenaire.config.economyPlannerThreads")
+         .defineInRange("plannerThreads", 1, 1, 2);
+      this.economyMaxNeedsPerVillage = builder.comment("Max active needs per village")
+         .translation("millenaire.config.economyMaxNeedsPerVillage")
+         .defineInRange("maxNeedsPerVillage", 24, 4, 64);
+      this.logisticsMaxContractsPerVillage = builder.comment("Max delivery contracts per village")
+         .translation("millenaire.config.logisticsMaxContractsPerVillage")
+         .defineInRange("maxContractsPerVillage", 8, 1, 32);
       builder.pop();
    }
 

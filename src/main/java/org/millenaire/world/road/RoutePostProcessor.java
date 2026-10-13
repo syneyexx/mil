@@ -24,7 +24,7 @@ public final class RoutePostProcessor {
       }
    }
 
-   public static PlannedRoute process(int[] rawPath, TerrainSampler sampler, long edgeId, long worldSeed, int maxBridgeLen, int tunnelThreshold) {
+   public static PlannedRoute process(int[] rawPath, TerrainView sampler, long edgeId, long worldSeed, int maxBridgeLen, int tunnelThreshold) {
       int[] simplified = douglasPeucker(rawPath, 2.5);
       int[] smooth = chaikin(simplified, 1, edgeId ^ worldSeed);
       byte[] kinds = labelSegments(smooth, sampler, maxBridgeLen, tunnelThreshold);
@@ -32,7 +32,7 @@ public final class RoutePostProcessor {
       return new PlannedRoute(smooth, kinds, index);
    }
 
-   static byte[] labelSegments(int[] path, TerrainSampler sampler, int maxBridgeLen, int tunnelThreshold) {
+   static byte[] labelSegments(int[] path, TerrainView sampler, int maxBridgeLen, int tunnelThreshold) {
       int points = path.length / 3;
       byte[] kinds = new byte[Math.max(0, points - 1)];
       int bridgeRun = 0;

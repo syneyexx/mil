@@ -18,7 +18,7 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox;
  * Samples height/biome without forcing chunk loads. Prefer real chunk data when present;
  * otherwise use ChunkGenerator estimates with a per-job RandomState snapshot from the level.
  */
-public final class TerrainSampler {
+public final class TerrainSampler implements TerrainView {
    private final ServerLevel level;
    private final RandomState randomState;
    private final Long2IntOpenHashMap heightCache = new Long2IntOpenHashMap(4096);

@@ -448,6 +448,9 @@ public class Millenaire {
          RoadNetworkService.get().onServerStopping();
          org.millenaire.faith.ReligionService.onServerStopping();
          org.millenaire.combat.war.WarCampaignService.onServerStopping();
+         org.millenaire.economy.EconomyService.onServerStopping();
+         org.millenaire.logistics.LogisticsService.onServerStopping();
+         org.millenaire.perf.plan.BackgroundWorkGate.get().shutdown();
          VillageOutfitService.clearCache();
          MillenaireStructureLoader.clearCache();
          ItemHelper.clearCache();
@@ -495,6 +498,11 @@ public class Millenaire {
          TestPlayerManager.acknowledgeChunkBatch();
          ServerLevel overworld = event.getServer().getLevel(Level.OVERWORLD);
          if (overworld != null) {
+            org.millenaire.perf.plan.CommitBudget.get()
+               .resetTick(
+                  MillenaireServerConfig.SERVER.planGateCommitUnitsPerTick.getAsInt(),
+                  MillenaireServerConfig.SERVER.planGateCandidateUnitsPerTick.getAsInt()
+               );
             var villageManager = VillageSavedData.get(overworld).getVillageManager();
             Village pendingRoad;
             int roadRegBudget = 8;
@@ -509,6 +517,8 @@ public class Millenaire {
             SettlementTakeover.tick(overworld);
             org.millenaire.faith.ReligionService.tick(overworld);
             org.millenaire.combat.war.WarCampaignService.tick(overworld);
+            org.millenaire.economy.EconomyService.tick(overworld);
+            org.millenaire.logistics.LogisticsService.tick(overworld);
          }
 
          long serverGameTime = overworld != null ? overworld.getGameTime() : 0L;
@@ -597,9 +607,18 @@ public class Millenaire {
                   I18nKeyAuditor.audit();
                   ServerLevel overworld = event.getServer().getLevel(Level.OVERWORLD);
                   if (overworld != null) {
+                     long session = overworld.getGameTime() ^ overworld.getSeed();
+                     org.millenaire.perf.plan.BackgroundWorkGate.get()
+                        .onServerStarted(
+                           session,
+                           MillenaireServerConfig.SERVER.planGateMaxInFlightTotal.getAsInt(),
+                           MillenaireServerConfig.SERVER.planGateMaxPerDomain.getAsInt()
+                        );
                      RoadNetworkService.get().onServerStarted(overworld);
                      org.millenaire.faith.ReligionService.onServerStarted(overworld);
                      org.millenaire.combat.war.WarCampaignService.onServerStarted(overworld);
+                     org.millenaire.economy.EconomyService.onServerStarted(overworld);
+                     org.millenaire.logistics.LogisticsService.onServerStarted(overworld);
                      VillageDiscovery.syncAllMillenaire(overworld, VillageSavedData.get(overworld).getVillageManager());
                   }
                } catch (Exception e) {

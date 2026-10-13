@@ -12,10 +12,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import org.millenaire.perf.plan.BackgroundWorkGate;
+import org.millenaire.perf.plan.PlanDomain;
+import org.millenaire.perf.plan.PlanPriority;
 import org.slf4j.Logger;
 
 /**
- * Async route planner. Never touches the world from worker threads beyond generator sampling.
+ * Async route planner. Workers use {@link OfflineTerrainSampler} only — never live world objects.
  * Results are queued for the main thread.
  */
 public final class RoutePlanner {
@@ -47,13 +50,18 @@ public final class RoutePlanner {
    }
 
    public boolean canSubmit() {
-      return !this.shutdown && this.inFlight.get() < this.maxConcurrent;
+      return !this.shutdown && this.inFlight.get() < this.maxConcurrent && !BackgroundWorkGate.get().isShutdown();
    }
 
    public void submit(ServerLevel level, RoadEdge edge, RoadNode a, RoadNode b, Collection<RoadNode> allNodes, RoadPlanConfig config) {
       if (!canSubmit()) {
          return;
       }
+      long gameTime = level.getGameTime();
+      if (!BackgroundWorkGate.get().tryAcquire(PlanDomain.ROADS, PlanPriority.SIM, gameTime)) {
+         return;
+      }
+
       edge.setState(EdgeState.PLANNING);
       this.inFlight.incrementAndGet();
       long edgeId = edge.id();
@@ -63,15 +71,18 @@ public final class RoutePlanner {
       BlockPos goal = RoadNode.pickEntranceToward(b, a);
       List<RoadNode> nodesSnapshot = new ArrayList<>(allNodes);
       long seed = level.getSeed();
+      // Capture generator refs on server thread; worker never sees ServerLevel.
+      OfflineTerrainSampler terrain = OfflineTerrainSampler.capture(level);
       this.executor.execute(() -> {
          try {
-            PlanResult result = plan(level, edgeId, idA, idB, start, goal, nodesSnapshot, seed, config);
+            PlanResult result = plan(terrain, edgeId, idA, idB, start, goal, nodesSnapshot, seed, config);
             this.results.offer(result);
          } catch (Throwable t) {
             LOGGER.warn("[Roads] Planning failed for edge {}: {}", edgeId, t.toString());
             this.results.offer(PlanResult.failed(edgeId, "exception"));
          } finally {
             this.inFlight.decrementAndGet();
+            BackgroundWorkGate.get().release(PlanDomain.ROADS);
          }
       });
    }
@@ -86,7 +97,7 @@ public final class RoutePlanner {
    }
 
    private static PlanResult plan(
-      ServerLevel level,
+      OfflineTerrainSampler sampler,
       long edgeId,
       String idA,
       String idB,
@@ -96,20 +107,19 @@ public final class RoutePlanner {
       long seed,
       RoadPlanConfig config
    ) {
-      TerrainSampler sampler = new TerrainSampler(level);
       for (RoadNode n : nodes) {
          sampler.markStructureBox(n.boundingBox(), 6);
       }
 
       CoarseGridAStar.CostProvider costs = (fx, fz, tx, tz, fy, ty) -> {
          int flags = sampler.flags(tx, tz);
-         if ((flags & TerrainSampler.FLAG_DEEP_OCEAN) != 0) {
+         if ((flags & OfflineTerrainSampler.FLAG_DEEP_OCEAN) != 0) {
             return CoarseGridAStar.COST_BLOCKED;
          }
-         if ((flags & TerrainSampler.FLAG_LAVA) != 0) {
+         if ((flags & OfflineTerrainSampler.FLAG_LAVA) != 0) {
             return CoarseGridAStar.COST_BLOCKED;
          }
-         if ((flags & TerrainSampler.FLAG_STRUCTURE) != 0) {
+         if ((flags & OfflineTerrainSampler.FLAG_STRUCTURE) != 0) {
             return CoarseGridAStar.COST_BLOCKED;
          }
          float cost = 1.0f;
@@ -118,10 +128,10 @@ public final class RoutePlanner {
          if (dy > config.maxSlope) {
             cost += 8f;
          }
-         if ((flags & TerrainSampler.FLAG_WATER) != 0) {
+         if ((flags & OfflineTerrainSampler.FLAG_WATER) != 0) {
             cost = config.bridgeCostPerBlock;
          }
-         if ((flags & TerrainSampler.FLAG_FOREST) != 0) {
+         if ((flags & OfflineTerrainSampler.FLAG_FOREST) != 0) {
             cost += 0.35f;
          }
          int surface = sampler.height(tx, tz);
@@ -165,7 +175,6 @@ public final class RoutePlanner {
       if (result.found()) {
          path = result.pathXzY();
       } else {
-         // Straight-line fallback
          path = straightLine(start, goal, sampler);
          LOGGER.debug("[Roads] Edge {} fallback straight line after {}", edgeId, result.reason());
       }
@@ -177,7 +186,7 @@ public final class RoutePlanner {
       return PlanResult.success(edgeId, planned.polyline, planned.segmentKinds, planned.chunkSegments);
    }
 
-   private static int[] straightLine(BlockPos start, BlockPos goal, TerrainSampler sampler) {
+   private static int[] straightLine(BlockPos start, BlockPos goal, OfflineTerrainSampler sampler) {
       int dx = goal.getX() - start.getX();
       int dz = goal.getZ() - start.getZ();
       int steps = Math.max(1, (int)Math.ceil(Math.sqrt(dx * dx + dz * dz) / 8.0));

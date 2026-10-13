@@ -28,6 +28,13 @@ public final class TickPerfCounters {
    public static final AtomicLong SELLER_SCANS = new AtomicLong();
    public static final AtomicLong MOB_DESPAWN = new AtomicLong();
    public static final AtomicLong GOAL_PICK_NS = new AtomicLong();
+   public static final AtomicLong PLAN_GATE_ACQUIRES = new AtomicLong();
+   public static final AtomicLong PLAN_GATE_REJECTS = new AtomicLong();
+   public static final AtomicLong PLAN_GATE_IN_FLIGHT = new AtomicLong();
+   public static final AtomicLong ECONOMY_SNAPSHOTS = new AtomicLong();
+   public static final AtomicLong ECONOMY_COMMITS = new AtomicLong();
+   public static final AtomicLong LOGISTICS_COMMITS = new AtomicLong();
+   public static final AtomicLong WAR_QUEUE_REJECTS = new AtomicLong();
 
    private TickPerfCounters() {
    }
@@ -55,6 +62,13 @@ public final class TickPerfCounters {
       SELLER_SCANS.set(0L);
       MOB_DESPAWN.set(0L);
       GOAL_PICK_NS.set(0L);
+      PLAN_GATE_ACQUIRES.set(0L);
+      PLAN_GATE_REJECTS.set(0L);
+      PLAN_GATE_IN_FLIGHT.set(0L);
+      ECONOMY_SNAPSHOTS.set(0L);
+      ECONOMY_COMMITS.set(0L);
+      LOGISTICS_COMMITS.set(0L);
+      WAR_QUEUE_REJECTS.set(0L);
    }
 
    public static String snapshot() {
@@ -101,6 +115,20 @@ public final class TickPerfCounters {
          + " mobDespawn="
          + MOB_DESPAWN.get()
          + " goalPickNs="
-         + GOAL_PICK_NS.get();
+         + GOAL_PICK_NS.get()
+         + " planGateAcquires="
+         + PLAN_GATE_ACQUIRES.get()
+         + " planGateRejects="
+         + PLAN_GATE_REJECTS.get()
+         + " planGateInFlight="
+         + PLAN_GATE_IN_FLIGHT.get()
+         + " economySnapshots="
+         + ECONOMY_SNAPSHOTS.get()
+         + " economyCommits="
+         + ECONOMY_COMMITS.get()
+         + " logisticsCommits="
+         + LOGISTICS_COMMITS.get()
+         + " warQueueRejects="
+         + WAR_QUEUE_REJECTS.get();
    }
 }

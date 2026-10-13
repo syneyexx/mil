@@ -25,6 +25,7 @@ public enum PanelType {
    HALL_OF_FAME,
    CHRONICLE,
    RELIGION,
+   NEEDS,
    BANK,
    BUILDING_DEFAULT;
 

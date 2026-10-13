@@ -8,15 +8,21 @@ import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.millenaire.perf.TickPerfCounters;
+import org.millenaire.perf.plan.BackgroundWorkGate;
+import org.millenaire.perf.plan.DirtyFairQueue;
+import org.millenaire.perf.plan.PlanDomain;
+import org.millenaire.perf.plan.PlanPriority;
 import org.slf4j.Logger;
 
 /**
  * Background war planner. Workers receive only immutable snapshots — never live world objects.
- * Rejection does not run on the caller (server) thread. Coalesces one in-flight plan per campaign.
+ * Rejection never runs on the caller thread; in-flight and gate slots are always cleared.
  */
 public final class WarPlanner {
    private static final Logger LOGGER = LogUtils.getLogger();
@@ -24,7 +30,7 @@ public final class WarPlanner {
 
    private final AtomicInteger inFlight = new AtomicInteger();
    private final Set<UUID> inflightCampaigns = ConcurrentHashMap.newKeySet();
-   private final Set<UUID> dirtyCampaigns = ConcurrentHashMap.newKeySet();
+   private final DirtyFairQueue<UUID> dirtyCampaigns = new DirtyFairQueue<>();
    private final ArrayBlockingQueue<WarPlanResult> results = new ArrayBlockingQueue<>(64);
    private final ArrayBlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(64);
    private ExecutorService executor;
@@ -54,14 +60,17 @@ public final class WarPlanner {
          TimeUnit.SECONDS,
          this.workQueue,
          factory,
-         (runnable, pool) -> LOGGER.debug("[War] Planner queue full; dropping submit")
+         (runnable, pool) -> {
+            TickPerfCounters.WAR_QUEUE_REJECTS.incrementAndGet();
+            throw new RejectedExecutionException("war planner queue full");
+         }
       );
    }
 
    public void shutdown() {
       this.shutdown = true;
       this.inflightCampaigns.clear();
-      this.dirtyCampaigns.clear();
+      this.dirtyCampaigns.clearAll();
       this.results.clear();
       this.workQueue.clear();
       if (this.executor != null) {
@@ -72,8 +81,13 @@ public final class WarPlanner {
    }
 
    public void markDirty(UUID campaignId) {
+      markDirty(campaignId, 0L);
+   }
+
+   public void markDirty(UUID campaignId, long gameTime) {
       if (campaignId != null) {
-         this.dirtyCampaigns.add(campaignId);
+         this.dirtyCampaigns.mark(campaignId, gameTime);
+         BackgroundWorkGate.get().noteQueued(PlanDomain.WAR, gameTime);
       }
    }
 
@@ -82,15 +96,23 @@ public final class WarPlanner {
          && this.executor != null
          && campaignId != null
          && !this.inflightCampaigns.contains(campaignId)
-         && this.inFlight.get() < 4;
+         && this.inFlight.get() < 4
+         && !BackgroundWorkGate.get().isShutdown();
    }
 
    public void submit(WarSnapshot snapshot) {
-      if (!canSubmit(snapshot.campaignId())) {
-         this.dirtyCampaigns.add(snapshot.campaignId());
+      if (snapshot == null || !canSubmit(snapshot.campaignId())) {
+         if (snapshot != null) {
+            this.dirtyCampaigns.mark(snapshot.campaignId(), snapshot.gameTime());
+         }
          return;
       }
-      this.dirtyCampaigns.remove(snapshot.campaignId());
+      if (!BackgroundWorkGate.get().tryAcquire(PlanDomain.WAR, PlanPriority.SIM, snapshot.gameTime())) {
+         this.dirtyCampaigns.mark(snapshot.campaignId(), snapshot.gameTime());
+         return;
+      }
+
+      this.dirtyCampaigns.clear(snapshot.campaignId());
       this.inflightCampaigns.add(snapshot.campaignId());
       this.inFlight.incrementAndGet();
       try {
@@ -98,7 +120,7 @@ public final class WarPlanner {
             try {
                WarPlanResult result = plan(snapshot);
                if (!this.results.offer(result)) {
-                  this.dirtyCampaigns.add(snapshot.campaignId());
+                  this.dirtyCampaigns.mark(snapshot.campaignId(), snapshot.gameTime());
                }
             } catch (Throwable t) {
                LOGGER.warn("[War] Plan failed for {}: {}", snapshot.campaignId(), t.toString());
@@ -106,12 +128,15 @@ public final class WarPlanner {
             } finally {
                this.inflightCampaigns.remove(snapshot.campaignId());
                this.inFlight.decrementAndGet();
+               BackgroundWorkGate.get().release(PlanDomain.WAR);
             }
          });
-      } catch (RuntimeException e) {
+      } catch (RejectedExecutionException | RuntimeException e) {
          this.inflightCampaigns.remove(snapshot.campaignId());
          this.inFlight.decrementAndGet();
-         this.dirtyCampaigns.add(snapshot.campaignId());
+         BackgroundWorkGate.get().release(PlanDomain.WAR);
+         this.dirtyCampaigns.mark(snapshot.campaignId(), snapshot.gameTime());
+         TickPerfCounters.WAR_QUEUE_REJECTS.incrementAndGet();
       }
    }
 
@@ -121,15 +146,24 @@ public final class WarPlanner {
       while (out.size() < max && (r = this.results.poll()) != null) {
          out.add(r);
       }
+      if (this.results.isEmpty() && this.dirtyCampaigns.isEmpty()) {
+         BackgroundWorkGate.get().clearQueuedMarker(PlanDomain.WAR);
+      }
       return out;
    }
 
+   public List<UUID> pollDirtyCampaigns(int max) {
+      return this.dirtyCampaigns.pollLimited(max);
+   }
+
+   /** @deprecated use {@link #pollDirtyCampaigns(int)} */
+   @Deprecated
    public Set<UUID> pollDirtyCampaigns() {
-      return Set.copyOf(this.dirtyCampaigns);
+      return Set.copyOf(this.dirtyCampaigns.pollLimited(64));
    }
 
    public void clearDirty(UUID campaignId) {
-      this.dirtyCampaigns.remove(campaignId);
+      this.dirtyCampaigns.clear(campaignId);
    }
 
    public int resultQueueDepth() {
@@ -209,8 +243,7 @@ public final class WarPlanner {
 
       if (snap.phase() == WarCampaign.Phase.WAVE_FIGHT
          && snap.buildingDamageEnabled()
-         && !snap.candidateSabotageBuildings().isEmpty()
-         && snap.candidateSabotageBuildings().size() > 0) {
+         && !snap.candidateSabotageBuildings().isEmpty()) {
          List<UUID> sabotage = snap.candidateSabotageBuildings().stream().limit(4).toList();
          return new WarPlanResult(
             snap.campaignId(),

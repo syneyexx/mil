@@ -3,23 +3,28 @@ package org.millenaire.faith;
 import com.mojang.logging.LogUtils;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
-import javax.annotation.Nullable;
-import net.minecraft.resources.ResourceLocation;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Set;
+import javax.annotation.Nullable;
+import net.minecraft.resources.ResourceLocation;
 import org.millenaire.perf.TickPerfCounters;
+import org.millenaire.perf.plan.BackgroundWorkGate;
+import org.millenaire.perf.plan.DirtyFairQueue;
+import org.millenaire.perf.plan.PlanDomain;
+import org.millenaire.perf.plan.PlanPriority;
 import org.slf4j.Logger;
 
 /**
  * Background religion planner. Workers receive only immutable snapshots — never live world objects.
- * Rejection does not run on the caller (server) thread.
+ * Rejection never runs work on the caller (server) thread; in-flight and gate slots are always cleared.
  */
 public final class ReligionPlanner {
    private static final Logger LOGGER = LogUtils.getLogger();
@@ -27,7 +32,7 @@ public final class ReligionPlanner {
 
    private final AtomicInteger inFlight = new AtomicInteger();
    private final Set<UUID> inflightVillages = ConcurrentHashMap.newKeySet();
-   private final Set<UUID> dirtyVillages = ConcurrentHashMap.newKeySet();
+   private final DirtyFairQueue<UUID> dirtyVillages = new DirtyFairQueue<>();
    private final ArrayBlockingQueue<ReligionPlanResult> results = new ArrayBlockingQueue<>(64);
    private final ArrayBlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(64);
    private ExecutorService executor;
@@ -59,9 +64,9 @@ public final class ReligionPlanner {
          this.workQueue,
          factory,
          (runnable, pool) -> {
-            // Do NOT run on caller. Mark dirty for retry with jitter via deadline elsewhere.
+            // Do NOT run on caller. Throw so submit() can clear in-flight + gate + re-dirty.
             TickPerfCounters.RELIGION_QUEUE_REJECTS.incrementAndGet();
-            LOGGER.debug("[Religion] Planner queue full; dropping submit");
+            throw new RejectedExecutionException("religion planner queue full");
          }
       );
    }
@@ -69,7 +74,7 @@ public final class ReligionPlanner {
    public void shutdown() {
       this.shutdown = true;
       this.inflightVillages.clear();
-      this.dirtyVillages.clear();
+      this.dirtyVillages.clearAll();
       this.results.clear();
       this.workQueue.clear();
       if (this.executor != null) {
@@ -77,56 +82,80 @@ public final class ReligionPlanner {
          this.executor = null;
       }
       this.inFlight.set(0);
+      this.oldestQueuedGameTime = -1L;
    }
 
    public void markDirty(UUID villageId) {
+      markDirty(villageId, 0L);
+   }
+
+   public void markDirty(UUID villageId, long gameTime) {
       if (villageId != null) {
-         this.dirtyVillages.add(villageId);
+         this.dirtyVillages.mark(villageId, gameTime);
+         BackgroundWorkGate.get().noteQueued(PlanDomain.RELIGION, gameTime);
+         if (this.oldestQueuedGameTime < 0L || (gameTime > 0L && gameTime < this.oldestQueuedGameTime)) {
+            this.oldestQueuedGameTime = gameTime;
+         }
       }
    }
 
+   /** Local readiness only — does not acquire the shared gate. */
    public boolean canSubmit(UUID villageId) {
       return !this.shutdown
          && this.executor != null
          && villageId != null
          && !this.inflightVillages.contains(villageId)
-         && this.inFlight.get() < 8;
+         && this.inFlight.get() < 8
+         && !BackgroundWorkGate.get().isShutdown();
    }
 
    public void submit(ReligionSnapshot snapshot) {
-      if (!canSubmit(snapshot.villageId())) {
-         this.dirtyVillages.add(snapshot.villageId());
+      if (snapshot == null || !canSubmit(snapshot.villageId())) {
+         if (snapshot != null) {
+            this.dirtyVillages.mark(snapshot.villageId(), snapshot.gameTime());
+         }
          return;
       }
-      this.dirtyVillages.remove(snapshot.villageId());
+      if (!BackgroundWorkGate.get().tryAcquire(PlanDomain.RELIGION, PlanPriority.SIM, snapshot.gameTime())) {
+         this.dirtyVillages.mark(snapshot.villageId(), snapshot.gameTime());
+         return;
+      }
+
+      this.dirtyVillages.clear(snapshot.villageId());
       this.inflightVillages.add(snapshot.villageId());
       this.inFlight.incrementAndGet();
       TickPerfCounters.RELIGION_SNAPSHOTS.incrementAndGet();
       if (this.oldestQueuedGameTime < 0L) {
          this.oldestQueuedGameTime = snapshot.gameTime();
       }
+
       try {
          this.executor.execute(() -> {
             try {
                ReligionPlanResult result = plan(snapshot);
                if (!this.results.offer(result)) {
                   TickPerfCounters.RELIGION_QUEUE_REJECTS.incrementAndGet();
-                  this.dirtyVillages.add(snapshot.villageId());
+                  this.dirtyVillages.mark(snapshot.villageId(), snapshot.gameTime());
                }
             } catch (Throwable t) {
                LOGGER.warn("[Religion] Plan failed for {}: {}", snapshot.villageId(), t.toString());
-               this.results.offer(ReligionPlanResult.failed(
-                  snapshot.villageId(), snapshot.worldSessionId(), snapshot.contentGeneration(), "exception"
-               ));
+               this.results.offer(
+                  ReligionPlanResult.failed(
+                     snapshot.villageId(), snapshot.worldSessionId(), snapshot.contentGeneration(), "exception"
+                  )
+               );
             } finally {
                this.inflightVillages.remove(snapshot.villageId());
                this.inFlight.decrementAndGet();
+               BackgroundWorkGate.get().release(PlanDomain.RELIGION);
             }
          });
-      } catch (RuntimeException e) {
+      } catch (RejectedExecutionException | RuntimeException e) {
          this.inflightVillages.remove(snapshot.villageId());
          this.inFlight.decrementAndGet();
-         this.dirtyVillages.add(snapshot.villageId());
+         BackgroundWorkGate.get().release(PlanDomain.RELIGION);
+         this.dirtyVillages.mark(snapshot.villageId(), snapshot.gameTime());
+         TickPerfCounters.RELIGION_QUEUE_REJECTS.incrementAndGet();
       }
    }
 
@@ -136,19 +165,26 @@ public final class ReligionPlanner {
       while (out.size() < max && (r = this.results.poll()) != null) {
          out.add(r);
       }
-      if (this.results.isEmpty()) {
+      if (this.results.isEmpty() && this.dirtyVillages.isEmpty()) {
          this.oldestQueuedGameTime = -1L;
+         BackgroundWorkGate.get().clearQueuedMarker(PlanDomain.RELIGION);
       }
       return out;
    }
 
+   /** Budgeted dirty poll — does not copy the entire dirty set. */
+   public List<UUID> pollDirtyVillages(int max) {
+      return this.dirtyVillages.pollLimited(max);
+   }
+
+   /** @deprecated use {@link #pollDirtyVillages(int)} */
+   @Deprecated
    public Set<UUID> pollDirtyVillages() {
-      Set<UUID> copy = Set.copyOf(this.dirtyVillages);
-      return copy;
+      return Set.copyOf(this.dirtyVillages.pollLimited(64));
    }
 
    public void clearDirty(UUID villageId) {
-      this.dirtyVillages.remove(villageId);
+      this.dirtyVillages.clear(villageId);
    }
 
    public int inFlight() {
@@ -175,7 +211,6 @@ public final class ReligionPlanner {
          return ReligionPlanResult.none(snap.villageId(), snap.worldSessionId(), snap.contentGeneration());
       }
 
-      // Seed chapter if eligible and missing.
       if (snap.chapterId() == null
          && snap.population() >= snap.minPopForOrder()
          && snap.religiousBuildingCount() > 0
@@ -210,7 +245,6 @@ public final class ReligionPlanner {
          return ReligionPlanResult.none(snap.villageId(), snap.worldSessionId(), snap.contentGeneration());
       }
 
-      // Suggest night wake when shrine ready / active and night window approaching.
       long dayTime = snap.dayTime() % 24000L;
       if ((snap.chapterStage() == Chapter.Stage.SHRINE_READY || snap.chapterStage() == Chapter.Stage.ACTIVE)
          && dayTime >= 12000L

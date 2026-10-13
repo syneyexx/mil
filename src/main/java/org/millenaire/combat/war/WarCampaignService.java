@@ -88,10 +88,12 @@ public final class WarCampaignService {
       }
 
       int submits = 0;
-      for (UUID campaignId : WarPlanner.get().pollDirtyCampaigns()) {
-         if (submits >= 2) {
+      int candidates = 0;
+      for (UUID campaignId : WarPlanner.get().pollDirtyCampaigns(8)) {
+         if (candidates >= 8 || submits >= 2) {
             break;
          }
+         candidates++;
          WarCampaign campaign = data.getCampaign(campaignId);
          if (campaign == null || !campaign.isOpen()) {
             WarPlanner.get().clearDirty(campaignId);
