@@ -1,7 +1,0 @@
-bandit.greeting=This camp ain't for tourists.
-bandit.patrol=Easy pickings on the road tonight.
-armoredbandit.greeting=Hand over your deniers and walk away.
-armoredbandit.patrol=Nobody crosses Outlawz turf for free.
-hostile=Your coin or your life!
-chat_villager=Keep quiet — the kingdom guards are near.
-chat_rain=Rain hides footprints. Perfect for a raid.

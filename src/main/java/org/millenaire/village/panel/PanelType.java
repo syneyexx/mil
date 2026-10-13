@@ -13,6 +13,7 @@ public enum PanelType {
    VILLAGE_MAP,
    MILITARY,
    CONTROLLED_MILITARY,
+   CONTROLLED_CITY,
    INN_TRADE_GOODS,
    INN_VISITORS,
    MARKET_MERCHANTS,
@@ -23,8 +24,6 @@ public enum PanelType {
    MARVEL_RESOURCES,
    HALL_OF_FAME,
    CHRONICLE,
-   CIVILIZATION,
-   RELIGION,
    BUILDING_DEFAULT;
 
    public static PanelType fromName(String name) {

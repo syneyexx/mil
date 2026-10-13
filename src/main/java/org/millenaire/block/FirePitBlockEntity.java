@@ -247,14 +247,33 @@ public class FirePitBlockEntity extends BlockEntity implements MenuProvider, Con
    }
 
    public static void serverTick(Level level, BlockPos pos, BlockState state, FirePitBlockEntity blockEntity) {
+      ItemStack fuelStack = blockEntity.getFuelItem();
+      boolean anyInput = false;
+      for (int i = 0; i < 3; i++) {
+         if (!blockEntity.getInputItem(i).isEmpty()) {
+            anyInput = true;
+            break;
+         }
+      }
+      if (blockEntity.burnTime <= 0 && fuelStack.isEmpty() && !anyInput) {
+         boolean hasCookProgress = false;
+         for (int cookTime : blockEntity.cookTimes) {
+            if (cookTime > 0) {
+               hasCookProgress = true;
+               break;
+            }
+         }
+         if (!hasCookProgress) {
+            return;
+         }
+      }
+
       boolean wasBurning = blockEntity.burnTime > 0;
       boolean dirty = false;
       boolean renderChanged = false;
       if (wasBurning) {
          blockEntity.burnTime--;
       }
-
-      ItemStack fuelStack = blockEntity.getFuelItem();
 
       for (int i = 0; i < 3; i++) {
          ItemStack inputStack = blockEntity.getInputItem(i);

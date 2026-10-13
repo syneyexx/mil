@@ -21,7 +21,6 @@ import org.millenaire.building.BuildingId;
 import org.millenaire.building.BuildingInstance;
 import org.millenaire.building.BuildingInventory;
 import org.millenaire.building.BuildingPlan;
-import org.millenaire.building.BuildingPurpose;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.goal.GoalContext;
 import org.millenaire.goal.gathering.BuildingConcurrencyCap;
@@ -142,22 +141,7 @@ public abstract class AbstractGatheringHandler implements GatheringHandler {
             return List.of();
          }
 
-         // HOUSE residents can work designated farmland soils via home-based crop goals.
-         if (home.isPlayerDesignated() && home.getPurpose() == BuildingPurpose.HOUSE) {
-            List<BuildingInstance> bridged = new ArrayList<>();
-            bridged.add(home);
-            for (BuildingInstance building : ctx.village().getBuildings()) {
-               if (building.isOperational()
-                  && building.isPlayerDesignated()
-                  && building.getPurpose() == BuildingPurpose.FARMLAND
-                  && !building.getId().equals(home.getId())) {
-                  bridged.add(building);
-               }
-            }
-            candidates = bridged;
-         } else {
-            candidates = List.of(home);
-         }
+         candidates = List.of(home);
       }
 
       String requiredTag = this.getRequiredTag(type);

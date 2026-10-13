@@ -353,15 +353,6 @@ public final class ModBlocks {
    public static final DeferredBlock<Block> SOD_DARK_OAK;
    public static final DeferredBlock<IronBarsBlock> INUIT_CARVING;
    public static final DeferredBlock<FirePitBlock> FIRE_PIT;
-   public static final DeferredBlock<Block> HEMELLANTAARN = BLOCKS.registerSimpleBlock(
-      "hemellantaarn",
-      Properties.of()
-         .mapColor(MapColor.GOLD)
-         .strength(1.2F, 6.0F)
-         .sound(SoundType.GLASS)
-         .lightLevel(state -> 15)
-         .noOcclusion()
-   );
    public static final DeferredBlock<LockedChestBlock> LOCKED_CHEST;
    public static final DeferredBlock<VillagePanelBlock> VILLAGE_PANEL;
    public static final DeferredBlock<MockMarkerBlock> MOCK_MARKER;

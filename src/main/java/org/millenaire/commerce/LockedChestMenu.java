@@ -1,6 +1,9 @@
 package org.millenaire.commerce;
 
+import javax.annotation.Nullable;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -9,17 +12,36 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import org.millenaire.building.BuildingId;
+import org.millenaire.crime.CrimeService;
 
 public class LockedChestMenu extends AbstractContainerMenu {
    private final Container chestInventory;
    private final int numRows;
    private final boolean locked;
+   @Nullable
+   private final BuildingId buildingId;
+   @Nullable
+   private final BlockPos chestPos;
 
    public LockedChestMenu(int containerId, Inventory playerInventory, Container chestInventory, boolean locked) {
+      this(containerId, playerInventory, chestInventory, locked, null, null);
+   }
+
+   public LockedChestMenu(
+      int containerId,
+      Inventory playerInventory,
+      Container chestInventory,
+      boolean locked,
+      @Nullable BuildingId buildingId,
+      @Nullable BlockPos chestPos
+   ) {
       super(ModMenuTypes.LOCKED_CHEST.get(), containerId);
       this.chestInventory = chestInventory;
       this.numRows = chestInventory.getContainerSize() / 9;
       this.locked = locked;
+      this.buildingId = buildingId;
+      this.chestPos = chestPos;
       chestInventory.startOpen(playerInventory.player);
       int yOffset = (this.numRows - 4) * 18;
 
@@ -72,6 +94,11 @@ public class LockedChestMenu extends AbstractContainerMenu {
    }
 
    public void clicked(int slotId, int button, ClickType clickType, Player player) {
+      ItemStack before = ItemStack.EMPTY;
+      if (!this.locked && slotId >= 0 && slotId < this.numRows * 9 && slotId < this.slots.size()) {
+         before = ((Slot)this.slots.get(slotId)).getItem().copy();
+      }
+
       if (this.locked && slotId >= 0 && slotId < this.slots.size()) {
          Slot slot = (Slot)this.slots.get(slotId);
          if (slot instanceof LockedChestMenu.LockedSlot) {
@@ -85,24 +112,11 @@ public class LockedChestMenu extends AbstractContainerMenu {
          }
       }
 
-      boolean takingFromChest = !this.locked && slotId >= 0 && slotId < this.numRows * 9;
-      ItemStack before = takingFromChest ? ((Slot)this.slots.get(slotId)).getItem().copy() : ItemStack.EMPTY;
       super.clicked(slotId, button, clickType, player);
-      if (takingFromChest && player instanceof net.minecraft.server.level.ServerPlayer serverPlayer
-         && serverPlayer.level() instanceof net.minecraft.server.level.ServerLevel serverLevel
-         && this.chestInventory instanceof org.millenaire.block.LockedChestBlockEntity chest
-         && chest.getBuildingId() != null) {
+      if (!this.locked && !before.isEmpty() && player instanceof ServerPlayer serverPlayer && slotId >= 0 && slotId < this.numRows * 9) {
          ItemStack after = ((Slot)this.slots.get(slotId)).getItem();
-         boolean removed = before.getCount() > after.getCount()
-            || (!before.isEmpty() && after.isEmpty())
-            || (!serverPlayer.containerMenu.getCarried().isEmpty() && before.getCount() > 0 && after.getCount() < before.getCount());
-         if (!before.isEmpty() && (after.isEmpty() || after.getCount() < before.getCount() || removed)) {
-            org.millenaire.village.Village village = org.millenaire.village.VillageSavedData.get(serverLevel)
-               .getVillageManager()
-               .findVillageContaining(chest.getBuildingId());
-            if (village != null) {
-               org.millenaire.faction.crime.CrimeService.onTheft(serverLevel, serverPlayer, village);
-            }
+         if (after.getCount() < before.getCount() || after.isEmpty()) {
+            this.notifyTheft(serverPlayer);
          }
       }
    }
@@ -121,6 +135,10 @@ public class LockedChestMenu extends AbstractContainerMenu {
             if (!this.moveItemStackTo(slotStack, this.numRows * 9, this.slots.size(), true)) {
                return ItemStack.EMPTY;
             }
+
+            if (player instanceof ServerPlayer serverPlayer) {
+               this.notifyTheft(serverPlayer);
+            }
          } else if (!this.moveItemStackTo(slotStack, 0, this.numRows * 9, false)) {
             return ItemStack.EMPTY;
          }
@@ -133,6 +151,12 @@ public class LockedChestMenu extends AbstractContainerMenu {
       }
 
       return result;
+   }
+
+   private void notifyTheft(ServerPlayer player) {
+      if (this.buildingId != null && this.chestPos != null) {
+         CrimeService.onChestItemTaken(player, this.buildingId, this.chestPos);
+      }
    }
 
    public boolean stillValid(Player player) {

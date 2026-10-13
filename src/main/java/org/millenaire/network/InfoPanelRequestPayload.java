@@ -31,36 +31,15 @@ public record InfoPanelRequestPayload() implements CustomPacketPayload {
       return TYPE;
    }
 
-   public static void handleOnServer(InfoPanelRequestPayload payload, IPayloadContext context) {
+      public static void handleOnServer(InfoPanelRequestPayload payload, IPayloadContext context) {
       context.enqueueWork(() -> {
          if (context.player() instanceof ServerPlayer serverPlayer) {
             if (serverPlayer.level() instanceof ServerLevel serverLevel) {
                if (RATE_LIMITER.acquire(serverPlayer.getUUID())) {
-                  PlayerCultureReputation cultureRep = PlayerCultureReputation.get(serverLevel);
-                  List<InfoPanelContentPayload.CultureEntry> entries = new ArrayList<>();
-                  Map<ResourceLocation, Culture> allCultures = ModCultures.getAllCultures();
-
-                  for (Entry<ResourceLocation, Culture> entry : allCultures.entrySet()) {
-                     ResourceLocation cultureId = entry.getKey();
-                     Culture culture = entry.getValue();
-                     int repValue = cultureRep.get(serverPlayer.getUUID(), cultureId);
-                     List<ReputationLabel> labels = ModCultures.getCultureReputationLabels(cultureId);
-                     if (labels == null) {
-                        labels = ModCultures.getReputationLabels(cultureId);
-                     }
-
-                     String repLabel = VillageReputation.getLabel(repValue, labels);
-                     if (repLabel == null) {
-                        repLabel = "reputation.neutral";
-                     }
-
-                     int languageScore = cultureRep.getLanguageKnowledge(serverPlayer.getUUID(), cultureId);
-                     String cultureNameKey = "culture.millenaire." + cultureId.getPath();
-                     entries.add(new InfoPanelContentPayload.CultureEntry(cultureNameKey, repValue, repLabel, languageScore));
-                  }
-
-                  PacketDistributor.sendToPlayer(serverPlayer, new InfoPanelContentPayload(entries), new CustomPacketPayload[0]);
-                  LOGGER.debug("InfoPanel payload sent to {} with {} cultures", serverPlayer.getName().getString(), entries.size());
+                  PacketDistributor.sendToPlayer(
+                     serverPlayer, org.millenaire.village.WorldLedgerService.build(serverLevel, serverPlayer), new CustomPacketPayload[0]
+                  );
+                  LOGGER.debug("WorldLedger payload sent to {}", serverPlayer.getName().getString());
                }
             }
          }

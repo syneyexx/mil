@@ -1,3 +1,0 @@
-bandit.greeting=This camp ain't for tourists.
-armoredbandit.greeting=Hand over your deniers.
-hostile=Your coin or your life!

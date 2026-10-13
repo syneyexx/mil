@@ -15,9 +15,6 @@ public final class DevCommand {
       DebugCommand.registerUnder(dev);
       StatusCommand.registerUnder(dev);
       MilitaryCommand.registerUnder(dev);
-      TerritoryCommand.registerUnder(dev);
-      PoliticsCommand.registerUnder(dev);
-      ConflictCommand.registerUnder(dev);
       RaidCommand.registerUnder(dev);
       InventoryCommand.registerUnder(dev);
       SpawnBuildingCommand.registerUnder(dev);
@@ -39,14 +36,6 @@ public final class DevCommand {
       SwitchVillageControlCommand.registerUnder(dev);
       GrantCultureControlCommand.registerUnder(dev);
       HireDevCommand.registerUnder(dev);
-      NpcChatDevCommand.registerUnder(dev);
-      org.millenaire.living.command.LivingDevCommand.registerUnder(dev);
-      org.millenaire.civilization.command.CivilizationCommand.registerUnder(dev);
-      ComputeCommand.registerUnder(dev);
-      TickCommand.registerUnder(dev);
-      BiomeCoverageCommand.registerUnder(dev);
-      BountyHunterDevCommand.registerUnder(dev);
-      StarterSettlementCommand.registerUnder(dev);
       dispatcher.register((LiteralArgumentBuilder)Commands.literal("millenaire").then(dev));
    }
 }

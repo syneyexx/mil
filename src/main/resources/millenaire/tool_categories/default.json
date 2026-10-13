@@ -139,12 +139,6 @@
     {"item": "minecraft:wooden_shovel", "priority": 10}
   ],
   "weaponsranged": [
-    {"item": "tacz:modern_kinetic_gun", "priority": 120},
-    {"item": "tacz:ak47", "priority": 115},
-    {"item": "tacz:m4a1", "priority": 115},
-    {"item": "tacz:glock_17", "priority": 110},
-    {"item": "tacz:uzi", "priority": 110},
-    {"item": "tacz:db_short", "priority": 105},
     {"item": "millenaire:seljuk_bow", "priority": 100},
     {"item": "millenaire:yumibow", "priority": 90},
     {"item": "millenaire:inuitbow", "priority": 85},

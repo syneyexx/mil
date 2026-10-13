@@ -98,7 +98,7 @@ public final class PanelPlacer {
             case 3 -> PanelType.PLAYER_BUILDINGS;
             case 4 -> isPlayerControlled ? PanelType.CONTROLLED_PROJECTS : PanelType.PROJECTS;
             case 5 -> PanelType.CONSTRUCTIONS;
-            case 6 -> PanelType.POPULATION;
+            case 6 -> isPlayerControlled ? PanelType.CONTROLLED_CITY : PanelType.POPULATION;
             case 7 -> PanelType.VILLAGE_MAP;
             case 8 -> isPlayerControlled ? PanelType.CONTROLLED_MILITARY : PanelType.MILITARY;
             default -> PanelType.VILLAGE_SUMMARY;

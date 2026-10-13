@@ -1,19 +1,14 @@
 package org.millenaire.goal;
 
 import com.mojang.logging.LogUtils;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
+import org.millenaire.TickConstants;
 import org.millenaire.diagnostics.NavEvent;
 import org.millenaire.diagnostics.NavigationCounters;
-import org.millenaire.entity.MillVillager;
-import org.millenaire.perf.sense.CombatSenseCache;
-import org.millenaire.perf.tick.EntitySimulationLod;
-import org.millenaire.village.Village;
 import org.slf4j.Logger;
 
 public class GoalScheduler {
@@ -21,11 +16,11 @@ public class GoalScheduler {
    private static final int MAX_TASK_TICKS = 6000;
    private static final int HARD_MAX_TASK_TICKS = 24000;
    private static final int MAX_IDLE_BACKOFF = 20;
+   private static final int MIN_IDLE_BACKOFF = 5;
    private static final int LEISURE_RECHECK_INTERVAL = 10;
+   private static final int COMBAT_PREEMPT_INTERVAL = 5;
    private final List<VillagerGoal> goals;
-   private final Map<ResourceLocation, Integer> goalIndex = new HashMap<>();
-   /** Parallel to {@link #goals}; {@link Long#MIN_VALUE} means never started. */
-   private final long[] lastGoalTick;
+   private final Map<ResourceLocation, Long> lastGoalTick = new HashMap<>();
    @Nullable
    private VillagerGoal currentGoal;
    @Nullable
@@ -35,9 +30,9 @@ public class GoalScheduler {
    @Nullable
    private VillagerTask lastTickedTask;
    private int idleBackoff = 0;
-   private int idleBackoffDelay = 1;
+   private int idleBackoffDelay = MIN_IDLE_BACKOFF;
    private int leisureRecheckCooldown = 0;
-   private boolean farSleepPaused;
+   private int combatPreemptCooldown = 0;
 
    public int getTaskTicks() {
       return this.taskTicks;
@@ -49,39 +44,11 @@ public class GoalScheduler {
 
    public GoalScheduler(List<VillagerGoal> goals) {
       this.goals = goals;
-      this.lastGoalTick = new long[goals.size()];
-      Arrays.fill(this.lastGoalTick, Long.MIN_VALUE);
-      for (int i = 0; i < goals.size(); i++) {
-         this.goalIndex.put(goals.get(i).id(), i);
-      }
    }
 
    public void tick(@Nullable GoalContext ctx) {
-      this.tick(ctx, true, true);
-   }
-
-   /**
-    * @param allowGoalPick when false, skip idle goal selection and leisure rechecks;
-    *        current task still runs every tick.
-    */
-   public void tick(@Nullable GoalContext ctx, boolean allowGoalPick) {
-      this.tick(ctx, allowGoalPick, true);
-   }
-
-   /**
-    * @param allowCombatScan when false, skip combat-urgent canStart preemption scans.
-    */
-   public void tick(@Nullable GoalContext ctx, boolean allowGoalPick, boolean allowCombatScan) {
-      this.tick(ctx, allowGoalPick, allowCombatScan, false);
-   }
-
-   /**
-    * @param farSleepPause when true, a non-urgent pure-travel task is not ticked this game tick (never completed or
-    *        failed by the pause itself; watchdog counters do not advance).
-    */
-   public void tick(@Nullable GoalContext ctx, boolean allowGoalPick, boolean allowCombatScan, boolean farSleepPause) {
       try {
-         this.tickInternal(ctx, allowGoalPick, allowCombatScan, farSleepPause);
+         this.tickInternal(ctx);
       } catch (Exception e) {
          LOGGER.error(
             "[Millenaire] Exception in GoalScheduler.tick() — goal={}, task={} — forced reset",
@@ -108,13 +75,7 @@ public class GoalScheduler {
       }
    }
 
-   /** True when the last tick skipped the current task because of Far-sleep travel pause. */
-   public boolean isFarSleepPaused() {
-      return this.farSleepPaused && this.currentTask != null;
-   }
-
-   private void tickInternal(@Nullable GoalContext ctx, boolean allowGoalPick, boolean allowCombatScan, boolean farSleepPause) {
-      this.farSleepPaused = false;
+   private void tickInternal(@Nullable GoalContext ctx) {
       if (this.currentTask != null && this.currentTask.isFinished()) {
          this.currentTask.stop(ctx, StopReason.COMPLETED);
          if (ctx != null) {
@@ -139,56 +100,58 @@ public class GoalScheduler {
          this.resetIdleBackoff();
       }
 
-      if (allowGoalPick) {
-         if (this.currentTask != null && this.currentGoal != null && this.currentGoal.isLeisure() && this.leisureRecheckCooldown > 0) {
-            this.leisureRecheckCooldown--;
-         } else if (this.currentTask != null && this.currentGoal != null && this.currentGoal.isLeisure()) {
-            this.leisureRecheckCooldown = 9;
-
-            for (int i = 0; i < this.goals.size(); i++) {
-               VillagerGoal goal = this.goals.get(i);
-               if (!goal.isLeisure()
-                  && isTimeAllowed(goal, ctx)
-                  && this.isCooldownExpired(i, goal.reoccurDelayTicks(), ctx != null ? ctx.gameTime() : 0L)
-                  && goal.canStart(ctx)) {
-                  this.currentTask.stop(ctx, StopReason.INTERRUPTED);
-                  if (ctx != null) {
-                     ctx.villager().getNavManager().stop(ctx.villager());
-                  }
-
-                  this.startGoal(goal, i, ctx);
-                  break;
-               }
-            }
-         }
-      } else if (this.currentTask != null && this.currentGoal != null && this.currentGoal.isLeisure() && this.leisureRecheckCooldown > 0) {
+      if (this.currentTask != null && this.currentGoal != null && this.currentGoal.isLeisure() && this.leisureRecheckCooldown > 0) {
          this.leisureRecheckCooldown--;
-      }
+      } else if (this.currentTask != null && this.currentGoal != null && this.currentGoal.isLeisure()) {
+         this.leisureRecheckCooldown = 9;
 
-      boolean doCombatScan = allowCombatScan && this.currentTask != null && this.currentGoal != null;
-      if (doCombatScan && this.idleBackoff > 0 && !combatPreemptRequired(ctx)) {
-         // No nearby hostiles and not recently hurt — reuse idle backoff for combat-urgent scans.
-         doCombatScan = false;
-      }
-      if (doCombatScan) {
-         boolean currentIsCombat = this.currentGoal.isCombatUrgent();
-         int currentPriority = currentIsCombat ? this.currentGoal.computePriority(ctx) : Integer.MIN_VALUE;
-
-         for (int i = 0; i < this.goals.size(); i++) {
-            VillagerGoal goal = this.goals.get(i);
-            if (goal.isCombatUrgent()
-               && goal != this.currentGoal
-               && (!currentIsCombat || goal.computePriority(ctx) > currentPriority)
+         for (VillagerGoal goal : this.goals) {
+            if (!goal.isLeisure()
                && isTimeAllowed(goal, ctx)
-               && this.isCooldownExpired(i, goal.reoccurDelayTicks(), ctx != null ? ctx.gameTime() : 0L)
+               && this.isCooldownExpired(goal.id(), goal.reoccurDelayTicks(), ctx != null ? ctx.gameTime() : 0L)
                && goal.canStart(ctx)) {
                this.currentTask.stop(ctx, StopReason.INTERRUPTED);
                if (ctx != null) {
                   ctx.villager().getNavManager().stop(ctx.villager());
                }
 
-               this.startGoal(goal, i, ctx);
+               this.currentGoal = goal;
+               this.currentTask = goal.start(ctx);
+               this.lastGoalTick.put(goal.id(), ctx != null ? ctx.gameTime() : 0L);
+               this.taskTicks = 0;
+               this.resetIdleBackoff();
                break;
+            }
+         }
+      }
+
+      if (this.currentTask != null && this.currentGoal != null) {
+         if (this.combatPreemptCooldown > 0) {
+            this.combatPreemptCooldown--;
+         } else {
+            this.combatPreemptCooldown = COMBAT_PREEMPT_INTERVAL - 1;
+            boolean currentIsCombat = this.currentGoal.isCombatUrgent();
+            int currentPriority = currentIsCombat ? this.currentGoal.computePriority(ctx) : Integer.MIN_VALUE;
+
+            for (VillagerGoal goal : this.goals) {
+               if (goal.isCombatUrgent()
+                  && goal != this.currentGoal
+                  && (!currentIsCombat || goal.computePriority(ctx) > currentPriority)
+                  && isTimeAllowed(goal, ctx)
+                  && this.isCooldownExpired(goal.id(), goal.reoccurDelayTicks(), ctx != null ? ctx.gameTime() : 0L)
+                  && goal.canStart(ctx)) {
+                  this.currentTask.stop(ctx, StopReason.INTERRUPTED);
+                  if (ctx != null) {
+                     ctx.villager().getNavManager().stop(ctx.villager());
+                  }
+
+                  this.currentGoal = goal;
+                  this.currentTask = goal.start(ctx);
+                  this.lastGoalTick.put(goal.id(), ctx != null ? ctx.gameTime() : 0L);
+                  this.taskTicks = 0;
+                  this.resetIdleBackoff();
+                  break;
+               }
             }
          }
       }
@@ -196,13 +159,16 @@ public class GoalScheduler {
       if (this.currentTask == null) {
          if (this.idleBackoff > 0) {
             this.idleBackoff--;
-         } else if (allowGoalPick) {
+         } else {
             GoalScheduler.BestGoal best = this.pickBest(ctx);
             if (best != null) {
-               this.startGoal(best.goal(), best.index(), ctx);
+               this.currentGoal = best.goal();
+               this.currentTask = best.goal().start(ctx);
+               this.lastGoalTick.put(best.goal().id(), ctx != null ? ctx.gameTime() : 0L);
+               this.resetIdleBackoff();
             } else {
                this.idleBackoff = this.idleBackoffDelay;
-               this.idleBackoffDelay = Math.min(this.idleBackoffDelay * 2, MAX_IDLE_BACKOFF);
+               this.idleBackoffDelay = Math.min(Math.max(this.idleBackoffDelay * 2, MIN_IDLE_BACKOFF), MAX_IDLE_BACKOFF);
             }
          }
       }
@@ -215,16 +181,6 @@ public class GoalScheduler {
 
          if (this.currentTask.consumeProgress()) {
             this.taskTicks = 0;
-         }
-
-         if (EntitySimulationLod.shouldPauseTask(
-            farSleepPause,
-            false,
-            this.currentGoal != null && this.currentGoal.isCombatUrgent(),
-            this.currentGoal != null && this.currentTask.isFarSleepPausable()
-         )) {
-            this.farSleepPaused = true;
-            return;
          }
 
          this.taskTicks++;
@@ -258,77 +214,39 @@ public class GoalScheduler {
       }
    }
 
-   private void startGoal(VillagerGoal goal, int index, @Nullable GoalContext ctx) {
-      this.currentGoal = goal;
-      this.currentTask = goal.start(ctx);
-      if (index >= 0 && index < this.lastGoalTick.length) {
-         this.lastGoalTick[index] = ctx != null ? ctx.gameTime() : 0L;
-      }
-      this.taskTicks = 0;
-      this.resetIdleBackoff();
-   }
-
    private void resetIdleBackoff() {
       this.idleBackoff = 0;
-      this.idleBackoffDelay = 1;
+      this.idleBackoffDelay = MIN_IDLE_BACKOFF;
    }
 
-   private boolean isCooldownExpired(int goalIdx, long cooldownTicks, long currentGameTime) {
-      if (cooldownTicks <= 0L || goalIdx < 0 || goalIdx >= this.lastGoalTick.length) {
+   private boolean isCooldownExpired(ResourceLocation goalId, long cooldownTicks, long currentGameTime) {
+      if (cooldownTicks <= 0L) {
          return true;
       }
-      long last = this.lastGoalTick[goalIdx];
-      return last == Long.MIN_VALUE || currentGameTime >= last + cooldownTicks;
-   }
 
-   /**
-    * Combat preemption must not wait on idle backoff when the villager is hurt, already targeting,
-    * or the village sense cache reports hostiles.
-    */
-   private static boolean combatPreemptRequired(@Nullable GoalContext ctx) {
-      if (ctx == null) {
-         return true;
-      }
-      MillVillager v = ctx.villager();
-      if (v.getAttackTarget() != null || v.hurtTime > 0) {
-         return true;
-      }
-      Village village = ctx.village();
-      ServerLevel level = ctx.level();
-      if (village == null || level == null) {
-         return true;
-      }
-      if (village.isUnderAttack() || village.isRaidActiveOrSuffering()) {
-         return true;
-      }
-      List<?> hostiles = CombatSenseCache.hostiles(level, village, v);
-      return hostiles != null && !hostiles.isEmpty();
+      Long lastTick = this.lastGoalTick.get(goalId);
+      return lastTick == null ? true : currentGameTime >= lastTick + cooldownTicks;
    }
 
    @Nullable
    private GoalScheduler.BestGoal pickBest(@Nullable GoalContext ctx) {
       VillagerGoal best = null;
-      int bestIdx = -1;
       int bestPriority = Integer.MIN_VALUE;
       boolean bestIsLeisure = true;
 
-      for (int i = 0; i < this.goals.size(); i++) {
-         VillagerGoal goal = this.goals.get(i);
-         if (isTimeAllowed(goal, ctx)
-            && this.isCooldownExpired(i, goal.reoccurDelayTicks(), ctx != null ? ctx.gameTime() : 0L)
-            && goal.canStart(ctx)) {
+      for (VillagerGoal goal : this.goals) {
+         if (isTimeAllowed(goal, ctx) && this.isCooldownExpired(goal.id(), goal.reoccurDelayTicks(), ctx != null ? ctx.gameTime() : 0L) && goal.canStart(ctx)) {
             int priority = goal.computePriority(ctx);
             boolean isLeisure = goal.isLeisure();
             if (!isLeisure && bestIsLeisure || isLeisure == bestIsLeisure && priority > bestPriority) {
                bestPriority = priority;
                best = goal;
-               bestIdx = i;
                bestIsLeisure = isLeisure;
             }
          }
       }
 
-      return best != null ? new GoalScheduler.BestGoal(best, bestIdx, bestPriority) : null;
+      return best != null ? new GoalScheduler.BestGoal(best, bestPriority) : null;
    }
 
    private static boolean isTimeAllowed(VillagerGoal goal, @Nullable GoalContext ctx) {
@@ -336,7 +254,7 @@ public class GoalScheduler {
          return true;
       }
 
-      boolean isNight = org.millenaire.perf.tick.LevelTickCache.isNight(ctx.level());
+      boolean isNight = TickConstants.isNight(ctx.level());
       return isNight && !goal.canBeDoneAtNight() ? false : isNight || goal.canBeDoneInDayTime();
    }
 
@@ -401,6 +319,6 @@ public class GoalScheduler {
       }
    }
 
-   private record BestGoal(VillagerGoal goal, int index, int priority) {
+   private record BestGoal(VillagerGoal goal, int priority) {
    }
 }

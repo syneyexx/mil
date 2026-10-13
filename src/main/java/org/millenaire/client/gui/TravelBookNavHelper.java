@@ -49,10 +49,6 @@ public final class TravelBookNavHelper {
    }
 
    public static void openFromNavTarget(@Nullable Screen callingScreen, PanelLine.PanelNavTarget target) {
-      if (target == null || "civ_action".equals(target.targetStateName())) {
-         // Civilization book actions are handled by VillageBookScreen, not the travel book.
-         return;
-      }
       TravelBookScreen.setCallingScreen(callingScreen);
 
       TravelBookScreenState state;

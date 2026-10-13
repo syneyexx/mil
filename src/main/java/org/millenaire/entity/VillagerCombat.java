@@ -1,7 +1,6 @@
 package org.millenaire.entity;
 
 import com.mojang.logging.LogUtils;
-import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import net.minecraft.ChatFormatting;
@@ -36,12 +35,11 @@ import org.millenaire.tool.ToolCategory;
 import org.millenaire.tool.ToolCategoryRegistry;
 import org.millenaire.village.Village;
 import org.millenaire.village.VillageId;
+import org.millenaire.village.VillageOutfitService;
 import org.slf4j.Logger;
 
 public final class VillagerCombat {
    private static final Logger LOGGER = LogUtils.getLogger();
-   private static final double MOB_AGGRO_RANGE = 16.0;
-   private static final double MOB_AGGRO_RANGE_SQ = MOB_AGGRO_RANGE * MOB_AGGRO_RANGE;
    private final MillVillager villager;
    @Nullable
    private LivingEntity attackTarget;
@@ -103,22 +101,17 @@ public final class VillagerCombat {
          return ItemStack.EMPTY;
       }
 
-      boolean combatRole = vt.isArcher() || vt.isHelpInAttacks() || vt.isRaider();
-      if (combatRole && !this.isTargetWithinMeleeRange()) {
-         Item ownedGun = org.millenaire.compat.tacz.TaczWeaponCompat.findOwnedGun(this.villager.getInventory());
-         if (ownedGun != null) {
-            return org.millenaire.compat.tacz.TaczWeaponCompat.createGunStack(ownedGun);
-         }
+      boolean preferRanged = vt.isArcher() && !this.isTargetWithinMeleeRange();
+      ItemStack outfitWeapon = VillageOutfitService.getOutfitCombatWeapon(this.villager, preferRanged);
+      if (outfitWeapon != null) {
+         return outfitWeapon;
       }
 
-      if (vt.isArcher() && !this.isTargetWithinMeleeRange()) {
+      if (preferRanged) {
          ToolCategory ranged = ToolCategoryRegistry.get("weaponsranged");
          if (ranged != null) {
             ToolCategory.ToolEntry best = ranged.getBestOwned(item -> this.villager.getInventory().getCount(item) > 0);
             if (best != null && best.item() != null) {
-               if (org.millenaire.compat.tacz.TaczWeaponCompat.isGunItem(best.item())) {
-                  return org.millenaire.compat.tacz.TaczWeaponCompat.createGunStack(best.item());
-               }
                return new ItemStack(best.item());
             }
          }
@@ -178,50 +171,21 @@ public final class VillagerCombat {
    public boolean performAttack(LivingEntity target) {
       VillagerType vt = ModCultures.getVillagerType(this.villager.getVillagerTypeId());
       boolean isArcher = vt != null && vt.isArcher();
-      boolean combatRole = vt != null && (vt.isArcher() || vt.isHelpInAttacks() || vt.isRaider());
-      ItemStack main = this.villager.getMainHandItem();
-      boolean hasGun = org.millenaire.compat.tacz.TaczWeaponCompat.isGun(main);
-      boolean hasBow = main.getItem() instanceof BowItem;
+      boolean hasBow = this.villager.getMainHandItem().getItem() instanceof BowItem;
       double distance = Math.sqrt(this.villager.distanceToSqr(target));
       boolean verticalOverlap = target.getBoundingBox().maxY > this.villager.getBoundingBox().minY
          && target.getBoundingBox().minY < this.villager.getBoundingBox().maxY;
-
-      if (combatRole && hasGun && distance > 5.0 && distance < 32.0 && this.getAttackCooldown() <= 0) {
-         this.villager.swing(InteractionHand.MAIN_HAND);
-         if (org.millenaire.compat.tacz.TaczWeaponCompat.tryFire(this.villager, target)) {
-            this.setAttackCooldown(40);
-            this.pursuitTicks = 0;
-            return true;
-         }
-      }
-
-      CombatHelper.AttackType type = CombatHelper.decideAttack(
-         distance, isArcher, hasBow || hasGun, this.getAttackCooldown(), verticalOverlap
-      );
+      CombatHelper.AttackType type = CombatHelper.decideAttack(distance, isArcher, hasBow, this.getAttackCooldown(), verticalOverlap);
       switch (type) {
          case RANGED:
             float df = (float)Math.min(1.0, Math.max(0.1, distance / 20.0));
             this.villager.swing(InteractionHand.MAIN_HAND);
-            if (hasGun) {
-               org.millenaire.compat.tacz.TaczWeaponCompat.tryFire(this.villager, target);
-               this.setAttackCooldown(40);
-            } else {
-               this.performRangedAttack(target, df);
-               this.setAttackCooldown(100);
-            }
+            this.performRangedAttack(target, df);
+            this.setAttackCooldown(100);
             this.pursuitTicks = 0;
             return true;
          case MELEE:
             target.hurt(this.villager.damageSources().mobAttack(this.villager), this.getAttackStrength());
-            if (target instanceof ServerPlayer sp
-               && this.villager.level() instanceof ServerLevel attackLevel
-               && org.millenaire.faction.crime.ArrestService.tryArrestFromVillagerAttack(attackLevel, sp, this.villager)) {
-               this.setAttackCooldown(20);
-               this.villager.swing(InteractionHand.MAIN_HAND);
-               this.pursuitTicks = 0;
-               this.villager.setAttackTarget(null);
-               return true;
-            }
             this.setAttackCooldown(20);
             this.villager.swing(InteractionHand.MAIN_HAND);
             this.pursuitTicks = 0;
@@ -298,34 +262,20 @@ public final class VillagerCombat {
    }
 
    void triggerMobAttacks() {
-      List<Monster> candidates = this.nearbyMonstersForAggro();
-      for (Monster mob : candidates) {
-         if (mob.getTarget() == null
-            && mob.distanceToSqr(this.villager) <= MOB_AGGRO_RANGE_SQ
-            && Math.abs(mob.getY() - this.villager.getY()) <= 5.0
-            && mob.hasLineOfSight(this.villager)) {
+      AABB box = new AABB(
+         this.villager.getX() - 16.0,
+         this.villager.getY() - 5.0,
+         this.villager.getZ() - 16.0,
+         this.villager.getX() + 16.0,
+         this.villager.getY() + 5.0,
+         this.villager.getZ() + 16.0
+      );
+
+      for (Monster mob : this.villager.level().getEntitiesOfClass(Monster.class, box)) {
+         if (mob.getTarget() == null && mob.hasLineOfSight(this.villager)) {
             mob.setTarget(this.villager);
          }
       }
-   }
-
-   private List<Monster> nearbyMonstersForAggro() {
-      VillageId villageId = this.villager.getVillageId();
-      if (villageId != null && this.villager.level() instanceof ServerLevel serverLevel) {
-         Village village = Village.resolve(serverLevel, villageId);
-         if (village != null) {
-            return org.millenaire.perf.sense.CombatSenseCache.monsters(serverLevel, village);
-         }
-      }
-      AABB box = new AABB(
-         this.villager.getX() - MOB_AGGRO_RANGE,
-         this.villager.getY() - 5.0,
-         this.villager.getZ() - MOB_AGGRO_RANGE,
-         this.villager.getX() + MOB_AGGRO_RANGE,
-         this.villager.getY() + 5.0,
-         this.villager.getZ() + MOB_AGGRO_RANGE
-      );
-      return this.villager.level().getEntitiesOfClass(Monster.class, box);
    }
 
    private boolean isDefensiveType() {
@@ -360,9 +310,7 @@ public final class VillagerCombat {
    }
 
    void onHurt(DamageSource source, float amount, boolean hadFullHealth) {
-      if (source.getEntity() instanceof ServerPlayer player
-         && CombatHelper.isPlayerTargetable(player)
-         && !this.isRaiderEntity()) {
+      if (source.getEntity() instanceof ServerPlayer player && !player.isCreative() && !player.isSpectator() && !this.isRaiderEntity()) {
          ResourceLocation vtId = this.villager.getVillagerTypeId();
          VillagerType vtype = vtId != null ? ModCultures.getVillagerType(vtId) : null;
          boolean nonHostileType = vtype != null && !vtype.isHostile();
@@ -372,7 +320,7 @@ public final class VillagerCombat {
             if (village != null) {
                int repChange = -((int)(amount * 10.0F));
                village.adjustReputation(serverLevel, player.getUUID(), repChange);
-               org.millenaire.faction.crime.CrimeService.onVillagerAssault(serverLevel, player, this.villager, village);
+               org.millenaire.crime.CrimeService.onVillagerAssault(player, this.villager, village);
                LOGGER.debug(
                   "[Millenaire] {} hit {} : rep {} (village {})",
                   new Object[]{player.getGameProfile().getName(), this.villager.getVillagerTypeId(), repChange, village.getVillageName()}

@@ -2,7 +2,6 @@ package org.millenaire.entity;
 
 import com.mojang.logging.LogUtils;
 import javax.annotation.Nullable;
-import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -59,8 +58,6 @@ public class VillagerNavigationManager implements VillagerNavDriver {
    private static final int UNDER_TARGET_FAST_TICKS = 100;
    private static final double ALREADY_AT_DEST_SQ = 2.25;
    private static final int DEFAULT_FLOOR_TOLERANCE = 1;
-   private long asyncPathGeneration;
-   private boolean asyncPathPending;
 
    public static int pathfindBackoffTicks(int backoffLevel) {
       if (backoffLevel <= 0) {
@@ -77,17 +74,6 @@ public class VillagerNavigationManager implements VillagerNavDriver {
 
    @Override
    public void navigateToCombatTarget(MillVillager villager, BlockPos dest, double walkSpeed) {
-      // Throttle combat repaths — chasing targets used to storm A* every tick.
-      if (this.destination != null
-         && this.destinationIsCombatTarget
-         && !this.abandoned
-         && dest.distSqr(this.destination) <= 16.0
-         && villager.tickCount % REPATH_INTERVAL != 0
-         && !villager.getNavigation().isDone()) {
-         this.destination = dest;
-         this.speed = walkSpeed;
-         return;
-      }
       this.navigateToInternal(villager, dest, walkSpeed, true);
    }
 
@@ -248,8 +234,7 @@ public class VillagerNavigationManager implements VillagerNavDriver {
                if (village != null) {
                   VillageWaypointGraph graph = village.getWaypointGraph();
                   if (graph != null) {
-                     if (villager.level() instanceof ServerLevel sl
-                        && org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+                     if (villager.level() instanceof ServerLevel sl) {
                         boolean rebuilt = village.rebuildWaypointGraphIfStale(sl, 60L);
                         if (rebuilt) {
                            villager.getNavEventLog()
@@ -476,89 +461,6 @@ public class VillagerNavigationManager implements VillagerNavDriver {
       this.abandoned = false;
       this.pathfindCooldown = 0;
       this.pathfindBackoffLevel = 0;
-      this.asyncPathPending = false;
-      this.asyncPathGeneration++;
-   }
-
-   /**
-    * Submit Mid-LOD pathfinding to the compute pool. Returns true when a job was queued
-    * (caller should not run sync A*). Near combat stays sync via {@link MillPathNavigation}.
-    */
-   public boolean trySubmitAsyncPath(MillVillager villager, BlockPos dest, double walkSpeed) {
-      if (!org.millenaire.perf.compute.ComputeOffload.entityPaths()) {
-         return false;
-      }
-      if (!(villager.level() instanceof ServerLevel level)) {
-         return false;
-      }
-      org.millenaire.perf.tick.EntitySimulationLod lod = org.millenaire.perf.tick.EntitySimulationLod.resolve(level, villager);
-      if (lod != org.millenaire.perf.tick.EntitySimulationLod.MID) {
-         return false;
-      }
-      if (this.asyncPathPending) {
-         return true;
-      }
-      if (!org.millenaire.perf.tick.ServerTickGovernor.hasEntityAdmissionTime()) {
-         org.millenaire.perf.tick.ServerTickGovernor.noteEntityAsyncRejectedOldDeadline();
-         return false;
-      }
-      if (!org.millenaire.perf.tick.ServerTickGovernor.tryConsumeCaptureBudget(0L)) {
-         org.millenaire.perf.tick.ServerTickGovernor.noteEntitySyncFallback();
-         return false;
-      }
-      BlockPos from = villager.blockPosition();
-      long captureStart = System.nanoTime();
-      org.millenaire.perf.path.NavRegionSnapshot snapshot =
-         org.millenaire.perf.path.NavRegionSnapshot.capture(level, from, dest, 24);
-      org.millenaire.perf.tick.ServerTickGovernor.tryConsumeCaptureBudget(System.nanoTime() - captureStart);
-      long generation = ++this.asyncPathGeneration;
-      this.asyncPathPending = true;
-      UUID uuid = villager.getUUID();
-      boolean submitted = org.millenaire.perf.compute.MillenaireComputePool.submit(() -> {
-         Path path = snapshot.findPath(from, dest);
-         return new org.millenaire.perf.path.EntityPathComputeResult(uuid, generation, dest, walkSpeed, path);
-      });
-      if (!submitted) {
-         // Compute queue full: caller falls back to sync A*, which is still capped by PathRequestQueue.
-         this.asyncPathPending = false;
-         org.millenaire.perf.tick.ServerTickGovernor.noteEntityAsyncQueueFull();
-         org.millenaire.perf.tick.ServerTickGovernor.noteEntitySyncFallback();
-         return false;
-      }
-      org.millenaire.perf.tick.ServerTickGovernor.noteEntityAsyncAccepted();
-      return true;
-   }
-
-   public boolean acceptAsyncPath(MillVillager villager, long generation, BlockPos dest, double walkSpeed, @Nullable Path path) {
-      if (generation != this.asyncPathGeneration) {
-         return false;
-      }
-      this.asyncPathPending = false;
-      if (this.destination == null || this.abandoned) {
-         return false;
-      }
-      if (this.destination.distSqr(dest) > DEST_CHANGE_THRESHOLD_SQ) {
-         return false;
-      }
-      if (path == null
-         || !org.millenaire.perf.path.NavRegionSnapshot.validateWalkability(
-            (ServerLevel)villager.level(), path, 4
-         )) {
-         // Invalid / unwalkable async result — cooldown then allow sync retry next request.
-         this.pathfindCooldown = pathfindBackoffTicks(this.pathfindBackoffLevel);
-         this.pathfindBackoffLevel++;
-         return true;
-      }
-      boolean ok = villager.getNavigation().moveTo(path, walkSpeed);
-      if (ok) {
-         this.pathfindCooldown = 0;
-         this.pathfindBackoffLevel = 0;
-         this.consecutivePathFailures = 0;
-      } else {
-         this.pathfindCooldown = pathfindBackoffTicks(this.pathfindBackoffLevel);
-         this.pathfindBackoffLevel++;
-      }
-      return true;
    }
 
    @Nullable

@@ -106,9 +106,6 @@ public class VillageSpawnQueue {
    public static boolean couldHostAnyVillage(Collection<VillageType> types, Predicate<TagKey<Biome>> biomeTagMatcher) {
       for (VillageType vt : types) {
          if (vt.weight() > 0) {
-            if (vt.biomeTags().isEmpty() && vt.biomeKeys().isEmpty()) {
-               return true;
-            }
             for (TagKey<Biome> tag : vt.biomeTags()) {
                if (biomeTagMatcher.test(tag)) {
                   return true;
@@ -117,36 +114,6 @@ public class VillageSpawnQueue {
          }
       }
 
-      return false;
-   }
-
-   /** Tag match, exact biome keys, or climate fallback for surface biomes. */
-   public static boolean couldHostAnyVillage(Collection<VillageType> types, Holder<Biome> biome) {
-      if (biome == null) {
-         return false;
-      }
-      for (VillageType vt : types) {
-         if (vt.weight() > 0 && vt.matchesBiome(biome)) {
-            return true;
-         }
-      }
-      if (!org.millenaire.compat.ClimateBiomeFallback.isFallbackEnabled()) {
-         return false;
-      }
-      org.millenaire.compat.ClimateBiomeFallback.Classification climate =
-         org.millenaire.compat.ClimateBiomeFallback.classify(biome);
-      if (!climate.surfaceEligible()) {
-         return false;
-      }
-      for (VillageType vt : types) {
-         if (vt.weight() <= 0) {
-            continue;
-         }
-         String path = vt.culture() != null ? vt.culture().getPath() : "";
-         if (climate.culturePaths().contains(path)) {
-            return true;
-         }
-      }
       return false;
    }
 
@@ -175,7 +142,7 @@ public class VillageSpawnQueue {
       int cheapChecked = 0;
       int expensiveBudget = computeExpensiveBudget(this.candidates.size());
       int expensiveUsed = 0;
-      long spawnProtRadius = effectiveSpawnProtectionRadius();
+      long spawnProtRadius = MillenaireServerConfig.SERVER.spawnProtectionRadius.getAsInt();
 
       while (cheapChecked < 10) {
          BlockPos candidate = this.candidates.poll();
@@ -185,9 +152,9 @@ public class VillageSpawnQueue {
 
          cheapChecked++;
          double distToSpawnSq = candidate.distSqr(level.getSharedSpawnPos());
-         if (spawnProtRadius > 0L && distToSpawnSq < spawnProtRadius * spawnProtRadius) {
+         if (distToSpawnSq < spawnProtRadius * spawnProtRadius) {
             if (log) {
-               LOGGER.debug(
+               LOGGER.info(
                   "[Millenaire spawn] {} rejected: within spawn protection ({} < {})",
                   new Object[]{candidate.toShortString(), (int)Math.sqrt(distToSpawnSq), spawnProtRadius}
                );
@@ -228,13 +195,13 @@ public class VillageSpawnQueue {
                         if (!tooCloseForLone) {
                            this.loneBuildingQueue.addLast(new VillageSpawnQueue.LBCandidate(surfacePos, distToSpawnSq, currentTick, 0L));
                            if (log) {
-                              LOGGER.debug("[Millenaire spawn] {} deferred to LB queue (village failed)", surfacePos.toShortString());
+                              LOGGER.info("[Millenaire spawn] {} deferred to LB queue (village failed)", surfacePos.toShortString());
                            }
                         }
                      } else if (!tooCloseForLone) {
                         this.loneBuildingQueue.addLast(new VillageSpawnQueue.LBCandidate(surfacePos, distToSpawnSq, currentTick, 0L));
                         if (log) {
-                           LOGGER.debug("[Millenaire spawn] {} deferred to LB queue (too close for village)", surfacePos.toShortString());
+                           LOGGER.info("[Millenaire spawn] {} deferred to LB queue (too close for village)", surfacePos.toShortString());
                         }
                      }
 
@@ -254,7 +221,7 @@ public class VillageSpawnQueue {
                   }
                }
             } else if (log && genVillages && tooCloseForVillage) {
-               LOGGER.debug("[Millenaire spawn] {} skipped for village: tooClose", candidate.toShortString());
+               LOGGER.info("[Millenaire spawn] {} skipped for village: tooClose", candidate.toShortString());
             }
          }
       }
@@ -275,7 +242,7 @@ public class VillageSpawnQueue {
 
             if (isExpired(candidate, currentTick, 72000L)) {
                if (log) {
-                  LOGGER.debug("[Millenaire spawn] LB candidate {} expired (TTL)", candidate.pos().toShortString());
+                  LOGGER.info("[Millenaire spawn] LB candidate {} expired (TTL)", candidate.pos().toShortString());
                }
             } else if (shouldBackoff(candidate, currentTick)) {
                this.loneBuildingQueue.addLast(candidate);
@@ -293,12 +260,12 @@ public class VillageSpawnQueue {
                );
                if (placement == VillageManager.LBPlacement.BLOCKED) {
                   if (log) {
-                     LOGGER.debug("[Millenaire spawn] LB candidate {} dropped (too close after re-check)", candidate.pos().toShortString());
+                     LOGGER.info("[Millenaire spawn] LB candidate {} dropped (too close after re-check)", candidate.pos().toShortString());
                   }
                } else {
                   boolean keyOnly = placement == VillageManager.LBPlacement.KEY_ONLY;
                   if (log) {
-                     LOGGER.debug("[Millenaire spawn] LB candidate {} passed coverage check", candidate.pos().toShortString());
+                     LOGGER.info("[Millenaire spawn] LB candidate {} passed coverage check", candidate.pos().toShortString());
                   }
 
                   VillageSpawnQueue.SpawnResult result = this.trySpawnVillage(level, candidate.pos(), candidate.distToSpawnSq(), manager, true, log, keyOnly);
@@ -399,11 +366,16 @@ public class VillageSpawnQueue {
 
       VillageSavedData savedData = VillageSavedData.get(level);
       Map<ResourceLocation, Integer> lbCounts = null;
+      int illagerCampCount = 0;
       if (loneBuilding) {
          lbCounts = new HashMap<>();
 
          for (VillageSavedData.LoneBuildingEntry entry : savedData.getLoneBuildingPositions()) {
             lbCounts.merge(entry.type(), 1, Integer::sum);
+            VillageType existing = ModCultures.getVillageType(entry.type());
+            if (existing != null && "illager_camp".equals(existing.specialType())) {
+               illagerCampCount++;
+            }
          }
       }
 
@@ -417,35 +389,13 @@ public class VillageSpawnQueue {
             biomeCandidates.addAll(entry.getValue());
          }
       }
-      // Exact biome ResourceKeys from village JSON (bare IDs).
-      for (VillageType vt : ModCultures.getAllVillageTypes().values()) {
-         if (vt.weight() > 0 && vt.loneBuilding() == loneBuilding && vt.matchesBiome(biome)) {
-            biomeCandidates.add(vt);
-         }
-      }
-      // Climate fallback when tags miss entirely for this surface biome.
-      if (biomeCandidates.isEmpty() && org.millenaire.compat.ClimateBiomeFallback.isFallbackEnabled()) {
-         org.millenaire.compat.ClimateBiomeFallback.Classification climate =
-            org.millenaire.compat.ClimateBiomeFallback.classify(biome);
-         if (climate.surfaceEligible()) {
-            for (VillageType vt : ModCultures.getAllVillageTypes().values()) {
-               if (vt.weight() <= 0 || vt.loneBuilding() != loneBuilding) {
-                  continue;
-               }
-               String path = vt.culture() != null ? vt.culture().getPath() : "";
-               if (climate.culturePaths().contains(path)) {
-                  biomeCandidates.add(vt);
-               }
-            }
-         }
-      }
 
       if (keyOnly) {
          biomeCandidates.removeIf(vtx -> !vtx.keyLoneBuilding());
       }
 
       boolean hamletConfigEnabled = (Boolean)MillenaireServerConfig.SERVER.generateHamlets.get();
-      int spawnProtRadius = effectiveSpawnProtectionRadius();
+      int spawnProtRadius = MillenaireServerConfig.SERVER.spawnProtectionRadius.getAsInt();
       List<VillageType> compatible = new ArrayList<>();
       Map<Integer, List<VillageType>> byRadius = new LinkedHashMap<>();
       int filteredByHamlets = 0;
@@ -473,10 +423,18 @@ public class VillageSpawnQueue {
                }
             }
 
-            long combinedDist = (long)spawnProtRadius + vt.radius();
-            if (spawnProtRadius > 0 && distToSpawnSq < (double)combinedDist * combinedDist) {
+            if (loneBuilding && "illager_camp".equals(vt.specialType())) {
+               int illagerQuota = MillenaireServerConfig.SERVER.illagerLoneBuildingQuota.getAsInt();
+               if (illagerQuota >= 0 && illagerCampCount >= illagerQuota) {
+                  filteredByMaxCount++;
+                  continue;
+               }
+            }
+
+            long combinedDist = spawnProtRadius + vt.radius();
+            if (distToSpawnSq < (double)combinedDist * combinedDist) {
                filteredBySpawnDist++;
-            } else if (vt.biomeTags().isEmpty() && vt.biomeKeys().isEmpty()) {
+            } else if (vt.biomeTags().isEmpty()) {
                compatible.add(vt);
             } else {
                int sampleRadius = Math.min(vt.radius(), 64);
@@ -504,18 +462,8 @@ public class VillageSpawnQueue {
          for (VillageType vt : types) {
             int validCount = 0;
 
-            // Climate-fallback candidates: don't require tag coverage on mosaic mod biomes.
-            boolean climateFallbackCandidate = !vt.matchesBiome(biome)
-               && org.millenaire.compat.ClimateBiomeFallback.isFallbackEnabled()
-               && org.millenaire.compat.ClimateBiomeFallback.classify(biome)
-                  .culturePaths()
-                  .contains(vt.culture() != null ? vt.culture().getPath() : "");
             for (Holder<Biome> sample : samples) {
-               if (climateFallbackCandidate) {
-                  if (org.millenaire.compat.ClimateBiomeFallback.isSurfaceEligible(sample)) {
-                     validCount++;
-                  }
-               } else if (matchesBiomeConstraints(sample, vt)) {
+               if (matchesAnyTag(sample, vt.biomeTags())) {
                   validCount++;
                }
             }
@@ -523,13 +471,10 @@ public class VillageSpawnQueue {
             float validPerc = (float)validCount / totalCount;
             float requiredValidity = vt.minimumBiomeValidity();
             requiredValidity += SiteValidator.radiusRelaxation(vt.radius()) * (0.2F - requiredValidity);
-            if (climateFallbackCandidate || org.millenaire.compat.ClimateBiomeFallback.isModpackBiome(biome)) {
-               requiredValidity = Math.max(BIOME_VALIDITY_FLOOR, requiredValidity * 0.55F);
-            }
             if (validPerc < requiredValidity) {
                filteredByBiomeValidity++;
                if (log && validCount > 0) {
-                  LOGGER.debug(
+                  LOGGER.info(
                      "[Millenaire spawn]   {} rejected: biome validity {}/{} = {}% < {}%",
                      new Object[]{vt.id(), validCount, totalCount, Math.round(validPerc * 100.0F), Math.round(requiredValidity * 100.0F)}
                   );
@@ -544,11 +489,11 @@ public class VillageSpawnQueue {
          if (log) {
             int dist = (int)Math.sqrt(distToSpawnSq);
             if (biomeCandidates.isEmpty()) {
-               LOGGER.debug(
+               LOGGER.info(
                   "[Millenaire spawn] {} at {} rejected: no {} type registered for biome {}", new Object[]{label, surfacePos.toShortString(), label, biomeId}
                );
             } else {
-               LOGGER.debug(
+               LOGGER.info(
                   "[Millenaire spawn] {} at {} rejected: {} biome-compatible {} type(s) found but all filtered out (spawnDist={}/{}: {}, hamlets: {}, maxCount: {}, minDist: {}, biomeValidity: {})",
                   new Object[]{
                      label,
@@ -591,7 +536,7 @@ public class VillageSpawnQueue {
          }
 
          if (log) {
-            LOGGER.debug(
+            LOGGER.info(
                "[Millenaire spawn] {} at {} trying type '{}' (radius={}, biome={})",
                new Object[]{label, surfacePos.toShortString(), chosen.id(), chosen.radius(), biomeId}
             );
@@ -599,7 +544,7 @@ public class VillageSpawnQueue {
 
          if (manager.overlapsExistingVillage(surfacePos, chosen.radius())) {
             if (log) {
-               LOGGER.debug(
+               LOGGER.info(
                   "[Millenaire spawn] {} at {} rejected: footprint would overlap an existing village (radius={})",
                   new Object[]{label, surfacePos.toShortString(), chosen.radius()}
                );
@@ -612,7 +557,7 @@ public class VillageSpawnQueue {
                )
              {
                if (log) {
-                  LOGGER.debug("[Millenaire spawn] {} at {} deferred: chunks not loaded (radius={})", new Object[]{label, surfacePos.toShortString(), r});
+                  LOGGER.info("[Millenaire spawn] {} at {} deferred: chunks not loaded (radius={})", new Object[]{label, surfacePos.toShortString(), r});
                }
 
                if (!loneBuilding) {
@@ -622,26 +567,26 @@ public class VillageSpawnQueue {
                return VillageSpawnQueue.SpawnResult.DEFERRED;
             } else if (StructureAvoidance.hasConflict(level, surfacePos, chosen.radius())) {
                if (log) {
-                  LOGGER.debug("[Millenaire spawn] {} at {} rejected: vanilla structure conflict", label, surfacePos.toShortString());
+                  LOGGER.info("[Millenaire spawn] {} at {} rejected: vanilla structure conflict", label, surfacePos.toShortString());
                }
 
                return VillageSpawnQueue.SpawnResult.FAILED;
             } else if (!SiteValidator.validate(level, surfacePos, chosen.radius(), loneBuilding)) {
                if (log) {
-                  LOGGER.debug("[Millenaire spawn] {} at {} rejected: terrain validation failed", label, surfacePos.toShortString());
+                  LOGGER.info("[Millenaire spawn] {} at {} rejected: terrain validation failed", label, surfacePos.toShortString());
                }
 
                return VillageSpawnQueue.SpawnResult.FAILED;
             } else {
                double distToSpawn = Math.sqrt(distToSpawnSq);
                int completion = computeCompletionByDistance(distToSpawn);
-               LOGGER.debug(
+               LOGGER.info(
                   "[Millenaire] Natural spawn ({}) : {} at {} (completion: {}%, queue: {}, lbQueue: {})",
                   new Object[]{label, chosen.id(), surfacePos.toShortString(), completion, this.candidates.size(), this.loneBuildingQueue.size()}
                );
                Component failure = VillageSpawner.spawnVillage(level, surfacePos, chosen, completion);
                if (log && failure != null) {
-                  LOGGER.debug("[Millenaire spawn] {} at {} rejected: {}", new Object[]{label, surfacePos.toShortString(), failure.getString()});
+                  LOGGER.info("[Millenaire spawn] {} at {} rejected: {}", new Object[]{label, surfacePos.toShortString(), failure.getString()});
                }
 
                if (failure == null && loneBuilding) {
@@ -699,29 +644,6 @@ public class VillageSpawnQueue {
       }
 
       return false;
-   }
-
-   private static boolean matchesBiomeConstraints(Holder<Biome> sample, VillageType vt) {
-      if (vt.biomeTags().isEmpty() && vt.biomeKeys().isEmpty()) {
-         return true;
-      }
-      if (matchesAnyTag(sample, vt.biomeTags())) {
-         return true;
-      }
-      for (net.minecraft.resources.ResourceKey<Biome> key : vt.biomeKeys()) {
-         if (sample.is(key)) {
-            return true;
-         }
-      }
-      return false;
-   }
-
-   /** Matches Phase 4: effective exclusion is max(spawnProtectionRadius, worldgenProtectedSpawnRadius). */
-   private static int effectiveSpawnProtectionRadius() {
-      return Math.max(
-         MillenaireServerConfig.SERVER.spawnProtectionRadius.getAsInt(),
-         MillenaireServerConfig.SERVER.worldgenProtectedSpawnRadius.getAsInt()
-      );
    }
 
    record LBCandidate(BlockPos pos, double distToSpawnSq, long enqueuedTick, long retryAfterTick) {

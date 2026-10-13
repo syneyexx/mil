@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": {
+      "item": "minecraft:iron_nugget"
+    },
+    "T": {
+      "item": "minecraft:tripwire_hook"
+    }
+  },
+  "pattern": [
+    " I",
+    "IT"
+  ],
+  "result": {
+    "count": 1,
+    "id": "millenaire:lockpick"
+  }
+}

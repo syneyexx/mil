@@ -2,9 +2,7 @@
   "culture": "millenaire:seljuk",
   "biome_tags": [
     "#c:is_desert",
-    "#c:is_savanna",
-    "#millenaire:is_mediterranean",
-    "#millenaire:is_volcanic"
+    "#c:is_savanna"
   ],
   "name": "Ticaret Noktası",
   "weight": 10,

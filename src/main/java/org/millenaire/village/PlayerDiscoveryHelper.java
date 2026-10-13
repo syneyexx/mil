@@ -82,20 +82,6 @@ public final class PlayerDiscoveryHelper {
                      double minY = o.getY() - 5;
                      double maxY = o.getY() + plan.height() + 5;
 
-                     // Cheap proximity filter before per-player AABB work.
-                     boolean anyNearBuilding = false;
-                     for (ServerPlayer player : nearbyPlayers) {
-                        double px = player.getX();
-                        double pz = player.getZ();
-                        if (px >= minX && px <= maxX && pz >= minZ && pz <= maxZ) {
-                           anyNearBuilding = true;
-                           break;
-                        }
-                     }
-                     if (!anyNearBuilding) {
-                        continue;
-                     }
-
                      for (ServerPlayer player : nearbyPlayers) {
                         double px = player.getX();
                         double py = player.getY();

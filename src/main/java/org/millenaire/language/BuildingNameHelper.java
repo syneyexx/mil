@@ -23,10 +23,6 @@ public final class BuildingNameHelper {
    }
 
    public static String getTranslationKey(BuildingInstance building) {
-      if (building.isPlayerDesignated() && building.getPurpose() != null) {
-         return "building.millenaire.designated." + building.getPurpose().id();
-      }
-
       if (building.getPlanSetId() != null) {
          BuildingPlanSet planSet = ModCultures.getBuildingPlanSet(building.getPlanSetId());
          if (planSet != null) {
@@ -44,10 +40,6 @@ public final class BuildingNameHelper {
    }
 
    public static String getServerFallbackName(BuildingInstance building) {
-      if (building.isPlayerDesignated() && building.getPurpose() != null) {
-         return building.getPurpose().fallbackDisplayName();
-      }
-
       if (building.getPlanSetId() != null) {
          BuildingPlanSet planSet = ModCultures.getBuildingPlanSet(building.getPlanSetId());
          if (planSet != null) {

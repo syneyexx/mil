@@ -60,32 +60,37 @@ public class LockedChestBlock extends ChestBlock {
    }
 
    private InteractionResult handleInteraction(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
+      return openForPlayer(state, level, pos, player);
+   }
+
+   /** Opens the locked-chest menu; used by empty-hand use and after a successful lockpick. */
+   public static InteractionResult openForPlayer(BlockState state, Level level, BlockPos pos, Player player) {
       if (level.isClientSide()) {
          return InteractionResult.SUCCESS;
       }
 
+      if (!(state.getBlock() instanceof LockedChestBlock block)) {
+         return InteractionResult.PASS;
+      }
+
       if (level.getBlockEntity(pos) instanceof LockedChestBlockEntity chest) {
          boolean locked = chest.isLockedFor(player);
-         if (!locked && state.hasProperty(ChestBlock.TYPE)) {
-            ChestType chestType = (ChestType)state.getValue(ChestBlock.TYPE);
-            if (chestType != ChestType.SINGLE) {
-               BlockPos otherPos = pos.relative(ChestBlock.getConnectedDirection(state));
-               if (level.getBlockEntity(otherPos) instanceof LockedChestBlockEntity otherChest) {
-                  locked = otherChest.isLockedFor(player);
-               }
-            }
-         }
 
-         Container container = ChestBlock.getContainer(this, state, level, pos, true);
+         Container container = ChestBlock.getContainer(block, state, level, pos, true);
          if (container == null) {
             return InteractionResult.PASS;
          }
 
          Component title = chest.getDisplayName();
          boolean isLocked = locked;
+         var buildingId = chest.getBuildingId();
+         BlockPos chestPos = pos;
          if (player instanceof ServerPlayer serverPlayer) {
             serverPlayer.openMenu(
-               new SimpleMenuProvider((containerId, playerInventory, p) -> new LockedChestMenu(containerId, playerInventory, container, isLocked), title),
+               new SimpleMenuProvider(
+                  (containerId, playerInventory, p) -> new LockedChestMenu(containerId, playerInventory, container, isLocked, buildingId, chestPos),
+                  title
+               ),
                buf -> {
                   buf.writeByte(container.getContainerSize() / 9);
                   buf.writeBoolean(isLocked);

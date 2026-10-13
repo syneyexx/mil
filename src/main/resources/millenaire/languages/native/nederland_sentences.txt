@@ -1,0 +1,9 @@
+seneschal.greeting=Welkom in ons dorp, $name. Pas op voor de grachten.
+seneschal.greeting=De burgemeester houdt de polder rustig.
+lady.greeting=Wij handelen eerlijk en verwachten hetzelfde van bezoekers.
+farmer.greeting=Het graan ziet er goed uit dit seizoen.
+farmer.plantseeds=Nu zaaien, oogsten voor de herfstregen.
+wife.greeting=Vers brood en een droog dak — dat is welvaart.
+lumberman.greeting=Deze dijkbomen voorzien het dorp van hout.
+lumberman.choptrees=Steadig hakwerk houdt de kou buiten.
+guard.greeting=Houd orde op de markt, $name, anders doet de schutter het.

@@ -44,6 +44,13 @@ public class MillRecipeProvider extends RecipeProvider {
       japaneseTiles(out);
       normanBlocks(out);
       inuitBlocks(out);
+      ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, (ItemLike)ModItems.LOCKPICK.get())
+         .pattern(" I")
+         .pattern("IT")
+         .define('I', Items.IRON_NUGGET)
+         .define('T', Items.TRIPWIRE_HOOK)
+         .unlockedBy("has_tripwire_hook", has(Items.TRIPWIRE_HOOK))
+         .save(out, id("lockpick"));
    }
 
    private static void smelting(RecipeOutput out) {

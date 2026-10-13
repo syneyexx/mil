@@ -11,7 +11,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
-import org.millenaire.civilization.settlement.SovereignDiplomacyBridge;
 import org.millenaire.village.ControlledMilitaryService;
 import org.millenaire.village.Village;
 import org.millenaire.village.VillageId;
@@ -77,7 +76,6 @@ public record ControlledRelationPayload(String villageId, String targetVillageId
                         if (target != null) {
                            village.adjustRelationSymmetric(serverLevel, targetId, value, true);
                            VillageSavedData.get(serverLevel).setDirty();
-                           SovereignDiplomacyBridge.onControlledRelationChanged(serverLevel, village, target, value);
                            ControlledMilitaryService.sendRefresh(player, serverLevel, village);
                         }
                      } else {

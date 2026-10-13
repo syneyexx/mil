@@ -42,13 +42,12 @@ public final class CustomContentClientSetup {
    public static void onClientLoggingOut(LoggingOut event) {
       ClientQuestCache.clear();
       ClientLanguageCache.clear();
-      BountyHudClientState.clear();
+      BountyHudClient.clear();
       PanelRenderHelper.clearWarnedIcons();
    }
 
    static {
       NeoForge.EVENT_BUS.addListener(CustomContentClientSetup::onClientLoggingIn);
       NeoForge.EVENT_BUS.addListener(CustomContentClientSetup::onClientLoggingOut);
-      NeoForge.EVENT_BUS.addListener(org.millenaire.client.gui.BountyHudOverlay::onRenderGui);
    }
 }

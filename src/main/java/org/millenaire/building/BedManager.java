@@ -52,6 +52,15 @@ public class BedManager {
       return List.copyOf(this.bedPositions);
    }
 
+   public void clearAll() {
+      if (!this.bedPositions.isEmpty() || !this.claimedBeds.isEmpty() || !this.suffocatingExpiry.isEmpty()) {
+         this.bedPositions.clear();
+         this.claimedBeds.clear();
+         this.suffocatingExpiry.clear();
+         this.dirty = true;
+      }
+   }
+
    public boolean claimBed(BlockPos footPos, UUID villagerUuid) {
       if (!this.bedPositions.contains(footPos)) {
          return false;

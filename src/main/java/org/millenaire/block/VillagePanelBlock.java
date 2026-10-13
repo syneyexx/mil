@@ -37,9 +37,11 @@ import org.millenaire.building.BuildingId;
 import org.millenaire.building.BuildingInstance;
 import org.millenaire.building.SpecialPoint;
 import org.millenaire.item.SummoningWandItem;
+import org.millenaire.network.ControlledCityPayload;
 import org.millenaire.network.ControlledMilitaryPayload;
 import org.millenaire.network.ControlledProjectsPayload;
 import org.millenaire.network.PanelContentPayload;
+import org.millenaire.village.ControlledCityService;
 import org.millenaire.village.ControlledMilitaryService;
 import org.millenaire.village.ControlledProjectsService;
 import org.millenaire.village.Village;
@@ -153,6 +155,9 @@ public class VillagePanelBlock extends BaseEntityBlock {
                PacketDistributor.sendToPlayer(player, payload, new CustomPacketPayload[0]);
             } else if (panel.getPanelType() == PanelType.CONTROLLED_MILITARY && village.isControlledBy(player.getUUID())) {
                ControlledMilitaryPayload payload = ControlledMilitaryService.buildPayload(village, level);
+               PacketDistributor.sendToPlayer(player, payload, new CustomPacketPayload[0]);
+            } else if (panel.getPanelType() == PanelType.CONTROLLED_CITY && village.isControlledBy(player.getUUID())) {
+               ControlledCityPayload payload = ControlledCityService.buildPayload(village, level);
                PacketDistributor.sendToPlayer(player, payload, new CustomPacketPayload[0]);
             } else {
                int signIndex = this.computeSignIndex(panel.getBlockPos(), building);

@@ -1,0 +1,68 @@
+{
+  "culture": "millenaire:nederland",
+  "name": "Dorp",
+  "weight": 12,
+  "biome_tags": [
+    "#c:is_plains",
+    "#c:is_swamp",
+    "minecraft:river"
+  ],
+  "layout": [
+    {
+      "plan": "millenaire:norman/manor",
+      "role": "centre"
+    },
+    {
+      "plan": "millenaire:norman/lumbermanhut",
+      "role": "start"
+    },
+    {
+      "plan": "millenaire:norman/farm",
+      "role": "start"
+    },
+    {
+      "plan": "millenaire:norman/guardhouse",
+      "role": "start"
+    },
+    {
+      "plan": "millenaire:norman/grove",
+      "role": "start"
+    },
+    {
+      "plan": "millenaire:norman/farm",
+      "role": "core"
+    },
+    {
+      "plan": "millenaire:norman/lumbermanhut",
+      "role": "core"
+    },
+    {
+      "plan": "millenaire:norman/guardhouse",
+      "role": "core"
+    },
+    {
+      "plan": "millenaire:norman/bakery",
+      "role": "core"
+    },
+    {
+      "plan": "millenaire:norman/guesthouse",
+      "role": "secondary"
+    },
+    {
+      "plan": "millenaire:norman/farm",
+      "role": "secondary"
+    }
+  ],
+  "icon": "minecraft:bread",
+  "qualifiers": [
+    "aan-de-dijk"
+  ],
+  "path_materials": [
+    "pathdirt",
+    "pathgravel",
+    "pathslabs"
+  ],
+  "radius": 50,
+  "carries_raid": true,
+  "allow_extra_buildings": false
+}

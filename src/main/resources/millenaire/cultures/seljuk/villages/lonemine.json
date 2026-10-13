@@ -2,9 +2,7 @@
   "culture": "millenaire:seljuk",
   "biome_tags": [
     "#c:is_desert",
-    "#c:is_badlands",
-    "#millenaire:is_mediterranean",
-    "#millenaire:is_volcanic"
+    "#c:is_badlands"
   ],
   "name": "Yanlız Mayın",
   "weight": 10,

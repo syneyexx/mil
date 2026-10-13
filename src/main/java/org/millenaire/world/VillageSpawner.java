@@ -40,12 +40,6 @@ import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.NameLists;
 import org.millenaire.culture.VillageType;
 import org.millenaire.culture.WallType;
-import org.millenaire.faction.FactionId;
-import org.millenaire.faction.FactionLifecycle;
-import org.millenaire.faction.FactionManager;
-import org.millenaire.faction.FactionSavedData;
-import org.millenaire.faction.politics.PoliticsSavedData;
-import org.millenaire.faction.territory.TerritorySavedData;
 import org.millenaire.village.BuildingFinalizer;
 import org.millenaire.village.SubBuildingHelper;
 import org.millenaire.village.Village;
@@ -300,37 +294,6 @@ public final class VillageSpawner {
       @javax.annotation.Nullable VillageId parentVillageId,
       @javax.annotation.Nullable ServerPlayer controller
    ) {
-      return spawnVillage(level, center, villageType, completion, parentBaseName, parentVillageId, controller, null);
-   }
-
-   /**
-    * Spawns an empty player-sovereign settlement: buildings placed, no free occupants/goods,
-    * assigned to {@code playerFactionId}.
-    */
-   @Nullable
-   public static Component spawnSovereignShell(
-      ServerLevel level,
-      BlockPos center,
-      VillageType villageType,
-      ServerPlayer founder,
-      String settlementName,
-      FactionId playerFactionId
-   ) {
-      SovereignShellOptions options = new SovereignShellOptions(settlementName, playerFactionId);
-      return spawnVillage(level, center, villageType, 0, null, null, founder, options);
-   }
-
-   @Nullable
-   public static Component spawnVillage(
-      ServerLevel level,
-      BlockPos center,
-      VillageType villageType,
-      int completion,
-      @javax.annotation.Nullable String parentBaseName,
-      @javax.annotation.Nullable VillageId parentVillageId,
-      @javax.annotation.Nullable ServerPlayer controller,
-      @javax.annotation.Nullable SovereignShellOptions sovereignShell
-   ) {
       VillageSpawner.ValidationResult validation = dryRunPlacement(level, center, villageType);
       if (validation.error != null) {
          return validation.error;
@@ -365,9 +328,7 @@ public final class VillageSpawner {
       BlockPos townhallOrigin = new BlockPos(townhallRequestedOrigin.getX(), townhallPlacementY, townhallRequestedOrigin.getZ());
       VillageId villageId = VillageId.random();
       Village village = new Village(villageId, villageType.culture(), villageTypeId, centerAtGround);
-      if (sovereignShell != null && sovereignShell.settlementName() != null && !sovereignShell.settlementName().isBlank()) {
-         village.setVillageName(sovereignShell.settlementName().trim());
-      } else if (parentBaseName != null) {
+      if (parentBaseName != null) {
          String qualifier = pickQualifier(level, centerAtGround, villageType);
          String villageName = qualifier != null ? parentBaseName + " " + qualifier : parentBaseName;
          village.setVillageName(villageName);
@@ -507,55 +468,37 @@ public final class VillageSpawner {
          }
       }
 
-      if (sovereignShell == null) {
-         for (BuildingInstance building : village.getBuildings()) {
-            if (!building.isSubBuilding()) {
-               ResourceLocation planSetId = building.getPlanSetId();
-               if (planSetId != null) {
-                  BuildingPlanSet bps = ModCultures.getBuildingPlanSet(planSetId);
-                  if (bps != null) {
-                     VillageGrowthManager.spawnBuildingOccupants(level, village, bps, building);
-                  }
+      for (BuildingInstance building : village.getBuildings()) {
+         if (!building.isSubBuilding()) {
+            ResourceLocation planSetId = building.getPlanSetId();
+            if (planSetId != null) {
+               BuildingPlanSet bps = ModCultures.getBuildingPlanSet(planSetId);
+               if (bps != null) {
+                  VillageGrowthManager.spawnBuildingOccupants(level, village, bps, building);
                }
             }
          }
+      }
 
-         BuildingInstance centreBuilding = village.getBuildings().isEmpty() ? null : village.getBuildings().get(0);
-         if (centreBuilding != null && centreBuilding.getPlanSetId() != null) {
-            BuildingPlanSet centrePlanSet = ModCultures.getBuildingPlanSet(centreBuilding.getPlanSetId());
-            if (centrePlanSet != null && !centrePlanSet.startingGoods().isEmpty()) {
-               village.fillStartingGoods(level, centreBuilding, centrePlanSet, true);
-               village.setLastGoodsRefresh(level.getGameTime());
-            }
+      BuildingInstance centreBuilding = village.getBuildings().isEmpty() ? null : village.getBuildings().get(0);
+      if (centreBuilding != null && centreBuilding.getPlanSetId() != null) {
+         BuildingPlanSet centrePlanSet = ModCultures.getBuildingPlanSet(centreBuilding.getPlanSetId());
+         if (centrePlanSet != null && !centrePlanSet.startingGoods().isEmpty()) {
+            village.fillStartingGoods(level, centreBuilding, centrePlanSet, true);
+            village.setLastGoodsRefresh(level.getGameTime());
          }
       }
 
       VillageSavedData savedData = VillageSavedData.get(level);
       VillageManager villageManager = savedData.getVillageManager();
       villageManager.addVillage(village);
-      if (sovereignShell != null && sovereignShell.playerFactionId() != null) {
-         FactionManager factions = FactionSavedData.get(level).getFactionManager();
-         factions.assignVillage(village, sovereignShell.playerFactionId());
-         try {
-            TerritorySavedData.get(level).getTerritoryManager().ensureTerritory(level, village);
-         } catch (Exception e) {
-            LOGGER.warn("[Millenaire] Territory register failed for sovereign shell: {}", e.getMessage());
-         }
-         try {
-            PoliticsSavedData.get(level).getPoliticsManager().ensurePolitics(level, sovereignShell.playerFactionId());
-         } catch (Exception e) {
-            LOGGER.warn("[Millenaire] Politics ensure failed for sovereign shell: {}", e.getMessage());
-         }
-      } else {
-         FactionLifecycle.onVillageRegistered(level, village);
-      }
       savedData.setDirty();
       if (parentVillageId != null) {
          village.setParentVillageId(parentVillageId);
       }
 
       initializeRelations(level, village, villageManager);
-      if ((villageType.playerControlled() || sovereignShell != null) && controller != null) {
+      if (villageType.playerControlled() && controller != null) {
          village.setOwner(controller.getUUID(), controller.getName().getString());
          VillageReputation rep = village.getReputation();
          rep.add(controller.getUUID(), 20000);
@@ -649,12 +592,8 @@ public final class VillageSpawner {
       }
 
       VillageNotifier.notifySpawn(level, center, village.getVillageName(), villageType);
-      if (sovereignShell != null) {
-         village.recordEvent(level, "Sovereign settlement founded (type: " + villageTypeId.getPath() + ")");
-      } else {
-         village.recordEvent(level, "Village founded (type: " + villageTypeId.getPath() + ", completion: " + completion + "%)");
-      }
-      if ((villageType.playerControlled() || sovereignShell != null) && controller != null && village.getOwnerName() != null) {
+      village.recordEvent(level, "Village founded (type: " + villageTypeId.getPath() + ", completion: " + completion + "%)");
+      if (villageType.playerControlled() && controller != null && village.getOwnerName() != null) {
          village.recordChronicleEvent(level, VillageEventType.FOUNDED_CONTROLLED, villageType.name(), village.getOwnerName());
          controller.sendSystemMessage(Component.translatable("chronicle.millenaire.founded_toast", new Object[]{village.getVillageName()}));
          String cultureKey = village.getCultureId().getPath().toLowerCase(Locale.ROOT);
@@ -670,16 +609,12 @@ public final class VillageSpawner {
          "[Millenaire] Village {} spawned: {} buildings, completion={}%",
          new Object[]{villageId.uuid().toString().substring(0, 8), village.getBuildings().size(), completion}
       );
-      if (sovereignShell == null && !villageType.hamlets().isEmpty()) {
+      if (!villageType.hamlets().isEmpty()) {
          String baseName = extractBaseName(village.getVillageName(), villageType);
          generateHamlets(level, village, villageManager, villageType, baseName, completion);
       }
 
       return null;
-   }
-
-   /** Options for player-founded empty settlements on a PLAYER faction. */
-   public record SovereignShellOptions(String settlementName, FactionId playerFactionId) {
    }
 
    private static void stabilizeCompletion(

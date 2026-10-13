@@ -1,13 +1,9 @@
 package org.millenaire.goal;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-/**
- * Main-thread-only per-village TTL cache (combat sense / gather). Not used from workers.
- */
 public final class PerVillageTickCache<T> {
    private static final long DEFAULT_EXPIRY_TICKS = 12000L;
    private static final long DEFAULT_CLEANUP_INTERVAL = 2400L;
@@ -15,9 +11,7 @@ public final class PerVillageTickCache<T> {
    private final long expiryTicks;
    private final long cleanupInterval;
    private long lastCleanupTick = 0L;
-   private final Map<UUID, PerVillageTickCache.Entry<T>> entries = new HashMap<>();
-   private int hits;
-   private int misses;
+   private final ConcurrentHashMap<UUID, PerVillageTickCache.Entry<T>> entries = new ConcurrentHashMap<>();
 
    public PerVillageTickCache(int refreshTicks) {
       this(refreshTicks, 12000L, 2400L);
@@ -33,27 +27,11 @@ public final class PerVillageTickCache<T> {
       this.runCleanupIfNeeded(currentTick);
       PerVillageTickCache.Entry<T> entry = this.entries.get(villageId);
       if (entry == null || currentTick - entry.tick() >= this.refreshTicks || currentTick < entry.tick()) {
-         this.misses++;
          entry = new PerVillageTickCache.Entry<>(currentTick, scanner.get());
          this.entries.put(villageId, entry);
-      } else {
-         this.hits++;
       }
 
       return entry.value();
-   }
-
-   public int hits() {
-      return this.hits;
-   }
-
-   public int misses() {
-      return this.misses;
-   }
-
-   public void resetMetrics() {
-      this.hits = 0;
-      this.misses = 0;
    }
 
    private void runCleanupIfNeeded(long currentTick) {

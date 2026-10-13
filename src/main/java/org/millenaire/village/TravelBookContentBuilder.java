@@ -351,27 +351,6 @@ public final class TravelBookContentBuilder {
          }
       }
 
-      lines.add(TravelBookLine.separator());
-      lines.add(TravelBookLine.text(t("panel.millenaire.panel_type.religion")));
-      if (org.millenaire.religion.content.ReligionContentRegistry.cultureHasExplicitNone(cultureKey)) {
-         lines.add(TravelBookLine.text(t("religion.millenaire.book.no_organized")));
-      } else {
-         var traditions = org.millenaire.religion.content.ReligionContentRegistry.traditionsForCulture(cultureKey);
-         if (traditions.isEmpty()) {
-            lines.add(TravelBookLine.text(t("religion.millenaire.book.no_organized")));
-         } else {
-            for (ResourceLocation tid : traditions) {
-               var def = org.millenaire.religion.content.ReligionContentRegistry.traditionOrNull(tid);
-               if (def != null) {
-                  lines.add(TravelBookLine.text("  " + t(def.nameKey())));
-                  addDescriptionLine(lines, def.descriptionKey());
-               } else {
-                  lines.add(TravelBookLine.text("  " + tid.toString()));
-               }
-            }
-         }
-      }
-
       return lines;
    }
 

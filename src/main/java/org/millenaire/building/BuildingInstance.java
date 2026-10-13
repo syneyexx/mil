@@ -58,13 +58,7 @@ public class BuildingInstance {
    private boolean bedManagerInitialized;
    private boolean upgradesAllowed = true;
    private boolean playerChosen;
-   private boolean playerDesignated;
-   @Nullable
-   private BuildingPurpose purpose;
-   private int designatedWidth;
-   private int designatedDepth;
-   private int designatedHeight;
-   private boolean designationFeaturesValid = true;
+   private org.millenaire.village.BuildingPurpose purpose = org.millenaire.village.BuildingPurpose.AUTO;
    private long lastMarketNightDay = -1L;
    private int nbNightsMerchant;
    private final Map<Item, Integer> imported = new LinkedHashMap<>();
@@ -73,6 +67,8 @@ public class BuildingInstance {
    private static final int MAX_VISITOR_LOG = 50;
    private transient long lastAnimalSpawnTick;
    private final Set<String> runtimeTags = new LinkedHashSet<>();
+   @Nullable
+   private String playerBuildingRole;
    @Nullable
    private BuildingId parentBuildingId;
    private int cachedMinX = Integer.MIN_VALUE;
@@ -169,77 +165,7 @@ public class BuildingInstance {
    }
 
    public boolean isOperational() {
-      if (this.playerDesignated && !this.designationFeaturesValid) {
-         return false;
-      }
-
       return this.status == BuildingInstance.Status.COMPLETE || this.status == BuildingInstance.Status.UPGRADING;
-   }
-
-   public boolean isPlayerDesignated() {
-      return this.playerDesignated;
-   }
-
-   @Nullable
-   public BuildingPurpose getPurpose() {
-      return this.purpose;
-   }
-
-   public int getDesignatedWidth() {
-      return this.designatedWidth;
-   }
-
-   public int getDesignatedDepth() {
-      return this.designatedDepth;
-   }
-
-   public int getDesignatedHeight() {
-      return this.designatedHeight;
-   }
-
-   public boolean isDesignationFeaturesValid() {
-      return this.designationFeaturesValid;
-   }
-
-   public void setDesignationFeaturesValid(boolean valid) {
-      this.designationFeaturesValid = valid;
-   }
-
-   public void setDesignation(BuildingPurpose purpose, int width, int depth, int height) {
-      this.playerDesignated = true;
-      this.playerChosen = true;
-      this.purpose = purpose;
-      this.designatedWidth = Math.max(1, width);
-      this.designatedDepth = Math.max(1, depth);
-      this.designatedHeight = Math.max(1, height);
-      this.upgradesAllowed = false;
-      this.invalidateDimensionCache();
-   }
-
-   public void clearDesignation() {
-      this.playerDesignated = false;
-      this.purpose = null;
-      this.designatedWidth = 0;
-      this.designatedDepth = 0;
-      this.designatedHeight = 0;
-      this.designationFeaturesValid = true;
-      this.invalidateDimensionCache();
-   }
-
-   public void invalidateDimensionCache() {
-      this.cachedWidth = -1;
-      this.cachedDepth = -1;
-      this.cachedMinX = Integer.MIN_VALUE;
-   }
-
-   public void setResolvedPoints(List<SpecialPoint> points) {
-      this.resolvedPoints = points == null || points.isEmpty() ? Collections.emptyList() : List.copyOf(points);
-      this.pointsByTypeCache = null;
-      this.positionsByTypeCache = null;
-   }
-
-   public void clearInventory() {
-      this.inventory = null;
    }
 
    @Nullable
@@ -265,16 +191,6 @@ public class BuildingInstance {
    }
 
    private void populateDimensionCache() {
-      if (this.playerDesignated && this.designatedWidth > 0 && this.designatedDepth > 0) {
-         this.cachedMinX = 0;
-         this.cachedMaxX = this.designatedWidth - 1;
-         this.cachedMinZ = 0;
-         this.cachedMaxZ = this.designatedDepth - 1;
-         this.cachedWidth = this.designatedWidth;
-         this.cachedDepth = this.designatedDepth;
-         return;
-      }
-
       BuildingPlan plan = ModCultures.getBuildingPlan(this.planId);
       if (plan == null) {
          this.cachedWidth = 0;
@@ -377,6 +293,51 @@ public class BuildingInstance {
       this.playerChosen = playerChosen;
    }
 
+   public org.millenaire.village.BuildingPurpose getPurpose() {
+      return this.purpose;
+   }
+
+   public void setPurpose(org.millenaire.village.BuildingPurpose purpose) {
+      this.purpose = purpose == null ? org.millenaire.village.BuildingPurpose.AUTO : purpose;
+   }
+
+   @Nullable
+   public String getPlayerBuildingRole() {
+      return this.playerBuildingRole;
+   }
+
+   public void setPlayerBuildingRole(@Nullable String playerBuildingRole) {
+      this.playerBuildingRole = playerBuildingRole == null || playerBuildingRole.isBlank() ? null : playerBuildingRole;
+   }
+
+   public boolean isPlayerDesignated() {
+      return this.playerBuildingRole != null;
+   }
+
+   /** Player's private house — NPC villagers must not claim beds here. */
+   public boolean isPlayerReservedHouse() {
+      return "kings_house".equals(this.playerBuildingRole)
+         || this.hasRuntimeTag("kings_house")
+         || this.hasRuntimeTag("player_house");
+   }
+
+   public void setPlanId(ResourceLocation planId) {
+      this.planId = planId;
+      this.cachedWidth = -1;
+      this.cachedDepth = -1;
+      this.cachedMinX = Integer.MIN_VALUE;
+   }
+
+   public void setResolvedPoints(List<SpecialPoint> points) {
+      this.resolvedPoints = points == null || points.isEmpty() ? Collections.emptyList() : List.copyOf(points);
+      this.pointsByTypeCache = null;
+      this.positionsByTypeCache = null;
+   }
+
+   public void clearRuntimeTags() {
+      this.runtimeTags.clear();
+   }
+
    public long getLastMarketNightDay() {
       return this.lastMarketNightDay;
    }
@@ -472,30 +433,15 @@ public class BuildingInstance {
    public void backfillBedPositions(ServerLevel level, BuildingPlan plan) {
       if (this.origin != null) {
          BedManager mgr = this.getBedManager();
-         int minX;
-         int maxX;
-         int minY;
-         int maxY;
-         int minZ;
-         int maxZ;
-         if (this.playerDesignated && this.designatedWidth > 0) {
-            minX = 0;
-            maxX = this.designatedWidth - 1;
-            minY = 0;
-            maxY = Math.max(0, this.designatedHeight - 1);
-            minZ = 0;
-            maxZ = this.designatedDepth - 1;
-         } else {
-            StructurePlaceSettings settings = new StructurePlaceSettings().setRotation(this.rotation);
-            BlockPos cornerA = StructureTemplate.calculateRelativePosition(settings, BlockPos.ZERO);
-            BlockPos cornerB = StructureTemplate.calculateRelativePosition(settings, new BlockPos(plan.width() - 1, plan.height() - 1, plan.depth() - 1));
-            minX = Math.min(cornerA.getX(), cornerB.getX());
-            maxX = Math.max(cornerA.getX(), cornerB.getX());
-            minY = Math.min(cornerA.getY(), cornerB.getY());
-            maxY = Math.max(cornerA.getY(), cornerB.getY());
-            minZ = Math.min(cornerA.getZ(), cornerB.getZ());
-            maxZ = Math.max(cornerA.getZ(), cornerB.getZ());
-         }
+         StructurePlaceSettings settings = new StructurePlaceSettings().setRotation(this.rotation);
+         BlockPos cornerA = StructureTemplate.calculateRelativePosition(settings, BlockPos.ZERO);
+         BlockPos cornerB = StructureTemplate.calculateRelativePosition(settings, new BlockPos(plan.width() - 1, plan.height() - 1, plan.depth() - 1));
+         int minX = Math.min(cornerA.getX(), cornerB.getX());
+         int maxX = Math.max(cornerA.getX(), cornerB.getX());
+         int minY = Math.min(cornerA.getY(), cornerB.getY());
+         int maxY = Math.max(cornerA.getY(), cornerB.getY());
+         int minZ = Math.min(cornerA.getZ(), cornerB.getZ());
+         int maxZ = Math.max(cornerA.getZ(), cornerB.getZ());
 
          for (int dx = minX; dx <= maxX; dx++) {
             for (int dy = minY; dy <= maxY; dy++) {

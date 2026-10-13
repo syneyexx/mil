@@ -3,6 +3,7 @@ package org.millenaire.item;
 import com.mojang.logging.LogUtils;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
@@ -12,6 +13,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
@@ -131,15 +133,12 @@ public class SummoningWandItem extends Item {
          Culture culture = ModCultures.getCulture(vt.culture());
          String cultureName = culture != null ? culture.displayName() : cultureKey;
          boolean requiresControl = vt.playerControlled();
-         boolean hasCultureControl = cultureRep.hasCultureControl(player.getUUID(), vt.culture());
-         boolean hasControl = !requiresControl || hasCultureControl;
-         boolean canFound = !vt.loneBuilding() && !vt.isHamlet();
-         // Include controlled types even without culture control so Found mode can list them.
-         entries.add(
-            new VillageTypeListPayload.VillageTypeEntry(
-               cultureKey, cultureName, vt.id().getPath(), vt.name(), vt.weight(), requiresControl, hasControl, hasCultureControl, canFound
-            )
-         );
+         boolean hasControl = requiresControl && cultureRep.hasCultureControl(player.getUUID(), vt.culture());
+         if (!requiresControl || hasControl) {
+            entries.add(
+               new VillageTypeListPayload.VillageTypeEntry(cultureKey, cultureName, vt.id().getPath(), vt.name(), vt.weight(), requiresControl, hasControl)
+            );
+         }
       }
 
       entries.sort(
@@ -420,16 +419,29 @@ public class SummoningWandItem extends Item {
       Holder<Biome> biome = level.getBiome(pos);
       List<VillageType> compatible = new ArrayList<>();
 
-      org.millenaire.compat.ClimateBiomeFallback.Classification climate =
-         org.millenaire.compat.ClimateBiomeFallback.classify(biome);
       for (VillageType vt : ModCultures.getAllVillageTypes().values()) {
          if ((vt.weight() > 0 || vt.playerControlled()) && vt.spawnable() && !vt.isHamlet()) {
-            if (vt.matchesBiome(biome)) {
+            if (vt.biomeTags().isEmpty()) {
                compatible.add(vt);
-            } else if (org.millenaire.compat.ClimateBiomeFallback.isFallbackEnabled()
-               && climate.surfaceEligible()
-               && climate.culturePaths().contains(vt.culture() != null ? vt.culture().getPath() : "")) {
-               compatible.add(vt);
+            } else {
+               boolean matches = false;
+               Iterator var7 = vt.biomeTags().iterator();
+
+               while (true) {
+                  if (var7.hasNext()) {
+                     TagKey<Biome> tag = (TagKey<Biome>)var7.next();
+                     if (!biome.is(tag)) {
+                        continue;
+                     }
+
+                     matches = true;
+                  }
+
+                  if (matches) {
+                     compatible.add(vt);
+                  }
+                  break;
+               }
             }
          }
       }

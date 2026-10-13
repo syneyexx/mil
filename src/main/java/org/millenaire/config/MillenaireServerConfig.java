@@ -17,6 +17,7 @@ public final class MillenaireServerConfig {
    public final BooleanValue generateLoneBuildings;
    public final BooleanValue generateHamlets;
    public final IntValue minVillageDistance;
+   public final IntValue playerFoundTerritoryWarDistance;
    public final IntValue minLoneBuildingDistance;
    public final IntValue minVillageLoneBuildingDistance;
    public final IntValue spawnProtectionRadius;
@@ -24,62 +25,6 @@ public final class MillenaireServerConfig {
    public final IntValue completionMinDistance;
    public final IntValue completionMaxDistance;
    public final BooleanValue logSpawnAttempts;
-   public final BooleanValue worldgenEngineEnabled;
-   public final BooleanValue worldgenLegacyFallback;
-   public final IntValue worldgenRegionSizeChunks;
-   public final DoubleValue worldgenSettlementDensity;
-   public final DoubleValue worldgenLoneBuildingDensity;
-   public final DoubleValue worldgenHamletDensity;
-   public final IntValue worldgenMinimumSettlementSpacing;
-   public final IntValue worldgenProtectedSpawnRadius;
-   public final BooleanValue starterSettlementEnabled;
-   public final ConfigValue<String> starterCulture;
-   public final ConfigValue<String> starterVillageType;
-   public final IntValue starterSearchRadius;
-   public final IntValue nearSpawnBoostRadius;
-   public final BooleanValue worldgenPrefillEnabled;
-   public final IntValue worldgenPrefillRadiusBlocks;
-   public final IntValue worldgenPrefillChunksPerTick;
-   public final IntValue worldgenPrefillPlanKicksPerTick;
-   public final BooleanValue worldgenPrefillWaitForStarter;
-   public final IntValue worldgenMaximumSettlementFootprint;
-   public final BooleanValue worldgenAllowHillyTerrain;
-   public final IntValue worldgenMaximumTerrainSlope;
-   public final IntValue worldgenMaximumFoundationDepth;
-   public final IntValue worldgenMaximumTerrainModification;
-   public final BooleanValue worldgenUseNativeStructures;
-   public final BooleanValue worldgenGenerateInitialRoads;
-   public final BooleanValue worldgenGenerateRegionalRoads;
-   public final BooleanValue worldgenGenerateBridges;
-   public final BooleanValue worldgenSandHighways;
-   public final IntValue highwayWidth;
-   public final IntValue highwayMaxLinkDistance;
-   public final IntValue highwayMaxNeighbors;
-   public final BooleanValue highwayTunnels;
-   public final BooleanValue highwayTravelers;
-   public final IntValue highwayMaxJourneys;
-   public final BooleanValue highwayDiscoverVanilla;
-   public final BooleanValue highwayDiscoverMod;
-   public final BooleanValue highwayDiscoverMillenaire;
-   public final BooleanValue highwayIncludeLoneBuildings;
-   public final BooleanValue worldgenGenerateStartingWalls;
-   public final BooleanValue worldgenPreserveVanillaStructures;
-   public final BooleanValue worldgenPreserveModdedStructures;
-   public final IntValue worldgenStructureSafetyMargin;
-   public final BooleanValue placeVillageWaystones;
-   public final BooleanValue worldgenUntaggedBiomeFallback;
-   public final BooleanValue worldgenEnableSettlementVariation;
-   public final BooleanValue worldgenAllowPartialInitialCompletion;
-   public final IntValue worldgenPlanningCacheSize;
-   public final IntValue worldgenMaterializationBudget;
-   public final IntValue worldgenMaterializationScanBudget;
-   public final IntValue worldgenResumeQueueBudget;
-   public final IntValue worldgenActivationBudget;
-   public final IntValue worldgenPlanningBudget;
-   public final IntValue worldgenTickTimeBudgetMs;
-   public final IntValue worldgenTerrainColumnsPerTick;
-   public final IntValue worldgenPlacementStepCacheSize;
-   public final BooleanValue worldgenDetailedDiagnostics;
    public final BooleanValue forceLoadVillages;
    public final IntValue keepActiveRadius;
    public final IntValue villageRadiusOverride;
@@ -90,9 +35,6 @@ public final class MillenaireServerConfig {
    public final EnumValue<NavDriverType> navDriver;
    public final BooleanValue languageLearning;
    public final BooleanValue travelBookLearning;
-   public final BooleanValue mapSyncEnabled;
-   public final BooleanValue mapSyncShowLoneBuildings;
-   public final BooleanValue mapSyncIncludeApproxBounds;
    public final IntValue sentenceDistanceSingleplayer;
    public final IntValue sentenceDistanceMultiplayer;
    public final BooleanValue ignoreResourceCost;
@@ -101,191 +43,49 @@ public final class MillenaireServerConfig {
    public final ConfigValue<String> apiBaseUrlOverride;
    public final IntValue banditRaidRadius;
    public final IntValue raidingRate;
+   public final IntValue maxConcurrentRaids;
+   public final IntValue illagerRaidPackSize;
+   public final IntValue illagerCampGarrisonCap;
+   public final IntValue illagerLoneBuildingQuota;
+   public final IntValue cultureStandingDriftChance;
+   public final IntValue cultureWarAutoThreshold;
+   public final IntValue cultureWarRaidAttemptsPerNight;
+   public final BooleanValue placeWaystonesInMillenaire;
+   public final BooleanValue placeWaystonesInVanilla;
+   public final BooleanValue vanillaVillagersUseDeniers;
+   public final IntValue emeraldToDenierRate;
+   public final IntValue immigrantAutoPeriodTicks;
+   public final IntValue immigrantAutoPerDay;
+   public final IntValue immigrantManualPerDay;
+   public final IntValue immigrantMaxQueue;
+   public final IntValue immigrantDenierCost;
+   public final IntValue cityStatsFailsafeTicks;
    public final BooleanValue legacyAutoConvert;
    public final IntValue legacyAutoConvertMaxPngs;
-   public final BooleanValue npcChatEnabled;
-   public final ConfigValue<String> npcChatProvider;
-   public final ConfigValue<String> npcChatBaseUrl;
-   public final ConfigValue<String> npcChatModel;
-   public final ConfigValue<String> npcChatApiKey;
-   public final IntValue npcChatTimeoutSeconds;
-   public final IntValue npcChatMaxConcurrent;
-   public final IntValue npcChatMinMillisBetweenMessages;
-   public final IntValue npcChatChatRange;
-   public final IntValue npcChatLeaveRange;
-   public final BooleanValue npcChatGossip;
-   public final IntValue npcChatGossipExpiryDays;
-   public final BooleanValue npcChatMillenaire;
-   public final BooleanValue npcChatVanilla;
-   public final BooleanValue npcChatModded;
-   public final BooleanValue npcChatGenericLiving;
-   public final BooleanValue npcChatNonverbal;
-   public final BooleanValue npcChatRequireLineOfSight;
-   public final IntValue npcChatTransientRetentionDays;
-   public final IntValue npcChatMaxStoredMinds;
-   public final ConfigValue<String> npcChatEntityAllowList;
-   public final ConfigValue<String> npcChatEntityDenyList;
-   public final BooleanValue companionEnabled;
-   public final BooleanValue companionChatViaT;
-   public final IntValue companionChatRange;
-   public final IntValue companionHeartbeatSeconds;
-   public final IntValue companionMaxProactiveLinesPerMinute;
-   public final IntValue companionMaxIntentsPerReply;
-   public final IntValue companionMaxDistanceBeforeReturn;
-   public final IntValue companionMaxPerPlayer;
-   public final IntValue companionSummonVillageRange;
-   public final ConfigValue<String> companionActionAllowList;
-   public final ConfigValue<String> companionActionDenyList;
-   public final BooleanValue livingVillagesEnabled;
-   public final BooleanValue villageNeedsEnabled;
-   public final IntValue villageNeedsEvaluationInterval;
-   public final IntValue villageNeedsGlobalBudget;
-   public final BooleanValue npcSocialEnabled;
-   public final IntValue npcSocialInteractionCooldown;
-   public final IntValue npcRelationshipRetention;
-   public final BooleanValue npcPersonalityEnabled;
-   public final IntValue npcMoodDecayInterval;
-   public final BooleanValue npcEventMemoryEnabled;
-   public final IntValue npcEventRetentionLimit;
-   public final IntValue npcKnowledgeRetentionLimit;
-   public final BooleanValue villageRequestsEnabled;
-   public final IntValue villageRequestMaxPerPlayer;
-   public final IntValue villageRequestMaxPerVillage;
-   public final IntValue villageRequestExpiryDays;
-   public final IntValue villageRequestMaximumDeliveryQuantity;
-   public final net.neoforged.neoforge.common.ModConfigSpec.DoubleValue villageRequestReputationMultiplier;
-   public final BooleanValue npcWorldReactionsEnabled;
-   public final IntValue npcReactionProcessingBudget;
-   public final BooleanValue npcDialogueActionSuggestionsEnabled;
-   public final BooleanValue livingVillagesDebugLogging;
-   public final BooleanValue religionEnabled;
-   public final IntValue religionEvaluationInterval;
-   public final IntValue religionGlobalBudget;
-   public final IntValue religionCeremonyBudget;
-   public final IntValue religionMaxHistoryPerVillage;
-   public final IntValue religionMaxCeremoniesTracked;
-   public final IntValue religionCatchupLimit;
-   public final BooleanValue religionDebugLogging;
-   public final BooleanValue civilizationEvolutionEnabled;
-   public final BooleanValue civilizationAutoTradeEnabled;
-   public final BooleanValue civilizationOffscreenEnabled;
-   public final BooleanValue civilizationNpcContextEnabled;
-   public final BooleanValue civilizationAutonomousFoundingEnabled;
-   public final BooleanValue civilizationMetricsLogging;
-   public final IntValue civilizationFactionBudget;
-   public final IntValue civilizationTradeOpsBudget;
-   public final IntValue civilizationEventPublishBudget;
-   public final IntValue civilizationMigrationBudget;
-   public final BooleanValue civilizationImmigrationEnabled;
-   public final IntValue civilizationImmigrationBudget;
-   public final BooleanValue civilizationTravelerImmigrationEnabled;
-   public final IntValue civilizationTravelerImmigrationDailyCap;
-   public final IntValue civilizationCatchupDays;
-   public final IntValue civilizationColonizationOpsBudget;
-   public final IntValue civilizationColonizationCandidateBudget;
-   public final IntValue civilizationColonizationCooldownDays;
-   public final BooleanValue civilizationIntraFactionLogistics;
-   public final BooleanValue cultureBountyEnabled;
-   public final BooleanValue cultureBountyChatEnabled;
-   public final BooleanValue cultureBountyOnSightEnabled;
-   public final ConfigValue<String> cultureBountyOnSightTier;
-   public final BooleanValue treatCreativeAsSurvival;
-   public final BooleanValue bountyHudEnabled;
-   public final BooleanValue pickpocketEnabled;
-   public final DoubleValue pickpocketBaseChance;
-   public final BooleanValue arrestEnabled;
-   public final IntValue arrestLockSeconds;
-   public final IntValue arrestBountyOnArrest;
-   public final BooleanValue playerShopEnabled;
-   public final BooleanValue roadTravelerShopVisits;
-   public final IntValue cultureBountyRaidThreshold;
-   public final IntValue cultureBountyWarThreshold;
-   public final IntValue cultureBountyStockPerWave;
-   public final BooleanValue bountyHunterEnabled;
-   public final IntValue bountyHunterMaxPerPlayer;
-   public final IntValue bountyHunterDispatchDelaySeconds;
-   public final IntValue bountyHunterReplacementCooldownTicks;
-   public final IntValue bountyHunterBolaCooldownSeconds;
-   public final IntValue bountyHunterBolaSlownessSeconds;
-   public final IntValue bountyHunterArrestChannelSeconds;
-   public final IntValue bountyHunterJailSentenceSeconds;
-   public final IntValue bountyHunterSettlementReduction;
-   public final ConfigValue<String> bountyHunterMinTier;
-   public final BooleanValue bountyHunterHuntInOverworld;
-   public final BooleanValue bountyHunterAllowPeaceful;
-   public final BooleanValue civilizationDiplomaticAiEnabled;
-   public final IntValue civilizationDiplomaticAiBudget;
-   public final BooleanValue computeOffloadEnabled;
-   public final IntValue computeWorkerThreads;
-   public final IntValue computeApplyBudgetPerTick;
-   public final BooleanValue computeOffloadVillagePaths;
-   public final BooleanValue computeOffloadHighwayPlan;
-   public final BooleanValue computeOffloadWorldgenPlan;
-   public final BooleanValue computeOffloadWaypointGraph;
-   public final BooleanValue computeOffloadEntityPaths;
-   public final BooleanValue tickGovernorEnabled;
-   public final BooleanValue villageLodEnabled;
-   public final IntValue villageLodMidInterval;
-   public final IntValue villageLodInnerNearRadius;
-   public final BooleanValue villagerAiCadenceEnabled;
-   public final IntValue villagerAiMidDistance;
-   public final IntValue villagerAiMidInterval;
-   public final BooleanValue factionLifecycleStagingEnabled;
-   public final IntValue civilizationExporterScanBudget;
-   public final IntValue villageBookRefreshMinIntervalTicks;
-   public final IntValue nearVillageMaxFullTicksPerTick;
-   public final BooleanValue entityLodEnabled;
-   public final IntValue entityLodMidDistance;
-   public final IntValue entityLodFarDistance;
-   public final BooleanValue entityLodFarSleep;
-   public final IntValue entityLodMidCombatInterval;
-   public final IntValue entityLodNearCombatInterval;
-   public final BooleanValue tickPressureScalesAi;
-   public final BooleanValue worldgenFastSectionWrites;
-   public final IntValue pathMaxSearchMs;
-   public final IntValue pathNodeMultiplier;
-   public final IntValue pathMaxStartsPerTick;
-   public final IntValue tickGlobalBudgetMs;
-   public final BooleanValue tickAdaptiveBudgetEnabled;
-   public final IntValue tickAdaptiveMinGlobalMs;
-   public final IntValue tickSoftMsptThreshold;
-   public final IntValue tickHardMsptThreshold;
-   public final IntValue entityGoalPickBudgetPerTick;
-   public final IntValue tickPhaseApplyMs;
-   public final IntValue tickPhaseVillageNearMs;
-   public final IntValue tickPhaseVillageMidMs;
-   public final IntValue tickPhaseAiSupportMs;
-   public final IntValue tickPhaseCivMs;
-   public final IntValue tickPhaseWorldgenMs;
-   public final IntValue tickPhaseHighwayMs;
-   public final IntValue tickPhaseTailMs;
-   public final IntValue farBackgroundTickInterval;
-   public final BooleanValue worldBossEventsEnabled;
-   public final ConfigValue<String> worldBossCadenceMode;
-   public final IntValue worldBossIntervalDays;
-   public final BooleanValue worldBossQuietSpawn;
-   public final IntValue worldBossIntervalMinTicks;
-   public final IntValue worldBossIntervalMaxTicks;
-   public final ConfigValue<String> worldBossAllowedDimensions;
-   public final IntValue worldBossSpawnMinDistance;
-   public final IntValue worldBossSpawnMaxDistance;
-   public final IntValue worldBossHoverHeight;
-   public final IntValue worldBossSpawnAttemptsPerPulse;
-   public final IntValue worldBossVillageAvoidRadius;
-   public final IntValue worldBossNeutralDwellTicks;
-   public final IntValue worldBossCombatTimeoutTicks;
-   public final BooleanValue worldBossAllowCreativeAnchors;
-   public final BooleanValue worldBossAllowAdventureAnchors;
-   public final ConfigValue<String> worldBossDisableActivePolicy;
-   public final IntValue worldBossHemelwachterWeight;
-   public final DoubleValue worldBossHemelwachterHealth;
-   public final DoubleValue worldBossHemelwachterArmor;
-   public final DoubleValue worldBossHemelwachterToughness;
-   public final DoubleValue worldBossBeamDamage;
-   public final DoubleValue worldBossBeamRange;
-   public final DoubleValue worldBossBuffetDamage;
-   public final DoubleValue worldBossProjectileDamage;
-   public final IntValue worldBossEffectBudgetPerTick;
+   public final BooleanValue enableCrime;
+   public final IntValue crimeTradeBanThreshold;
+   public final IntValue crimeHostileThreshold;
+   public final IntValue crimeRaidCityThreshold;
+   public final BooleanValue roadsEnabled;
+   public final IntValue roadsWidth;
+   public final IntValue roadsMaxEdgeLength;
+   public final IntValue roadsHardMaxEdgeLength;
+   public final IntValue roadsKNearest;
+   public final ConfigValue<Double> roadsLoopRatio;
+   public final ConfigValue<Double> roadsMaxMillisPerTick;
+   public final IntValue roadsMaxChunksPerTick;
+   public final IntValue roadsMaxQueueSize;
+   public final ConfigValue<Double> roadsMsptPauseThreshold;
+   public final IntValue roadsTunnelThreshold;
+   public final IntValue roadsMaxBridgeLength;
+   public final BooleanValue roadsBridgesEnabled;
+   public final BooleanValue roadsTunnelsEnabled;
+   public final IntValue roadsPlannerThreads;
+   public final BooleanValue settlementsEnabled;
+   public final ConfigValue<String> settlementsFallbackCulture;
+   public final BooleanValue settlementsTakeoverEnabled;
+   public final IntValue settlementsMaxActivePromotions;
+   public final IntValue settlementsTakeoverScanInterval;
 
    public static int getDefaultClearMargin() {
       try {
@@ -311,21 +111,24 @@ public final class MillenaireServerConfig {
             }
          )
          .translation("millenaire.config.generateHamlets")
-         .define("generateHamlets", true);
+         .define("generateHamlets", false);
       this.minVillageDistance = builder.comment("Minimum distance between two villages (blocks)")
          .translation("millenaire.config.minVillageDistance")
-         .defineInRange("minVillageDistance", 350, 300, 1000);
+         .defineInRange("minVillageDistance", 500, 300, 1000);
+      this.playerFoundTerritoryWarDistance = builder.comment(
+            "Distance under which founding a player city with the VillageCreate wand triggers unavoidable war."
+         )
+         .translation("millenaire.config.playerFoundTerritoryWarDistance")
+         .defineInRange("playerFoundTerritoryWarDistance", 500, 100, 2000);
       this.minLoneBuildingDistance = builder.comment("Minimum distance between two lone buildings (blocks)")
          .translation("millenaire.config.minLoneBuildingDistance")
-         .defineInRange("minLoneBuildingDistance", 320, 300, 1000);
+         .defineInRange("minLoneBuildingDistance", 500, 300, 1000);
       this.minVillageLoneBuildingDistance = builder.comment("Minimum distance between a village and a lone building (blocks)")
          .translation("millenaire.config.minVillageLoneBuildingDistance")
-         .defineInRange("minVillageLoneBuildingDistance", 180, 100, 800);
-      this.spawnProtectionRadius = builder.comment(
-            "Protected area around world spawn where nothing generates (blocks). Default 0 so settlements may form near spawn."
-         )
+         .defineInRange("minVillageLoneBuildingDistance", 250, 100, 800);
+      this.spawnProtectionRadius = builder.comment("Protected area around world spawn where nothing generates (blocks)")
          .translation("millenaire.config.spawnProtectionRadius")
-         .defineInRange("spawnProtectionRadius", 0, 0, 500);
+         .defineInRange("spawnProtectionRadius", 250, 0, 500);
       builder.comment("Progressive completion for distant villages").push("completion");
       this.completionMaxPercentage = builder.comment("Maximum initial progress % for distant villages")
          .translation("millenaire.config.completionMaxPercentage")
@@ -336,235 +139,6 @@ public final class MillenaireServerConfig {
       this.completionMaxDistance = builder.comment("Distance from spawn where max initial progress is reached (blocks)")
          .translation("millenaire.config.completionMaxDistance")
          .defineInRange("maxDistance", 10000, 0, 100000);
-      builder.pop();
-      builder.comment(
-            new String[]{
-               "Phase 4 deterministic worldgen engine. When enabled, natural settlements are planned from",
-               "the world seed + region grid and materialized per new chunk.",
-               "Legacy VillageSpawnQueue natural spawns run only when worldgenLegacyFallback=true",
-               "(or when the engine is disabled). Manual /millenaire spawn commands still use VillageSpawner.",
-               "Legacy density keys (generateVillages, minVillageDistance, etc.) remain authoritative",
-               "minimums; worldgen* keys refine planner behaviour without renaming old keys."
-            }
-         )
-         .push("worldgen");
-      this.worldgenEngineEnabled = builder.comment("Enable Phase 4 deterministic settlement worldgen engine")
-         .translation("millenaire.config.worldgenEngineEnabled")
-         .define("worldgenEngineEnabled", true);
-      this.worldgenLegacyFallback = builder.comment(
-            new String[]{
-               "Also run the legacy VillageSpawnQueue while the Phase 4 engine is enabled.",
-               "Default false: Phase 4 is the sole natural spawn path.",
-               "Set true only if natural villages fail to appear; spacing rules still prevent overlaps."
-            }
-         )
-         .translation("millenaire.config.worldgenLegacyFallback")
-         .define("worldgenLegacyFallback", false);
-      this.worldgenRegionSizeChunks = builder.comment(
-            new String[]{
-               "Region grid size in chunks for candidate distribution (independent of village radius).",
-               "24 chunks ≈ 384 blocks — with min spacing 350 this targets roughly one village every 350–450 blocks."
-            }
-         )
-         .translation("millenaire.config.worldgenRegionSizeChunks")
-         .defineInRange("worldgenRegionSizeChunks", 24, 8, 128);
-      this.worldgenSettlementDensity = builder.comment(
-            "Probability a region attempts a full village (0-1). High default so most regions try; spacing still enforces the 350 floor."
-         )
-         .translation("millenaire.config.worldgenSettlementDensity")
-         .defineInRange("worldgenSettlementDensity", 0.92D, 0.0D, 1.0D);
-      this.worldgenLoneBuildingDensity = builder.comment("Probability a region attempts a lone building when no village is selected (0-1)")
-         .translation("millenaire.config.worldgenLoneBuildingDensity")
-         .defineInRange("worldgenLoneBuildingDensity", 0.40D, 0.0D, 1.0D);
-      this.worldgenHamletDensity = builder.comment("Reserved density weight for hamlet satellite planning (0-1)")
-         .translation("millenaire.config.worldgenHamletDensity")
-         .defineInRange("worldgenHamletDensity", 0.5D, 0.0D, 1.0D);
-      this.worldgenMinimumSettlementSpacing = builder.comment(
-            "Minimum spacing between planned settlements (blocks). Effective spacing is max(this, minVillageDistance)."
-         )
-         .translation("millenaire.config.worldgenMinimumSettlementSpacing")
-         .defineInRange("worldgenMinimumSettlementSpacing", 350, 200, 2000);
-      this.worldgenProtectedSpawnRadius = builder.comment(
-            "Additional protected radius around world spawn (blocks). Effective protection is max(this, spawnProtectionRadius). Default 0."
-         )
-         .translation("millenaire.config.worldgenProtectedSpawnRadius")
-         .defineInRange("worldgenProtectedSpawnRadius", 0, 0, 1000);
-      this.starterSettlementEnabled = builder.comment(
-            "On new worlds, place one starter settlement (default Gabbers Koninkrijk) and move world spawn to its centre."
-         )
-         .translation("millenaire.config.starterSettlementEnabled")
-         .define("starterSettlementEnabled", true);
-      this.starterCulture = builder.comment("Culture path for the starter settlement (namespace millenaire)")
-         .translation("millenaire.config.starterCulture")
-         .define("starterCulture", "gabbers");
-      this.starterVillageType = builder.comment("Village type path under the starter culture (e.g. koninkrijk)")
-         .translation("millenaire.config.starterVillageType")
-         .define("starterVillageType", "koninkrijk");
-      this.starterSearchRadius = builder.comment("Max search radius from the initial shared spawn for the starter settlement (blocks)")
-         .translation("millenaire.config.starterSearchRadius")
-         .defineInRange("starterSearchRadius", 512, 64, 1024);
-      this.nearSpawnBoostRadius = builder.comment(
-            "Within this radius of world spawn, Phase 4 prioritizes finishing already-loaded settlement footprints (no force-load)."
-         )
-         .translation("millenaire.config.nearSpawnBoostRadius")
-         .defineInRange("nearSpawnBoostRadius", 1024, 0, 2048);
-      this.worldgenPrefillEnabled = builder.comment(
-            new String[]{
-               "On new worlds, budgeted-prefill settlement regions around spawn so players join a populated ring",
-               "that then grows outward via normal exploration. Uses Phase 4 plan/materialize/activate (not VillageSpawner)."
-            }
-         )
-         .translation("millenaire.config.worldgenPrefillEnabled")
-         .define("worldgenPrefillEnabled", true);
-      this.worldgenPrefillRadiusBlocks = builder.comment("Radius around world spawn (blocks) to prefill with Phase 4 settlement regions")
-         .translation("millenaire.config.worldgenPrefillRadiusBlocks")
-         .defineInRange("worldgenPrefillRadiusBlocks", 1024, 256, 2048);
-      this.worldgenPrefillChunksPerTick = builder.comment("Max chunks to sync-generate per tick while prefill is chunking the spawn ring")
-         .translation("millenaire.config.worldgenPrefillChunksPerTick")
-         .defineInRange("worldgenPrefillChunksPerTick", 16, 1, 64);
-      this.worldgenPrefillPlanKicksPerTick = builder.comment("Max Phase 4 plan kicks per tick while draining the prefill ring")
-         .translation("millenaire.config.worldgenPrefillPlanKicksPerTick")
-         .defineInRange("worldgenPrefillPlanKicksPerTick", 4, 1, 32);
-      this.worldgenPrefillWaitForStarter = builder.comment(
-            "Wait until the starter settlement is placed (or gave up / disabled) before starting spawn-ring prefill"
-         )
-         .translation("millenaire.config.worldgenPrefillWaitForStarter")
-         .define("worldgenPrefillWaitForStarter", true);
-      this.worldgenMaximumSettlementFootprint = builder.comment("Soft cap on planned settlement radius used for reservation (blocks)")
-         .translation("millenaire.config.worldgenMaximumSettlementFootprint")
-         .defineInRange("worldgenMaximumSettlementFootprint", 120, 32, 256);
-      this.worldgenAllowHillyTerrain = builder.comment("Allow settlements on rolling/hilly terrain within slope limits")
-         .translation("millenaire.config.worldgenAllowHillyTerrain")
-         .define("worldgenAllowHillyTerrain", true);
-      this.worldgenMaximumTerrainSlope = builder.comment("Maximum average sample step slope (blocks) accepted for natural settlements")
-         .translation("millenaire.config.worldgenMaximumTerrainSlope")
-         .defineInRange("worldgenMaximumTerrainSlope", 4, 1, 16);
-      this.worldgenMaximumFoundationDepth = builder.comment("Maximum foundation depth adjustment (blocks)")
-         .translation("millenaire.config.worldgenMaximumFoundationDepth")
-         .defineInRange("worldgenMaximumFoundationDepth", 8, 1, 32);
-      this.worldgenMaximumTerrainModification = builder.comment("Maximum height difference terraformed under a building footprint (blocks)")
-         .translation("millenaire.config.worldgenMaximumTerrainModification")
-         .defineInRange("worldgenMaximumTerrainModification", 6, 1, 24);
-      this.worldgenUseNativeStructures = builder.comment(
-            "Reserved: register settlements as native Structure features when fully supported. Currently plans use chunk-load materialization."
-         )
-         .translation("millenaire.config.worldgenUseNativeStructures")
-         .define("worldgenUseNativeStructures", false);
-      this.worldgenGenerateInitialRoads = builder.comment("Plan and materialize initial internal roads during worldgen")
-         .translation("millenaire.config.worldgenGenerateInitialRoads")
-         .define("worldgenGenerateInitialRoads", true);
-      this.worldgenGenerateRegionalRoads = builder.comment("Plan bounded regional connectors between nearby settlements (foundation)")
-         .translation("millenaire.config.worldgenGenerateRegionalRoads")
-         .define("worldgenGenerateRegionalRoads", false);
-      this.worldgenGenerateBridges = builder.comment("Allow short bridge/raised-path segments where road policy supports them")
-         .translation("millenaire.config.worldgenGenerateBridges")
-         .define("worldgenGenerateBridges", true);
-      this.worldgenSandHighways = builder.comment(
-            "Discovery-driven 4-wide sand highways between Millenaire, vanilla, and tagged mod settlements (bridges/tunnels/travelers)"
-         )
-         .translation("millenaire.config.worldgenSandHighways")
-         .define("worldgenSandHighways", false);
-      this.highwayWidth = builder.comment("Highway surface width in blocks")
-         .translation("millenaire.config.highwayWidth")
-         .defineInRange("highwayWidth", 4, 1, 8);
-      this.highwayMaxLinkDistance = builder.comment("Max distance (blocks) when linking discovered highway nodes")
-         .translation("millenaire.config.highwayMaxLinkDistance")
-         .defineInRange("highwayMaxLinkDistance", 1600, 200, 4096);
-      this.highwayMaxNeighbors = builder.comment("Max highway links per node (faction hubs get +1)")
-         .translation("millenaire.config.highwayMaxNeighbors")
-         .defineInRange("highwayMaxNeighbors", 3, 1, 8);
-      this.highwayTunnels = builder.comment("Carve mountain tunnels when steep surface routing fails")
-         .translation("millenaire.config.highwayTunnels")
-         .define("highwayTunnels", true);
-      this.highwayTravelers = builder.comment("Spawn logical road travelers (traders/warriors/bandits) on connected highways")
-         .translation("millenaire.config.highwayTravelers")
-         .define("highwayTravelers", true);
-      this.highwayMaxJourneys = builder.comment("Soft cap on concurrent road journeys")
-         .translation("millenaire.config.highwayMaxJourneys")
-         .defineInRange("highwayMaxJourneys", 24, 1, 128);
-      this.highwayDiscoverVanilla = builder.comment("Discover vanilla villages (#minecraft:village) as highway endpoints")
-         .translation("millenaire.config.highwayDiscoverVanilla")
-         .define("highwayDiscoverVanilla", true);
-      this.highwayDiscoverMod = builder.comment("Discover #millenaire:highway_endpoint mod structures as highway endpoints")
-         .translation("millenaire.config.highwayDiscoverMod")
-         .define("highwayDiscoverMod", true);
-      this.highwayDiscoverMillenaire = builder.comment("Discover Millenaire villages/plans as highway endpoints")
-         .translation("millenaire.config.highwayDiscoverMillenaire")
-         .define("highwayDiscoverMillenaire", true);
-      this.highwayIncludeLoneBuildings = builder.comment("Include Millenaire lone buildings as highway endpoints")
-         .translation("millenaire.config.highwayIncludeLoneBuildings")
-         .define("highwayIncludeLoneBuildings", false);
-      this.worldgenGenerateStartingWalls = builder.comment("Plan and materialize starting walls/gates when village type defines them")
-         .translation("millenaire.config.worldgenGenerateStartingWalls")
-         .define("worldgenGenerateStartingWalls", true);
-      this.worldgenPreserveVanillaStructures = builder.comment("Reject settlement candidates that conflict with protected vanilla structures")
-         .translation("millenaire.config.worldgenPreserveVanillaStructures")
-         .define("worldgenPreserveVanillaStructures", true);
-      this.worldgenPreserveModdedStructures = builder.comment(
-            "Reject settlement candidates that conflict with #millenaire:avoid_settlement structures (Waystones, Dungeons Arise, etc.)"
-         )
-         .translation("millenaire.config.worldgenPreserveModdedStructures")
-         .define("worldgenPreserveModdedStructures", true);
-      this.worldgenStructureSafetyMargin = builder.comment("Extra margin around protected structures (blocks)")
-         .translation("millenaire.config.worldgenStructureSafetyMargin")
-         .defineInRange("worldgenStructureSafetyMargin", 3, 0, 32);
-      this.worldgenEnableSettlementVariation = builder.comment("Enable deterministic orientation/variant/decoration variation")
-         .translation("millenaire.config.worldgenEnableSettlementVariation")
-         .define("worldgenEnableSettlementVariation", true);
-      this.worldgenAllowPartialInitialCompletion = builder.comment("Allow distant settlements a deterministic non-zero initial completion percent")
-         .translation("millenaire.config.worldgenAllowPartialInitialCompletion")
-         .define("worldgenAllowPartialInitialCompletion", true);
-      this.worldgenPlanningCacheSize = builder.comment("Soft cap on in-memory plan index hints (plans remain persisted in SavedData)")
-         .translation("millenaire.config.worldgenPlanningCacheSize")
-         .defineInRange("worldgenPlanningCacheSize", 2048, 64, 16384);
-      this.worldgenMaterializationBudget = builder.comment(
-            "Max block/terrain operations per server tick for settlement materialization (shared across chunk loads)"
-         )
-         .translation("millenaire.config.worldgenMaterializationBudget")
-         .defineInRange("worldgenMaterializationBudget", 3000, 500, 50000);
-      this.worldgenMaterializationScanBudget = builder.comment(
-            "Max candidate scans (buildings/walls/roads inspected) per tick while searching for unfinished work"
-         )
-         .translation("millenaire.config.worldgenMaterializationScanBudget")
-         .defineInRange("worldgenMaterializationScanBudget", 256, 16, 4096);
-      this.worldgenResumeQueueBudget = builder.comment("Max unfinished chunk jobs drained from the resume queue per server tick")
-         .translation("millenaire.config.worldgenResumeQueueBudget")
-         .defineInRange("worldgenResumeQueueBudget", 4, 1, 32);
-      this.worldgenActivationBudget = builder.comment("Max settlement activation attempts per server tick (counts failures too)")
-         .translation("millenaire.config.worldgenActivationBudget")
-         .defineInRange("worldgenActivationBudget", 1, 1, 8);
-      this.worldgenPlanningBudget = builder.comment("Max region-plan / layout work units drained per server tick")
-         .translation("millenaire.config.worldgenPlanningBudget")
-         .defineInRange("worldgenPlanningBudget", 6, 1, 32);
-      this.worldgenTickTimeBudgetMs = builder.comment(
-            "Soft wall-clock budget (ms) for optional worldgen work per server tick; combines with op/scan budgets"
-         )
-         .translation("millenaire.config.worldgenTickTimeBudgetMs")
-         .defineInRange("worldgenTickTimeBudgetMs", 20, 1, 50);
-      this.worldgenTerrainColumnsPerTick = builder.comment("Max terrain-map columns scanned per tick while building a resumable layout map")
-         .translation("millenaire.config.worldgenTerrainColumnsPerTick")
-         .defineInRange("worldgenTerrainColumnsPerTick", 256, 8, 4096);
-      this.worldgenPlacementStepCacheSize = builder.comment("Bounded cache of immutable compiled placement steps (per plan/rotation)")
-         .translation("millenaire.config.worldgenPlacementStepCacheSize")
-         .defineInRange("worldgenPlacementStepCacheSize", 64, 8, 512);
-      this.worldgenFastSectionWrites = builder.comment(
-            "Use LevelChunkSection.setBlockState for bulk placement (falls back to setBlock for block-entities/waterlogged/POI)"
-         )
-         .translation("millenaire.config.worldgenFastSectionWrites")
-         .define("worldgenFastSectionWrites", false);
-      this.worldgenDetailedDiagnostics = builder.comment("Verbose worldgen planning/materialization logs (opt-in)")
-         .translation("millenaire.config.worldgenDetailedDiagnostics")
-         .define("worldgenDetailedDiagnostics", false);
-      this.placeVillageWaystones = builder.comment(
-            "When Waystones is loaded, place a waystone in every Millenaire village and every vanilla village"
-         )
-         .translation("millenaire.config.placeVillageWaystones")
-         .define("placeVillageWaystones", true);
-      this.worldgenUntaggedBiomeFallback = builder.comment(
-            "When a biome matches no village biome_tags, assign cultures by climate so BOP/OTBWG/Nature's Spirit biomes still get villages"
-         )
-         .translation("millenaire.config.worldgenUntaggedBiomeFallback")
-         .define("worldgenUntaggedBiomeFallback", true);
       builder.pop();
       builder.pop();
       builder.comment("Debug and logging settings").push("debug");
@@ -584,7 +158,7 @@ public final class MillenaireServerConfig {
             }
          )
          .translation("millenaire.config.forceLoadVillages")
-         .define("forceLoadVillages", false);
+         .define("forceLoadVillages", true);
       this.keepActiveRadius = builder.comment("Radius for keeping village chunks loaded (blocks). 0 = disabled.")
          .translation("millenaire.config.keepActiveRadius")
          .defineInRange("keepActiveRadius", 200, 0, 2000);
@@ -628,17 +202,6 @@ public final class MillenaireServerConfig {
       this.travelBookLearning = builder.comment("Whether Travel Book content needs to be discovered through interaction (nearby villagers, buildings, trade)")
          .translation("millenaire.config.travelBookLearning")
          .define("travelBookLearning", true);
-      this.mapSyncEnabled = builder.comment("Push discovered/owned settlement locations to clients for map mods (Xaero, etc.)")
-         .translation("millenaire.config.mapSyncEnabled")
-         .define("mapSyncEnabled", true);
-      this.mapSyncShowLoneBuildings = builder.comment("Include lone buildings in settlement map sync when discovered/owned")
-         .translation("millenaire.config.mapSyncShowLoneBuildings")
-         .define("mapSyncShowLoneBuildings", false);
-      this.mapSyncIncludeApproxBounds = builder.comment(
-            "Include approximate building AABB corners in map sync (visualization only; not territorial claims)"
-         )
-         .translation("millenaire.config.mapSyncIncludeApproxBounds")
-         .define("mapSyncIncludeApproxBounds", false);
       this.sentenceDistanceSingleplayer = builder.comment("Distance for villager sentences in chat — singleplayer (blocks). 0 = disabled.")
          .translation("millenaire.config.sentenceDistanceSP")
          .defineInRange("sentenceDistanceSingleplayer", 6, 0, 10);
@@ -685,13 +248,72 @@ public final class MillenaireServerConfig {
          .translation("millenaire.config.apiBaseUrlOverride")
          .define("apiBaseUrlOverride", "");
       builder.pop();
-      builder.comment("Raid settings (combat AI not yet implemented — values reserved)").push("raids");
-      this.banditRaidRadius = builder.comment("TODO: Radius for bandit raids (blocks). 0 = disabled.")
+      builder.comment("Raid and bandit presence settings (Phase 0 tick contract caps)").push("raids");
+      this.banditRaidRadius = builder.comment("Radius for bandit raids (blocks). 0 = disabled.")
          .translation("millenaire.config.banditRaidRadius")
          .defineInRange("banditRaidRadius", 1500, 0, 2000);
       this.raidingRate = builder.comment("% chance per night of a raid attempt. 0 = disabled.")
          .translation("millenaire.config.raidingRate")
-         .defineInRange("raidingRate", 35, 0, 100);
+         .defineInRange("raidingRate", 20, 0, 100);
+      this.maxConcurrentRaids = builder.comment("Max simultaneous active raids world-wide. Extra plans are skipped.")
+         .translation("millenaire.config.maxConcurrentRaids")
+         .defineInRange("maxConcurrentRaids", 3, 1, 16);
+      this.illagerRaidPackSize = builder.comment("Max vanilla Illagers spawned per hybrid raid wave.")
+         .translation("millenaire.config.illagerRaidPackSize")
+         .defineInRange("illagerRaidPackSize", 12, 0, 32);
+      this.illagerCampGarrisonCap = builder.comment("Soft cap of vanilla Illagers maintained at an active Illager camp.")
+         .translation("millenaire.config.illagerCampGarrisonCap")
+         .defineInRange("illagerCampGarrisonCap", 6, 0, 16);
+      this.illagerLoneBuildingQuota = builder.comment("Max Illager camps counted toward the dedicated lone-building spawn quota.")
+         .translation("millenaire.config.illagerLoneBuildingQuota")
+         .defineInRange("illagerLoneBuildingQuota", 24, 0, 200);
+      builder.pop();
+      builder.comment("Culture-level diplomacy and war").push("war");
+      this.cultureStandingDriftChance = builder.comment("% chance per night for each culture pair to drift in standing. 0 = disabled.")
+         .translation("millenaire.config.cultureStandingDriftChance")
+         .defineInRange("cultureStandingDriftChance", 25, 0, 100);
+      this.cultureWarAutoThreshold = builder.comment("Standing at or below this value auto-declares war between cultures.")
+         .translation("millenaire.config.cultureWarAutoThreshold")
+         .defineInRange("cultureWarAutoThreshold", -75, -100, 0);
+      this.cultureWarRaidAttemptsPerNight = builder.comment("Max culture-war raid plans scheduled per Minecraft night.")
+         .translation("millenaire.config.cultureWarRaidAttemptsPerNight")
+         .defineInRange("cultureWarRaidAttemptsPerNight", 1, 0, 16);
+      builder.pop();
+      builder.comment("Optional Waystones integration").push("waystones");
+      this.placeWaystonesInMillenaire = builder.comment("Place a Waystone near Millenaire town halls when the Waystones mod is loaded.")
+         .translation("millenaire.config.placeWaystonesInMillenaire")
+         .define("placeWaystonesInMillenaire", true);
+      this.placeWaystonesInVanilla = builder.comment("Place a Waystone at discovered vanilla village centers when the Waystones mod is loaded.")
+         .translation("millenaire.config.placeWaystonesInVanilla")
+         .define("placeWaystonesInVanilla", true);
+      builder.pop();
+      builder.comment("Vanilla villager economy").push("vanilla_economy");
+      this.vanillaVillagersUseDeniers = builder.comment("Replace emerald costs/results in vanilla villager and wandering trader offers with Millenaire deniers.")
+         .translation("millenaire.config.vanillaVillagersUseDeniers")
+         .define("vanillaVillagersUseDeniers", true);
+      this.emeraldToDenierRate = builder.comment("How many bronze deniers equal one emerald when converting vanilla trades (64 equals 1 argent).")
+         .translation("millenaire.config.emeraldToDenierRate")
+         .defineInRange("emeraldToDenierRate", 64, 1, 4096);
+      builder.pop();
+      builder.comment("Controlled city management (immigrants / jobs) — Phase 0 budgets").push("city");
+      this.immigrantAutoPeriodTicks = builder.comment("Staggered period (ticks) between auto immigrant checks per village.")
+         .translation("millenaire.config.immigrantAutoPeriodTicks")
+         .defineInRange("immigrantAutoPeriodTicks", 300, 40, 2400);
+      this.immigrantAutoPerDay = builder.comment("Max automatic immigrant arrivals per controlled village per Minecraft day.")
+         .translation("millenaire.config.immigrantAutoPerDay")
+         .defineInRange("immigrantAutoPerDay", 2, 0, 20);
+      this.immigrantManualPerDay = builder.comment("Max manual 'call immigrants' successes per controlled village per Minecraft day.")
+         .translation("millenaire.config.immigrantManualPerDay")
+         .defineInRange("immigrantManualPerDay", 1, 0, 10);
+      this.immigrantMaxQueue = builder.comment("Max open immigrant / simultaneous spawn budget per village.")
+         .translation("millenaire.config.immigrantMaxQueue")
+         .defineInRange("immigrantMaxQueue", 3, 1, 20);
+      this.immigrantDenierCost = builder.comment("Deniers taken from town hall stock per immigrant (0 = free).")
+         .translation("millenaire.config.immigrantDenierCost")
+         .defineInRange("immigrantDenierCost", 64, 0, 10000);
+      this.cityStatsFailsafeTicks = builder.comment("Failsafe CityStats recount period when dirty flag was missed.")
+         .translation("millenaire.config.cityStatsFailsafeTicks")
+         .defineInRange("cityStatsFailsafeTicks", 600, 100, 6000);
       builder.pop();
       builder.comment("Automatic conversion of legacy 1.12 content packs dropped into millenaire-custom/").push("legacy");
       this.legacyAutoConvert = builder.comment(
@@ -718,682 +340,86 @@ public final class MillenaireServerConfig {
          .translation("millenaire.config.legacyAutoConvertMaxPngs")
          .defineInRange("legacyAutoConvertMaxPngs", 2500, 0, 5000);
       builder.pop();
-      builder.comment("Free-form NPC chat backed by local LM Studio (OpenAI-compatible /v1 on the same machine or LAN)").push("npcChat");
-      this.npcChatEnabled = builder.comment("Master switch for NPC free chat. When false, no HTTP calls are made.")
-         .translation("millenaire.config.npcChat.enabled")
+      builder.comment("Player crime: pickpocket, lockpicking, per-culture bounty").push("crime");
+      this.enableCrime = builder.comment("Enable pickpocketing, lockpicking, and culture bounty consequences")
+         .translation("millenaire.config.enableCrime")
+         .define("enableCrime", true);
+      this.crimeTradeBanThreshold = builder.comment("Bounty at or above this blocks trade with the player and their city")
+         .translation("millenaire.config.crimeTradeBanThreshold")
+         .defineInRange("tradeBanThreshold", 50, 1, 1000);
+      this.crimeHostileThreshold = builder.comment("Bounty at or above this makes helpInAttacks villagers attack the player on sight")
+         .translation("millenaire.config.crimeHostileThreshold")
+         .defineInRange("hostileThreshold", 100, 1, 1000);
+      this.crimeRaidCityThreshold = builder.comment("Bounty at or above this can schedule raids against the player's controlled city")
+         .translation("millenaire.config.crimeRaidCityThreshold")
+         .defineInRange("raidCityThreshold", 200, 1, 1000);
+      builder.pop();
+      builder.comment("Inter-village road network (async planning, budgetted building)").push("roads");
+      this.roadsEnabled = builder.comment("Enable automatic roads between known villages")
+         .translation("millenaire.config.roadsEnabled")
          .define("enabled", true);
-      this.npcChatProvider = builder.comment(
-            new String[]{
-               "Legacy field; NPC chat is LM Studio only. Keep 'lmstudio'.",
-               "Values openai/remote/auto are ignored — cloud APIs are rejected. The base URL must point at LM Studio."
-            }
-         )
-         .translation("millenaire.config.npcChat.provider")
-         .define("provider", "lmstudio");
-      this.npcChatBaseUrl = builder.comment(
-            new String[]{
-               "Local OpenAI-compatible API base URL (no trailing slash). LM Studio or Ollama only — not cloud APIs.",
-               "LM Studio: http://127.0.0.1:1234/v1  |  Ollama: http://127.0.0.1:11434/v1",
-               "New worlds use this default automatically. Cloud URLs are rejected and migrated to the LM Studio default on load.",
-               "Model name optional for LM Studio auto-detect; set model id for Ollama (e.g. llama3.2)."
-            }
-         )
-         .translation("millenaire.config.npcChat.baseUrl")
-         .define("baseUrl", org.millenaire.chat.NpcChatConfigMigration.DEFAULT_LOCAL_BASE_URL);
-      this.npcChatModel = builder.comment(
-            new String[]{
-               "Optional LM Studio model id. Leave empty for automatic selection when exactly one LLM is loaded;",
-               "when multiple LLMs are loaded, set this (or use /millenaire npcchat model select) to choose one."
-            }
-         )
-         .translation("millenaire.config.npcChat.model")
-         .define("model", "");
-      this.npcChatApiKey = builder.comment(
-            new String[]{
-               "Optional LM Studio API token. Leave empty for local default (no auth).",
-               "If set, sent as Bearer. Env LM_API_TOKEN is also accepted. Never log this value."
-            }
-         )
-         .translation("millenaire.config.npcChat.apiKey")
-         .define("apiKey", "");
-      this.npcChatTimeoutSeconds = builder.comment("HTTP request timeout in seconds")
-         .translation("millenaire.config.npcChat.timeoutSeconds")
-         .defineInRange("timeoutSeconds", 8, 4, 30);
-      this.npcChatMaxConcurrent = builder.comment("Maximum concurrent model requests on this server")
-         .translation("millenaire.config.npcChat.maxConcurrent")
-         .defineInRange("maxConcurrent", 4, 1, 8);
-      this.npcChatMinMillisBetweenMessages = builder.comment("Minimum milliseconds between chat send packets per player")
-         .translation("millenaire.config.npcChat.minMillisBetweenMessages")
-         .defineInRange("minMillisBetweenMessages", 1500, 0, 60000);
-      this.npcChatChatRange = builder.comment("Maximum distance to open or keep talking to a villager (blocks)")
-         .translation("millenaire.config.npcChat.chatRange")
-         .defineInRange("chatRange", 4, 2, 6);
-      this.npcChatLeaveRange = builder.comment("Distance at which an open chat session closes (blocks). Always at least chatRange.")
-         .translation("millenaire.config.npcChat.leaveRange")
-         .defineInRange("leaveRange", 6, 4, 10);
-      this.npcChatGossip = builder.comment("Allow same-culture rumor spreading from free chat")
-         .translation("millenaire.config.npcChat.gossip")
-         .define("gossip", false);
-      this.npcChatGossipExpiryDays = builder.comment("Days before an inactive rumor expires")
-         .translation("millenaire.config.npcChat.gossipExpiryDays")
-         .defineInRange("gossipExpiryDays", 30, 7, 120);
-      this.npcChatMillenaire = builder.comment("Allow dialogue with Millénaire villagers")
-         .translation("millenaire.config.npcChat.millenaire")
-         .define("millenaire", true);
-      this.npcChatVanilla = builder.comment("Allow dialogue with vanilla villagers, traders, illagers, piglins, golems, allays, hostiles and animals")
-         .translation("millenaire.config.npcChat.vanilla")
-         .define("vanilla", true);
-      this.npcChatModded = builder.comment("Allow dialogue with living entities from other mods via the generic adapter")
-         .translation("millenaire.config.npcChat.modded")
-         .define("modded", true);
-      this.npcChatGenericLiving = builder.comment("Generic LivingEntity fallback for types without a dedicated adapter")
-         .translation("millenaire.config.npcChat.genericLiving")
-         .define("genericLiving", true);
-      this.npcChatNonverbal = builder.comment("Allow nonverbal / atmospheric dialogue for animals and monsters")
-         .translation("millenaire.config.npcChat.nonverbal")
-         .define("nonverbal", true);
-      this.npcChatRequireLineOfSight = builder.comment("Require clear line of sight to open or continue dialogue")
-         .translation("millenaire.config.npcChat.requireLineOfSight")
-         .define("requireLineOfSight", true);
-      this.npcChatTransientRetentionDays = builder.comment("Days to retain minds for transient NPCs after last talk")
-         .translation("millenaire.config.npcChat.transientRetentionDays")
-         .defineInRange("transientRetentionDays", 7, 1, 60);
-      this.npcChatMaxStoredMinds = builder.comment("Soft cap on stored NPC minds; excess transient minds are pruned first")
-         .translation("millenaire.config.npcChat.maxStoredMinds")
-         .defineInRange("maxStoredMinds", 2000, 100, 20000);
-      this.npcChatEntityAllowList = builder.comment(
-            "Optional comma-separated entity type ids (namespace:path or path) for extra documentation; empty = no allow-list restriction"
-         )
-         .translation("millenaire.config.npcChat.entityAllowList")
-         .define("entityAllowList", "");
-      this.npcChatEntityDenyList = builder.comment("Comma-separated entity type ids denied from the generic adapter")
-         .translation("millenaire.config.npcChat.entityDenyList")
-         .define("entityDenyList", "");
+      this.roadsWidth = builder.comment("Road width in blocks (2-5)")
+         .translation("millenaire.config.roadsWidth")
+         .defineInRange("width", 3, 2, 5);
+      this.roadsMaxEdgeLength = builder.comment("Max candidate edge length for k-nearest graph (blocks)")
+         .translation("millenaire.config.roadsMaxEdgeLength")
+         .defineInRange("maxEdgeLength", 1500, 200, 8000);
+      this.roadsHardMaxEdgeLength = builder.comment("Hard max when linking disconnected components")
+         .translation("millenaire.config.roadsHardMaxEdgeLength")
+         .defineInRange("hardMaxEdgeLength", 4000, 500, 16000);
+      this.roadsKNearest = builder.comment("k-nearest neighbors per node before MST")
+         .translation("millenaire.config.roadsKNearest")
+         .defineInRange("kNearest", 3, 2, 6);
+      this.roadsLoopRatio = builder.comment("Extra loop edges as fraction of MST size (0.10-0.25)")
+         .translation("millenaire.config.roadsLoopRatio")
+         .defineInRange("loopRatio", 0.15, 0.0, 0.5);
+      this.roadsMaxMillisPerTick = builder.comment("RoadBuilder time budget per tick (ms)")
+         .translation("millenaire.config.roadsMaxMillisPerTick")
+         .defineInRange("maxMillisPerTick", 1.0, 0.1, 10.0);
+      this.roadsMaxChunksPerTick = builder.comment("Max chunks built per tick")
+         .translation("millenaire.config.roadsMaxChunksPerTick")
+         .defineInRange("maxChunksPerTick", 1, 1, 8);
+      this.roadsMaxQueueSize = builder.comment("Max pending build chunk jobs")
+         .translation("millenaire.config.roadsMaxQueueSize")
+         .defineInRange("maxQueueSize", 2048, 64, 16384);
+      this.roadsMsptPauseThreshold = builder.comment("Pause building when smoothed MSPT exceeds this")
+         .translation("millenaire.config.roadsMsptPauseThreshold")
+         .defineInRange("msptPauseThreshold", 45.0, 20.0, 100.0);
+      this.roadsTunnelThreshold = builder.comment("Height above road that triggers tunnel mode")
+         .translation("millenaire.config.roadsTunnelThreshold")
+         .defineInRange("tunnelThreshold", 12, 4, 48);
+      this.roadsMaxBridgeLength = builder.comment("Max bridge length in blocks")
+         .translation("millenaire.config.roadsMaxBridgeLength")
+         .defineInRange("maxBridgeLength", 48, 8, 128);
+      this.roadsBridgesEnabled = builder.comment("Allow bridge segments")
+         .translation("millenaire.config.roadsBridgesEnabled")
+         .define("bridgesEnabled", true);
+      this.roadsTunnelsEnabled = builder.comment("Allow tunnel segments")
+         .translation("millenaire.config.roadsTunnelsEnabled")
+         .define("tunnelsEnabled", true);
+      this.roadsPlannerThreads = builder.comment("Async route planner thread count (1-2)")
+         .translation("millenaire.config.roadsPlannerThreads")
+         .defineInRange("plannerThreads", 1, 1, 2);
       builder.pop();
-      builder.comment("Opt-in LM Companion — inert until /millenaire companion summon|bind")
-         .push("companion");
-      this.companionEnabled = builder.comment("Master switch for companion systems. Still requires summon/bind command.")
-         .translation("millenaire.config.companion.enabled")
+      builder.comment("Thin settlement registry + capped vanilla takeover").push("settlements");
+      this.settlementsEnabled = builder.comment("Track vanilla/Millenaire settlements with name and culture")
+         .translation("millenaire.config.settlementsEnabled")
          .define("enabled", true);
-      this.companionChatViaT = builder.comment(
-            "When true, vanilla T-chat is heard by your summoned companion (no NPC chat UI required)."
-         )
-         .translation("millenaire.config.companion.chatViaT")
-         .define("chatViaT", true);
-      this.companionChatRange = builder.comment("Max distance (blocks) for the companion to hear T-chat")
-         .translation("millenaire.config.companion.chatRange")
-         .defineInRange("chatRange", 48, 8, 128);
-      this.companionHeartbeatSeconds = builder.comment("Seconds between companion LM heartbeats when near the player")
-         .translation("millenaire.config.companion.heartbeatSeconds")
-         .defineInRange("heartbeatSeconds", 30, 10, 120);
-      this.companionMaxProactiveLinesPerMinute = builder.comment("Max proactive speech lines per minute")
-         .translation("millenaire.config.companion.maxProactiveLinesPerMinute")
-         .defineInRange("maxProactiveLinesPerMinute", 3, 1, 12);
-      this.companionMaxIntentsPerReply = builder.comment("Max intents applied from one LM reply")
-         .translation("millenaire.config.companion.maxIntentsPerReply")
-         .defineInRange("maxIntentsPerReply", 4, 1, 8);
-      this.companionMaxDistanceBeforeReturn = builder.comment("Blocks before companion auto-returns to player")
-         .translation("millenaire.config.companion.maxDistanceBeforeReturn")
-         .defineInRange("maxDistanceBeforeReturn", 48, 16, 128);
-      this.companionMaxPerPlayer = builder.comment("Max bonded companions per player")
-         .translation("millenaire.config.companion.maxPerPlayer")
-         .defineInRange("maxPerPlayer", 1, 1, 1);
-      this.companionSummonVillageRange = builder.comment("Max distance to nearest village for summon")
-         .translation("millenaire.config.companion.summonVillageRange")
-         .defineInRange("summonVillageRange", 256, 32, 1024);
-      this.companionActionAllowList = builder.comment("Optional comma-separated intent allow-list; empty = all catalog intents")
-         .translation("millenaire.config.companion.actionAllowList")
-         .define("actionAllowList", "");
-      this.companionActionDenyList = builder.comment("Comma-separated intent deny-list")
-         .translation("millenaire.config.companion.actionDenyList")
-         .define("actionDenyList", "");
-      builder.pop();
-      builder.comment("Living Villages 2.0 — needs, social simulation, assistance requests (does not disable core Millénaire when off)")
-         .push("livingVillages");
-      this.livingVillagesEnabled = builder.comment("Master switch for Living Villages systems")
-         .translation("millenaire.config.livingVillages.enabled")
-         .define("livingVillagesEnabled", true);
-      this.villageNeedsEnabled = builder.comment("Derive village needs from authoritative inventories and projects")
-         .translation("millenaire.config.livingVillages.villageNeedsEnabled")
-         .define("villageNeedsEnabled", true);
-      this.villageNeedsEvaluationInterval = builder.comment("Ticks between need evaluations per village")
-         .translation("millenaire.config.livingVillages.villageNeedsEvaluationInterval")
-         .defineInRange("villageNeedsEvaluationInterval", 200, 40, 4000);
-      this.villageNeedsGlobalBudget = builder.comment("Max village need evaluations per server tick")
-         .translation("millenaire.config.livingVillages.villageNeedsGlobalBudget")
-         .defineInRange("villageNeedsGlobalBudget", 4, 1, 32);
-      this.npcSocialEnabled = builder.comment("NPC-to-NPC social relationship updates from ChatGoal")
-         .translation("millenaire.config.livingVillages.npcSocialEnabled")
-         .define("npcSocialEnabled", true);
-      this.npcSocialInteractionCooldown = builder.comment("Minimum ticks between social updates for the same NPC pair side")
-         .translation("millenaire.config.livingVillages.npcSocialInteractionCooldown")
-         .defineInRange("npcSocialInteractionCooldown", 1200, 200, 24000);
-      this.npcRelationshipRetention = builder.comment("Soft max relationships retained per NPC")
-         .translation("millenaire.config.livingVillages.npcRelationshipRetention")
-         .defineInRange("npcRelationshipRetention", 24, 8, 128);
-      this.npcPersonalityEnabled = builder.comment("Persistent NPC personality traits and mood reactions")
-         .translation("millenaire.config.livingVillages.npcPersonalityEnabled")
-         .define("npcPersonalityEnabled", true);
-      this.npcMoodDecayInterval = builder.comment("Ticks between mood decay checks")
-         .translation("millenaire.config.livingVillages.npcMoodDecayInterval")
-         .defineInRange("npcMoodDecayInterval", 6000, 200, 24000);
-      this.npcEventMemoryEnabled = builder.comment("Persist Living Villages event journal entries")
-         .translation("millenaire.config.livingVillages.npcEventMemoryEnabled")
-         .define("npcEventMemoryEnabled", true);
-      this.npcEventRetentionLimit = builder.comment("Max detailed living events retained per village")
-         .translation("millenaire.config.livingVillages.npcEventRetentionLimit")
-         .defineInRange("npcEventRetentionLimit", 128, 32, 512);
-      this.npcKnowledgeRetentionLimit = builder.comment("Max knowledge items retained per NPC")
-         .translation("millenaire.config.livingVillages.npcKnowledgeRetentionLimit")
-         .defineInRange("npcKnowledgeRetentionLimit", 24, 8, 128);
-      this.villageRequestsEnabled = builder.comment("Dynamic village assistance requests and deliveries")
-         .translation("millenaire.config.livingVillages.villageRequestsEnabled")
-         .define("villageRequestsEnabled", true);
-      this.villageRequestMaxPerPlayer = builder.comment("Max active assistance requests per player")
-         .translation("millenaire.config.livingVillages.villageRequestMaxPerPlayer")
-         .defineInRange("villageRequestMaxPerPlayer", 3, 1, 16);
-      this.villageRequestMaxPerVillage = builder.comment("Max active assistance requests per village")
-         .translation("millenaire.config.livingVillages.villageRequestMaxPerVillage")
-         .defineInRange("villageRequestMaxPerVillage", 6, 1, 32);
-      this.villageRequestExpiryDays = builder.comment("Minecraft days before an assistance request expires")
-         .translation("millenaire.config.livingVillages.villageRequestExpiryDays")
-         .defineInRange("villageRequestExpiryDays", 7, 1, 60);
-      this.villageRequestMaximumDeliveryQuantity = builder.comment("Max quantity of one item requested per assistance offer")
-         .translation("millenaire.config.livingVillages.villageRequestMaximumDeliveryQuantity")
-         .defineInRange("villageRequestMaximumDeliveryQuantity", 64, 8, 256);
-      this.villageRequestReputationMultiplier = builder.comment("Multiplier applied to reputation rewards for completed assistance")
-         .translation("millenaire.config.livingVillages.villageRequestReputationMultiplier")
-         .defineInRange("villageRequestReputationMultiplier", 1.0D, 0.0D, 5.0D);
-      this.npcWorldReactionsEnabled = builder.comment("Seed NPC knowledge from living events")
-         .translation("millenaire.config.livingVillages.npcWorldReactionsEnabled")
-         .define("npcWorldReactionsEnabled", true);
-      this.npcReactionProcessingBudget = builder.comment("Max reaction/event knowledge operations per reaction pass")
-         .translation("millenaire.config.livingVillages.npcReactionProcessingBudget")
-         .defineInRange("npcReactionProcessingBudget", 16, 1, 64);
-      this.npcDialogueActionSuggestionsEnabled = builder.comment("Show contextual Living Villages action buttons in NPC chat")
-         .translation("millenaire.config.livingVillages.npcDialogueActionSuggestionsEnabled")
-         .define("npcDialogueActionSuggestionsEnabled", true);
-      this.livingVillagesDebugLogging = builder.comment("Verbose Living Villages debug logging")
-         .translation("millenaire.config.livingVillages.debugLogging")
-         .define("livingVillagesDebugLogging", false);
-      builder.pop();
-      builder.comment(
-            new String[]{
-               "Religion — traditions, daily practice, ceremonies, pilgrimages, and village faith communities.",
-               "When disabled, simulation pauses but SavedData is retained. Does not require civilization",
-               "evolution or an LLM provider. Disabling does NOT wipe affiliations or ceremony history."
-            }
-         )
-         .push("religion");
-      this.religionEnabled = builder.comment("Master switch for religion simulation")
-         .translation("millenaire.config.religion.enabled")
-         .define("religionEnabled", true);
-      this.religionEvaluationInterval = builder.comment("Ticks between religion evaluation passes per village (staggered)")
-         .translation("millenaire.config.religion.evaluationInterval")
-         .defineInRange("religionEvaluationInterval", 100, 40, 4000);
-      this.religionGlobalBudget = builder.comment("Max villages evaluated for religion per server tick")
-         .translation("millenaire.config.religion.globalBudget")
-         .defineInRange("religionGlobalBudget", 4, 1, 32);
-      this.religionCeremonyBudget = builder.comment("Max ceremony state advances per religion tick pass")
-         .translation("millenaire.config.religion.ceremonyBudget")
-         .defineInRange("religionCeremonyBudget", 8, 1, 64);
-      this.religionMaxHistoryPerVillage = builder.comment("Max local religion history lines retained per village")
-         .translation("millenaire.config.religion.maxHistoryPerVillage")
-         .defineInRange("religionMaxHistoryPerVillage", 32, 8, 128);
-      this.religionMaxCeremoniesTracked = builder.comment("Max ceremony instances retained (active + recent)")
-         .translation("millenaire.config.religion.maxCeremoniesTracked")
-         .defineInRange("religionMaxCeremoniesTracked", 64, 16, 256);
-      this.religionCatchupLimit = builder.comment("Max catch-up ceremony plans after sleep/time-skip per village per day")
-         .translation("millenaire.config.religion.catchupLimit")
-         .defineInRange("religionCatchupLimit", 1, 0, 4);
-      this.religionDebugLogging = builder.comment("Verbose religion debug logging")
-         .translation("millenaire.config.religion.debugLogging")
-         .define("religionDebugLogging", false);
-      builder.pop();
-      builder.comment(
-            new String[]{
-               "Phase 5 civilization evolution — orchestration across factions, economy, politics,",
-               "diplomacy, military and demographics. When disabled, FactionLifecycle ticks managers",
-               "directly as before. Disabling civilization does NOT disable villages, Phase 3 Living",
-               "Villages, Phase 4 worldgen, trading, quests or NPC chat."
-            }
-         )
-         .push("civilization");
-      this.civilizationEvolutionEnabled = builder.comment("Master switch for CivilizationOrchestrator staged updates")
-         .translation("millenaire.config.civilization.evolutionEnabled")
-         .define("civilizationEvolutionEnabled", true);
-      this.civilizationAutoTradeEnabled = builder.comment("Allow conserved settlement-to-settlement trade when needs/deficits exist")
-         .translation("millenaire.config.civilization.autoTradeEnabled")
-         .define("civilizationAutoTradeEnabled", true);
-      this.civilizationOffscreenEnabled = builder.comment("Bounded coarse catch-up for inactive settlements (never force-loads chunks)")
-         .translation("millenaire.config.civilization.offscreenEnabled")
-         .define("civilizationOffscreenEnabled", true);
-      this.civilizationNpcContextEnabled = builder.comment("Inject verified faction/civilization facts into NPC dialogue context")
-         .translation("millenaire.config.civilization.npcContextEnabled")
-         .define("civilizationNpcContextEnabled", true);
-      this.civilizationAutonomousFoundingEnabled = builder.comment(
-            new String[]{
-               "Enable bounded autonomous colonization using existing worldgen planning + migration.",
-               "Default false for save safety. When enabled, overcrowded faction settlements may found nearby colonies",
-               "only in already-loaded chunks, without force-loading or free resident creation."
-            }
-         )
-         .translation("millenaire.config.civilization.autonomousFoundingEnabled")
-         .define("civilizationAutonomousFoundingEnabled", false);
-      this.civilizationMetricsLogging = builder.comment("Occasional civilization orchestration metrics in logs (opt-in)")
-         .translation("millenaire.config.civilization.metricsLogging")
-         .define("civilizationMetricsLogging", false);
-      this.civilizationFactionBudget = builder.comment("Max factions processed per orchestration stage pass")
-         .translation("millenaire.config.civilization.factionBudget")
-         .defineInRange("civilizationFactionBudget", 8, 1, 64);
-      this.civilizationTradeOpsBudget = builder.comment("Max conserved trade operations per economy stage")
-         .translation("millenaire.config.civilization.tradeOpsBudget")
-         .defineInRange("civilizationTradeOpsBudget", 4, 0, 32);
-      this.civilizationEventPublishBudget = builder.comment("Max civilization chronicle events published per tick")
-         .translation("millenaire.config.civilization.eventPublishBudget")
-         .defineInRange("civilizationEventPublishBudget", 12, 1, 64);
-      this.civilizationMigrationBudget = builder.comment("Max migration transactions per demographics stage")
-         .translation("millenaire.config.civilization.migrationBudget")
-         .defineInRange("civilizationMigrationBudget", 2, 0, 16);
-      this.civilizationImmigrationEnabled = builder.comment("Allow civilians to immigrate into player-founded sovereign settlements")
-         .translation("millenaire.config.civilization.immigrationEnabled")
-         .define("civilizationImmigrationEnabled", true);
-      this.civilizationImmigrationBudget = builder.comment("Max immigration ops (pulls + travelers) per demographics stage")
-         .translation("millenaire.config.civilization.immigrationBudget")
-         .defineInRange("civilizationImmigrationBudget", 2, 0, 16);
-      this.civilizationTravelerImmigrationEnabled = builder.comment("When sources are scarce, allow capped traveler spawns into sovereign housing")
-         .translation("millenaire.config.civilization.travelerImmigrationEnabled")
-         .define("civilizationTravelerImmigrationEnabled", true);
-      this.civilizationTravelerImmigrationDailyCap = builder.comment("Max traveler immigrants per sovereign settlement per Minecraft day")
-         .translation("millenaire.config.civilization.travelerImmigrationDailyCap")
-         .defineInRange("civilizationTravelerImmigrationDailyCap", 1, 0, 8);
-      this.civilizationCatchupDays = builder.comment("Max Minecraft days of offscreen profile-refresh catch-up after long inactivity")
-         .translation("millenaire.config.civilization.catchupDays")
-         .defineInRange("civilizationCatchupDays", 7, 1, 30);
-      this.civilizationColonizationOpsBudget = builder.comment("Max new autonomous colonization operations started per development stage")
-         .translation("millenaire.config.civilization.colonizationOpsBudget")
-         .defineInRange("civilizationColonizationOpsBudget", 1, 0, 4);
-      this.civilizationColonizationCandidateBudget = builder.comment("Max parent settlements scanned for colonization per stage")
-         .translation("millenaire.config.civilization.colonizationCandidateBudget")
-         .defineInRange("civilizationColonizationCandidateBudget", 4, 1, 32);
-      this.civilizationColonizationCooldownDays = builder.comment("Cooldown days before the same parent may start another colonization")
-         .translation("millenaire.config.civilization.colonizationCooldownDays")
-         .defineInRange("civilizationColonizationCooldownDays", 7, 1, 60);
-      this.civilizationIntraFactionLogistics = builder.comment(
-            "Allow conserved same-faction goods movement driven by local needs (logistics, not diplomatic trade)"
-         )
-         .translation("millenaire.config.civilization.intraFactionLogistics")
-         .define("civilizationIntraFactionLogistics", true);
-      this.cultureBountyEnabled = builder.comment("Enable culture bounty: player crimes raise wanted status, raid waves, and war")
-         .translation("millenaire.config.civilization.cultureBountyEnabled")
-         .define("cultureBountyEnabled", true);
-      this.cultureBountyChatEnabled = builder.comment("Send chat when bounty score increases")
-         .translation("millenaire.config.civilization.cultureBountyChatEnabled")
-         .define("cultureBountyChatEnabled", true);
-      this.cultureBountyOnSightEnabled = builder.comment("Guards pursue wanted players on sight in villages of that culture")
-         .translation("millenaire.config.civilization.cultureBountyOnSightEnabled")
-         .define("cultureBountyOnSightEnabled", true);
-      this.cultureBountyOnSightTier = builder.comment("Minimum wanted tier for on-sight guard pursuit (NONE/SUSPECT/WANTED/PUBLIC_ENEMY/SCOURGE). HUD shows any positive bounty.")
-         .translation("millenaire.config.civilization.cultureBountyOnSightTier")
-         .define("cultureBountyOnSightTier", "WANTED");
-      this.treatCreativeAsSurvival = builder.comment(
-            new String[]{
-               "When true, creative players still earn culture bounty, get pursued by guards,",
-               "and trigger assault/murder reactions as if in survival. Spectator is always ignored.",
-               "Vanilla creative invulnerability still blocks most damage (and thus arrests)."
-            }
-         )
-         .translation("millenaire.config.civilization.treatCreativeAsSurvival")
-         .define("treatCreativeAsSurvival", true);
-      this.bountyHudEnabled = builder.comment("Show persistent bounty HUD for wanted cultures")
-         .translation("millenaire.config.civilization.bountyHudEnabled")
-         .define("bountyHudEnabled", true);
-      this.pickpocketEnabled = builder.comment("Allow sneak+empty-hand pickpocketing of villagers")
-         .translation("millenaire.config.civilization.pickpocketEnabled")
-         .define("pickpocketEnabled", true);
-      this.pickpocketBaseChance = builder.comment("Base success chance for pickpocketing (0.0-1.0)")
-         .translation("millenaire.config.civilization.pickpocketBaseChance")
-         .defineInRange("pickpocketBaseChance", 0.55, 0.0, 1.0);
-      this.arrestEnabled = builder.comment("When guards would kill a wanted player, arrest (soft-death) instead")
-         .translation("millenaire.config.civilization.arrestEnabled")
-         .define("arrestEnabled", true);
-      this.arrestLockSeconds = builder.comment("Seconds before an arrested player may freely reclaim jail-chest items")
-         .translation("millenaire.config.civilization.arrestLockSeconds")
-         .defineInRange("arrestLockSeconds", 60, 5, 3600);
-      this.arrestBountyOnArrest = builder.comment("Bounty score change on arrest (0 = keep score, negative reduces)")
-         .translation("millenaire.config.civilization.arrestBountyOnArrest")
-         .defineInRange("arrestBountyOnArrest", 0, -500, 0);
-      this.playerShopEnabled = builder.comment("Allow designated SHOP buildings and visitor purchases")
-         .translation("millenaire.config.civilization.playerShopEnabled")
-         .define("playerShopEnabled", true);
-      this.roadTravelerShopVisits = builder.comment("Spawn road travelers that visit player shops")
-         .translation("millenaire.config.civilization.roadTravelerShopVisits")
-         .define("roadTravelerShopVisits", true);
-      this.cultureBountyRaidThreshold = builder.comment("Bounty score at which cultures begin planning raid waves on the player")
-         .translation("millenaire.config.civilization.cultureBountyRaidThreshold")
-         .defineInRange("cultureBountyRaidThreshold", 120, 40, 2000);
-      this.cultureBountyWarThreshold = builder.comment("Bounty score at which the culture declares war on the player's faction")
-         .translation("millenaire.config.civilization.cultureBountyWarThreshold")
-         .defineInRange("cultureBountyWarThreshold", 250, 120, 2000);
-      this.cultureBountyStockPerWave = builder.comment("Player settlement stock items per additional bounty raid wave")
-         .translation("millenaire.config.civilization.cultureBountyStockPerWave")
-         .defineInRange("cultureBountyStockPerWave", 256, 32, 10000);
-      this.bountyHunterEnabled = builder.comment("Dispatch professional bounty hunters against players with enforceable culture bounties")
-         .translation("millenaire.config.civilization.bountyHunterEnabled")
-         .define("bountyHunterEnabled", true);
-      this.bountyHunterMaxPerPlayer = builder.comment("Maximum active bounty hunters assigned to one player")
-         .translation("millenaire.config.civilization.bountyHunterMaxPerPlayer")
-         .defineInRange("bountyHunterMaxPerPlayer", 1, 1, 3);
-      this.bountyHunterDispatchDelaySeconds = builder.comment("Seconds after a bounty becomes enforceable before a hunter may spawn")
-         .translation("millenaire.config.civilization.bountyHunterDispatchDelaySeconds")
-         .defineInRange("bountyHunterDispatchDelaySeconds", 45, 10, 600);
-      this.bountyHunterReplacementCooldownTicks = builder.comment("Game ticks before a defeated hunter may be redispatched (24000 = 1 Minecraft day)")
-         .translation("millenaire.config.civilization.bountyHunterReplacementCooldownTicks")
-         .defineInRange("bountyHunterReplacementCooldownTicks", 24000, 200, 240000);
-      this.bountyHunterBolaCooldownSeconds = builder.comment("Bola throw cooldown in seconds")
-         .translation("millenaire.config.civilization.bountyHunterBolaCooldownSeconds")
-         .defineInRange("bountyHunterBolaCooldownSeconds", 12, 4, 60);
-      this.bountyHunterBolaSlownessSeconds = builder.comment("Slowness II duration from a bola hit in seconds")
-         .translation("millenaire.config.civilization.bountyHunterBolaSlownessSeconds")
-         .defineInRange("bountyHunterBolaSlownessSeconds", 3, 1, 15);
-      this.bountyHunterArrestChannelSeconds = builder.comment("Visible restraint channel time before handcuff arrest completes")
-         .translation("millenaire.config.civilization.bountyHunterArrestChannelSeconds")
-         .defineInRange("bountyHunterArrestChannelSeconds", 2, 1, 10);
-      this.bountyHunterJailSentenceSeconds = builder.comment("Server-authoritative jail custody duration after bounty-hunter arrest")
-         .translation("millenaire.config.civilization.bountyHunterJailSentenceSeconds")
-         .defineInRange("bountyHunterJailSentenceSeconds", 90, 15, 3600);
-      this.bountyHunterSettlementReduction = builder.comment("Bounty score removed on successful hunter capture (0 = clear entire culture bounty)")
-         .translation("millenaire.config.civilization.bountyHunterSettlementReduction")
-         .defineInRange("bountyHunterSettlementReduction", 0, 0, 2000);
-      this.bountyHunterMinTier = builder.comment("Minimum wanted tier that allows bounty-hunter dispatch (NONE/SUSPECT/WANTED/PUBLIC_ENEMY/SCOURGE)")
-         .translation("millenaire.config.civilization.bountyHunterMinTier")
-         .define("bountyHunterMinTier", "WANTED");
-      this.bountyHunterHuntInOverworld = builder.comment("Allow bounty hunters to pursue targets in the Overworld")
-         .translation("millenaire.config.civilization.bountyHunterHuntInOverworld")
-         .define("bountyHunterHuntInOverworld", true);
-      this.bountyHunterAllowPeaceful = builder.comment("Allow bounty-hunter pursuit on Peaceful difficulty")
-         .translation("millenaire.config.civilization.bountyHunterAllowPeaceful")
-         .define("bountyHunterAllowPeaceful", false);
-      this.civilizationDiplomaticAiEnabled = builder.comment("Allow NPC factions to form/break treaties and escalate wars autonomously (budget-capped)")
-         .translation("millenaire.config.civilization.diplomaticAiEnabled")
-         .define("civilizationDiplomaticAiEnabled", true);
-      this.civilizationDiplomaticAiBudget = builder.comment("Max autonomous diplomatic actions per diplomacy stage")
-         .translation("millenaire.config.civilization.diplomaticAiBudget")
-         .defineInRange("civilizationDiplomaticAiBudget", 2, 0, 16);
-      builder.pop();
-
-      builder.comment(
-            new String[]{
-               "Multi-core Compute/Apply — pure planning/path search on worker threads.",
-               "World mutations (blocks, entities, SavedData writes) always stay on the server thread.",
-               "Each phase has a kill-switch that falls back to the previous synchronous path."
-            }
-         )
-         .push("compute");
-      this.computeOffloadEnabled = builder.comment("Master switch for Millenaire compute offload pool")
-         .translation("millenaire.config.compute.offloadEnabled")
-         .define("computeOffloadEnabled", true);
-      this.computeWorkerThreads = builder.comment(
-            "Worker threads for pure compute (0 = auto: clamp(processors/4, 2, 8))"
-         )
-         .translation("millenaire.config.compute.workerThreads")
-         .defineInRange("computeWorkerThreads", 0, 0, 32);
-      this.computeApplyBudgetPerTick = builder.comment("Max completed compute results applied per server tick")
-         .translation("millenaire.config.compute.applyBudgetPerTick")
-         .defineInRange("computeApplyBudgetPerTick", 8, 1, 64);
-      this.computeOffloadVillagePaths = builder.comment("Offload village path A* searches to worker threads")
-         .translation("millenaire.config.compute.offloadVillagePaths")
-         .define("computeOffloadVillagePaths", true);
-      this.computeOffloadHighwayPlan = builder.comment("Offload highway graph link planning to worker threads")
-         .translation("millenaire.config.compute.offloadHighwayPlan")
-         .define("computeOffloadHighwayPlan", true);
-      this.computeOffloadWorldgenPlan = builder.comment("Offload settlement region plan decisions to worker threads")
-         .translation("millenaire.config.compute.offloadWorldgenPlan")
-         .define("computeOffloadWorldgenPlan", true);
-      this.computeOffloadWaypointGraph = builder.comment("Offload waypoint-graph edge batch prep to worker threads")
-         .translation("millenaire.config.compute.offloadWaypointGraph")
-         .define("computeOffloadWaypointGraph", true);
-      this.computeOffloadEntityPaths = builder.comment(
-            "Offload Mid-LOD entity A* to worker threads via NavRegionSnapshot (Near stays sync under PathRequestQueue)"
-         )
-         .translation("millenaire.config.compute.offloadEntityPaths")
-         .define("computeOffloadEntityPaths", true);
-      builder.pop();
-
-      builder.comment(
-            new String[]{
-               "Tick Governor + Simulation LOD — soft shared deadline across Millenaire phases.",
-               "Defaults favor desktop/SP headroom; adaptive HEALTHY/SOFT/HARD pressure remains the safety net.",
-               "Does not remove features; amortizes far/mid work and adds fair deferral under load.",
-               "Uses worldgenTickTimeBudgetMs as the shared soft wall-clock budget."
-            }
-         )
-         .push("tickGovernor");
-      this.tickGovernorEnabled = builder.comment("Master switch for ServerTickGovernor soft deadline checks")
-         .translation("millenaire.config.tickGovernor.enabled")
+      this.settlementsFallbackCulture = builder.comment("Fallback culture id when biome matches none")
+         .translation("millenaire.config.settlementsFallbackCulture")
+         .define("fallbackCulture", "millenaire:norman");
+      builder.push("takeover");
+      this.settlementsTakeoverEnabled = builder.comment("Promote nearby vanilla settlements to Millenaire villages (capped)")
+         .translation("millenaire.config.settlementsTakeoverEnabled")
          .define("enabled", true);
-      this.villageLodEnabled = builder.comment("Distance LOD for active villages (Near full / Mid staggered / Far background)")
-         .translation("millenaire.config.tickGovernor.villageLodEnabled")
-         .define("villageLodEnabled", true);
-      this.villageLodMidInterval = builder.comment("Ticks between full Village.tick for Mid LOD villages (staggered)")
-         .translation("millenaire.config.tickGovernor.villageLodMidInterval")
-         .defineInRange("villageLodMidInterval", 2, 1, 20);
-      this.villagerAiCadenceEnabled = builder.comment("Amortize goal-pick for villagers beyond mid distance")
-         .translation("millenaire.config.tickGovernor.villagerAiCadenceEnabled")
-         .define("villagerAiCadenceEnabled", true);
-      this.villagerAiMidDistance = builder.comment("Players within this distance keep full AI goal-pick rate")
-         .translation("millenaire.config.tickGovernor.villagerAiMidDistance")
-         .defineInRange("villagerAiMidDistance", 48, 16, 256);
-      this.villagerAiMidInterval = builder.comment("Goal-pick interval for distant villagers")
-         .translation("millenaire.config.tickGovernor.villagerAiMidInterval")
-         .defineInRange("villagerAiMidInterval", 2, 1, 20);
-      this.factionLifecycleStagingEnabled = builder.comment(
-            "When civilization orchestrator is off, stage FactionLifecycle managers like civ stages"
-         )
-         .translation("millenaire.config.tickGovernor.factionLifecycleStagingEnabled")
-         .define("factionLifecycleStagingEnabled", true);
-      this.civilizationExporterScanBudget = builder.comment("Max exporter village inventory scans per needs-trade pass")
-         .translation("millenaire.config.tickGovernor.civilizationExporterScanBudget")
-         .defineInRange("civilizationExporterScanBudget", 32, 4, 256);
-      this.villageBookRefreshMinIntervalTicks = builder.comment(
-            "Min ticks between heavy village-book rebuilds per player+village (0 = off)"
-         )
-         .translation("millenaire.config.tickGovernor.villageBookRefreshMinIntervalTicks")
-         .defineInRange("villageBookRefreshMinIntervalTicks", 20, 0, 200);
-      this.nearVillageMaxFullTicksPerTick = builder.comment(
-            "Max Near villages that may run full Village.tick per server tick (rest deferred FIFO)"
-         )
-         .translation("millenaire.config.tickGovernor.nearVillageMaxFullTicksPerTick")
-         .defineInRange("nearVillageMaxFullTicksPerTick", 4, 1, 32);
-      this.villageLodInnerNearRadius = builder.comment(
-            "Optional true-NEAR ring (blocks). 0 = off (NEAR = keepActiveRadius). When >0, only villages inside this radius are NEAR; keepActive..inner stay MID."
-         )
-         .translation("millenaire.config.tickGovernor.villageLodInnerNearRadius")
-         .defineInRange("villageLodInnerNearRadius", 0, 0, 512);
-      this.entityLodEnabled = builder.comment("Distance LOD for loaded villagers (Near / Mid / Far sleep)")
-         .translation("millenaire.config.tickGovernor.entityLodEnabled")
-         .define("entityLodEnabled", true);
-      this.entityLodMidDistance = builder.comment("Players within this distance keep full villager AI")
-         .translation("millenaire.config.tickGovernor.entityLodMidDistance")
-         .defineInRange("entityLodMidDistance", 48, 16, 256);
-      this.entityLodFarDistance = builder.comment("Beyond this distance villagers Far-sleep when enabled")
-         .translation("millenaire.config.tickGovernor.entityLodFarDistance")
-         .defineInRange("entityLodFarDistance", 96, 32, 512);
-      this.entityLodFarSleep = builder.comment("Aggressive Far sleep: skip goal-pick, combat scans, ambient work")
-         .translation("millenaire.config.tickGovernor.entityLodFarSleep")
-         .define("entityLodFarSleep", true);
-      this.entityLodMidCombatInterval = builder.comment("Combat canStart scan interval for Mid-distance villagers")
-         .translation("millenaire.config.tickGovernor.entityLodMidCombatInterval")
-         .defineInRange("entityLodMidCombatInterval", 3, 1, 40);
-      this.entityLodNearCombatInterval = builder.comment(
-            "Combat canStart scan interval for Near villagers (hurt/target always scans immediately)"
-         )
-         .translation("millenaire.config.tickGovernor.entityLodNearCombatInterval")
-         .defineInRange("entityLodNearCombatInterval", 3, 1, 20);
-      this.tickPressureScalesAi = builder.comment(
-            "Under SOFT/HARD TickPressure, stretch combat-scan / Mid goal-pick intervals and shrink pathMaxSearchMs"
-         )
-         .translation("millenaire.config.tickGovernor.tickPressureScalesAi")
-         .define("tickPressureScalesAi", true);
-      this.pathMaxSearchMs = builder.comment("Hard wall-clock abort for entity A* path searches (ms)")
-         .translation("millenaire.config.tickGovernor.pathMaxSearchMs")
-         .defineInRange("pathMaxSearchMs", 4, 1, 25);
-      this.pathNodeMultiplier = builder.comment("MillPathNavigation node budget multiplier (was 8)")
-         .translation("millenaire.config.tickGovernor.pathNodeMultiplier")
-         .defineInRange("pathNodeMultiplier", 4, 1, 8);
-      this.pathMaxStartsPerTick = builder.comment(
-            "Max new entity path searches started per server tick globally (PathRequestQueue)"
-         )
-         .translation("millenaire.config.tickGovernor.pathMaxStartsPerTick")
-         .defineInRange("pathMaxStartsPerTick", 6, 1, 32);
-      this.tickGlobalBudgetMs = builder.comment("Global Millenaire Post-tick soft ceiling (ms); includes WORLDGEN reserve")
-         .translation("millenaire.config.tickGovernor.globalBudgetMs")
-         .defineInRange("globalBudgetMs", 24, 4, 50);
-      this.tickAdaptiveBudgetEnabled = builder.comment(
-            "Scale Post-tick allowance from remaining tick time and recent MSPT pressure (HEALTHY/SOFT/HARD)"
-         )
-         .translation("millenaire.config.tickGovernor.adaptiveBudgetEnabled")
-         .define("adaptiveBudgetEnabled", true);
-      this.tickAdaptiveMinGlobalMs = builder.comment("Floor for adaptive effective globalMs under HARD pressure")
-         .translation("millenaire.config.tickGovernor.adaptiveMinGlobalMs")
-         .defineInRange("adaptiveMinGlobalMs", 12, 2, 20);
-      this.tickSoftMsptThreshold = builder.comment("Approximate total tick ms (pre-Post + Millenaire) that enters SOFT pressure")
-         .translation("millenaire.config.tickGovernor.softMsptThreshold")
-         .defineInRange("softMsptThreshold", 45, 20, 80);
-      this.tickHardMsptThreshold = builder.comment("Approximate total tick ms that enters HARD pressure")
-         .translation("millenaire.config.tickGovernor.hardMsptThreshold")
-         .defineInRange("hardMsptThreshold", 55, 25, 100);
-      this.entityGoalPickBudgetPerTick = builder.comment(
-            "Max non-urgent villager goal-pick starts per tick across the entity swarm (hired/companion/combat always allowed)"
-         )
-         .translation("millenaire.config.tickGovernor.entityGoalPickBudgetPerTick")
-         .defineInRange("entityGoalPickBudgetPerTick", 64, 4, 256);
-      this.tickPhaseApplyMs = builder.comment("APPLY phase quota (ms)")
-         .translation("millenaire.config.tickGovernor.phaseApplyMs")
-         .defineInRange("phaseApplyMs", 4, 1, 20);
-      this.tickPhaseVillageNearMs = builder.comment("VILLAGE_NEAR phase quota (ms)")
-         .translation("millenaire.config.tickGovernor.phaseVillageNearMs")
-         .defineInRange("phaseVillageNearMs", 8, 1, 30);
-      this.tickPhaseVillageMidMs = builder.comment("VILLAGE_MID phase quota (ms)")
-         .translation("millenaire.config.tickGovernor.phaseVillageMidMs")
-         .defineInRange("phaseVillageMidMs", 4, 1, 20);
-      this.tickPhaseAiSupportMs = builder.comment("AI_SUPPORT phase quota (ms)")
-         .translation("millenaire.config.tickGovernor.phaseAiSupportMs")
-         .defineInRange("phaseAiSupportMs", 2, 1, 20);
-      this.tickPhaseCivMs = builder.comment("CIV_FACTION phase quota (ms)")
-         .translation("millenaire.config.tickGovernor.phaseCivMs")
-         .defineInRange("phaseCivMs", 3, 1, 20);
-      this.tickPhaseWorldgenMs = builder.comment("WORLDGEN reserved phase quota (ms); earlier phases cannot consume this")
-         .translation("millenaire.config.tickGovernor.phaseWorldgenMs")
-         .defineInRange("phaseWorldgenMs", 4, 1, 20);
-      this.tickPhaseHighwayMs = builder.comment("HIGHWAY reserved phase quota (ms)")
-         .translation("millenaire.config.tickGovernor.phaseHighwayMs")
-         .defineInRange("phaseHighwayMs", 2, 1, 20);
-      this.tickPhaseTailMs = builder.comment("BOSS_QUEST_MAP / TAIL phase quota (ms)")
-         .translation("millenaire.config.tickGovernor.phaseTailMs")
-         .defineInRange("phaseTailMs", 2, 1, 20);
-      this.farBackgroundTickInterval = builder.comment(
-            "Ticks between backgroundTick for inactive/Far villages (raid-active always runs)"
-         )
-         .translation("millenaire.config.tickGovernor.farBackgroundTickInterval")
-         .defineInRange("farBackgroundTickInterval", 10, 1, 200);
+      this.settlementsMaxActivePromotions = builder.comment("Hard cap on active promoted vanilla settlements")
+         .translation("millenaire.config.settlementsMaxActivePromotions")
+         .defineInRange("maxActivePromotions", 4, 0, 32);
+      this.settlementsTakeoverScanInterval = builder.comment("Ticks between promote/demote scans")
+         .translation("millenaire.config.settlementsTakeoverScanInterval")
+         .defineInRange("scanIntervalTicks", 20, 5, 200);
       builder.pop();
-
-      builder.comment(
-            new String[]{
-               "World Boss Events — default cadence is every N Minecraft days (world time).",
-               "DAYS mode: sleep//time set advances the calendar; still requires an eligible online player to fire.",
-               "ACTIVE_PLAYTIME mode: legacy tick counter while eligible players are online.",
-               "quietSpawn skips announce chat/sound/particles; aerial descent still runs.",
-               "Disabling stops new events; SavedData is retained. Active-boss policy is explicit."
-            }
-         )
-         .push("worldBossEvents");
-      this.worldBossEventsEnabled = builder.comment("Master switch for world boss events")
-         .translation("millenaire.config.worldBossEvents.enabled")
-         .define("enabled", false);
-      this.worldBossCadenceMode = builder.comment("DAYS (default) or ACTIVE_PLAYTIME")
-         .translation("millenaire.config.worldBossEvents.cadenceMode")
-         .define("cadenceMode", "DAYS");
-      this.worldBossIntervalDays = builder.comment("Minecraft days between events when cadenceMode=DAYS")
-         .translation("millenaire.config.worldBossEvents.intervalDays")
-         .defineInRange("intervalDays", 5, 1, 365);
-      this.worldBossQuietSpawn = builder.comment("Skip announce/arrive chat+FX; spawn high and descend only")
-         .translation("millenaire.config.worldBossEvents.quietSpawn")
-         .define("quietSpawn", true);
-      this.worldBossIntervalMinTicks = builder.comment("ACTIVE_PLAYTIME only: minimum active ticks between events")
-         .translation("millenaire.config.worldBossEvents.intervalMinTicks")
-         .defineInRange("intervalMinTicks", 72000, 1200, 1728000);
-      this.worldBossIntervalMaxTicks = builder.comment("ACTIVE_PLAYTIME only: maximum active ticks between events")
-         .translation("millenaire.config.worldBossEvents.intervalMaxTicks")
-         .defineInRange("intervalMaxTicks", 108000, 1200, 1728000);
-      this.worldBossAllowedDimensions = builder.comment("Comma-separated dimension ids allowed as event anchors/spawns")
-         .translation("millenaire.config.worldBossEvents.allowedDimensions")
-         .define("allowedDimensions", "minecraft:overworld");
-      this.worldBossSpawnMinDistance = builder.comment("Minimum horizontal spawn distance from anchor player")
-         .translation("millenaire.config.worldBossEvents.spawnMinDistance")
-         .defineInRange("spawnMinDistance", 40, 16, 128);
-      this.worldBossSpawnMaxDistance = builder.comment("Maximum horizontal spawn distance from anchor player")
-         .translation("millenaire.config.worldBossEvents.spawnMaxDistance")
-         .defineInRange("spawnMaxDistance", 70, 24, 160);
-      this.worldBossHoverHeight = builder.comment("Hover height above ground for aerial bosses")
-         .translation("millenaire.config.worldBossEvents.hoverHeight")
-         .defineInRange("hoverHeight", 10, 4, 40);
-      this.worldBossSpawnAttemptsPerPulse = builder.comment("Spawn candidate attempts per selecting pulse (bounded)")
-         .translation("millenaire.config.worldBossEvents.spawnAttemptsPerPulse")
-         .defineInRange("spawnAttemptsPerPulse", 8, 1, 24);
-      this.worldBossVillageAvoidRadius = builder.comment("Avoid spawning within this radius of Millénaire villages / protected structures")
-         .translation("millenaire.config.worldBossEvents.villageAvoidRadius")
-         .defineInRange("villageAvoidRadius", 96, 16, 256);
-      this.worldBossNeutralDwellTicks = builder.comment("Neutral observation time before peaceful departure (6000 ≈ 5 min at 20 TPS)")
-         .translation("millenaire.config.worldBossEvents.neutralDwellTicks")
-         .defineInRange("neutralDwellTicks", 6000, 200, 72000);
-      this.worldBossCombatTimeoutTicks = builder.comment("Ticks without valid combat targets before disengage/depart")
-         .translation("millenaire.config.worldBossEvents.combatTimeoutTicks")
-         .defineInRange("combatTimeoutTicks", 12000, 200, 72000);
-      this.worldBossAllowCreativeAnchors = builder.comment("Allow creative players as event anchors/targets")
-         .translation("millenaire.config.worldBossEvents.allowCreativeAnchors")
-         .define("allowCreativeAnchors", false);
-      this.worldBossAllowAdventureAnchors = builder.comment("Allow adventure players as event anchors/targets")
-         .translation("millenaire.config.worldBossEvents.allowAdventureAnchors")
-         .define("allowAdventureAnchors", true);
-      this.worldBossDisableActivePolicy = builder.comment("When disabled with an active boss: leave | force_depart")
-         .translation("millenaire.config.worldBossEvents.disableActivePolicy")
-         .define("disableActivePolicy", "force_depart");
-      this.worldBossHemelwachterWeight = builder.comment("Selection weight for Hemelwachter in the boss pool")
-         .translation("millenaire.config.worldBossEvents.hemelwachterWeight")
-         .defineInRange("hemelwachterWeight", 100, 1, 10000);
-      this.worldBossHemelwachterHealth = builder.comment("Hemelwachter max health (1200 = 600 hearts)")
-         .translation("millenaire.config.worldBossEvents.hemelwachterHealth")
-         .defineInRange("hemelwachterHealth", 1200.0D, 100.0D, 20000.0D);
-      this.worldBossHemelwachterArmor = builder.comment("Hemelwachter armor")
-         .translation("millenaire.config.worldBossEvents.hemelwachterArmor")
-         .defineInRange("hemelwachterArmor", 12.0D, 0.0D, 30.0D);
-      this.worldBossHemelwachterToughness = builder.comment("Hemelwachter armor toughness")
-         .translation("millenaire.config.worldBossEvents.hemelwachterToughness")
-         .defineInRange("hemelwachterToughness", 6.0D, 0.0D, 20.0D);
-      this.worldBossBeamDamage = builder.comment("Eye beam damage before armor")
-         .translation("millenaire.config.worldBossEvents.beamDamage")
-         .defineInRange("beamDamage", 14.0D, 1.0D, 100.0D);
-      this.worldBossBeamRange = builder.comment("Eye beam maximum range")
-         .translation("millenaire.config.worldBossEvents.beamRange")
-         .defineInRange("beamRange", 40.0D, 8.0D, 80.0D);
-      this.worldBossBuffetDamage = builder.comment("Wing buffet damage before armor")
-         .translation("millenaire.config.worldBossEvents.buffetDamage")
-         .defineInRange("buffetDamage", 16.0D, 1.0D, 100.0D);
-      this.worldBossProjectileDamage = builder.comment("Celestial projectile damage before armor")
-         .translation("millenaire.config.worldBossEvents.projectileDamage")
-         .defineInRange("projectileDamage", 8.0D, 1.0D, 100.0D);
-      this.worldBossEffectBudgetPerTick = builder.comment("Soft cap hint for boss particle/sound bursts per tick")
-         .translation("millenaire.config.worldBossEvents.effectBudgetPerTick")
-         .defineInRange("effectBudgetPerTick", 24, 4, 128);
       builder.pop();
-   }
-
-   public int effectiveNpcChatLeaveRange() {
-      int chat = this.npcChatChatRange.getAsInt();
-      int leave = this.npcChatLeaveRange.getAsInt();
-      return Math.max(chat, leave);
    }
 
    static {

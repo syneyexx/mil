@@ -2,9 +2,7 @@
   "culture": "millenaire:byzantines",
   "biome_tags": [
     "#millenaire:is_temperate_forest",
-    "#c:is_hill",
-    "#millenaire:is_mediterranean",
-    "#millenaire:is_lavender"
+    "#c:is_hill"
   ],
   "name": "Monastíri",
   "weight": 10,

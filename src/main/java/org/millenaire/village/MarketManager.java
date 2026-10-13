@@ -69,13 +69,17 @@ public final class MarketManager {
       List<VillagerType> foreignCandidates = new ArrayList<>();
       VillageManager villageManager = VillageSavedData.get(level).getVillageManager();
       ResourceLocation ownCulture = village.getCultureId();
+      CultureStandingSavedData cultureStanding = CultureStandingSavedData.get(level);
 
       for (Village otherVillage : villageManager.getAllVillages()) {
          if (!otherVillage.getId().equals(village.getId())) {
             int relation = village.getRelation(otherVillage.getId());
-            if (relation > 70) {
-               ResourceLocation otherCulture = otherVillage.getCultureId();
-               if (!ownCulture.equals(otherCulture) && hasMarketBuilding(otherVillage)) {
+            ResourceLocation otherCulture = otherVillage.getCultureId();
+            if (relation > 70
+               && !ownCulture.equals(otherCulture)
+               && CultureWarService.allowsTrade(ownCulture, otherCulture, level)
+               && cultureStanding.getStanding(ownCulture, otherCulture) >= CultureStandingSavedData.ALLIED_THRESHOLD) {
+               if (hasMarketBuilding(otherVillage)) {
                   VillagerType foreignType = getRandomForeignMerchant(otherCulture);
                   if (foreignType != null) {
                      foreignCandidates.add(foreignType);

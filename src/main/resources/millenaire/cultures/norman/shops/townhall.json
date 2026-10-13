@@ -39,12 +39,7 @@
     "carrot",
     "purse",
     "summoning_wand",
-    "norpattern",
-    "fd_hamburger",
-    "mcw_oak_roof",
-    "create_cogwheel",
-    "waystone_item",
-    "ek_arming_sword"
+    "norpattern"
   ],
   "buys": [
     "wood",

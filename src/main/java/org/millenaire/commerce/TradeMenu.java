@@ -346,6 +346,25 @@ public class TradeMenu extends AbstractContainerMenu {
       return isSelling ? good.sellingPrice() : good.buyingPrice();
    }
 
+   private int applyCultureStandingPrice(int base, boolean isSelling, Player player) {
+      if (base <= 0 || this.village == null || !(player instanceof ServerPlayer serverPlayer)) {
+         return base;
+      }
+      ServerLevel level = serverPlayer.serverLevel();
+      ResourceLocation playerCulture = org.millenaire.village.CultureWarService.playerCultureId(serverPlayer, level);
+      if (playerCulture == null || playerCulture.equals(this.village.getCultureId())) {
+         return base;
+      }
+      double mult = org.millenaire.village.CultureWarService.tradeStandingMultiplier(playerCulture, this.village.getCultureId(), level);
+      if (mult <= 0.0) {
+         return Integer.MAX_VALUE / 4;
+      }
+      if (isSelling) {
+         return Math.max(1, (int)Math.round(base / mult));
+      }
+      return Math.max(1, (int)Math.round(base * mult));
+   }
+
    public boolean clickMenuButton(Player player, int buttonId) {
       if (this.serverGoods == null || this.village == null || this.building == null) {
          return false;
@@ -403,7 +422,7 @@ public class TradeMenu extends AbstractContainerMenu {
       if (good.canSell()) {
          if (this.village != null && this.building != null) {
             int playerMoney = MoneyHelper.getTotalDeniers(player.getInventory());
-            int price = this.resolvePrice(good, true);
+            int price = this.applyCultureStandingPrice(this.resolvePrice(good, true), true, player);
             if (price > 0) {
                int rep;
                if (player.level() instanceof ServerLevel sl) {
@@ -412,7 +431,10 @@ public class TradeMenu extends AbstractContainerMenu {
                   rep = this.village.getReputation().get(player.getUUID());
                }
 
-               if (rep < good.minReputation()) {
+               if (player.level() instanceof ServerLevel bountyLevel
+                  && org.millenaire.crime.PlayerBountySavedData.get(bountyLevel).isTradeBanned(player.getUUID(), this.village.getCultureId())) {
+                  player.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.millenaire.crime.trade_banned"));
+               } else if (rep < good.minReputation()) {
                   LOGGER.debug("Insufficient reputation to buy {} (required={}, actual={})", new Object[]{good.id(), good.minReputation(), rep});
                } else {
                   int maxByMoney = playerMoney / price;
@@ -443,6 +465,11 @@ public class TradeMenu extends AbstractContainerMenu {
                            this.giveItems(player, item, actual);
                            if (player.level() instanceof ServerLevel serverLevel) {
                               this.village.adjustReputation(serverLevel, player.getUUID(), totalCost);
+                              if (player instanceof ServerPlayer sp) {
+                                 org.millenaire.village.CultureTradeSpillover.onPlayerTrade(
+                                    sp, serverLevel, this.getEffectiveCultureId(), totalCost
+                                 );
+                              }
                            }
 
                            if (player.level() instanceof ServerLevel sl) {
@@ -468,6 +495,12 @@ public class TradeMenu extends AbstractContainerMenu {
    private void executeSell(Player player, TradeGood good, int requestedQty) {
       if (good.canBuy()) {
          if (this.village != null && this.building != null) {
+            if (player.level() instanceof ServerLevel bountyLevel
+               && org.millenaire.crime.PlayerBountySavedData.get(bountyLevel).isTradeBanned(player.getUUID(), this.village.getCultureId())) {
+               player.sendSystemMessage(Component.translatable("message.millenaire.crime.trade_banned"));
+               return;
+            }
+
             int playerCount = this.countPlayerItems(player.getInventory(), good);
             int actual = Math.min(requestedQty, playerCount);
             if (actual > 0) {
@@ -486,7 +519,7 @@ public class TradeMenu extends AbstractContainerMenu {
                   }
                }
 
-               int buyPrice = this.resolvePrice(good, false);
+               int buyPrice = this.applyCultureStandingPrice(this.resolvePrice(good, false), false, player);
                if (buyPrice > 0 || this.donationMode) {
                   Map<Item, Integer> removedByType = removeMatchingItemsPerType(
                      player.getInventory(), stack -> good.matchesItem(stack) && !isDamaged(stack), actual
@@ -517,6 +550,11 @@ public class TradeMenu extends AbstractContainerMenu {
                      int repMultiplier = donating ? 4 : 1;
                      if (player.level() instanceof ServerLevel serverLevel) {
                         this.village.adjustReputation(serverLevel, player.getUUID(), totalRevenue * repMultiplier);
+                        if (player instanceof ServerPlayer sp) {
+                           org.millenaire.village.CultureTradeSpillover.onPlayerTrade(
+                              sp, serverLevel, this.getEffectiveCultureId(), Math.max(1, totalRevenue)
+                           );
+                        }
                      }
 
                      if (player.level() instanceof ServerLevel sl) {
@@ -760,11 +798,16 @@ public class TradeMenu extends AbstractContainerMenu {
 
    private List<TradeGood> resolveGoods(ShopProfile shopProfile, List<TradeGood> catalog, Inventory playerInventory) {
       List<TradeGood> goods = new ArrayList<>();
+      boolean dynamicSells = shopProfile.sells().contains("*");
 
-      for (String sellId : shopProfile.sells()) {
-         TradeGood good = this.findGoodById(catalog, sellId);
-         if (good != null && good.canSell() && good.resolveItem() != null) {
-            goods.add(good);
+      if (dynamicSells) {
+         goods.addAll(this.resolvePlayerShopSells(catalog, playerInventory));
+      } else {
+         for (String sellId : shopProfile.sells()) {
+            TradeGood good = this.findGoodById(catalog, sellId);
+            if (good != null && good.canSell() && good.resolveItem() != null) {
+               goods.add(good);
+            }
          }
       }
 
@@ -783,6 +826,45 @@ public class TradeMenu extends AbstractContainerMenu {
       }
 
       this.injectConstructionNeedsIfTownhall(goods, catalog);
+      return goods;
+   }
+
+
+   private List<TradeGood> resolvePlayerShopSells(List<TradeGood> catalog, Inventory playerInventory) {
+      List<TradeGood> goods = new ArrayList<>();
+      Set<String> already = new HashSet<>();
+      BuildingInventory inv = this.building != null ? this.building.getInventory() : null;
+      Map<Item, Integer> stock = Map.of();
+      if (inv != null && playerInventory.player.level() instanceof Level level) {
+         stock = inv.scanChests(level);
+      }
+
+      for (TradeGood good : catalog) {
+         if (good.isTag() || !good.canSell() || good.resolveItem() == null) {
+            continue;
+         }
+         Item item = good.resolveItem();
+         if (inv != null && stock.getOrDefault(item, 0) <= 0) {
+            continue;
+         }
+         goods.add(good);
+         already.add(BuiltInRegistries.ITEM.getKey(item).toString());
+      }
+
+      // Non-catalog chest items become synthetic sell goods (base price 1 denier/stack unit)
+      for (Entry<Item, Integer> entry : stock.entrySet()) {
+         if (entry.getValue() <= 0) {
+            continue;
+         }
+         String itemId = BuiltInRegistries.ITEM.getKey(entry.getKey()).toString();
+         if (already.contains(itemId)) {
+            continue;
+         }
+         String synthId = "_player_shop_" + entry.getKey().toString();
+         TradeGood synth = new TradeGood(synthId, itemId, 1, 0, 0, 0, false, 0, "player_shop", false, 0);
+         goods.add(synth);
+         already.add(itemId);
+      }
       return goods;
    }
 
@@ -837,13 +919,14 @@ public class TradeMenu extends AbstractContainerMenu {
 
    private List<TradeMenu.GoodDirections> resolveDirections(ShopProfile shopProfile, List<TradeGood> goods, Inventory playerInventory) {
       Set<String> sellsIds = new HashSet<>(shopProfile.sells());
+      boolean dynamicSells = sellsIds.contains("*");
       Set<String> buysIds = new HashSet<>(shopProfile.buys());
       Set<String> optionalIds = new HashSet<>(shopProfile.buysOptional());
       List<TradeMenu.GoodDirections> result = new ArrayList<>(goods.size());
 
       for (TradeGood good : goods) {
-         boolean sellDir = sellsIds.contains(good.id()) && good.canSell();
-         boolean inAnyShopList = sellsIds.contains(good.id()) || buysIds.contains(good.id()) || optionalIds.contains(good.id());
+         boolean sellDir = (dynamicSells || sellsIds.contains(good.id())) && good.canSell();
+         boolean inAnyShopList = dynamicSells || sellsIds.contains(good.id()) || buysIds.contains(good.id()) || optionalIds.contains(good.id());
          boolean buyDir = (buysIds.contains(good.id()) || optionalIds.contains(good.id()) && this.playerHasItem(playerInventory, good) || !inAnyShopList)
             && good.canBuy();
          result.add(new TradeMenu.GoodDirections(good, sellDir, buyDir));

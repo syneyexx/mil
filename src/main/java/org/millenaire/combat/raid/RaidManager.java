@@ -29,6 +29,8 @@ import org.millenaire.culture.VillageType;
 import org.millenaire.culture.VillagerType;
 import org.millenaire.entity.MillVillager;
 import org.millenaire.entity.VillagerSpawnFactory;
+import org.millenaire.perf.TickPerfCounters;
+import org.millenaire.village.CultureStandingSavedData;
 import org.millenaire.village.Village;
 import org.millenaire.village.VillageId;
 import org.millenaire.village.VillageManager;
@@ -92,6 +94,14 @@ public final class RaidManager {
       }
    }
 
+   public static boolean isRegularViableTargetForCultureWar(int targetDefendingStrength, int maxAcceptable, boolean targetUnderAttack) {
+      if (targetUnderAttack) {
+         return false;
+      } else {
+         return targetDefendingStrength < maxAcceptable;
+      }
+   }
+
    public static void attemptPlanNewRaid(Village attacker, ServerLevel level) {
       if (attacker != null && attacker.getRaidTarget() == null) {
          VillageType vt = ModCultures.getVillageType(attacker.getVillageTypeId());
@@ -99,11 +109,17 @@ public final class RaidManager {
             BlockPos c = attacker.getCenter();
             int bgRadius = (Integer)MillenaireServerConfig.SERVER.backgroundRadius.get();
             if (level.hasNearbyAlivePlayer(c.getX() + 0.5, c.getY() + 0.5, c.getZ() + 0.5, bgRadius)) {
-               boolean isBandit = vt.loneBuilding();
+               boolean isBandit = vt.loneBuilding() && (vt.carriesRaid() || "illager_camp".equals(vt.specialType()));
                if (vt.carriesRaid() || isBandit) {
                   int rate = (Integer)MillenaireServerConfig.SERVER.raidingRate.get();
                   if (rate > 0) {
                      if (ThreadLocalRandom.current().nextInt(100) < rate) {
+                        int maxConcurrent = MillenaireServerConfig.SERVER.maxConcurrentRaids.getAsInt();
+                        if (countActiveRaids(VillageSavedData.get(level).getVillageManager()) >= maxConcurrent) {
+                           TickPerfCounters.RAID_PLANS_SKIPPED_CAP.incrementAndGet();
+                           return;
+                        }
+
                         for (VillagerRecord r : attacker.getVillagerRecords().values()) {
                            if (r.isRaidingVillage()) {
                               return;
@@ -147,9 +163,21 @@ public final class RaidManager {
             }
          }
       } else {
+         CultureStandingSavedData cultureStanding = CultureStandingSavedData.get(level);
+         ResourceLocation attackerCulture = attacker.getCultureId();
+
          for (Entry<VillageId, Integer> entry : attacker.getRelations().entrySet()) {
             Village v = vm.getVillage(entry.getKey());
             if (v != null && isRegularViableTarget(v.getVillageDefendingStrength(), maxAcceptable, entry.getValue(), v.isUnderAttack())) {
+               candidates.add(v);
+            }
+         }
+
+         for (Village v : vm.getAllVillages()) {
+            if (v != attacker
+               && !candidates.contains(v)
+               && cultureStanding.isAtWar(attackerCulture, v.getCultureId())
+               && isRegularViableTargetForCultureWar(v.getVillageDefendingStrength(), maxAcceptable, v.isUnderAttack())) {
                candidates.add(v);
             }
          }
@@ -237,13 +265,19 @@ public final class RaidManager {
       startRaidInternal(attacker, target, level, true);
    }
 
-   static boolean shouldAbortDueToImprovedRelations(boolean isBandit, Integer relation, boolean skipRelationCheck) {
+   static boolean shouldAbortDueToImprovedRelations(
+      boolean isBandit, Integer relation, boolean skipRelationCheck, ServerLevel level, Village attacker, Village target
+   ) {
       if (skipRelationCheck) {
          return false;
       } else if (isBandit) {
          return false;
+      } else if (relation == null) {
+         return false;
+      } else if (relation > -90) {
+         return !CultureStandingSavedData.get(level).isAtWar(attacker.getCultureId(), target.getCultureId());
       } else {
-         return relation == null ? false : relation > -90;
+         return false;
       }
    }
 
@@ -251,7 +285,7 @@ public final class RaidManager {
       VillageType attackerVT = ModCultures.getVillageType(attacker.getVillageTypeId());
       boolean isBandit = attackerVT != null && attackerVT.loneBuilding();
       Integer rel = isBandit ? null : attacker.getRelations().get(target.getId());
-      if (shouldAbortDueToImprovedRelations(isBandit, rel, skipRelationCheck)) {
+      if (shouldAbortDueToImprovedRelations(isBandit, rel, skipRelationCheck, level, attacker, target)) {
          LOGGER.info("[Millenaire] Raid aborted (relation improved): {} -> {}.", nameOf(attacker), nameOf(target));
          attacker.clearRaid();
       } else if (target.isUnderAttack()) {
@@ -297,8 +331,21 @@ public final class RaidManager {
                )
             );
             LOGGER.info("[Millenaire] Raid started: {} dispatched {} raiders to {}.", new Object[]{nameOf(attacker), sent, nameOf(target)});
+            IllagerRaidSupport.onRaidStarted(attacker, target, level);
          }
       }
+   }
+
+   private static int countActiveRaids(VillageManager vm) {
+      int count = 0;
+
+      for (Village v : vm.getAllVillages()) {
+         if (v.getRaidStart() > 0L || v.isUnderAttack()) {
+            count++;
+         }
+      }
+
+      return count;
    }
 
    static boolean sendVillagerOnRaid(VillagerRecord original, Village attacker, Village target, ServerLevel level) {
@@ -471,11 +518,6 @@ public final class RaidManager {
       }
 
       grantRaidAdvancements(attacker, target, attackersWon, level);
-      try {
-         org.millenaire.faction.crime.BountyRaidScheduler.onBountyRaidEnded(level, attacker, target, attackersWon);
-      } catch (Exception bountyError) {
-         LOGGER.debug("[Millenaire] Bounty raid end hook failed: {}", bountyError.toString());
-      }
       List<VillagerRecord> clones = new ArrayList<>();
 
       for (VillagerRecord r : target.getVillagerRecords().values()) {
@@ -620,6 +662,7 @@ public final class RaidManager {
    }
 
    private static void cleanupClones(Village target, ServerLevel level) {
+      IllagerRaidSupport.cleanupRaidIllagers(target, level);
       List<UUID> toRemove = new ArrayList<>();
 
       for (VillagerRecord r : target.getVillagerRecords().values()) {

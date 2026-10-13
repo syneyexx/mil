@@ -1,0 +1,6 @@
+bandit.greeting=Hands where I can see them, $name.
+bandit.greeting=This camp answers to no village chief.
+bandit.greeting=Crossbows are loaded. Choose your next words carefully.
+armoredbandit.greeting=The captain does not parley with strangers.
+armoredbandit.greeting=One step closer and my axe finds your shield.
+armoredbandit.patrol=These woods belong to the raid.

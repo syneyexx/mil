@@ -14,7 +14,6 @@ import java.util.Set;
 import java.util.Map.Entry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.GsonHelper;
@@ -76,16 +75,14 @@ final class VillageTypeLoader {
          String villageName = GsonHelper.getAsString(json, "name", fallbackName);
          int weight = GsonHelper.getAsInt(json, "weight", 10);
          List<TagKey<Biome>> biomeTags = new ArrayList<>();
-         List<ResourceKey<Biome>> biomeKeys = new ArrayList<>();
          if (json.has("biome_tags")) {
             for (JsonElement e : GsonHelper.getAsJsonArray(json, "biome_tags")) {
                String raw = e.getAsString();
                if (raw.startsWith("#")) {
-                  biomeTags.add(TagKey.create(Registries.BIOME, ResourceLocation.parse(raw.substring(1))));
-               } else {
-                  // Bare IDs are biome ResourceKeys (legacy docs); #prefix is a tag.
-                  biomeKeys.add(ResourceKey.create(Registries.BIOME, ResourceLocation.parse(raw)));
+                  raw = raw.substring(1);
                }
+
+               biomeTags.add(TagKey.create(Registries.BIOME, ResourceLocation.parse(raw)));
             }
          }
 
@@ -161,9 +158,7 @@ final class VillageTypeLoader {
          boolean keyLoneBuilding = GsonHelper.getAsBoolean(json, "key_lone_building", false);
          String keyLoneBuildingGenerateTag = json.has("key_lone_building_generate_tag") ? GsonHelper.getAsString(json, "key_lone_building_generate_tag") : null;
          boolean generatedForPlayer = GsonHelper.getAsBoolean(json, "generated_for_player", false);
-         // Default true for both villages and lone buildings so Phase 4 natural gen includes
-         // bandit camps / inns. Content may still set "spawnable": false explicitly.
-         boolean spawnableLB = GsonHelper.getAsBoolean(json, "spawnable", true);
+         boolean spawnableLB = GsonHelper.getAsBoolean(json, "spawnable", !loneBuilding);
          boolean showTownHallSigns = GsonHelper.getAsBoolean(json, "show_town_hall_signs", !loneBuilding);
          String nameListVal;
          if (json.has("name_list")) {
@@ -223,7 +218,6 @@ final class VillageTypeLoader {
                villageName,
                weight,
                biomeTags,
-               biomeKeys,
                layout,
                sellingPriceOverrides,
                buyingPriceOverrides,

@@ -11,7 +11,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
-import org.millenaire.civilization.settlement.SovereignDiplomacyBridge;
 import org.millenaire.combat.raid.RaidManager;
 import org.millenaire.entity.VillagerInteraction;
 import org.millenaire.village.ControlledMilitaryService;
@@ -107,8 +106,6 @@ public record RaidActionPayload(String villageId, String targetVillageId, int ac
 
                village.adjustRelationSymmetric(serverLevel, target.getId(), -100, true);
                RaidManager.planRaid(village, target, serverLevel);
-               SovereignDiplomacyBridge.onRaidPlanned(serverLevel, village, target);
-               org.millenaire.faction.crime.CrimeService.onRaidAgainstCulture(serverLevel, player, target);
                player.sendSystemMessage(
                   Component.translatable(
                      "millenaire.combat.raid_planned_ack",

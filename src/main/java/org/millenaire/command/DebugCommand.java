@@ -41,6 +41,8 @@ import org.millenaire.entity.VillagerInventory;
 import org.millenaire.goal.GoalScheduler;
 import org.millenaire.goal.VillagerGoal;
 import org.millenaire.goal.VillagerTask;
+import org.millenaire.culture.Culture;
+import org.millenaire.village.CultureStandingSavedData;
 import org.millenaire.village.PlayerCultureReputation;
 import org.millenaire.village.Village;
 import org.millenaire.village.VillageGrowthManager;
@@ -50,6 +52,7 @@ import org.millenaire.village.VillageReputation;
 import org.millenaire.village.VillageSavedData;
 import org.millenaire.village.VillageWaypointGraph;
 import org.millenaire.village.VillagerRecord;
+import org.millenaire.perf.TickPerfCounters;
 import org.millenaire.village.WallGrowthManager;
 
 public final class DebugCommand {
@@ -78,9 +81,18 @@ public final class DebugCommand {
    }
 
    public static void registerUnder(LiteralArgumentBuilder<CommandSourceStack> parent) {
-      parent.then(Commands.literal("debug").executes(DebugCommand::execute));
+      parent.then(
+         Commands.literal("debug")
+            .executes(DebugCommand::execute)
+            .then(
+               Commands.literal("perf")
+                  .executes(DebugCommand::perfSnapshot)
+                  .then(Commands.literal("reset").executes(DebugCommand::perfReset))
+            )
+      );
       parent.then(Commands.literal("verbose").executes(DebugCommand::toggleVerbose));
       parent.then(Commands.literal("growth").executes(DebugCommand::forceGrowth));
+      parent.then(Commands.literal("culturewar").executes(DebugCommand::listCultureWar));
       parent.then(Commands.literal("villager").then(Commands.argument("uuid_prefix", StringArgumentType.string()).executes(DebugCommand::debugVillager)));
       parent.then(Commands.literal("nav").then(Commands.argument("uuid_prefix", StringArgumentType.string()).executes(DebugCommand::debugNav)));
       parent.then(
@@ -519,6 +531,44 @@ public final class DebugCommand {
          nav.stop();
       }
 
+      return 1;
+   }
+
+   private static int listCultureWar(CommandContext<CommandSourceStack> ctx) {
+      CommandSourceStack source = ctx.getSource();
+      if (!(source.getLevel() instanceof ServerLevel level)) {
+         return 0;
+      }
+
+      CultureStandingSavedData data = CultureStandingSavedData.get(level);
+      source.sendSuccess(() -> Component.translatable("millenaire.culturewar.debug.header"), false);
+
+      for (CultureStandingSavedData.CultureStandingEntry entry : data.getAllStandings()) {
+         Culture cultureA = ModCultures.getCulture(entry.cultureA());
+         Culture cultureB = ModCultures.getCulture(entry.cultureB());
+         String nameA = cultureA != null ? cultureA.displayName() : entry.cultureA().getPath();
+         String nameB = cultureB != null ? cultureB.displayName() : entry.cultureB().getPath();
+         source.sendSuccess(
+            () -> Component.translatable(
+               "millenaire.culturewar.debug.line", nameA, nameB, entry.standing(), entry.atWar() ? "war" : "peace"
+            ),
+            false
+         );
+      }
+
+      return 1;
+   }
+
+   private static int perfSnapshot(CommandContext<CommandSourceStack> ctx) {
+      CommandSourceStack source = ctx.getSource();
+      source.sendSuccess(() -> Component.literal(TickPerfCounters.snapshot()), false);
+      return 1;
+   }
+
+   private static int perfReset(CommandContext<CommandSourceStack> ctx) {
+      TickPerfCounters.reset();
+      CommandSourceStack source = ctx.getSource();
+      source.sendSuccess(() -> Component.literal("Tick perf counters reset."), false);
       return 1;
    }
 

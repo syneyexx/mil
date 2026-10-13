@@ -84,7 +84,7 @@ public class EngageTargetGoal implements VillagerGoal {
       if (t == null || !t.isAlive()) {
          return null;
       } else if (t instanceof ServerPlayer sp) {
-         return CombatHelper.isPlayerTargetable(sp) ? sp : null;
+         return CombatHelper.isPlayerTargetable(sp.isCreative(), sp.isSpectator()) ? sp : null;
       } else {
          return !(t instanceof Monster) && !(t instanceof MillVillager) ? null : t;
       }

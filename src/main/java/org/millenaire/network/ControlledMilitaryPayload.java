@@ -17,9 +17,11 @@ public record ControlledMilitaryPayload(
    String currentRaidTargetVillageId,
    boolean raidInProgress,
    List<ControlledMilitaryPayload.RelationEntry> relations,
+   List<ControlledMilitaryPayload.CultureStandingEntry> cultureStandings,
    List<PanelLine> militaryLines
 ) implements CustomPacketPayload {
    private static final int MAX_RELATION_ENTRIES = 64;
+   private static final int MAX_CULTURE_STANDING_ENTRIES = 32;
    private static final int MAX_MILITARY_LINES = 512;
    private static final int MAX_MILITARY_LINE_ARGS = 8;
    public static final Type<ControlledMilitaryPayload> TYPE = new Type(ResourceLocation.fromNamespaceAndPath("millenaire", "controlled_military"));
@@ -43,6 +45,17 @@ public record ControlledMilitaryPayload(
          ByteBufCodecs.STRING_UTF8.encode(buf, re.cultureName());
          ByteBufCodecs.VAR_INT.encode(buf, re.relation());
          ByteBufCodecs.STRING_UTF8.encode(buf, re.relationLabel());
+      }
+
+      int cultureCount = Math.min(payload.cultureStandings.size(), MAX_CULTURE_STANDING_ENTRIES);
+      ByteBufCodecs.VAR_INT.encode(buf, cultureCount);
+
+      for (int i = 0; i < cultureCount; i++) {
+         ControlledMilitaryPayload.CultureStandingEntry ce = payload.cultureStandings.get(i);
+         ByteBufCodecs.STRING_UTF8.encode(buf, ce.cultureId());
+         ByteBufCodecs.STRING_UTF8.encode(buf, ce.displayName());
+         ByteBufCodecs.VAR_INT.encode(buf, ce.standing());
+         buf.writeBoolean(ce.atWar());
       }
 
       encodeMilitaryLines(buf, payload.militaryLines);
@@ -69,8 +82,24 @@ public record ControlledMilitaryPayload(
          }
       }
 
+      int rawCultureCount = (Integer)ByteBufCodecs.VAR_INT.decode(buf);
+      int cultureCount = Math.min(rawCultureCount, MAX_CULTURE_STANDING_ENTRIES);
+      List<ControlledMilitaryPayload.CultureStandingEntry> cultureStandings = new ArrayList<>(cultureCount);
+
+      for (int i = 0; i < rawCultureCount; i++) {
+         String cultureId = (String)ByteBufCodecs.STRING_UTF8.decode(buf);
+         String displayName = (String)ByteBufCodecs.STRING_UTF8.decode(buf);
+         int standing = (Integer)ByteBufCodecs.VAR_INT.decode(buf);
+         boolean atWar = buf.readBoolean();
+         if (i < cultureCount) {
+            cultureStandings.add(new ControlledMilitaryPayload.CultureStandingEntry(cultureId, displayName, standing, atWar));
+         }
+      }
+
       List<PanelLine> militaryLines = decodeMilitaryLines(buf);
-      return new ControlledMilitaryPayload(villageUuid, villageName, ownerName, currentRaidTargetVillageId, raidInProgress, relations, militaryLines);
+      return new ControlledMilitaryPayload(
+         villageUuid, villageName, ownerName, currentRaidTargetVillageId, raidInProgress, relations, cultureStandings, militaryLines
+      );
    }
 
    private static void encodeMilitaryLines(ByteBuf buf, List<PanelLine> lines) {
@@ -141,5 +170,8 @@ public record ControlledMilitaryPayload(
    }
 
    public record RelationEntry(String villageId, String villageName, String cultureName, int relation, String relationLabel) {
+   }
+
+   public record CultureStandingEntry(String cultureId, String displayName, int standing, boolean atWar) {
    }
 }

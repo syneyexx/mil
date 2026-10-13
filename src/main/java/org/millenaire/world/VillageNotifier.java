@@ -10,7 +10,6 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import org.millenaire.config.MillenaireServerConfig;
-import org.millenaire.culture.Culture;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillageType;
 import org.millenaire.village.Village;
@@ -60,29 +59,11 @@ public final class VillageNotifier {
       return (int)Math.round(Math.sqrt(dx * dx + dz * dz));
    }
 
+   /**
+    * Previously scanned nearby players and chat-notified on every spawn. That is opt-in via
+    * {@code /millenaire villages} (or the villages keybind) through {@link #sendVillageList}.
+    */
    public static void notifySpawn(ServerLevel level, BlockPos villageCenter, String villageName, VillageType villageType) {
-      double radiusSq = (double)getNotificationRadius() * getNotificationRadius();
-      List<ServerPlayer> nearby = level.getPlayers(p -> p.blockPosition().distSqr(villageCenter) < radiusSq);
-      boolean isLoneBuilding = villageType.loneBuilding();
-
-      for (ServerPlayer player : nearby) {
-         int distance = horizontalDistance(player.blockPosition(), villageCenter);
-         String direction = cardinalDirection(player.blockPosition(), villageCenter);
-         MutableComponent message;
-         if (isLoneBuilding) {
-            message = Component.translatable(
-               "command.millenaire.new_lone_building_found", new Object[]{villageType.name(), String.valueOf(distance), direction}
-            );
-         } else {
-            Culture culture = ModCultures.getCulture(villageType.culture());
-            String cultureAdj = culture != null ? culture.displayName() : villageType.culture().getPath();
-            message = Component.translatable(
-               "command.millenaire.new_village_found", new Object[]{villageName, villageType.name(), cultureAdj, String.valueOf(distance), direction}
-            );
-         }
-
-         player.sendSystemMessage(message.withStyle(ChatFormatting.YELLOW));
-      }
    }
 
    public static void sendVillageList(ServerPlayer player, ServerLevel level) {

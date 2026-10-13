@@ -26,6 +26,12 @@ public final class BuildingFinalizer {
       if (!instance.getPointsByType("animalSpawn").isEmpty()) {
          village.updatePens(level, true);
       }
+      if (instance.getPlanSetId() != null) {
+         org.millenaire.building.BuildingPlanSet planSet = org.millenaire.culture.ModCultures.getBuildingPlanSet(instance.getPlanSetId());
+         if (planSet != null && planSet.isTownHall()) {
+            org.millenaire.compat.WaystonePlacer.tryPlaceForMillenaireVillage(level, village);
+         }
+      }
    }
 
    public static void applyVillageUpdates(ServerLevel level, Village village) {

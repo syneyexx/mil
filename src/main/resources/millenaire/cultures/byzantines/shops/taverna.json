@@ -8,8 +8,7 @@
     "cooked_cod",
     "beef_cooked",
     "porkchop_cooked",
-    "chicken_cooked",
-    "fd_noodle_soup"
+    "chicken_cooked"
   ],
   "buys": [
     "winebasic",

@@ -117,14 +117,6 @@ public class BuildingInventory {
       return Collections.unmodifiableList(this.chestPositions);
    }
 
-   public List<BlockPos> getFurnacePositions() {
-      return Collections.unmodifiableList(this.furnacePositions);
-   }
-
-   public List<BlockPos> getFirepitPositions() {
-      return Collections.unmodifiableList(this.firepitPositions);
-   }
-
    public int add(Level level, Item item, int count) {
       if (count <= 0) {
          return 0;
@@ -350,14 +342,9 @@ public class BuildingInventory {
       return remaining;
    }
 
-   /**
-    * Exact-stack deposit preserving item components.
-    * Returns how many items were placed and the concrete remainder (never silently discarded).
-    * Oversized stacks are split across empty slots up to {@link ItemStack#getMaxStackSize()}.
-    */
-   public AddStackResult addExactStack(Level level, ItemStack stack) {
-      if (stack == null || stack.isEmpty()) {
-         return AddStackResult.empty();
+   public boolean addStack(Level level, ItemStack stack) {
+      if (stack.isEmpty()) {
+         return false;
       }
 
       ItemStack toPlace = stack.copy();
@@ -365,9 +352,6 @@ public class BuildingInventory {
 
       for (Container container : this.resolveContainers(level)) {
          for (int slot = 0; slot < container.getContainerSize(); slot++) {
-            if (toPlace.isEmpty()) {
-               break;
-            }
             ItemStack existing = container.getItem(slot);
             if (!existing.isEmpty() && ItemStack.isSameItemSameComponents(existing, toPlace)) {
                int canAdd = Math.min(toPlace.getCount(), existing.getMaxStackSize() - existing.getCount());
@@ -375,6 +359,10 @@ public class BuildingInventory {
                   existing.grow(canAdd);
                   container.setChanged();
                   toPlace.shrink(canAdd);
+                  if (toPlace.isEmpty()) {
+                     this.invalidateCache();
+                     return true;
+                  }
                }
             }
          }
@@ -382,182 +370,20 @@ public class BuildingInventory {
 
       for (Container container : this.resolveContainers(level)) {
          for (int slot = 0; slot < container.getContainerSize(); slot++) {
-            if (toPlace.isEmpty()) {
-               break;
-            }
             if (container.getItem(slot).isEmpty()) {
-               int place = Math.min(toPlace.getCount(), toPlace.getMaxStackSize());
-               ItemStack placed = toPlace.copy();
-               placed.setCount(place);
-               container.setItem(slot, placed);
+               container.setItem(slot, toPlace);
                container.setChanged();
-               toPlace.shrink(place);
+               this.invalidateCache();
+               return true;
             }
          }
       }
 
-      int placed = initialCount - toPlace.getCount();
-      if (placed > 0) {
+      if (toPlace.getCount() < initialCount) {
          this.invalidateCache();
-      }
-      return new AddStackResult(placed, toPlace.isEmpty() ? ItemStack.EMPTY : toPlace.copy());
-   }
-
-   /**
-    * Legacy boolean API. Prefer {@link #addExactStack} when remainder must be conserved.
-    * Returns true when any amount was placed; remainder of the input copy is not returned to the caller.
-    */
-   public boolean addStack(Level level, ItemStack stack) {
-      if (stack.isEmpty()) {
+         return true;
+      } else {
          return false;
-      }
-      AddStackResult result = this.addExactStack(level, stack);
-      // Mutate caller's stack to reflect unplaced remainder (vanilla-like).
-      stack.setCount(result.remainder().getCount());
-      if (!result.remainder().isEmpty() && !stack.isEmpty()) {
-         // Keep components aligned with remainder.
-         ItemStack rem = result.remainder();
-         stack.setCount(rem.getCount());
-      } else if (result.remainder().isEmpty()) {
-         stack.setCount(0);
-      }
-      return result.placed() > 0;
-   }
-
-   public record AddStackResult(int placed, ItemStack remainder) {
-      public static AddStackResult empty() {
-         return new AddStackResult(0, ItemStack.EMPTY);
-      }
-
-      public boolean fullyAccepted() {
-         return this.remainder.isEmpty();
-      }
-   }
-
-   /**
-    * Removes up to {@code amount} matching {@code sample} by item+components.
-    * Returns concrete removed stacks (copies).
-    */
-   public List<ItemStack> removeExactStacks(Level level, ItemStack sample, int amount) {
-      List<ItemStack> removed = new ArrayList<>();
-      if (sample == null || sample.isEmpty() || amount <= 0) {
-         return removed;
-      }
-      int remaining = amount;
-      for (Container container : this.resolveContainers(level)) {
-         for (int slot = 0; slot < container.getContainerSize() && remaining > 0; slot++) {
-            ItemStack stack = container.getItem(slot);
-            if (stack.isEmpty() || !ItemStack.isSameItemSameComponents(stack, sample)) {
-               continue;
-            }
-            int take = Math.min(remaining, stack.getCount());
-            ItemStack split = stack.split(take);
-            if (stack.isEmpty()) {
-               container.setItem(slot, ItemStack.EMPTY);
-            }
-            container.setChanged();
-            removed.add(split.copy());
-            remaining -= take;
-         }
-      }
-      if (!removed.isEmpty()) {
-         this.invalidateCache();
-      }
-      return removed;
-   }
-
-   /**
-    * Removes up to {@code amount} of {@code item}, returning the concrete stacks taken
-    * (components preserved). Prefer this over {@link #remove} when ledgering refunds.
-    */
-   public RemoveStacksResult removeByItemExact(Level level, Item item, int amount) {
-      List<ItemStack> removed = new ArrayList<>();
-      if (item == null || amount <= 0) {
-         return RemoveStacksResult.empty();
-      }
-      int remaining = amount;
-      for (Container container : this.resolveContainers(level)) {
-         for (int slot = 0; slot < container.getContainerSize() && remaining > 0; slot++) {
-            ItemStack stack = container.getItem(slot);
-            if (stack.isEmpty() || !stack.is(item)) {
-               continue;
-            }
-            int take = Math.min(remaining, stack.getCount());
-            ItemStack split = stack.split(take);
-            if (stack.isEmpty()) {
-               container.setItem(slot, ItemStack.EMPTY);
-            }
-            container.setChanged();
-            removed.add(split.copy());
-            remaining -= take;
-         }
-      }
-      // Furnace / firepit outputs — take concrete stacks too.
-      for (BlockPos pos : this.furnacePositions) {
-         if (remaining <= 0) {
-            break;
-         }
-         if (level.isLoaded(pos) && level.getBlockEntity(pos) instanceof AbstractFurnaceBlockEntity furnace) {
-            ItemStack stack = furnace.getItem(2);
-            if (!stack.isEmpty() && stack.is(item)) {
-               int take = Math.min(remaining, stack.getCount());
-               ItemStack split = stack.split(take);
-               if (stack.isEmpty()) {
-                  furnace.setItem(2, ItemStack.EMPTY);
-               }
-               furnace.setChanged();
-               removed.add(split.copy());
-               remaining -= take;
-            }
-         }
-      }
-      if (!removed.isEmpty()) {
-         this.invalidateCache();
-      }
-      int taken = removed.stream().mapToInt(ItemStack::getCount).sum();
-      return new RemoveStacksResult(taken, amount - taken, removed);
-   }
-
-   /**
-    * Removes up to {@code amount} matching {@code tag}, returning concrete stacks.
-    */
-   public RemoveStacksResult removeByTagExact(Level level, TagKey<Item> tag, int amount, Set<Item> excluded) {
-      List<ItemStack> removed = new ArrayList<>();
-      if (tag == null || amount <= 0) {
-         return RemoveStacksResult.empty();
-      }
-      Set<Item> skip = excluded == null ? Set.of() : excluded;
-      int remaining = amount;
-      for (Container container : this.resolveContainers(level)) {
-         for (int slot = 0; slot < container.getContainerSize() && remaining > 0; slot++) {
-            ItemStack stack = container.getItem(slot);
-            if (stack.isEmpty() || !stack.is(tag) || skip.contains(stack.getItem())) {
-               continue;
-            }
-            int take = Math.min(remaining, stack.getCount());
-            ItemStack split = stack.split(take);
-            if (stack.isEmpty()) {
-               container.setItem(slot, ItemStack.EMPTY);
-            }
-            container.setChanged();
-            removed.add(split.copy());
-            remaining -= take;
-         }
-      }
-      if (!removed.isEmpty()) {
-         this.invalidateCache();
-      }
-      int taken = removed.stream().mapToInt(ItemStack::getCount).sum();
-      return new RemoveStacksResult(taken, amount - taken, removed);
-   }
-
-   public record RemoveStacksResult(int removed, int unsatisfied, List<ItemStack> stacks) {
-      public static RemoveStacksResult empty() {
-         return new RemoveStacksResult(0, 0, List.of());
-      }
-
-      public boolean fullySatisfied() {
-         return this.unsatisfied <= 0;
       }
    }
 

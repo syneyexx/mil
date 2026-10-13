@@ -187,23 +187,11 @@ public class ControlledProjectsScreen extends AbstractMillenaireScreen {
             int btnY = rowY + this.entryButtonY();
             int slotX = btnX;
             if (hasForget(entry)) {
-               boolean designated = entry.planSetId() != null && entry.planSetId().contains("designated/");
                Button forget = Button.builder(
-                     Component.translatable(
-                        designated ? "gui.millenaire.designate.undesignate" : "gui.millenaire.controlled_projects.forget"
-                     ),
-                     b -> {
-                        if (designated) {
-                           PacketDistributor.sendToServer(
-                              new org.millenaire.network.UndesignateBuildingRequestPayload(this.data.villageUuid(), entry.buildingId()),
-                              new CustomPacketPayload[0]
-                           );
-                        } else {
-                           PacketDistributor.sendToServer(
-                              new BuildingForgetRequestPayload(this.data.villageUuid(), entry.buildingId()), new CustomPacketPayload[0]
-                           );
-                        }
-                     }
+                     Component.translatable("gui.millenaire.controlled_projects.forget"),
+                     b -> PacketDistributor.sendToServer(
+                        new BuildingForgetRequestPayload(this.data.villageUuid(), entry.buildingId()), new CustomPacketPayload[0]
+                     )
                   )
                   .bounds(slotX, btnY, 80, 14)
                   .build();

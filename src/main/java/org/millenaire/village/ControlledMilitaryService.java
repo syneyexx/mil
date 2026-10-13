@@ -2,8 +2,11 @@ package org.millenaire.village;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -37,13 +40,43 @@ public final class ControlledMilitaryService {
       }
 
       relations.sort(Comparator.comparing(ControlledMilitaryPayload.RelationEntry::villageName));
+      ResourceLocation ownCulture = village.getCultureId();
+      CultureStandingSavedData cultureData = CultureStandingSavedData.get(level);
+      Set<ResourceLocation> otherCultures = new HashSet<>();
+
+      for (Village other : vm.getAllVillages()) {
+         if (!other.isLoneBuilding() && !ownCulture.equals(other.getCultureId())) {
+            otherCultures.add(other.getCultureId());
+         }
+      }
+
+      List<ControlledMilitaryPayload.CultureStandingEntry> cultureStandings = new ArrayList<>();
+
+      for (ResourceLocation otherCultureId : otherCultures) {
+         Culture culture = ModCultures.getCulture(otherCultureId);
+         String display = culture != null ? culture.displayName() : otherCultureId.getPath();
+         int standing = cultureData.getStanding(ownCulture, otherCultureId);
+         boolean atWar = cultureData.isAtWar(ownCulture, otherCultureId);
+         cultureStandings.add(
+            new ControlledMilitaryPayload.CultureStandingEntry(otherCultureId.toString(), display, standing, atWar)
+         );
+      }
+
+      cultureStandings.sort(Comparator.comparing(ControlledMilitaryPayload.CultureStandingEntry::displayName));
       String currentRaidTargetVillageId = village.getRaidTarget() != null ? village.getRaidTarget().uuid().toString() : "";
       boolean raidInProgress = village.getRaidStart() > 0L;
       List<PanelLine> militaryLines = new ArrayList<>(MilitaryPanelGenerator.generateMilitary(village, level).lines());
       String villageName = village.getVillageName() != null ? village.getVillageName() : "";
       String ownerName = village.getOwnerName() != null ? village.getOwnerName() : "";
       return new ControlledMilitaryPayload(
-         village.getId().uuid().toString(), villageName, ownerName, currentRaidTargetVillageId, raidInProgress, relations, militaryLines
+         village.getId().uuid().toString(),
+         villageName,
+         ownerName,
+         currentRaidTargetVillageId,
+         raidInProgress,
+         relations,
+         cultureStandings,
+         militaryLines
       );
    }
 

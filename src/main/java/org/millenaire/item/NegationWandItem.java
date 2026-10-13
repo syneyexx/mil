@@ -68,6 +68,9 @@ public class NegationWandItem extends Item {
    }
 
    public static void performDeletion(ServerLevel level, VillageSavedData savedData, Village village, ServerPlayer player) {
+      org.millenaire.combat.raid.IllagerRaidSupport.cleanupRaidIllagers(village, level);
+      org.millenaire.combat.raid.IllagerRaidSupport.discardCampIllagers(village, level);
+
       for (BuildingInstance building : village.getBuildings()) {
          for (BlockPos chestPos : building.getChestPositions()) {
             if (level.getBlockEntity(chestPos) instanceof LockedChestBlockEntity chest) {
@@ -91,7 +94,7 @@ public class NegationWandItem extends Item {
          village.setChunksForceLoaded(false);
       }
 
-      savedData.getVillageManager().removeVillage(level, village.getId());
+      savedData.getVillageManager().removeVillage(village.getId());
 
       for (Village other : savedData.getVillageManager().getAllVillages()) {
          other.removeRelation(village.getId());

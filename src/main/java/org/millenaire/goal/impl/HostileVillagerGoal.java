@@ -5,6 +5,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
 import org.millenaire.combat.CombatHelper;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillagerType;
@@ -53,14 +54,27 @@ public class HostileVillagerGoal implements VillagerGoal {
    static LivingEntity findTarget(MillVillager v) {
       VillagerType type = ModCultures.getVillagerType(v.getVillagerTypeId());
       double range = type != null && type.isDefensive() ? 20.0 : 80.0;
-      return org.millenaire.perf.sense.CombatSenseCache.findClosestHostile(v, range);
+      double rangeSq = range * range;
+      double bestSq = rangeSq + 1.0;
+      LivingEntity best = null;
+      AABB box = v.getBoundingBox().inflate(range);
+
+      for (LivingEntity e : v.level().getEntitiesOfClass(LivingEntity.class, box, HostileVillagerGoal::isValidOpponent)) {
+         double d = v.distanceToSqr(e);
+         if (d < bestSq) {
+            bestSq = d;
+            best = e;
+         }
+      }
+
+      return best;
    }
 
    private static boolean isValidOpponent(LivingEntity e) {
       if (!e.isAlive()) {
          return false;
       } else if (e instanceof Player p) {
-         return p instanceof ServerPlayer && CombatHelper.isPlayerTargetable(p);
+         return p instanceof ServerPlayer && CombatHelper.isPlayerTargetable(p.isCreative(), p.isSpectator());
       } else if (!(e instanceof MillVillager mv)) {
          return false;
       } else {

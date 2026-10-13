@@ -1,0 +1,60 @@
+{
+  "culture": "millenaire:nederland",
+  "name": "Bestuurd Dorp",
+  "weight": 0,
+  "player_controlled": true,
+  "layout": [
+    {
+      "plan": "millenaire:norman/playerlargefort",
+      "role": "centre"
+    },
+    {
+      "plan": "millenaire:norman/lumbermanhut",
+      "role": "start"
+    },
+    {
+      "plan": "millenaire:norman/lumbermanhut",
+      "role": "start"
+    },
+    {
+      "plan": "millenaire:norman/guardhouse",
+      "role": "start"
+    },
+    {
+      "plan": "millenaire:norman/grove",
+      "role": "start"
+    },
+    {
+      "plan": "millenaire:norman/farm",
+      "role": "core"
+    },
+    {
+      "plan": "millenaire:norman/lumbermanhut",
+      "role": "core"
+    },
+    {
+      "plan": "millenaire:norman/guardhouse",
+      "role": "core"
+    },
+    {
+      "plan": "millenaire:norman/bakery",
+      "role": "core"
+    },
+    {
+      "plan": "millenaire:norman/market",
+      "role": "core"
+    },
+    {
+      "plan": "millenaire:norman/grove",
+      "role": "core"
+    }
+  ],
+  "icon": "millenaire:norman_helmet",
+  "path_materials": [
+    "pathdirt",
+    "pathgravel",
+    "pathslabs"
+  ],
+  "carries_raid": true,
+  "allow_extra_buildings": false
+}

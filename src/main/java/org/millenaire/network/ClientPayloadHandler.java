@@ -9,16 +9,18 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.millenaire.client.AdjustModeController;
+import org.millenaire.client.BountyHudClient;
 import org.millenaire.client.ClientLanguageCache;
 import org.millenaire.client.ClientQuestCache;
 import org.millenaire.client.FireplaceSmokeHandler;
 import org.millenaire.client.gui.CancelProjectConfirmScreen;
-import org.millenaire.client.gui.CityAdminScreen;
+import org.millenaire.client.gui.ControlledCityScreen;
 import org.millenaire.client.gui.ControlledMilitaryScreen;
 import org.millenaire.client.gui.ControlledProjectsScreen;
 import org.millenaire.client.gui.HireScreen;
 import org.millenaire.client.gui.ImportTableScreen;
 import org.millenaire.client.gui.InfoPanelScreen;
+import org.millenaire.client.gui.WorldLedgerScreen;
 import org.millenaire.client.gui.NegationWandScreen;
 import org.millenaire.client.gui.NewBuildingProjectScreen;
 import org.millenaire.client.gui.NewVillageScreen;
@@ -26,16 +28,14 @@ import org.millenaire.client.gui.PanelRenderHelper;
 import org.millenaire.client.gui.QuestScreen;
 import org.millenaire.client.gui.TravelBookScreen;
 import org.millenaire.client.gui.UnlockingToast;
+import org.millenaire.client.gui.DiplomacyEventScreen;
 import org.millenaire.client.gui.VillageBookScreen;
 import org.millenaire.client.gui.VillageChiefScreen;
+import org.millenaire.client.gui.VillageCreateHubScreen;
+import org.millenaire.client.gui.VillageCreateWizardScreen;
 import org.millenaire.client.gui.VillagePanelScreen;
-import org.millenaire.client.gui.WorldStatusScreen;
-import org.millenaire.client.gui.NpcChatScreen;
 import org.millenaire.client.gui.VillagerInfoScreen;
 import org.millenaire.client.gui.WandDebugScreen;
-import org.millenaire.chat.NpcChatClosedPayload;
-import org.millenaire.chat.NpcChatLinePayload;
-import org.millenaire.chat.NpcChatOpenPayload;
 import org.millenaire.commerce.TradeMenu;
 import org.millenaire.language.DisplayNameResolver;
 import org.millenaire.language.SentenceRenderer;
@@ -54,26 +54,6 @@ public final class ClientPayloadHandler {
          ClientLanguageCache.update(cultureId, payload.languageScore());
          Minecraft.getInstance().setScreen(new VillagerInfoScreen(payload));
       });
-   }
-
-   public static void handleNpcChatOpen(NpcChatOpenPayload payload, IPayloadContext context) {
-      context.enqueueWork(() -> NpcChatScreen.open(payload));
-   }
-
-   public static void handleNpcChatLine(NpcChatLinePayload payload, IPayloadContext context) {
-      context.enqueueWork(() -> NpcChatScreen.handleLine(payload));
-   }
-
-   public static void handleNpcChatClosed(NpcChatClosedPayload payload, IPayloadContext context) {
-      context.enqueueWork(() -> NpcChatScreen.handleClosed(payload));
-   }
-
-   public static void handleLivingActionChoices(org.millenaire.living.net.LivingActionChoicesPayload payload, IPayloadContext context) {
-      context.enqueueWork(() -> NpcChatScreen.handleLivingActions(payload));
-   }
-
-   public static void handleLivingActionFeedback(org.millenaire.living.net.LivingActionFeedbackPayload payload, IPayloadContext context) {
-      context.enqueueWork(() -> NpcChatScreen.handleLivingFeedback(payload));
    }
 
    public static void handleUnlockingToast(UnlockingToastPayload payload, IPayloadContext context) {
@@ -136,14 +116,7 @@ public final class ClientPayloadHandler {
    }
 
    public static void handleVillageBook(VillageBookPayload payload, IPayloadContext context) {
-      context.enqueueWork(() -> {
-         Minecraft mc = Minecraft.getInstance();
-         if (mc.screen instanceof VillageBookScreen open && open.sameVillage(payload)) {
-            open.applyUpdate(payload);
-         } else {
-            mc.setScreen(new VillageBookScreen(payload));
-         }
-      });
+      context.enqueueWork(() -> Minecraft.getInstance().setScreen(new VillageBookScreen(payload)));
    }
 
    public static void handleImportTableSync(ImportTableSyncPayload payload, IPayloadContext context) {
@@ -217,54 +190,17 @@ public final class ClientPayloadHandler {
       context.enqueueWork(() -> Minecraft.getInstance().setScreen(new NewVillageScreen(payload)));
    }
 
-   public static void handleCityAdmin(CityAdminPayload payload, IPayloadContext context) {
-      context.enqueueWork(() -> {
-         Minecraft mc = Minecraft.getInstance();
-         if (mc.screen instanceof CityAdminScreen open && open.sameVillage(payload)) {
-            open.applyUpdate(payload);
-         } else {
-            mc.setScreen(new CityAdminScreen(payload));
-         }
-      });
+   
+   public static void handleWorldLedger(WorldLedgerPayload payload, IPayloadContext context) {
+      context.enqueueWork(() -> Minecraft.getInstance().setScreen(new WorldLedgerScreen(payload)));
    }
 
    public static void handleBountyHud(BountyHudPayload payload, IPayloadContext context) {
-      context.enqueueWork(() -> org.millenaire.client.BountyHudClientState.apply(payload));
-   }
-
-   public static void handleSettlementMapSnapshot(SettlementMapSnapshotPayload payload, IPayloadContext context) {
-      context.enqueueWork(() -> {
-         boolean complete = org.millenaire.client.map.SettlementMapClientCache.get()
-            .applySnapshotPart(payload.worldToken(), payload.revision(), payload.partIndex(), payload.partCount(), payload.entries());
-         if (complete) {
-            org.millenaire.compat.xaero.XaeroCompatBootstrap.syncFromCacheIfNeeded();
-         }
-      });
-   }
-
-   public static void handleSettlementMapDelta(SettlementMapDeltaPayload payload, IPayloadContext context) {
-      context.enqueueWork(() -> {
-         boolean applied = org.millenaire.client.map.SettlementMapClientCache.get()
-            .applyDelta(payload.worldToken(), payload.revision(), payload.upserts(), payload.removed());
-         if (applied) {
-            org.millenaire.compat.xaero.XaeroCompatBootstrap.syncFromCacheIfNeeded();
-         }
-      });
+      context.enqueueWork(() -> BountyHudClient.update(payload));
    }
 
    public static void handleInfoPanel(InfoPanelContentPayload payload, IPayloadContext context) {
       context.enqueueWork(() -> Minecraft.getInstance().setScreen(new InfoPanelScreen(payload)));
-   }
-
-   public static void handleWorldStatus(WorldStatusContentPayload payload, IPayloadContext context) {
-      context.enqueueWork(() -> {
-         Minecraft mc = Minecraft.getInstance();
-         if (mc.screen instanceof WorldStatusScreen open) {
-            open.applyUpdate(payload);
-         } else {
-            mc.setScreen(new WorldStatusScreen(payload));
-         }
-      });
    }
 
    public static void handlePanelContent(PanelContentPayload payload, IPayloadContext context) {
@@ -316,7 +252,23 @@ public final class ClientPayloadHandler {
       context.enqueueWork(() -> Minecraft.getInstance().setScreen(new ControlledMilitaryScreen(payload)));
    }
 
+   public static void handleControlledCity(ControlledCityPayload payload, IPayloadContext context) {
+      context.enqueueWork(() -> Minecraft.getInstance().setScreen(new ControlledCityScreen(payload)));
+   }
+
    public static void handleWandDebugMenu(WandDebugMenuPayload payload, IPayloadContext context) {
       context.enqueueWork(() -> Minecraft.getInstance().setScreen(new WandDebugScreen(payload)));
+   }
+
+   public static void handleDiplomacyEventPopup(DiplomacyEventPopupPayload payload, IPayloadContext context) {
+      context.enqueueWork(() -> Minecraft.getInstance().setScreen(new DiplomacyEventScreen(payload)));
+   }
+
+   public static void handleVillageCreateWizard(VillageCreateWizardPayload payload, IPayloadContext context) {
+      context.enqueueWork(() -> Minecraft.getInstance().setScreen(new VillageCreateWizardScreen(payload)));
+   }
+
+   public static void handleVillageCreateHub(VillageCreateHubPayload payload, IPayloadContext context) {
+      context.enqueueWork(() -> Minecraft.getInstance().setScreen(new VillageCreateHubScreen(payload)));
    }
 }

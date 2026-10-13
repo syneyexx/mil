@@ -1,9 +1,7 @@
 {
   "culture": "millenaire:seljuk",
   "biome_tags": [
-    "#c:is_savanna",
-    "#millenaire:is_mediterranean",
-    "#millenaire:is_volcanic"
+    "#c:is_savanna"
   ],
   "name": "Inek Çiftliği",
   "weight": 10,

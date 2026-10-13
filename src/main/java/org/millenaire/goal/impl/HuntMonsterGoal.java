@@ -18,6 +18,7 @@ import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillagerType;
 import org.millenaire.entity.MillVillager;
 import org.millenaire.goal.GoalContext;
+import org.millenaire.monster.NativeMonster;
 import org.millenaire.goal.PerVillageTickCache;
 import org.millenaire.goal.StopReason;
 import org.millenaire.goal.TravelPhase;
@@ -42,6 +43,8 @@ public class HuntMonsterGoal implements VillagerGoal {
       } else if (entity instanceof Player) {
          return false;
       } else if (entity instanceof Creeper) {
+         return false;
+      } else if (entity instanceof NativeMonster) {
          return false;
       } else if (!(entity instanceof MillVillager villager)) {
          return entity instanceof Monster;

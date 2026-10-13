@@ -1,0 +1,14 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:bedrock",
+    "minecraft:spawner",
+    "minecraft:chest",
+    "minecraft:ender_chest",
+    "minecraft:barrel",
+    "minecraft:trapped_chest",
+    "#minecraft:beds",
+    "#minecraft:doors",
+    "#minecraft:all_signs"
+  ]
+}

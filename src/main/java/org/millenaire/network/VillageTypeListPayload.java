@@ -10,11 +10,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type;
 import net.minecraft.resources.ResourceLocation;
 
-public record VillageTypeListPayload(BlockPos targetPos, List<VillageTypeListPayload.VillageTypeEntry> entries, boolean sovereignFoundingAvailable)
-   implements CustomPacketPayload {
-   public VillageTypeListPayload(BlockPos targetPos, List<VillageTypeListPayload.VillageTypeEntry> entries) {
-      this(targetPos, entries, true);
-   }
+public record VillageTypeListPayload(BlockPos targetPos, List<VillageTypeListPayload.VillageTypeEntry> entries) implements CustomPacketPayload {
    private static final int MAX_ENTRIES = 256;
    public static final Type<VillageTypeListPayload> TYPE = new Type(ResourceLocation.fromNamespaceAndPath("millenaire", "village_type_list"));
    public static final StreamCodec<ByteBuf, VillageTypeListPayload> STREAM_CODEC = StreamCodec.of(
@@ -35,10 +31,7 @@ public record VillageTypeListPayload(BlockPos targetPos, List<VillageTypeListPay
          ByteBufCodecs.VAR_INT.encode(buf, entry.weight);
          ByteBufCodecs.BOOL.encode(buf, entry.requiresControl);
          ByteBufCodecs.BOOL.encode(buf, entry.hasControl);
-         ByteBufCodecs.BOOL.encode(buf, entry.hasCultureControl);
-         ByteBufCodecs.BOOL.encode(buf, entry.canFound);
       }
-      ByteBufCodecs.BOOL.encode(buf, payload.sovereignFoundingAvailable);
    }
 
    private static VillageTypeListPayload decode(ByteBuf buf) {
@@ -59,8 +52,6 @@ public record VillageTypeListPayload(BlockPos targetPos, List<VillageTypeListPay
                (String)ByteBufCodecs.STRING_UTF8.decode(buf),
                (Integer)ByteBufCodecs.VAR_INT.decode(buf),
                (Boolean)ByteBufCodecs.BOOL.decode(buf),
-               (Boolean)ByteBufCodecs.BOOL.decode(buf),
-               (Boolean)ByteBufCodecs.BOOL.decode(buf),
                (Boolean)ByteBufCodecs.BOOL.decode(buf)
             )
          );
@@ -74,12 +65,9 @@ public record VillageTypeListPayload(BlockPos targetPos, List<VillageTypeListPay
          ByteBufCodecs.VAR_INT.decode(buf);
          ByteBufCodecs.BOOL.decode(buf);
          ByteBufCodecs.BOOL.decode(buf);
-         ByteBufCodecs.BOOL.decode(buf);
-         ByteBufCodecs.BOOL.decode(buf);
       }
 
-      boolean sovereignFoundingAvailable = ByteBufCodecs.BOOL.decode(buf);
-      return new VillageTypeListPayload(pos, entries, sovereignFoundingAvailable);
+      return new VillageTypeListPayload(pos, entries);
    }
 
    public Type<? extends CustomPacketPayload> type() {
@@ -87,33 +75,7 @@ public record VillageTypeListPayload(BlockPos targetPos, List<VillageTypeListPay
    }
 
    public record VillageTypeEntry(
-      String cultureKey,
-      String cultureName,
-      String typeKey,
-      String displayName,
-      int weight,
-      boolean requiresControl,
-      boolean hasControl,
-      boolean hasCultureControl,
-      boolean canFound
+      String cultureKey, String cultureName, String typeKey, String displayName, int weight, boolean requiresControl, boolean hasControl
    ) {
-      public VillageTypeEntry(
-         String cultureKey, String cultureName, String typeKey, String displayName, int weight, boolean requiresControl, boolean hasControl
-      ) {
-         this(cultureKey, cultureName, typeKey, displayName, weight, requiresControl, hasControl, hasControl, true);
-      }
-
-      public VillageTypeEntry(
-         String cultureKey,
-         String cultureName,
-         String typeKey,
-         String displayName,
-         int weight,
-         boolean requiresControl,
-         boolean hasControl,
-         boolean hasCultureControl
-      ) {
-         this(cultureKey, cultureName, typeKey, displayName, weight, requiresControl, hasControl, hasCultureControl, true);
-      }
    }
 }

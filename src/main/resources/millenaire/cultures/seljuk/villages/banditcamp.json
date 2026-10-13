@@ -8,9 +8,7 @@
   "biome_tags": [
     "minecraft:desert",
     "minecraft:savanna",
-    "minecraft:windswept_savanna",
-    "#millenaire:is_mediterranean",
-    "#millenaire:is_volcanic"
+    "minecraft:windswept_savanna"
   ],
   "layout": [
     {

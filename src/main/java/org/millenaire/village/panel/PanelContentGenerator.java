@@ -67,15 +67,12 @@ public final class PanelContentGenerator {
          case WALLS -> generateWalls(village, level);
          case CONTROLLED_PROJECTS -> generateStubControlled(village, PanelType.CONTROLLED_PROJECTS, "panel.millenaire.panel_type.controlled_projects");
          case CONTROLLED_MILITARY -> generateStubControlled(village, PanelType.CONTROLLED_MILITARY, "panel.millenaire.panel_type.controlled_military");
+         case CONTROLLED_CITY -> generateStubControlled(village, PanelType.CONTROLLED_CITY, "panel.millenaire.panel_type.controlled_city");
          case MARVEL_PROJECTS -> MarvelPanelGenerator.generateMarvelProjects(village);
          case MARVEL_DONATIONS -> MarvelPanelGenerator.generateMarvelDonations(village);
          case MARVEL_RESOURCES -> MarvelPanelGenerator.generateMarvelResources(village, level);
          case HALL_OF_FAME -> new PanelContent(PanelType.HALL_OF_FAME, "panel.millenaire.panel_type.hall_of_fame", List.of(), true, null);
          case CHRONICLE -> VillageOverviewPanelGenerator.generateChronicle(village);
-         case CIVILIZATION -> VillageOverviewPanelGenerator.generateCivilization(village, level, player);
-         case RELIGION -> level != null
-            ? org.millenaire.religion.ReligionService.get().presentation().villageBookSection(level, village, player)
-            : new PanelContent(PanelType.RELIGION, "panel.millenaire.panel_type.religion", List.of(PanelLine.translatable("religion.millenaire.book.degraded")), true, null);
       };
    }
 
@@ -446,10 +443,6 @@ public final class PanelContentGenerator {
       switch (type) {
          case VILLAGE_SUMMARY:
             VillageOverviewPanelGenerator.addSummary3D(data, village);
-            break;
-         case CIVILIZATION:
-            VillageOverviewPanelGenerator.addSummary3D(data, village);
-            data.addCenteredTranslatable("panel.millenaire.panel_type.civilization");
             break;
          case POPULATION:
             VillageOverviewPanelGenerator.addPopulation3D(data, village);

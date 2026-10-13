@@ -29,13 +29,6 @@ import org.millenaire.village.Village;
 
 public class HiredEscortGoal implements VillagerGoal {
    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath("millenaire", "hired_escort");
-   private static final int OPPONENT_CACHE_TICKS = 10;
-   @Nullable
-   private static UUID cachedOwnerId;
-   private static long cachedOpponentTick = Long.MIN_VALUE;
-   private static boolean cachedAggressive;
-   @Nullable
-   private static LivingEntity cachedOpponent;
 
    @Override
    public ResourceLocation id() {
@@ -111,18 +104,6 @@ public class HiredEscortGoal implements VillagerGoal {
 
    @Nullable
    private static LivingEntity acquireOpponent(MillVillager v, ServerPlayer owner, boolean aggressive) {
-      long gameTime = v.level().getGameTime();
-      UUID ownerId = owner.getUUID();
-      if (cachedOwnerId != null
-         && cachedOwnerId.equals(ownerId)
-         && cachedAggressive == aggressive
-         && gameTime - cachedOpponentTick < OPPONENT_CACHE_TICKS
-         && cachedOpponent != null
-         && cachedOpponent.isAlive()
-         && cachedOpponent.distanceToSqr(owner) <= 6400.0) {
-         return cachedOpponent;
-      }
-
       AABB box = new AABB(owner.blockPosition()).inflate(16.0, 8.0, 16.0);
       LivingEntity best = null;
       double bestSq = 6400.0;
@@ -142,10 +123,6 @@ public class HiredEscortGoal implements VillagerGoal {
          }
       }
 
-      cachedOwnerId = ownerId;
-      cachedOpponentTick = gameTime;
-      cachedAggressive = aggressive;
-      cachedOpponent = best;
       return best;
    }
 

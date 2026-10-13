@@ -123,7 +123,6 @@ public class BuildGoal implements VillagerGoal {
       }
 
       task.reserve(context.villager().getUUID());
-      context.village().noteConstructionReservation(building);
       context.villager().setConstructionBuildingId(building.getId());
       if (task.hasPendingLeafClear()) {
          preClearFootprintLeaves(context, building);
@@ -270,7 +269,6 @@ public class BuildGoal implements VillagerGoal {
                this.constructionTask.resetReservationAge();
             } else {
                this.constructionTask.releaseReservation();
-               ctx.village().clearConstructionReservation(this.building);
                ctx.villager().setConstructionBuildingId(null);
             }
 
@@ -878,7 +876,6 @@ public class BuildGoal implements VillagerGoal {
             }
 
             village.recordChronicleEvent(level, VillageEventType.BUILDING_COMPLETED, chronicleName, null);
-            org.millenaire.religion.ReligionLifecycle.onReligiousBuildingCompleted(level, village, this.building);
             BuildGoal.LOGGER.info("Building {} completed — {} special points resolved", this.building.getPlanId(), this.building.getResolvedPoints().size());
          }
 

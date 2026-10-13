@@ -11,7 +11,9 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import org.millenaire.combat.raid.RaidButtonState;
 import org.millenaire.network.ControlledMilitaryPayload;
 import org.millenaire.network.ControlledRelationPayload;
+import org.millenaire.network.CultureWarActionPayload;
 import org.millenaire.network.RaidActionPayload;
+import org.millenaire.village.CultureStandingSavedData;
 import org.millenaire.village.VillageRelations;
 import org.millenaire.village.panel.PanelLine;
 
@@ -27,7 +29,9 @@ public class ControlledMilitaryScreen extends AbstractMillenaireScreen {
    private final List<Button> pageButtons = new ArrayList<>();
    private List<PanelLine> wrappedMilitaryLines = List.of();
    private int rowsPerPage;
-   private int rowCount;
+   private int relationPageCount;
+   private int culturePageCount;
+   private int culturePageOffset;
 
    public ControlledMilitaryScreen(ControlledMilitaryPayload data) {
       super(Component.translatable("panel.millenaire.panel_type.controlled_military"));
@@ -48,9 +52,11 @@ public class ControlledMilitaryScreen extends AbstractMillenaireScreen {
       this.rowsPerPage = Math.max(1, availableHeight / 58);
       this.wrappedMilitaryLines = this.wrapLines(this.data().militaryLines(), 204);
       int relationRows = this.data().relations().size();
-      int relationPages = relationRows == 0 ? 0 : (relationRows + this.rowsPerPage - 1) / this.rowsPerPage;
-      this.rowCount = relationRows;
-      this.totalPages = Math.max(1, relationPages + 1);
+      this.relationPageCount = relationRows == 0 ? 0 : (relationRows + this.rowsPerPage - 1) / this.rowsPerPage;
+      int cultureRows = this.data().cultureStandings().size();
+      this.culturePageCount = cultureRows == 0 ? 0 : (cultureRows + this.rowsPerPage - 1) / this.rowsPerPage;
+      this.culturePageOffset = this.relationPageCount;
+      this.totalPages = Math.max(1, this.relationPageCount + this.culturePageCount + 1);
       this.currentPage = 0;
       this.initPaginationButtons(parchX, parchY, 204, 220, 16, true);
       this.rebuildPageButtons();
@@ -65,6 +71,14 @@ public class ControlledMilitaryScreen extends AbstractMillenaireScreen {
       return this.totalPages - 1;
    }
 
+   private boolean isCulturePage() {
+      return this.currentPage >= this.culturePageOffset && this.currentPage < this.militaryPageIndex();
+   }
+
+   private boolean isRelationPage() {
+      return this.currentPage < this.culturePageOffset;
+   }
+
    @Override
    protected void onPageChanged() {
       super.onPageChanged();
@@ -77,13 +91,54 @@ public class ControlledMilitaryScreen extends AbstractMillenaireScreen {
       }
 
       this.pageButtons.clear();
-      if (this.currentPage != this.militaryPageIndex()) {
-         int parchX = (this.width - 204) / 2;
-         int parchY = (this.height - 220) / 2;
-         int contentX = parchX + 16;
-         int rowY = parchY + 42 + this.subtitleOffset();
+      if (this.currentPage == this.militaryPageIndex()) {
+         return;
+      }
+
+      int parchX = (this.width - 204) / 2;
+      int parchY = (this.height - 220) / 2;
+      int contentX = parchX + 16;
+      int rowY = parchY + 42 + this.subtitleOffset();
+
+      if (this.isCulturePage()) {
+         int pageWithinCulture = this.currentPage - this.culturePageOffset;
+         int startIdx = pageWithinCulture * this.rowsPerPage;
+         int endIdx = Math.min(startIdx + this.rowsPerPage, this.data().cultureStandings().size());
+
+         for (int i = startIdx; i < endIdx; i++) {
+            ControlledMilitaryPayload.CultureStandingEntry ce = this.data().cultureStandings().get(i);
+            int btnY = rowY + 2 * (9 + 1) + 2;
+            if (ce.atWar()) {
+               this.addPageButton(
+                  Button.builder(
+                        Component.translatable("gui.millenaire.controlled_military.culture_peace"),
+                        b -> PacketDistributor.sendToServer(
+                           new CultureWarActionPayload(this.data().villageUuid(), CultureWarActionPayload.ACTION_END_WAR, ce.cultureId()),
+                           new CustomPacketPayload[0]
+                        )
+                     )
+                     .bounds(contentX, btnY, 120, 14)
+                     .build()
+               );
+            } else {
+               this.addPageButton(
+                  Button.builder(
+                        Component.translatable("gui.millenaire.controlled_military.culture_war"),
+                        b -> PacketDistributor.sendToServer(
+                           new CultureWarActionPayload(this.data().villageUuid(), CultureWarActionPayload.ACTION_DECLARE_WAR, ce.cultureId()),
+                           new CustomPacketPayload[0]
+                        )
+                     )
+                     .bounds(contentX, btnY, 120, 14)
+                     .build()
+               );
+            }
+
+            rowY += 58;
+         }
+      } else if (this.isRelationPage()) {
          int startIdx = this.currentPage * this.rowsPerPage;
-         int endIdx = Math.min(startIdx + this.rowsPerPage, this.rowCount);
+         int endIdx = Math.min(startIdx + this.rowsPerPage, this.data().relations().size());
          String currentRaidTarget = this.data().currentRaidTargetVillageId().isEmpty() ? null : this.data().currentRaidTargetVillageId();
 
          for (int i = startIdx; i < endIdx; i++) {
@@ -176,7 +231,9 @@ public class ControlledMilitaryScreen extends AbstractMillenaireScreen {
 
       if (this.currentPage == this.militaryPageIndex()) {
          this.renderMilitaryPage(graphics, parchX, parchY, y);
-      } else if (this.rowCount == 0) {
+      } else if (this.isCulturePage()) {
+         this.renderCultureRows(graphics, parchX, y);
+      } else if (this.data().relations().isEmpty()) {
          graphics.drawString(this.font, Component.translatable("gui.millenaire.chief.diplomacy_none"), parchX + 16, y, 5914656, false);
       } else {
          this.renderRelationRows(graphics, parchX, y);
@@ -186,11 +243,44 @@ public class ControlledMilitaryScreen extends AbstractMillenaireScreen {
       super.render(graphics, mouseX, mouseY, partialTick);
    }
 
+   private void renderCultureRows(GuiGraphics graphics, int parchX, int startY) {
+      graphics.drawString(this.font, Component.translatable("gui.millenaire.controlled_military.culture_title"), parchX + 16, startY, -14018560, false);
+      int rowY = startY + 9 + 4;
+      int contentX = parchX + 16;
+      int pageWithinCulture = this.currentPage - this.culturePageOffset;
+      int startIdx = pageWithinCulture * this.rowsPerPage;
+      int endIdx = Math.min(startIdx + this.rowsPerPage, this.data().cultureStandings().size());
+
+      if (startIdx >= endIdx) {
+         graphics.drawString(this.font, Component.translatable("gui.millenaire.controlled_military.culture_none"), contentX, rowY, 5914656, false);
+      } else {
+         for (int i = startIdx; i < endIdx; i++) {
+            ControlledMilitaryPayload.CultureStandingEntry ce = this.data().cultureStandings().get(i);
+            graphics.drawString(this.font, Component.literal(ce.displayName()), contentX, rowY, 4202512, false);
+            int color = ce.atWar() ? 11141120 : ce.standing() >= CultureStandingSavedData.ALLIED_THRESHOLD ? 5635925 : 6963232;
+            String statusKey = ce.atWar()
+               ? "gui.millenaire.controlled_military.culture_at_war"
+               : ce.standing() >= CultureStandingSavedData.ALLIED_THRESHOLD
+                  ? "gui.millenaire.controlled_military.culture_allied"
+                  : "gui.millenaire.controlled_military.culture_standing";
+            graphics.drawString(
+               this.font,
+               Component.translatable(statusKey, ce.standing()),
+               contentX,
+               rowY + 9 + 1,
+               0xFF000000 | color,
+               false
+            );
+            rowY += 58;
+         }
+      }
+   }
+
    private void renderRelationRows(GuiGraphics graphics, int parchX, int startY) {
       int contentX = parchX + 16;
       int rowY = startY;
       int startIdx = this.currentPage * this.rowsPerPage;
-      int endIdx = Math.min(startIdx + this.rowsPerPage, this.rowCount);
+      int endIdx = Math.min(startIdx + this.rowsPerPage, this.data().relations().size());
       String currentRaidTarget = this.data().currentRaidTargetVillageId().isEmpty() ? null : this.data().currentRaidTargetVillageId();
 
       for (int i = startIdx; i < endIdx; i++) {

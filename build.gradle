@@ -20,8 +20,9 @@ sourceSets.main.resources {
 repositories {
     mavenCentral()
     maven {
-        name = "Xaero's Maven"
-        url = "https://chocolateminecraft.com/maven"
+        name = 'GeckoLib'
+        url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+        content { includeGroup('software.bernie.geckolib') }
     }
 }
 
@@ -43,22 +44,6 @@ neoForge {
         client {
             client()
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-            // Optional visual QA: ./gradlew runClient -Pmillenaire.wraithPreview=true
-            if (project.hasProperty('millenaire.wraithPreview')) {
-                systemProperty 'millenaire.wraithPreview', project.property('millenaire.wraithPreview')
-            }
-            // Optional visual QA: ./gradlew runClient -Pmillenaire.cultPreview=true
-            if (project.hasProperty('millenaire.cultPreview')) {
-                systemProperty 'millenaire.cultPreview', project.property('millenaire.cultPreview')
-            }
-            // Optional visual QA: ./gradlew runClient -Pmillenaire.bountyArmorPreview=true
-            if (project.hasProperty('millenaire.bountyArmorPreview')) {
-                systemProperty 'millenaire.bountyArmorPreview', project.property('millenaire.bountyArmorPreview')
-            }
-            // Optional visual QA: ./gradlew runClient -Pmillenaire.hemelwachterPreview=true
-            if (project.hasProperty('millenaire.hemelwachterPreview')) {
-                systemProperty 'millenaire.hemelwachterPreview', project.property('millenaire.hemelwachterPreview')
-            }
         }
 
         server {
@@ -85,11 +70,6 @@ neoForge {
             sourceSet(sourceSets.main)
         }
     }
-
-    unitTest {
-        enable()
-        testedMod = mods."${mod_id}"
-    }
 }
 
 configurations {
@@ -97,15 +77,11 @@ configurations {
 }
 
 dependencies {
+    implementation "software.bernie.geckolib:geckolib-neoforge-1.21.1:${geckolib_version}"
     compileOnly 'org.jetbrains:annotations:24.1.0'
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-    // Optional Xaero integration: compile against Minimap API; load jars in runClient only.
-    compileOnly "xaero.minimap:xaerominimap-neoforge-${minecraft_version}:${xaero_minimap_version}"
-    localRuntime "xaero.minimap:xaerominimap-neoforge-${minecraft_version}:${xaero_minimap_version}"
-    localRuntime "xaero.map:xaeroworldmap-neoforge-${minecraft_version}:${xaero_worldmap_version}"
 }
 
 tasks.named('test', Test).configure {

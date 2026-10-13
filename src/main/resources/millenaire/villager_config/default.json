@@ -1,5 +1,6 @@
 {
   "_comment": "Configuration des aliments de croissance et conception (iso-legacy default.txt)",
+
   "food_growth": {
     "_comment": "Valeur = growth bonus (growth += value + random(value)). Trié par valeur descendante. Egg est aussi dans cette liste (iso-legacy) en plus du cas spécial dans le code.",
     "minecraft:egg": 1,
@@ -27,24 +28,9 @@
     "millenaire:yogurt": 2,
     "millenaire:rice": 1,
     "millenaire:pistachios": 1,
-    "minecraft:carrot": 1,
-    "farmersdelight:cooked_rice": 3,
-    "farmersdelight:vegetable_noodles": 5,
-    "farmersdelight:steak_and_potatoes": 5,
-    "farmersdelight:roasted_mutton_chops": 4,
-    "farmersdelight:chicken_soup": 4,
-    "farmersdelight:beef_stew": 5,
-    "farmersdelight:pumpkin_soup": 3,
-    "farmersdelight:noodle_soup": 4,
-    "farmersdelight:bacon_and_eggs": 4,
-    "farmersdelight:hamburger": 5,
-    "farmersdelight:cabbage": 1,
-    "farmersdelight:tomato": 1,
-    "farmersdelight:onion": 1,
-    "farmersdelight:rice": 1,
-    "naturalist:cooked_venison": 4,
-    "naturalist:cooked_lizard_tail": 3
+    "minecraft:carrot": 1
   },
+
   "food_conception": {
     "_comment": "Valeur = bonus chance de conception sur 10 (base=2/10). Un seul par nuit.",
     "millenaire:winefancy": 4,
@@ -63,12 +49,8 @@
     "millenaire:bearmeat_cooked": 4,
     "millenaire:wolfmeat_cooked": 2,
     "millenaire:inuit_bear_stew": 4,
-    "millenaire:olive_oil": 2,
-    "farmersdelight:apple_cider": 2,
-    "farmersdelight:melon_juice": 1,
-    "farmersdelight:glow_berry_custard": 3,
-    "farmersdelight:chocolate_pie": 4,
-    "farmersdelight:sweet_berry_cheesecake": 4
+    "millenaire:olive_oil": 2
   },
+
   "build_village_paths": true
 }

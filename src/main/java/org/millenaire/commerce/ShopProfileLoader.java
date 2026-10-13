@@ -47,6 +47,10 @@ public final class ShopProfileLoader {
       }
    }
 
+   public static void register(ResourceLocation cultureId, String shopId, ShopProfile profile) {
+      PROFILES.computeIfAbsent(cultureId, k -> new ConcurrentHashMap<>()).put(shopId, profile);
+   }
+
    @Nullable
    public static ShopProfile getProfile(ResourceLocation cultureId, String shopId) {
       Map<String, ShopProfile> cultureProfiles = PROFILES.get(cultureId);

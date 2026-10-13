@@ -3,7 +3,6 @@ package org.millenaire.village;
 import com.mojang.logging.LogUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -19,7 +18,6 @@ import org.millenaire.commerce.TradeGood;
 import org.millenaire.commerce.TradeGoodsLoader;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillagerType;
-import org.millenaire.faction.economy.EconomySavedData;
 import org.millenaire.item.ItemHelper;
 import org.slf4j.Logger;
 
@@ -72,7 +70,12 @@ public final class LocalMerchantHelper {
       for (Entry<VillageId, Integer> rel : village.getRelations().entrySet()) {
          if (rel.getValue() >= 0) {
             Village other = vm.getVillage(rel.getKey());
-            if (other != null && other != village && other.isActive() && !other.getVillageTypeId().equals(village.getVillageTypeId())) {
+            if (other != null
+               && other != village
+               && other.isActive()
+               && !other.getVillageTypeId().equals(village.getVillageTypeId())
+               && CultureWarService.allowsTrade(village.getCultureId(), other.getCultureId(), level)
+               && !isCrimeTradeBlocked(level, village, other)) {
                double distance = linearDistance(village.getCenter(), other.getCenter());
                if (!(distance >= 2000.0)) {
                   for (BuildingInstance destInn : other.getBuildingsWithTag("inn")) {
@@ -128,24 +131,7 @@ public final class LocalMerchantHelper {
    private static void moveMerchant(
       ServerLevel level, Village srcVillage, BuildingInstance srcInn, VillagerRecord merchant, Village destVillage, BuildingInstance destInn
    ) {
-      transferGoods(level, srcVillage, srcInn, destVillage, destInn);
-      if (org.millenaire.worldgen.highway.travel.RoadJourneyScheduler.tryStartMerchantJourney(
-         level, srcVillage, destVillage, merchant.getVillagerTypeId(), merchant.getUuid()
-      )) {
-         // Discard so transferVillagerPermanently rehomes the record without teleporting.
-         if (level.getEntity(merchant.getUuid()) instanceof org.millenaire.entity.MillVillager live) {
-            live.discard();
-         }
-         srcVillage.transferVillagerPermanently(level, merchant.getUuid(), destVillage, destInn.getId());
-         String merchantName = merchant.getFirstName() + " " + merchant.getFamilyName();
-         srcInn.addVisitorLog(
-            "panels.merchantmovedout;" + merchantName + ";" + merchant.getRoleName() + ";" + destVillage.getVillageName() + ";" + srcInn.getNbNightsMerchant()
-         );
-         destInn.addVisitorLog("panels.merchantarrived;" + merchantName + ";" + merchant.getRoleName() + ";" + srcVillage.getVillageName());
-         merchant.setInnTradingAnnounced(true);
-         srcInn.resetMerchantNights();
-         return;
-      }
+      transferGoods(level, srcInn, destInn);
       srcVillage.transferVillagerPermanently(level, merchant.getUuid(), destVillage, destInn.getId());
       String merchantName = merchant.getFirstName() + " " + merchant.getFamilyName();
       srcInn.addVisitorLog(
@@ -170,8 +156,8 @@ public final class LocalMerchantHelper {
    ) {
       Map<Item, Integer> srcContents = getInnContents(level, srcInn);
       Map<Item, Integer> destContents = getInnContents(level, destInn);
-      transferGoodsFromSnapshot(level, srcVillage, srcInn, destVillage, destInn, srcContents);
-      transferGoodsFromSnapshot(level, destVillage, destInn, srcVillage, srcInn, destContents);
+      transferGoodsFromSnapshot(level, srcInn, destInn, srcContents);
+      transferGoodsFromSnapshot(level, destInn, srcInn, destContents);
       srcVillage.transferVillagerPermanently(level, srcMerchant.getUuid(), destVillage, destInn.getId());
       destVillage.transferVillagerPermanently(level, destMerchant.getUuid(), srcVillage, srcInn.getId());
       String srcName = srcMerchant.getFirstName() + " " + srcMerchant.getFamilyName();
@@ -194,17 +180,14 @@ public final class LocalMerchantHelper {
       destInn.resetMerchantNights();
    }
 
-   private static void transferGoods(ServerLevel level, Village srcVillage, BuildingInstance srcInn, Village destVillage, BuildingInstance destInn) {
+   private static void transferGoods(ServerLevel level, BuildingInstance srcInn, BuildingInstance destInn) {
       Map<Item, Integer> contents = getInnContents(level, srcInn);
-      transferGoodsFromSnapshot(level, srcVillage, srcInn, destVillage, destInn, contents);
+      transferGoodsFromSnapshot(level, srcInn, destInn, contents);
    }
 
-   private static void transferGoodsFromSnapshot(
-      ServerLevel level, Village srcVillage, BuildingInstance srcInn, Village destVillage, BuildingInstance destInn, Map<Item, Integer> contents
-   ) {
+   private static void transferGoodsFromSnapshot(ServerLevel level, BuildingInstance srcInn, BuildingInstance destInn, Map<Item, Integer> contents) {
       BuildingInventory srcInv = srcInn.getInventory();
       BuildingInventory destInv = destInn.getInventory();
-      Map<Item, Integer> transferred = new LinkedHashMap<>();
       if (srcInv != null && destInv != null) {
          for (Entry<Item, Integer> entry : contents.entrySet()) {
             Item item = entry.getKey();
@@ -226,15 +209,10 @@ public final class LocalMerchantHelper {
                   if (stored > 0) {
                      destInn.addImported(item, stored);
                      srcInn.addExported(item, stored);
-                     transferred.merge(item, stored, Integer::sum);
                   }
                }
             }
          }
-      }
-
-      if (!transferred.isEmpty()) {
-         EconomySavedData.get(level).getTradeManager().recordSettlementGoodsTransfer(level, srcVillage, destVillage, transferred);
       }
    }
 
@@ -300,6 +278,21 @@ public final class LocalMerchantHelper {
 
       village.setImportsNeededCache(result, now + 60000L);
       return result;
+   }
+
+   private static boolean isCrimeTradeBlocked(ServerLevel level, Village from, Village to) {
+      if (!org.millenaire.crime.PlayerBountySavedData.crimeEnabled()) {
+         return false;
+      }
+
+      org.millenaire.crime.PlayerBountySavedData bounty = org.millenaire.crime.PlayerBountySavedData.get(level);
+      if (to.isPlayerControlled() && to.getOwnerUUID() != null && bounty.isTradeBanned(to.getOwnerUUID(), from.getCultureId())) {
+         return true;
+      }
+
+      return from.isPlayerControlled()
+         && from.getOwnerUUID() != null
+         && bounty.isTradeBanned(from.getOwnerUUID(), to.getCultureId());
    }
 
    private record WeightedTarget(BuildingInstance inn, Village village) {

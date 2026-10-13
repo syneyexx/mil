@@ -117,7 +117,6 @@ public class MillVillager extends PathfinderMob {
    private static final EntityDataAccessor<Boolean> DATA_HOSTILE = SynchedEntityData.defineId(MillVillager.class, EntityDataSerializers.BOOLEAN);
    private static final EntityDataAccessor<Boolean> DATA_IS_SELLING = SynchedEntityData.defineId(MillVillager.class, EntityDataSerializers.BOOLEAN);
    private static final EntityDataAccessor<Boolean> DATA_HIRED = SynchedEntityData.defineId(MillVillager.class, EntityDataSerializers.BOOLEAN);
-   private static final EntityDataAccessor<Boolean> DATA_COMPANION = SynchedEntityData.defineId(MillVillager.class, EntityDataSerializers.BOOLEAN);
    private static final EntityDataAccessor<Boolean> DATA_STANCE_AGGRESSIVE = SynchedEntityData.defineId(MillVillager.class, EntityDataSerializers.BOOLEAN);
    private static final EntityDataAccessor<Integer> DATA_HIRE_HOURS_LEFT = SynchedEntityData.defineId(MillVillager.class, EntityDataSerializers.INT);
    private static final int HELD_ITEM_CYCLE_DURATION = 20;
@@ -153,16 +152,9 @@ public class MillVillager extends PathfinderMob {
    private VillagerTask lastTrackedTask;
    private int suffocationGraceTicks;
    private int waterTicks;
-   private long lastWaterProbeGameTime = Long.MIN_VALUE;
-   private int goalPickDeferredStreak;
    private boolean inRicePaddy;
-   private long lastRicePaddyBlockKey = Long.MIN_VALUE;
-   private long lastSafetyProbeBlockKey = Long.MIN_VALUE;
-   private int lastClothInventoryModCount = Integer.MIN_VALUE;
    private int sleepDebtTicks;
    private boolean guiPreviewMode;
-   private boolean roadShopTraveler;
-   private int roadShopTravelerTicks;
    @Nullable
    private BlockPos lastOutdoorPos;
    private final VillagerCombat combat = new VillagerCombat(this);
@@ -170,9 +162,6 @@ public class MillVillager extends PathfinderMob {
    private UUID hiredBy;
    private long hiredUntil;
    private boolean aggressiveStance;
-   private boolean companion;
-   @org.jetbrains.annotations.Nullable
-   private UUID companionOwnerId;
    private static final Map<EquipmentSlot, String> ARMOR_SLOT_CATEGORIES = Map.of(
       EquipmentSlot.HEAD, "armourshelmet", EquipmentSlot.CHEST, "armourschestplate", EquipmentSlot.LEGS, "armoursleggings", EquipmentSlot.FEET, "armoursboots"
    );
@@ -234,14 +223,6 @@ public class MillVillager extends PathfinderMob {
       return this.combat.isRaiderEntity();
    }
 
-   public boolean isRoadShopTraveler() {
-      return this.roadShopTraveler;
-   }
-
-   public void setRoadShopTraveler(boolean roadShopTraveler) {
-      this.roadShopTraveler = roadShopTraveler;
-   }
-
    public void setRaiderEntity(boolean raiderEntity) {
       this.combat.setRaiderEntity(raiderEntity);
    }
@@ -277,29 +258,6 @@ public class MillVillager extends PathfinderMob {
 
    public boolean isHired() {
       return this.hiredBy != null;
-   }
-
-   public boolean isCompanion() {
-      return this.companion;
-   }
-
-   @org.jetbrains.annotations.Nullable
-   public UUID getCompanionOwnerId() {
-      return this.companionOwnerId;
-   }
-
-   public void setCompanionState(@org.jetbrains.annotations.Nullable UUID owner, boolean companion) {
-      this.companion = companion;
-      this.companionOwnerId = companion ? owner : null;
-      this.entityData.set(DATA_COMPANION, companion);
-      if (companion) {
-         this.setPersistenceRequired();
-      }
-   }
-
-   public void clearCompanionState() {
-      this.setCompanionState(null, false);
-      this.setHireState(null, 0L);
    }
 
    public boolean isAggressiveStance() {
@@ -382,15 +340,6 @@ public class MillVillager extends PathfinderMob {
          if (player instanceof ServerPlayer serverPlayer) {
             if (player.getItemInHand(hand).getItem() instanceof SummoningWandItem && ServerPayloadGuards.isOperatorOrSingleplayerOwner(serverPlayer)) {
                return InteractionResult.PASS;
-            }
-
-            if (player.isShiftKeyDown()) {
-               if (player.getMainHandItem().isEmpty()
-                  && org.millenaire.faction.crime.PickpocketService.tryPickpocket(serverPlayer, this)) {
-                  return InteractionResult.SUCCESS;
-               }
-               org.millenaire.chat.NpcChatService.handleOpen(serverPlayer, this.getId());
-               return InteractionResult.SUCCESS;
             }
 
             if (this.goalScheduler != null) {
@@ -481,18 +430,6 @@ public class MillVillager extends PathfinderMob {
                village.markVillagerKilled(this.getUUID());
                village.markDirty();
                village.reevaluateChestLock(serverLevel);
-               try {
-                  org.millenaire.faction.politics.PoliticsSavedData.get(serverLevel)
-                     .getPoliticsManager()
-                     .onSettlementLeaderDied(serverLevel, village, this.getUUID(), this.getVillagerTypeId());
-               } catch (Exception politicsError) {
-                  LOGGER.error(
-                     "[Millenaire] Politics succession hook failed for villager {}: {}",
-                     this.getUUID().toString().substring(0, 8),
-                     politicsError.getClass().getSimpleName() + ": " + politicsError.getMessage(),
-                     politicsError
-                  );
-               }
             }
 
             if (this.homeBuilding != null) {
@@ -519,17 +456,13 @@ public class MillVillager extends PathfinderMob {
          }
       }
 
-      if (cause.getEntity() instanceof ServerPlayer killer
-         && org.millenaire.combat.CombatHelper.isPlayerTargetable(killer)) {
+      if (cause.getEntity() instanceof ServerPlayer killer && !killer.isCreative() && !killer.isSpectator()) {
          VillagerType vType = ModCultures.getVillagerType(this.getVillagerTypeId());
          if (vType != null && vType.hasTag("hostile")) {
             MillAdvancements.grant(killer, MillAdvancements.SELF_DEFENSE);
          } else {
             MillAdvancements.grant(killer, MillAdvancements.DARK_SIDE);
-            if (this.level() instanceof ServerLevel killLevel) {
-               Village killVillage = this.getVillageId() != null ? Village.resolve(killLevel, this.getVillageId()) : null;
-               org.millenaire.faction.crime.CrimeService.onVillagerMurder(killLevel, killer, this, killVillage);
-            }
+            org.millenaire.crime.CrimeService.onVillagerKilled(killer, this);
          }
       }
 
@@ -563,7 +496,6 @@ public class MillVillager extends PathfinderMob {
       builder.define(DATA_HOSTILE, false);
       builder.define(DATA_IS_SELLING, false);
       builder.define(DATA_HIRED, false);
-      builder.define(DATA_COMPANION, false);
       builder.define(DATA_STANCE_AGGRESSIVE, false);
       builder.define(DATA_HIRE_HOURS_LEFT, 0);
    }
@@ -979,13 +911,6 @@ public class MillVillager extends PathfinderMob {
          }
       }
 
-      if (!villagerType.isChild()) {
-         VillagerGoal attendCeremony = registry.get(org.millenaire.religion.goal.AttendCeremonyGoal.ID);
-         if (attendCeremony != null && !goals.contains(attendCeremony)) {
-            goals.add(attendCeremony);
-         }
-      }
-
       this.goalScheduler = new GoalScheduler(goals);
    }
 
@@ -1113,9 +1038,6 @@ public class MillVillager extends PathfinderMob {
       this.updateSwingTime();
       if (!this.level().isClientSide()) {
          this.combat.tickCombatMaintenance();
-         if (this.roadShopTraveler && ++this.roadShopTravelerTicks > 6000) {
-            this.discard();
-         }
       }
    }
 
@@ -1135,71 +1057,36 @@ public class MillVillager extends PathfinderMob {
    }
 
    public void tick() {
-      BlockPos feetNow = this.blockPosition();
-      long feetKey = feetNow.asLong();
-      if (feetKey != this.lastRicePaddyBlockKey) {
-         this.lastRicePaddyBlockKey = feetKey;
-         this.inRicePaddy = this.computeInRicePaddy(feetNow);
-      }
+      this.inRicePaddy = this.computeInRicePaddy();
       super.tick();
-
-      long entityAiStartNanos = 0L;
-      boolean sampleAiNanos = !this.level().isClientSide() && (this.getId() & 7) == (this.tickCount & 7);
-      if (sampleAiNanos) {
-         entityAiStartNanos = System.nanoTime();
-      }
-
-      org.millenaire.perf.tick.EntitySimulationLod entityLod = org.millenaire.perf.tick.EntitySimulationLod.NEAR;
-      if (!this.level().isClientSide() && this.level() instanceof net.minecraft.server.level.ServerLevel serverForLod) {
-         org.millenaire.perf.tick.LevelTickCache.ensure(serverForLod);
-         entityLod = org.millenaire.perf.tick.EntitySimulationLod.resolve(serverForLod, this);
-         org.millenaire.perf.tick.ServerTickGovernor.noteEntityLod(entityLod);
-      }
-      boolean ambientOk = entityLod.allowAmbientWork();
-      boolean farSleep = entityLod == org.millenaire.perf.tick.EntitySimulationLod.FAR
-         && org.millenaire.perf.tick.EntitySimulationLod.farSleepEnabled();
-      if (!this.level().isClientSide() && farSleep) {
-         org.millenaire.perf.tick.ServerTickGovernor.noteEntityFarSleep();
-      }
-
       if (!this.level().isClientSide() && this.suffocationGraceTicks > 0) {
          this.suffocationGraceTicks--;
       }
 
-      if (!this.level().isClientSide() && !farSleep) {
-         this.tickPassiveRegeneration();
+      if (!this.level().isClientSide()) {
+         if (this.tickCount % 40 == 0) {
+            this.tickPassiveRegeneration();
+         }
+         if (this.tickCount % 40 == 11) {
+            org.millenaire.village.VillageOutfitService.syncArmorSlots(this);
+         }
       }
 
-      // Far sleep: amortize anti-drown / suffocation block probes (still rescue, just not every tick).
-      // Near/Mid: re-probe on block change or every 4 ticks (was every tick).
-      boolean safetyProbe = farSleep
-         ? this.tickCount % 40 == 0
-         : feetKey != this.lastSafetyProbeBlockKey || (this.tickCount & 3) == 0;
-      if (safetyProbe) {
-         this.lastSafetyProbeBlockKey = feetKey;
-      }
-      if (!this.level().isClientSide() && this.goalScheduler != null && safetyProbe) {
+      if (!this.level().isClientSide() && this.goalScheduler != null) {
          if (this.isInWater()) {
-            long probeTime = this.level().getGameTime();
-            int elapsed = this.lastWaterProbeGameTime == Long.MIN_VALUE
-               ? 1
-               : (int)Math.max(1L, Math.min(40L, probeTime - this.lastWaterProbeGameTime));
-            this.lastWaterProbeGameTime = probeTime;
-            this.waterTicks += elapsed;
+            this.waterTicks++;
             if (this.waterTicks > 100) {
                int safeY = this.level().getHeight(Types.MOTION_BLOCKING_NO_LEAVES, this.blockPosition().getX(), this.blockPosition().getZ());
                this.teleportTo(this.blockPosition().getX() + 0.5, safeY, this.blockPosition().getZ() + 0.5);
                LOGGER.debug("[Millénaire] Anti-drowning: {} TP surface (in water for {} ticks)", this.getVillagerTypeId(), this.waterTicks);
                this.waterTicks = 0;
-               this.lastWaterProbeGameTime = Long.MIN_VALUE;
             }
          } else {
             this.waterTicks = 0;
-            this.lastWaterProbeGameTime = Long.MIN_VALUE;
          }
       }
 
-      if (!this.level().isClientSide() && this.suffocationGraceTicks <= 0 && safetyProbe) {
+      if (!this.level().isClientSide() && this.suffocationGraceTicks <= 0) {
          BlockPos feet = this.blockPosition();
          BlockPos head = feet.above();
          if (this.level().getBlockState(feet).isSuffocating(this.level(), feet) && this.level().getBlockState(head).isSuffocating(this.level(), head)) {
@@ -1214,38 +1101,34 @@ public class MillVillager extends PathfinderMob {
          }
       }
 
-      if (!this.level().isClientSide() && ambientOk && this.level().getGameTime() % 40L == 7L && this.level().canSeeSky(this.blockPosition())) {
+      if (!this.level().isClientSide() && this.level().getGameTime() % 40L == 7L && this.level().canSeeSky(this.blockPosition())) {
          this.lastOutdoorPos = this.blockPosition().immutable();
       }
 
       if (!this.level().isClientSide() && this.tickCount % 20 == 0 && this.villagerTypeId != null) {
          VillagerType vType = ModCultures.getVillagerType(this.villagerTypeId);
          if (vType != null) {
-            int mod = this.inventory.modCount();
-            if (mod != this.lastClothInventoryModCount) {
-               this.lastClothInventoryModCount = mod;
-               this.updateClothTextures(vType);
-            }
+            this.updateClothTextures(vType);
          }
       }
 
-      if (!this.level().isClientSide() && ambientOk && this.tickCount % 100 == 0 && this.villagerTypeId != null) {
+      if (!this.level().isClientSide() && this.tickCount % 100 == 0 && this.villagerTypeId != null) {
          this.unlockForNearbyPlayers();
       }
 
-      if (!this.level().isClientSide() && ambientOk && this.tickCount % 100 == 0 && this.isLocalMerchant()) {
+      if (!this.level().isClientSide() && this.tickCount % 100 == 0 && this.isLocalMerchant()) {
          this.localMerchantRescue();
       }
 
-      if (!this.level().isClientSide() && ambientOk && Math.abs(this.level().getGameTime() + this.hashCode()) % 10L == 6L) {
+      if (!this.level().isClientSide() && Math.abs(this.level().getGameTime() + this.hashCode()) % 20L == 6L) {
          this.handleLeafClearing();
       }
 
-      if (!this.level().isClientSide() && ambientOk && Math.abs(this.level().getGameTime() + this.hashCode()) % 10L == 5L) {
+      if (!this.level().isClientSide() && Math.abs(this.level().getGameTime() + this.hashCode()) % 20L == 5L) {
          this.combat.triggerMobAttacks();
       }
 
-      if (!this.level().isClientSide()) {
+      if (!this.level().isClientSide() && this.tickCount % 20 == 0) {
          this.tickSleepDebt();
       }
 
@@ -1255,43 +1138,12 @@ public class MillVillager extends PathfinderMob {
 
       if (!this.level().isClientSide() && this.goalScheduler != null) {
          GoalContext ctx = this.buildGoalContext();
-         boolean allowGoalPick = entityLod.allowGoalPick(this.level().getGameTime(), this.getId());
-         boolean allowCombatScan = org.millenaire.perf.tick.EntitySimulationLod.forceCombatScan(this)
-            || entityLod.allowCombatScan(this.level().getGameTime(), this.getId());
-         // When Entity LOD is off, fall back to distance cadence. When LOD is on, Mid/Far already stagger.
-         if (!org.millenaire.perf.tick.EntitySimulationLod.enabled()
-            && this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel
-            && !org.millenaire.perf.tick.VillagerAiCadence.allowGoalPick(serverLevel, this)) {
-            allowGoalPick = false;
-         }
-         boolean urgentAi = this.isHired() || this.isCompanion() || this.getAttackTarget() != null;
-         if (allowGoalPick) {
-            if (org.millenaire.perf.tick.ServerTickGovernor.tryConsumeEntityGoalPick(
-               this.level().getGameTime(), urgentAi, this.goalPickDeferredStreak
-            )) {
-               this.goalPickDeferredStreak = 0;
-            } else {
-               this.goalPickDeferredStreak = Math.min(this.goalPickDeferredStreak + 1, 1000);
-               allowGoalPick = false;
-            }
-         }
-         if (!allowGoalPick) {
-            org.millenaire.perf.tick.ServerTickGovernor.noteAiCadenceSkipped();
-         }
-         boolean farSleepUrgent = urgentAi
-            || this.hurtTime > 0
-            || this.isSelling()
-            || ctx != null && ctx.village() != null && (ctx.village().isUnderAttack() || ctx.village().isRaidActiveOrSuffering());
          if (ctx != null) {
-            this.goalScheduler.tick(ctx, allowGoalPick, allowCombatScan, farSleep && !farSleepUrgent);
+            this.goalScheduler.tick(ctx);
          }
 
          Village navVillage = ctx != null ? ctx.village() : null;
-         boolean hasTask = this.goalScheduler.getCurrentTask() != null && !this.goalScheduler.isFarSleepPaused();
-         boolean allowNav = hasTask || (allowGoalPick && entityLod.allowIdleNavigation());
-         if (allowNav) {
-            this.navManager.tick(this, navVillage);
-         }
+         this.navManager.tick(this, navVillage);
          VillagerTask task = this.goalScheduler.getCurrentTask();
          if (task != null) {
             if (task != this.lastTrackedTask) {
@@ -1315,8 +1167,10 @@ public class MillVillager extends PathfinderMob {
                this.cycleHeldItems(task);
             }
 
-            this.updateGoalLabel(task);
-            if (ambientOk && !this.isSleeping() && !this.isVillagerSleeping()) {
+            if (this.tickCount % 10 == 0) {
+               this.updateGoalLabel(task);
+            }
+            if (!this.isSleeping() && !this.isVillagerSleeping() && this.tickCount % 10 == 0) {
                this.speech.tick(task, navVillage);
             }
          } else {
@@ -1326,19 +1180,12 @@ public class MillVillager extends PathfinderMob {
                this.lastTrackedTask = null;
             }
 
-            if (ambientOk && !this.isSleeping() && !this.isVillagerSleeping()) {
+            if (!this.isSleeping() && !this.isVillagerSleeping() && this.tickCount % 10 == 0) {
                this.speech.tick(null, navVillage);
             }
          }
 
-         if (ambientOk) {
-            this.tickPassivePickup();
-         }
-      }
-
-      if (sampleAiNanos && entityAiStartNanos != 0L) {
-         // Sampled 1/8 villagers/ticks; scale so diagnostics stay roughly comparable.
-         org.millenaire.perf.tick.ServerTickGovernor.noteEntityAiNanos((System.nanoTime() - entityAiStartNanos) * 8L);
+         this.tickPassivePickup();
       }
    }
 
@@ -1354,7 +1201,8 @@ public class MillVillager extends PathfinderMob {
       return !this.inRicePaddy && super.canSwimInFluidType(type);
    }
 
-   private boolean computeInRicePaddy(BlockPos feet) {
+   private boolean computeInRicePaddy() {
+      BlockPos feet = this.blockPosition();
       return !isRicePaddy(this.level(), feet) ? false : this.level().getFluidState(feet.above()).isEmpty();
    }
 
@@ -1383,15 +1231,8 @@ public class MillVillager extends PathfinderMob {
    }
 
    private void tickSleepDebt() {
-      boolean isNight;
-      long dayTime;
-      if (this.level() instanceof ServerLevel serverLevel) {
-         isNight = org.millenaire.perf.tick.LevelTickCache.isNight(serverLevel);
-         dayTime = org.millenaire.perf.tick.LevelTickCache.dayTimeInCycle(serverLevel);
-      } else {
-         isNight = TickConstants.isNight(this.level());
-         dayTime = this.level().getDayTime() % 24000L;
-      }
+      boolean isNight = TickConstants.isNight(this.level());
+      long dayTime = this.level().getDayTime() % 24000L;
       boolean asleep = this.isSleeping() || this.isVillagerSleeping();
       this.sleepDebtTicks = nextSleepDebt(this.sleepDebtTicks, asleep, isNight, dayTime);
    }
@@ -1504,12 +1345,8 @@ public class MillVillager extends PathfinderMob {
    }
 
    private void tickPassivePickup() {
-      // Stagger across 40 ticks so idle villagers do not all scan item entities together.
-      if (this.tickCount % 40 == Math.floorMod(this.getId(), 40)) {
-         boolean night = this.level() instanceof ServerLevel serverLevel
-            ? org.millenaire.perf.tick.LevelTickCache.isNight(serverLevel)
-            : TickConstants.isNight(this.level());
-         if (!night) {
+      if (this.tickCount % 20 == Math.floorMod(this.getUUID().hashCode(), 20)) {
+         if (!TickConstants.isNight(this.level())) {
             VillagerType vtype = ModCultures.getVillagerType(this.getVillagerTypeId());
             if (vtype != null && !vtype.resolvedCollectGoods().isEmpty()) {
                AABB scanBox = this.getBoundingBox().inflate(5.0, 30.0, 5.0);
@@ -1590,6 +1427,11 @@ public class MillVillager extends PathfinderMob {
          return super.getItemBySlot(slot);
       }
 
+      ItemStack custom = org.millenaire.village.VillageOutfitService.getOutfitPiece(this, slot);
+      if (custom != null) {
+         return custom;
+      }
+
       String categoryId = ARMOR_SLOT_CATEGORIES.get(slot);
       if (categoryId == null) {
          return super.getItemBySlot(slot);
@@ -1602,6 +1444,11 @@ public class MillVillager extends PathfinderMob {
 
       ToolCategory.ToolEntry best = category.getBestOwned(item -> this.getInventory().getCount(item) > 0);
       return best != null && best.item() != null ? new ItemStack(best.item()) : ItemStack.EMPTY;
+   }
+
+   /** Equipment stored on the entity (for client sync), bypassing virtual armor lookup. */
+   public ItemStack getSyncedEquipment(EquipmentSlot slot) {
+      return super.getItemBySlot(slot);
    }
 
    private void clearHeldItems() {
@@ -1712,12 +1559,6 @@ public class MillVillager extends PathfinderMob {
          tag.putLong("hiredUntil", this.hiredUntil);
          tag.putBoolean("aggressiveStance", this.aggressiveStance);
       }
-      if (this.companion) {
-         tag.putBoolean("companion", true);
-         if (this.companionOwnerId != null) {
-            tag.putUUID("companionOwner", this.companionOwnerId);
-         }
-      }
    }
 
    public void readAdditionalSaveData(CompoundTag tag) {
@@ -1760,14 +1601,6 @@ public class MillVillager extends PathfinderMob {
          this.aggressiveStance = tag.getBoolean("aggressiveStance");
          this.entityData.set(DATA_HIRED, true);
          this.entityData.set(DATA_STANCE_AGGRESSIVE, this.aggressiveStance);
-      }
-      if (tag.getBoolean("companion")) {
-         this.companion = true;
-         if (tag.hasUUID("companionOwner")) {
-            this.companionOwnerId = tag.getUUID("companionOwner");
-         }
-         this.entityData.set(DATA_COMPANION, true);
-         this.setPersistenceRequired();
       }
 
       VillagerIdentity loaded = VillagerIdentity.load(tag);

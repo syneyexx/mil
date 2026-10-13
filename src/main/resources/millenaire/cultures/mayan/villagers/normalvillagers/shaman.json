@@ -11,8 +11,8 @@
     "millenaire:chat",
     "millenaire:rest",
     "millenaire:tend_sacrifices",
-    "millenaire:pray",
-    "millenaire:hold_service"
+    "millenaire:perform_pujas",
+    "millenaire:be_puja_performer"
   ],
   "tags": [
     "religious",

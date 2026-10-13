@@ -1,0 +1,9 @@
+seneschal.greeting=Welcome to our dorp, $name. Mind the canals.
+seneschal.greeting=The burgemeester keeps the polder peaceful.
+lady.greeting=We trade fairly and expect the same from visitors.
+farmer.greeting=The wheat looks good this season.
+farmer.plantseeds=Plant now, harvest before the autumn rains.
+wife.greeting=Fresh bread and a dry roof — that is prosperity.
+lumberman.greeting=These dyke-side trees keep the village supplied.
+lumberman.choptrees=Steady axe work keeps the cold out.
+guard.greeting=Keep order in the market, $name, or the schutter will.

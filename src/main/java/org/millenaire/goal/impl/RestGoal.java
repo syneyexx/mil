@@ -273,7 +273,7 @@ public class RestGoal implements VillagerGoal {
             } else {
                BuildingInstance home = ctx.resolveHomeBuilding().orElse(null);
                BedManager bedMgr = home != null && home.hasBedManager() ? home.getBedManager() : null;
-               BlockPos legacyBed = this.findBedLegacy(level, searchCenter, bedMgr, level.getGameTime());
+               BlockPos legacyBed = this.findBedLegacy(level, searchCenter, bedMgr, level.getGameTime(), ctx.village());
                if (legacyBed != null) {
                   this.sleepBedPos = legacyBed;
                } else {
@@ -407,6 +407,9 @@ public class RestGoal implements VillagerGoal {
       @Nullable
       private BlockPos findBedViaClaiming(GoalContext ctx, ServerLevel level) {
          BuildingInstance home = ctx.resolveHomeBuilding().orElse(null);
+         if (home != null && home.isPlayerReservedHouse()) {
+            return null;
+         }
          if (home != null && home.hasBedManager()) {
             BedManager bedManager = home.getBedManager();
             UUID villagerUuid = ctx.villager().getUUID();
@@ -439,7 +442,7 @@ public class RestGoal implements VillagerGoal {
       }
 
       @Nullable
-      private BlockPos findBedLegacy(ServerLevel level, BlockPos center, @Nullable BedManager bedManager, long gameTime) {
+      private BlockPos findBedLegacy(ServerLevel level, BlockPos center, @Nullable BedManager bedManager, long gameTime, @Nullable org.millenaire.village.Village village) {
          MutableBlockPos mutable = new MutableBlockPos();
 
          for (int dx = -6; dx <= 6; dx++) {
@@ -451,6 +454,12 @@ public class RestGoal implements VillagerGoal {
                      && (!state.hasProperty(BedBlock.PART) || state.getValue(BedBlock.PART) != BedPart.HEAD)
                      && !this.isBedOccupied(level, mutable)
                      && (bedManager == null || !bedManager.isSuffocatingMarked(mutable.immutable(), gameTime))) {
+                     if (village != null) {
+                        BuildingInstance at = village.getOperationalBuildingAt(mutable.immutable());
+                        if (at != null && at.isPlayerReservedHouse()) {
+                           continue;
+                        }
+                     }
                      return mutable.immutable();
                   }
                }

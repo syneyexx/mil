@@ -37,7 +37,8 @@ public final class ModPayloads {
       new ModPayloads.ClientboundDef(SpeechChatPayload.TYPE, SpeechChatPayload.STREAM_CODEC),
       new ModPayloads.ClientboundDef(VillageTypeListPayload.TYPE, VillageTypeListPayload.STREAM_CODEC),
       new ModPayloads.ClientboundDef(InfoPanelContentPayload.TYPE, InfoPanelContentPayload.STREAM_CODEC),
-      new ModPayloads.ClientboundDef(WorldStatusContentPayload.TYPE, WorldStatusContentPayload.STREAM_CODEC),
+      new ModPayloads.ClientboundDef(WorldLedgerPayload.TYPE, WorldLedgerPayload.STREAM_CODEC),
+      new ModPayloads.ClientboundDef(BountyHudPayload.TYPE, BountyHudPayload.STREAM_CODEC),
       new ModPayloads.ClientboundDef(QuestInstanceSyncPayload.TYPE, QuestInstanceSyncPayload.STREAM_CODEC),
       new ModPayloads.ClientboundDef(QuestInstanceDestroyPayload.TYPE, QuestInstanceDestroyPayload.STREAM_CODEC),
       new ModPayloads.ClientboundDef(QuestResultTextPayload.TYPE, QuestResultTextPayload.STREAM_CODEC),
@@ -47,19 +48,14 @@ public final class ModPayloads {
       new ModPayloads.ClientboundDef(BuildingProjectListPayload.TYPE, BuildingProjectListPayload.STREAM_CODEC),
       new ModPayloads.ClientboundDef(ControlledProjectsPayload.TYPE, ControlledProjectsPayload.STREAM_CODEC),
       new ModPayloads.ClientboundDef(ControlledMilitaryPayload.TYPE, ControlledMilitaryPayload.STREAM_CODEC),
+      new ModPayloads.ClientboundDef(ControlledCityPayload.TYPE, ControlledCityPayload.STREAM_CODEC),
       new ModPayloads.ClientboundDef(OpenHireScreenPayload.TYPE, OpenHireScreenPayload.STREAM_CODEC),
       new ModPayloads.ClientboundDef(UnlockingToastPayload.TYPE, UnlockingToastPayload.STREAM_CODEC),
       new ModPayloads.ClientboundDef(PlanPreviewPayload.TYPE, PlanPreviewPayload.STREAM_CODEC),
       new ModPayloads.ClientboundDef(ProjectCancelPromptPayload.TYPE, ProjectCancelPromptPayload.STREAM_CODEC),
-      new ModPayloads.ClientboundDef(org.millenaire.chat.NpcChatOpenPayload.TYPE, org.millenaire.chat.NpcChatOpenPayload.STREAM_CODEC),
-      new ModPayloads.ClientboundDef(org.millenaire.chat.NpcChatLinePayload.TYPE, org.millenaire.chat.NpcChatLinePayload.STREAM_CODEC),
-      new ModPayloads.ClientboundDef(org.millenaire.chat.NpcChatClosedPayload.TYPE, org.millenaire.chat.NpcChatClosedPayload.STREAM_CODEC),
-      new ModPayloads.ClientboundDef(org.millenaire.living.net.LivingActionChoicesPayload.TYPE, org.millenaire.living.net.LivingActionChoicesPayload.STREAM_CODEC),
-      new ModPayloads.ClientboundDef(org.millenaire.living.net.LivingActionFeedbackPayload.TYPE, org.millenaire.living.net.LivingActionFeedbackPayload.STREAM_CODEC),
-      new ModPayloads.ClientboundDef(CityAdminPayload.TYPE, CityAdminPayload.STREAM_CODEC),
-      new ModPayloads.ClientboundDef(BountyHudPayload.TYPE, BountyHudPayload.STREAM_CODEC),
-      new ModPayloads.ClientboundDef(SettlementMapSnapshotPayload.TYPE, SettlementMapSnapshotPayload.STREAM_CODEC),
-      new ModPayloads.ClientboundDef(SettlementMapDeltaPayload.TYPE, SettlementMapDeltaPayload.STREAM_CODEC)
+      new ModPayloads.ClientboundDef(DiplomacyEventPopupPayload.TYPE, DiplomacyEventPopupPayload.STREAM_CODEC),
+      new ModPayloads.ClientboundDef(VillageCreateWizardPayload.TYPE, VillageCreateWizardPayload.STREAM_CODEC),
+      new ModPayloads.ClientboundDef(VillageCreateHubPayload.TYPE, VillageCreateHubPayload.STREAM_CODEC)
    );
 
    private ModPayloads() {
@@ -70,7 +66,7 @@ public final class ModPayloads {
    }
 
    public static void register(RegisterPayloadHandlersEvent event) {
-      PayloadRegistrar registrar = event.registrar("3");
+      PayloadRegistrar registrar = event.registrar("2");
       if (FMLEnvironment.dist.isClient()) {
          Map<Type<?>, IPayloadHandler<?>> handlers = ModPayloads.ClientHandlers.handlers();
          Set<Type<?>> orphans = new HashSet<>(handlers.keySet());
@@ -98,10 +94,6 @@ public final class ModPayloads {
       }
 
       registrar.playToServer(VillageScrollPurchasePayload.TYPE, VillageScrollPurchasePayload.STREAM_CODEC, VillageBookService::handleScrollPurchasePacket);
-      registrar.playToServer(VillageBookActionPayload.TYPE, VillageBookActionPayload.STREAM_CODEC, VillageBookActionPayload::handleOnServer);
-      registrar.playToServer(
-         VillageBookRefreshRequestPayload.TYPE, VillageBookRefreshRequestPayload.STREAM_CODEC, VillageBookRefreshRequestPayload::handleOnServer
-      );
       registrar.playToServer(BuildingPurchasePayload.TYPE, BuildingPurchasePayload.STREAM_CODEC, BuildingPurchaseService::handlePurchasePacket);
       registrar.playToServer(ImportTableActionPayload.TYPE, ImportTableActionPayload.STREAM_CODEC, ImportTableActionHandler::handleAction);
       registrar.playToServer(
@@ -113,28 +105,19 @@ public final class ModPayloads {
       registrar.playToServer(TravelBookRequestPayload.TYPE, TravelBookRequestPayload.STREAM_CODEC, TravelBookRequestPayload::handleOnServer);
       registrar.playToServer(DiplomacyActionPayload.TYPE, DiplomacyActionPayload.STREAM_CODEC, DiplomacyActionPayload::handleOnServer);
       registrar.playToServer(VillageCreationRequestPayload.TYPE, VillageCreationRequestPayload.STREAM_CODEC, VillageCreationRequestPayload::handleOnServer);
-      registrar.playToServer(
-         SettlementFoundingRequestPayload.TYPE, SettlementFoundingRequestPayload.STREAM_CODEC, SettlementFoundingRequestPayload::handleOnServer
-      );
-      registrar.playToServer(CityAdminActionPayload.TYPE, CityAdminActionPayload.STREAM_CODEC, CityAdminActionPayload::handleOnServer);
-      registrar.playToServer(CityAdminRenamePayload.TYPE, CityAdminRenamePayload.STREAM_CODEC, CityAdminRenamePayload::handleOnServer);
+      registrar.playToServer(VillageCreateConfirmPayload.TYPE, VillageCreateConfirmPayload.STREAM_CODEC, VillageCreateConfirmPayload::handleOnServer);
+      registrar.playToServer(DesignateBuildingPayload.TYPE, DesignateBuildingPayload.STREAM_CODEC, DesignateBuildingPayload::handleOnServer);
+      registrar.playToServer(DiplomacyEventResponsePayload.TYPE, DiplomacyEventResponsePayload.STREAM_CODEC, DiplomacyEventResponsePayload::handleOnServer);
       registrar.playToServer(CropLearningPayload.TYPE, CropLearningPayload.STREAM_CODEC, CropLearningPayload::handleOnServer);
       registrar.playToServer(HuntingLearningPayload.TYPE, HuntingLearningPayload.STREAM_CODEC, HuntingLearningPayload::handleOnServer);
       registrar.playToServer(CultureControlPurchasePayload.TYPE, CultureControlPurchasePayload.STREAM_CODEC, CultureControlPurchasePayload::handleOnServer);
       registrar.playToServer(InfoPanelRequestPayload.TYPE, InfoPanelRequestPayload.STREAM_CODEC, InfoPanelRequestPayload::handleOnServer);
-      registrar.playToServer(WorldStatusRequestPayload.TYPE, WorldStatusRequestPayload.STREAM_CODEC, WorldStatusRequestPayload::handleOnServer);
-      registrar.playToServer(WorldStatusActionPayload.TYPE, WorldStatusActionPayload.STREAM_CODEC, WorldStatusActionPayload::handleOnServer);
+      registrar.playToServer(WorldLedgerCityRequestPayload.TYPE, WorldLedgerCityRequestPayload.STREAM_CODEC, WorldLedgerCityRequestPayload::handleOnServer);
       registrar.playToServer(QuestCompleteStepPayload.TYPE, QuestCompleteStepPayload.STREAM_CODEC, QuestCompleteStepPayload::handle);
       registrar.playToServer(QuestRefusePayload.TYPE, QuestRefusePayload.STREAM_CODEC, QuestRefusePayload::handleOnServer);
       registrar.playToServer(WandDebugActionPayload.TYPE, WandDebugActionPayload.STREAM_CODEC, WandDebugActionPayload::handleOnServer);
       registrar.playToServer(NegationWandConfirmPayload.TYPE, NegationWandConfirmPayload.STREAM_CODEC, NegationWandConfirmPayload::handleOnServer);
       registrar.playToServer(BuildingProjectRequestPayload.TYPE, BuildingProjectRequestPayload.STREAM_CODEC, BuildingProjectRequestPayload::handleOnServer);
-      registrar.playToServer(
-         DesignateBuildingRequestPayload.TYPE, DesignateBuildingRequestPayload.STREAM_CODEC, DesignateBuildingRequestPayload::handleOnServer
-      );
-      registrar.playToServer(
-         UndesignateBuildingRequestPayload.TYPE, UndesignateBuildingRequestPayload.STREAM_CODEC, UndesignateBuildingRequestPayload::handleOnServer
-      );
       registrar.playToServer(
          BuildingUpgradeToggleRequestPayload.TYPE, BuildingUpgradeToggleRequestPayload.STREAM_CODEC, BuildingUpgradeToggleRequestPayload::handleOnServer
       );
@@ -147,17 +130,11 @@ public final class ModPayloads {
       registrar.playToServer(BuildingForgetRequestPayload.TYPE, BuildingForgetRequestPayload.STREAM_CODEC, BuildingForgetRequestPayload::handleOnServer);
       registrar.playToServer(RaidActionPayload.TYPE, RaidActionPayload.STREAM_CODEC, RaidActionPayload::handleOnServer);
       registrar.playToServer(ControlledRelationPayload.TYPE, ControlledRelationPayload.STREAM_CODEC, ControlledRelationPayload::handleOnServer);
+      registrar.playToServer(CultureWarActionPayload.TYPE, CultureWarActionPayload.STREAM_CODEC, CultureWarActionPayload::handleOnServer);
+      registrar.playToServer(ControlledCityActionPayload.TYPE, ControlledCityActionPayload.STREAM_CODEC, ControlledCityActionPayload::handleOnServer);
       registrar.playToServer(HireActionPayload.TYPE, HireActionPayload.STREAM_CODEC, HireActionPayload::handleOnServer);
       registrar.playToServer(ToggleStancePayload.TYPE, ToggleStancePayload.STREAM_CODEC, ToggleStancePayload::handleOnServer);
       registrar.playToServer(PlanPreviewRequestPayload.TYPE, PlanPreviewRequestPayload.STREAM_CODEC, PlanPreviewRequestPayload::handleOnServer);
-      registrar.playToServer(NpcChatOpenRequestPayload.TYPE, NpcChatOpenRequestPayload.STREAM_CODEC, NpcChatOpenRequestPayload::handleOnServer);
-      registrar.playToServer(NpcChatSendPayload.TYPE, NpcChatSendPayload.STREAM_CODEC, NpcChatSendPayload::handleOnServer);
-      registrar.playToServer(NpcChatCloseRequestPayload.TYPE, NpcChatCloseRequestPayload.STREAM_CODEC, NpcChatCloseRequestPayload::handleOnServer);
-      registrar.playToServer(
-         org.millenaire.living.net.LivingActionRequestPayload.TYPE,
-         org.millenaire.living.net.LivingActionRequestPayload.STREAM_CODEC,
-         org.millenaire.living.net.LivingActionRequestPayload::handleOnServer
-      );
    }
 
    private static <T extends CustomPacketPayload> void registerNoop(PayloadRegistrar registrar, ModPayloads.ClientboundDef<T> def) {
@@ -193,7 +170,8 @@ public final class ModPayloads {
          put(map, SpeechChatPayload.TYPE, ClientPayloadHandler::handleSpeechChat);
          put(map, VillageTypeListPayload.TYPE, ClientPayloadHandler::handleVillageTypeList);
          put(map, InfoPanelContentPayload.TYPE, ClientPayloadHandler::handleInfoPanel);
-         put(map, WorldStatusContentPayload.TYPE, ClientPayloadHandler::handleWorldStatus);
+         put(map, WorldLedgerPayload.TYPE, ClientPayloadHandler::handleWorldLedger);
+         put(map, BountyHudPayload.TYPE, ClientPayloadHandler::handleBountyHud);
          put(map, QuestInstanceSyncPayload.TYPE, ClientPayloadHandler::handleQuestSync);
          put(map, QuestInstanceDestroyPayload.TYPE, ClientPayloadHandler::handleQuestDestroy);
          put(map, QuestResultTextPayload.TYPE, ClientPayloadHandler::handleQuestResult);
@@ -203,19 +181,14 @@ public final class ModPayloads {
          put(map, BuildingProjectListPayload.TYPE, ClientPayloadHandler::handleBuildingProjectList);
          put(map, ControlledProjectsPayload.TYPE, ClientPayloadHandler::handleControlledProjects);
          put(map, ControlledMilitaryPayload.TYPE, ClientPayloadHandler::handleControlledMilitary);
+         put(map, ControlledCityPayload.TYPE, ClientPayloadHandler::handleControlledCity);
          put(map, OpenHireScreenPayload.TYPE, ClientPayloadHandler::handleOpenHire);
          put(map, UnlockingToastPayload.TYPE, ClientPayloadHandler::handleUnlockingToast);
          put(map, PlanPreviewPayload.TYPE, ClientPayloadHandler::handlePlanPreview);
          put(map, ProjectCancelPromptPayload.TYPE, ClientPayloadHandler::handleProjectCancelPrompt);
-         put(map, org.millenaire.chat.NpcChatOpenPayload.TYPE, ClientPayloadHandler::handleNpcChatOpen);
-         put(map, org.millenaire.chat.NpcChatLinePayload.TYPE, ClientPayloadHandler::handleNpcChatLine);
-         put(map, org.millenaire.chat.NpcChatClosedPayload.TYPE, ClientPayloadHandler::handleNpcChatClosed);
-         put(map, org.millenaire.living.net.LivingActionChoicesPayload.TYPE, ClientPayloadHandler::handleLivingActionChoices);
-         put(map, org.millenaire.living.net.LivingActionFeedbackPayload.TYPE, ClientPayloadHandler::handleLivingActionFeedback);
-         put(map, CityAdminPayload.TYPE, ClientPayloadHandler::handleCityAdmin);
-         put(map, BountyHudPayload.TYPE, ClientPayloadHandler::handleBountyHud);
-         put(map, SettlementMapSnapshotPayload.TYPE, ClientPayloadHandler::handleSettlementMapSnapshot);
-         put(map, SettlementMapDeltaPayload.TYPE, ClientPayloadHandler::handleSettlementMapDelta);
+         put(map, DiplomacyEventPopupPayload.TYPE, ClientPayloadHandler::handleDiplomacyEventPopup);
+         put(map, VillageCreateWizardPayload.TYPE, ClientPayloadHandler::handleVillageCreateWizard);
+         put(map, VillageCreateHubPayload.TYPE, ClientPayloadHandler::handleVillageCreateHub);
          return map;
       }
 

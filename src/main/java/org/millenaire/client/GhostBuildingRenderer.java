@@ -44,23 +44,25 @@ public final class GhostBuildingRenderer {
    public static void render(PoseStack pose, MultiBufferSource buffers, PlanPreviewPayload preview, BlockPos pivot, Rotation rotation, boolean valid) {
       rebuildIfNeeded(preview, rotation);
       if (!cachedBlocks.isEmpty()) {
+         Minecraft mc = Minecraft.getInstance();
          VertexConsumer vc = buffers.getBuffer(RenderType.translucent());
+         RandomSource random = RandomSource.create();
          float tintR = 1.0F;
          float tintG = valid ? 1.0F : 0.55F;
          float tintB = valid ? 1.0F : 0.55F;
 
          for (GhostBuildingRenderer.GhostBlock block : cachedBlocks) {
+            BakedModel model = mc.getBlockRenderer().getBlockModel(block.state());
             pose.pushPose();
             pose.translate(pivot.getX() + block.rel().getX(), pivot.getY() + block.rel().getY(), pivot.getZ() + block.rel().getZ());
 
-            for (int i = 0; i < Direction.values().length; i++) {
-               Direction cullDir = Direction.values()[i];
+            for (Direction cullDir : Direction.values()) {
                if (!cachedOccluders.contains(block.rel().relative(cullDir))) {
-                  emitQuads(vc, pose, block.state(), block.faceQuads()[i], tintR, tintG, tintB);
+                  emitQuads(vc, pose, block.state(), model.getQuads(block.state(), cullDir, random, ModelData.EMPTY, null), tintR, tintG, tintB);
                }
             }
 
-            emitQuads(vc, pose, block.state(), block.generalQuads(), tintR, tintG, tintB);
+            emitQuads(vc, pose, block.state(), model.getQuads(block.state(), null, random, ModelData.EMPTY, null), tintR, tintG, tintB);
             pose.popPose();
          }
       }
@@ -78,14 +80,12 @@ public final class GhostBuildingRenderer {
             b *= (color & 0xFF) / 255.0F;
          }
 
-         vc.putBulkData(pose.last(), quad, r, g, b, ALPHA, FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
+         vc.putBulkData(pose.last(), quad, r, g, b, 0.75F, 15728880, OverlayTexture.NO_OVERLAY);
       }
    }
 
    private static void rebuildIfNeeded(PlanPreviewPayload preview, Rotation rotation) {
       if (preview != cachedPreview || rotation != cachedRotation) {
-         Minecraft mc = Minecraft.getInstance();
-         RandomSource random = RandomSource.create(42L);
          List<GhostBuildingRenderer.GhostBlock> blocks = new ArrayList<>(preview.blocks().size());
          Set<BlockPos> occluders = new HashSet<>();
 
@@ -94,14 +94,7 @@ public final class GhostBuildingRenderer {
             BlockPos rel = StructureTemplate.transform(entry.relativePos(), Mirror.NONE, rotation, BlockPos.ZERO);
             BlockState rotated = state.rotate(rotation);
             if (rotated.getRenderShape() == RenderShape.MODEL) {
-               BakedModel model = mc.getBlockRenderer().getBlockModel(rotated);
-               @SuppressWarnings("unchecked")
-               List<BakedQuad>[] faceQuads = (List<BakedQuad>[]) new List[Direction.values().length];
-               for (int i = 0; i < Direction.values().length; i++) {
-                  faceQuads[i] = List.copyOf(model.getQuads(rotated, Direction.values()[i], random, ModelData.EMPTY, null));
-               }
-               List<BakedQuad> generalQuads = List.copyOf(model.getQuads(rotated, null, random, ModelData.EMPTY, null));
-               blocks.add(new GhostBuildingRenderer.GhostBlock(rel, rotated, faceQuads, generalQuads));
+               blocks.add(new GhostBuildingRenderer.GhostBlock(rel, rotated));
                if (rotated.canOcclude()) {
                   occluders.add(rel);
                }
@@ -115,6 +108,6 @@ public final class GhostBuildingRenderer {
       }
    }
 
-   private record GhostBlock(BlockPos rel, BlockState state, List<BakedQuad>[] faceQuads, List<BakedQuad> generalQuads) {
+   private record GhostBlock(BlockPos rel, BlockState state) {
    }
 }

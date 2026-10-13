@@ -87,12 +87,6 @@ public final class CultureLoader {
       }
 
       resolveVillagerTypeGoods();
-      org.millenaire.building.DesignatedBuildingPlans.register();
-      try {
-         org.millenaire.religion.content.ReligionContentLoader.loadAll();
-      } catch (RuntimeException e) {
-         LOGGER.error("[Religion] Content load failed: {}", e.getMessage(), e);
-      }
       LOGGER.info(
          "Millénaire content loaded: {} cultures, {} plans ({} sets), {} villager types, {} village types",
          new Object[]{
@@ -104,6 +98,7 @@ public final class CultureLoader {
          }
       );
       ContentStatsReporter.capture(activeCultures, new HashSet<>(BUILTIN_CULTURES));
+      org.millenaire.village.PlayerBuildingPlans.registerAll();
    }
 
    private static void resolveVillagerTypeGoods() {
@@ -322,9 +317,9 @@ public final class CultureLoader {
       Set<ResourceLocation> villageTypesToDisable = new LinkedHashSet<>();
 
       for (VillageType vt : ModCultures.getAllVillageTypes().values()) {
-         if (vt.weight() > 0 && vt.biomeTags().isEmpty() && vt.biomeKeys().isEmpty()) {
-            LOGGER.warn(
-               "VillageType {} has weight={} but no biome_tags — Phase 4 may still spawn via climate fallback if enabled. Prefer adding biome_tags or set weight=0.",
+         if (vt.weight() > 0 && vt.biomeTags().isEmpty()) {
+            LOGGER.error(
+               "VillageType {} has weight={} but no biomeTags — will never spawn naturally (biome pre-filter requires at least one tag). Add biomeTags or set weight=0.",
                vt.id(),
                vt.weight()
             );
@@ -534,24 +529,8 @@ public final class CultureLoader {
             : List.of();
          Optional<ResourceLocation> mapIcon = parseMapIcon(json);
          String cultureBannerNbt = json.has("culture_banner_nbt") ? GsonHelper.getAsString(json, "culture_banner_nbt") : null;
-         boolean excludeFromTrains = json.has("exclude_from_trains") && GsonHelper.getAsBoolean(json, "exclude_from_trains");
-         CulturalTemperament temperament = CulturalTemperament.parse(
-            json.has("temperament") ? GsonHelper.getAsJsonObject(json, "temperament") : null
-         );
          ModCultures.registerCulture(
-            new Culture(
-               id,
-               displayName,
-               panelTexture,
-               nativeLanguage,
-               travelBookCategories,
-               knownCrops,
-               knownHuntingDrops,
-               mapIcon,
-               cultureBannerNbt,
-               excludeFromTrains,
-               temperament
-            )
+            new Culture(id, displayName, panelTexture, nativeLanguage, travelBookCategories, knownCrops, knownHuntingDrops, mapIcon, cultureBannerNbt)
          );
       }
    }

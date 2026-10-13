@@ -198,37 +198,4 @@ public final class VillageBannerService {
    public static ItemStack fallbackBanner() {
       return new ItemStack(Items.WHITE_BANNER);
    }
-
-   /**
-    * Serialize a modern banner ItemStack for persistence on villages/factions.
-    * Prefixed so {@link #parseStoredBanner} can distinguish from legacy culture NBT.
-    */
-   public static String serializeBannerStack(ItemStack stack, RegistryAccess registryAccess) {
-      if (stack == null || stack.isEmpty()) {
-         return null;
-      }
-      try {
-         CompoundTag tag = (CompoundTag)stack.save(registryAccess);
-         return "itemstack:" + tag;
-      } catch (Exception e) {
-         LOGGER.warn("[banner] failed to serialize player banner: {}", e.getMessage());
-         return null;
-      }
-   }
-
-   public static ItemStack parseStoredBanner(String stored, RegistryAccess registryAccess) {
-      if (stored == null || stored.isBlank()) {
-         return ItemStack.EMPTY;
-      }
-      if (!stored.startsWith("itemstack:")) {
-         return ItemStack.EMPTY;
-      }
-      try {
-         CompoundTag tag = TagParser.parseTag(stored.substring("itemstack:".length()));
-         return ItemStack.parse(registryAccess, tag).orElse(ItemStack.EMPTY);
-      } catch (Exception e) {
-         LOGGER.warn("[banner] failed to parse stored banner: {}", e.getMessage());
-         return ItemStack.EMPTY;
-      }
-   }
 }

@@ -22,6 +22,7 @@ import net.minecraft.world.item.HoeItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.PickaxeItem;
 import net.minecraft.world.item.ShovelItem;
+import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.Tiers;
 import net.minecraft.world.item.ArmorItem.Type;
@@ -43,42 +44,14 @@ public final class ModItems {
    public static final DeferredItem<CoinItem> DENIER_ARGENT = ITEMS.registerItem("denier_argent", props -> new CoinItem(props.stacksTo(64)));
    public static final DeferredItem<CoinItem> DENIER_OR = ITEMS.registerItem("denier_or", props -> new CoinItem(props.stacksTo(64)));
    public static final DeferredItem<SummoningWandItem> SUMMONING_WAND = ITEMS.registerItem("summoning_wand", props -> new SummoningWandItem(props.stacksTo(1)));
+   public static final DeferredItem<VillageCreateWandItem> VILLAGE_CREATE_WAND = ITEMS.registerItem(
+      "village_create_wand", props -> new VillageCreateWandItem(props.stacksTo(1))
+   );
    public static final DeferredItem<NegationWandItem> NEGATION_WAND = ITEMS.registerItem("negation_wand", props -> new NegationWandItem(props.stacksTo(1)));
-   public static final DeferredItem<CityAdminWandItem> CITY_ADMIN_WAND = ITEMS.registerItem("city_admin_wand", props -> new CityAdminWandItem(props.stacksTo(1)));
    public static final DeferredItem<PurseItem> PURSE = ITEMS.registerItem("purse", props -> new PurseItem(props.stacksTo(1)));
    public static final DeferredItem<VillageBookItem> VILLAGE_SCROLL = ITEMS.registerItem("village_scroll", props -> new VillageBookItem(props.stacksTo(1)));
    public static final DeferredItem<TravelBookItem> TRAVEL_BOOK = ITEMS.registerItem("travel_book", props -> new TravelBookItem(props.stacksTo(1)));
-   public static final DeferredItem<DeferredSpawnEggItem> NETHER_WRAITH_SPAWN_EGG = ITEMS.registerItem(
-      "nether_wraith_spawn_egg",
-      props -> new DeferredSpawnEggItem(ModEntities.NETHER_WRAITH, 0x1A1214, 0xE0141B, props)
-   );
-   public static final DeferredItem<DeferredSpawnEggItem> INFERNAL_HARROW_SPAWN_EGG = ITEMS.registerItem(
-      "infernal_harrow_spawn_egg",
-      props -> new DeferredSpawnEggItem(ModEntities.INFERNAL_HARROW, 0x1A1010, 0xE02820, props)
-   );
-   public static final DeferredItem<DeferredSpawnEggItem> INFERNAL_HELLHOUND_SPAWN_EGG = ITEMS.registerItem(
-      "infernal_hellhound_spawn_egg",
-      props -> new DeferredSpawnEggItem(ModEntities.INFERNAL_HELLHOUND, 0x141010, 0xD82218, props)
-   );
-   public static final DeferredItem<DeferredSpawnEggItem> ANTICHRIST_PRIEST_SPAWN_EGG = ITEMS.registerItem(
-      "antichrist_priest_spawn_egg",
-      props -> new DeferredSpawnEggItem(ModEntities.ANTICHRIST_PRIEST, 0x121010, 0xC81820, props)
-   );
-   public static final DeferredItem<DeferredSpawnEggItem> INFERNAL_CULTIST_SPAWN_EGG = ITEMS.registerItem(
-      "infernal_cultist_spawn_egg",
-      props -> new DeferredSpawnEggItem(ModEntities.INFERNAL_CULTIST, 0x161212, 0xB8181C, props)
-   );
-   public static final DeferredItem<DeferredSpawnEggItem> BOUNTY_HUNTER_SPAWN_EGG = ITEMS.registerItem(
-      "bounty_hunter_spawn_egg",
-      props -> new DeferredSpawnEggItem(ModEntities.BOUNTY_HUNTER, 0x2A1D15, 0xFF9E1B, props)
-   );
-   public static final DeferredItem<DeferredSpawnEggItem> HEMELWACHTER_SPAWN_EGG = ITEMS.registerItem(
-      "hemelwachter_spawn_egg",
-      props -> new DeferredSpawnEggItem(ModEntities.HEMELWACHTER, 0xE8E0D0, 0xD4AF37, props)
-   );
-   public static final DeferredItem<Item> HEMELKERN = ITEMS.registerItem("hemelkern", props -> new Item(props.stacksTo(16)));
-   public static final DeferredItem<Item> HEMELFRAGMENT = ITEMS.registerItem("hemelfragment", props -> new Item(props.stacksTo(64)));
-   public static final DeferredItem<BlockItem> HEMELLANTAARN_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.HEMELLANTAARN);
+   public static final DeferredItem<LockpickItem> LOCKPICK = ITEMS.registerItem("lockpick", props -> new LockpickItem(props.stacksTo(1).durability(16)));
    public static final DeferredItem<PickaxeItem> NORMAN_PICKAXE = ITEMS.registerItem(
       "norman_pickaxe",
       props -> new PickaxeItem(NormanMaterials.NORMAN_TOOL, props.attributes(DiggerItem.createAttributes(NormanMaterials.NORMAN_TOOL, 1.0F, -2.8F)))
@@ -108,18 +81,6 @@ public final class ModItems {
    );
    public static final DeferredItem<ArmorItem> NORMAN_BOOTS = ITEMS.registerItem(
       "norman_boots", props -> new ArmorItem(NormanMaterials.NORMAN_ARMOR, Type.BOOTS, props.durability(Type.BOOTS.getDurability(66)))
-   );
-   public static final DeferredItem<BountyHunterArmorItem> BOUNTY_HUNTER_HELMET = ITEMS.registerItem(
-      "bounty_hunter_helmet", props -> new BountyHunterArmorItem(Type.HELMET, props)
-   );
-   public static final DeferredItem<BountyHunterArmorItem> BOUNTY_HUNTER_CHESTPLATE = ITEMS.registerItem(
-      "bounty_hunter_chestplate", props -> new BountyHunterArmorItem(Type.CHESTPLATE, props)
-   );
-   public static final DeferredItem<BountyHunterArmorItem> BOUNTY_HUNTER_LEGGINGS = ITEMS.registerItem(
-      "bounty_hunter_leggings", props -> new BountyHunterArmorItem(Type.LEGGINGS, props)
-   );
-   public static final DeferredItem<BountyHunterArmorItem> BOUNTY_HUNTER_BOOTS = ITEMS.registerItem(
-      "bounty_hunter_boots", props -> new BountyHunterArmorItem(Type.BOOTS, props)
    );
    public static final DeferredItem<MillFoodItem> CIDERAPPLE = ITEMS.registerItem(
       "cider_apple", props -> new MillFoodItem(props.stacksTo(64), 1, 0.05F, 0, 0, 0, false)
@@ -405,6 +366,78 @@ public final class ModItems {
    public static final DeferredItem<BlockItem> SOD_DARK_OAK_ITEM;
    public static final DeferredItem<BlockItem> INUIT_CARVING_ITEM;
    public static final DeferredItem<BlockItem> FIRE_PIT_ITEM;
+
+   public static final DeferredItem<Item> DRAKENKROON = ITEMS.registerItem("drakenkroon", props -> new Item(props.stacksTo(1)));
+   public static final DeferredItem<Item> OOG_VAN_DE_ALZIENDE = ITEMS.registerItem("oog_van_de_alziende", props -> new Item(props.stacksTo(1)));
+   public static final DeferredItem<Item> VORSTENKROON = ITEMS.registerItem("vorstenkroon", props -> new Item(props.stacksTo(1)));
+   public static final DeferredItem<Item> GEVALLEN_VEER = ITEMS.registerItem("gevallen_veer", props -> new Item(props.stacksTo(64)));
+   public static final DeferredItem<Item> SCHARLAKEN_SCEPTER = ITEMS.registerItem("scharlaken_scepter", props -> new Item(props.stacksTo(1)));
+   public static final DeferredItem<Item> RAZERNIJ_MANEN = ITEMS.registerItem("razernij_manen", props -> new Item(props.stacksTo(64)));
+
+   public static final DeferredItem<SpawnEggItem> DRAKENKONING_SPAWN_EGG = ITEMS.register(
+      "drakenkoning_spawn_egg",
+      () -> new DeferredSpawnEggItem(ModEntities.DRAKENKONING, 0x1a5c2e, 0xc9a227, new Properties())
+   );
+   public static final DeferredItem<SpawnEggItem> DE_ALZIENDE_SPAWN_EGG = ITEMS.register(
+      "de_alziende_spawn_egg",
+      () -> new DeferredSpawnEggItem(ModEntities.DE_ALZIENDE, 0xd4af37, 0x40e0d0, new Properties())
+   );
+   public static final DeferredItem<SpawnEggItem> DRIEVOUDIGE_VORST_SPAWN_EGG = ITEMS.register(
+      "drievoudige_vorst_spawn_egg",
+      () -> new DeferredSpawnEggItem(ModEntities.DRIEVOUDIGE_VORST, 0x5a2d82, 0xffd700, new Properties())
+   );
+   public static final DeferredItem<SpawnEggItem> GEVALLEN_SERAF_SPAWN_EGG = ITEMS.register(
+      "gevallen_seraf_spawn_egg",
+      () -> new DeferredSpawnEggItem(ModEntities.GEVALLEN_SERAF, 0x1a1a1a, 0xf5f5dc, new Properties())
+   );
+   public static final DeferredItem<SpawnEggItem> SCHARLAKEN_KONINGIN_SPAWN_EGG = ITEMS.register(
+      "scharlaken_koningin_spawn_egg",
+      () -> new DeferredSpawnEggItem(ModEntities.SCHARLAKEN_KONINGIN, 0x8b0000, 0xffd700, new Properties())
+   );
+   public static final DeferredItem<SpawnEggItem> ZESARMIGE_RAZERNIJ_SPAWN_EGG = ITEMS.register(
+      "zesarmige_razernij_spawn_egg",
+      () -> new DeferredSpawnEggItem(ModEntities.ZESARMIGE_RAZERNIJ, 0x3b2f2f, 0xff8c00, new Properties())
+   );
+   public static final DeferredItem<SpawnEggItem> HORSE_WIZARD_SPAWN_EGG = ITEMS.register(
+      "horse_wizard_spawn_egg",
+      () -> new DeferredSpawnEggItem(ModEntities.HORSE_WIZARD, 0x352044, 0xB644EE, new Properties())
+   );
+   public static final DeferredItem<SpawnEggItem> PEGASUS_SPAWN_EGG = ITEMS.register(
+      "pegasus_spawn_egg",
+      () -> new DeferredSpawnEggItem(ModEntities.PEGASUS, 0x43382E, 0xE49E29, new Properties())
+   );
+   public static final DeferredItem<SpawnEggItem> ZUZU_SPAWN_EGG = ITEMS.register(
+      "zuzu_spawn_egg",
+      () -> new DeferredSpawnEggItem(ModEntities.ZUZU, 0x494641, 0xDDDED7, new Properties())
+   );
+   public static final DeferredItem<SpawnEggItem> BIRDMAN_SPAWN_EGG = ITEMS.register(
+      "birdman_spawn_egg",
+      () -> new DeferredSpawnEggItem(ModEntities.BIRDMAN, 0x252C40, 0xD99E26, new Properties())
+   );
+   public static final DeferredItem<SpawnEggItem> CTHULU_SPAWN_EGG = ITEMS.register(
+      "cthulu_spawn_egg",
+      () -> new DeferredSpawnEggItem(ModEntities.CTHULU, 0x982626, 0x66D527, new Properties())
+   );
+   public static final DeferredItem<SpawnEggItem> JUNRA_SPAWN_EGG = ITEMS.register(
+      "junra_spawn_egg",
+      () -> new DeferredSpawnEggItem(ModEntities.JUNRA, 0x83532F, 0x4FAEBD, new Properties())
+   );
+   public static final DeferredItem<SpawnEggItem> NEBULA_SPAWN_EGG = ITEMS.register(
+      "nebula_spawn_egg",
+      () -> new DeferredSpawnEggItem(ModEntities.NEBULA, 0x21202D, 0xD3348E, new Properties())
+   );
+   public static final DeferredItem<SpawnEggItem> SDA_SPAWN_EGG = ITEMS.register(
+      "sda_spawn_egg",
+      () -> new DeferredSpawnEggItem(ModEntities.SDA, 0x737242, 0xE1D4A1, new Properties())
+   );
+   public static final DeferredItem<SpawnEggItem> ZAVA_SPAWN_EGG = ITEMS.register(
+      "zava_spawn_egg",
+      () -> new DeferredSpawnEggItem(ModEntities.ZAVA, 0x2D5BA8, 0x8F73BE, new Properties())
+   );
+   public static final DeferredItem<SpawnEggItem> DISCD_SPAWN_EGG = ITEMS.register(
+      "discd_spawn_egg",
+      () -> new DeferredSpawnEggItem(ModEntities.DISCD, 0xABB2BE, 0xDEAD27, new Properties())
+   );
 
    private static TagKey<BannerPattern> bannerPatternTag(String path) {
       return TagKey.create(Registries.BANNER_PATTERN, ResourceLocation.fromNamespaceAndPath("millenaire", "pattern_item/" + path));

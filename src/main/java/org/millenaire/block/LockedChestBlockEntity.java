@@ -1,5 +1,6 @@
 package org.millenaire.block;
 
+import java.util.UUID;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -30,6 +31,9 @@ import org.millenaire.village.VillageSavedData;
 public class LockedChestBlockEntity extends ChestBlockEntity {
    @Nullable
    private BuildingId buildingId;
+   @Nullable
+   private UUID pickedByUUID;
+   private long pickedUntilTick;
    private final ContainerOpenersCounter lockedChestOpenersCounter = new ContainerOpenersCounter() {
       protected void onOpen(Level level, BlockPos pos, BlockState state) {
          ChestType chestType = (ChestType)state.getValue(ChestBlock.TYPE);
@@ -115,6 +119,11 @@ public class LockedChestBlockEntity extends ChestBlockEntity {
       }
 
       if (this.level instanceof ServerLevel serverLevel) {
+         long gameTime = serverLevel.getGameTime();
+         if (this.isPickedOpenFor(player, gameTime) || this.isConnectedHalfPickedOpenFor(player, gameTime)) {
+            return false;
+         }
+
          Village village = VillageSavedData.get(serverLevel).getVillageManager().findVillageContaining(this.buildingId);
          if (village == null) {
             return false;
@@ -124,6 +133,83 @@ public class LockedChestBlockEntity extends ChestBlockEntity {
       } else {
          return true;
       }
+   }
+
+   public boolean isNaturallyLockedFor(Player player) {
+      if (this.buildingId == null) {
+         return false;
+      }
+
+      if (this.level instanceof ServerLevel serverLevel) {
+         Village village = VillageSavedData.get(serverLevel).getVillageManager().findVillageContaining(this.buildingId);
+         if (village == null) {
+            return false;
+         }
+
+         return !village.isControlledBy(player.getUUID()) && village.areChestsLocked();
+      }
+
+      return true;
+   }
+
+   public void setPickedOpen(UUID playerId, long untilTick) {
+      this.pickedByUUID = playerId;
+      this.pickedUntilTick = untilTick;
+      this.setChanged();
+      this.applyPickedOpenToConnectedHalf(playerId, untilTick);
+   }
+
+   private void applyPickedOpenToConnectedHalf(UUID playerId, long untilTick) {
+      if (this.level == null) {
+         return;
+      }
+
+      BlockState state = this.getBlockState();
+      if (!state.hasProperty(ChestBlock.TYPE)) {
+         return;
+      }
+
+      ChestType chestType = state.getValue(ChestBlock.TYPE);
+      if (chestType == ChestType.SINGLE) {
+         return;
+      }
+
+      BlockPos otherPos = this.getBlockPos().relative(ChestBlock.getConnectedDirection(state));
+      if (this.level.getBlockEntity(otherPos) instanceof LockedChestBlockEntity other) {
+         other.pickedByUUID = playerId;
+         other.pickedUntilTick = untilTick;
+         other.setChanged();
+      }
+   }
+
+   private boolean isConnectedHalfPickedOpenFor(Player player, long gameTime) {
+      if (this.level == null) {
+         return false;
+      }
+
+      BlockState state = this.getBlockState();
+      if (!state.hasProperty(ChestBlock.TYPE)) {
+         return false;
+      }
+
+      ChestType chestType = state.getValue(ChestBlock.TYPE);
+      if (chestType == ChestType.SINGLE) {
+         return false;
+      }
+
+      BlockPos otherPos = this.getBlockPos().relative(ChestBlock.getConnectedDirection(state));
+      return this.level.getBlockEntity(otherPos) instanceof LockedChestBlockEntity other
+         && other.isPickedOpenFor(player, gameTime);
+   }
+
+   public boolean isPickedOpenFor(Player player, long gameTime) {
+      return this.pickedByUUID != null
+         && this.pickedByUUID.equals(player.getUUID())
+         && gameTime < this.pickedUntilTick;
+   }
+
+   public boolean wasPickedOpenRecently(Player player, long gameTime) {
+      return this.isPickedOpenFor(player, gameTime);
    }
 
    protected Component getDefaultName() {
@@ -173,12 +259,22 @@ public class LockedChestBlockEntity extends ChestBlockEntity {
       if (this.buildingId != null) {
          tag.putUUID("building_id", this.buildingId.uuid());
       }
+
+      if (this.pickedByUUID != null) {
+         tag.putUUID("picked_by", this.pickedByUUID);
+         tag.putLong("picked_until", this.pickedUntilTick);
+      }
    }
 
    protected void loadAdditional(CompoundTag tag, Provider registries) {
       super.loadAdditional(tag, registries);
       if (tag.hasUUID("building_id")) {
          this.buildingId = new BuildingId(tag.getUUID("building_id"));
+      }
+
+      if (tag.hasUUID("picked_by")) {
+         this.pickedByUUID = tag.getUUID("picked_by");
+         this.pickedUntilTick = tag.getLong("picked_until");
       }
    }
 }

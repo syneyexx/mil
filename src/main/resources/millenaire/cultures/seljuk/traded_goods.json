@@ -1580,37 +1580,6 @@
       "min_reputation": 8192,
       "foreign_merchant_price": 100,
       "category": "crafting"
-    },
-    {
-      "id": "fd_onion",
-      "item": "farmersdelight:onion",
-      "selling_price": 2,
-      "category": "food",
-      "buying_price": 1,
-      "target_quantity": 32
-    },
-    {
-      "id": "fd_beef_stew",
-      "item": "farmersdelight:beef_stew",
-      "selling_price": 12,
-      "category": "food",
-      "target_quantity": 8
-    },
-    {
-      "id": "mcw_sandstone_path",
-      "item": "mcwpaths:sand_path",
-      "selling_price": 6,
-      "category": "construction",
-      "buying_price": 2,
-      "target_quantity": 24
-    },
-    {
-      "id": "exotic_oriental_helmet",
-      "item": "exotic_armory:oriental_helmet",
-      "selling_price": 55,
-      "category": "armor",
-      "buying_price": 18,
-      "target_quantity": 2
     }
   ]
 }

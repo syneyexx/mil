@@ -2,9 +2,7 @@
   "culture": "millenaire:byzantines",
   "biome_tags": [
     "#c:is_plains",
-    "#c:is_savanna",
-    "#millenaire:is_mediterranean",
-    "#millenaire:is_lavender"
+    "#c:is_savanna"
   ],
   "name": "Emporiko Xorio",
   "weight": 10,
@@ -126,8 +124,6 @@
   "carries_raid": true,
   "path_materials": [
     "pathgravel",
-    "mcw_stone_path",
-    "mcw_gravel_path",
     "pathslabs",
     "pathsandstone"
   ],

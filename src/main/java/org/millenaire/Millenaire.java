@@ -33,12 +33,16 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.world.chunk.RegisterTicketControllersEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import org.millenaire.village.VillageOutfitService;
+import org.millenaire.crime.CrimeService;
+import org.millenaire.commerce.VanillaDenierTradeHelper;
+import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.minecraft.world.entity.npc.AbstractVillager;
 import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
-import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent.Pre;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerRespawnEvent;
 import net.neoforged.neoforge.event.level.ChunkEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
@@ -59,12 +63,19 @@ import org.millenaire.building.MillenaireStructureLoader;
 import org.millenaire.command.ConvertAddonCommand;
 import org.millenaire.command.DevCommand;
 import org.millenaire.command.QueryCommand;
+import org.millenaire.command.BountyCommand;
 import org.millenaire.command.ReputationCommand;
+import org.millenaire.command.RoadsCommand;
+import org.millenaire.command.SettlementsCommand;
 import org.millenaire.command.SpawnLoneBuildingCommand;
 import org.millenaire.command.SpawnVillageCommand;
 import org.millenaire.command.TestCommand;
 import org.millenaire.command.TpCommand;
 import org.millenaire.command.VillagesCommand;
+import org.millenaire.village.Village;
+import org.millenaire.world.road.RoadNetworkService;
+import org.millenaire.world.road.VillageDiscovery;
+import org.millenaire.world.settlement.SettlementTakeover;
 import org.millenaire.commerce.ModMenuTypes;
 import org.millenaire.compat.LegacyRegistryAliases;
 import org.millenaire.config.MillenaireClientConfig;
@@ -87,7 +98,6 @@ import org.millenaire.diagnostics.WaypointVisualizationManager;
 import org.millenaire.entity.MillVillager;
 import org.millenaire.entity.ModEntities;
 import org.millenaire.entity.VillagerAppearanceFactory;
-import org.millenaire.faction.FactionLifecycle;
 import org.millenaire.goal.GoalRegistry;
 import org.millenaire.goal.gathering.GatheringHandlerRegistry;
 import org.millenaire.goal.gathering.GatheringTypeLoader;
@@ -108,6 +118,8 @@ import org.millenaire.goal.impl.GetToolGoal;
 import org.millenaire.goal.impl.HideGoal;
 import org.millenaire.goal.impl.HiredEscortGoal;
 import org.millenaire.goal.impl.HostileVillagerGoal;
+import org.millenaire.goal.impl.InvestigateChestGoal;
+import org.millenaire.goal.impl.WantedPlayerGoal;
 import org.millenaire.goal.impl.HuntMonsterGoal;
 import org.millenaire.goal.impl.IdleGoal;
 import org.millenaire.goal.impl.LightHearthGoal;
@@ -148,8 +160,6 @@ import org.millenaire.village.VillageSavedData;
 import org.millenaire.world.BiomeTagDisjointnessValidator;
 import org.millenaire.world.ModProcessors;
 import org.millenaire.world.VillageSpawnQueue;
-import org.millenaire.worldgen.WorldgenEngine;
-import org.millenaire.worldgen.command.WorldgenDiagCommand;
 import org.slf4j.Logger;
 
 @Mod("millenaire")
@@ -160,10 +170,6 @@ public class Millenaire {
    private static ModContainer modContainerInstance;
    private static VillageSpawnQueue spawnQueueInstance;
    private static volatile boolean naturalSpawnSuppressed = false;
-
-   private static boolean tailSectionHasTime(ServerLevel overworld) {
-      return overworld == null || org.millenaire.perf.tick.ServerTickGovernor.hasTime();
-   }
 
    public static void setNaturalSpawnSuppressed(boolean suppressed) {
       naturalSpawnSuppressed = suppressed;
@@ -196,9 +202,10 @@ public class Millenaire {
          if (event.getConfig().getType() == Type.COMMON) {
             MillenaireCommonConfig.COMMON.bindLogCategories();
          }
-         if (event.getConfig().getType() == Type.SERVER) {
-            org.millenaire.chat.NpcChatConfigMigration.migrateLoadedServerConfig();
-            org.millenaire.perf.tick.ServerTickGovernor.refreshConfigSnapshot();
+      });
+      modEventBus.addListener(ModConfigEvent.class, event -> {
+         if (event.getConfig().getType() == Type.COMMON) {
+            MillenaireCommonConfig.COMMON.bindLogCategories();
          }
       });
       ModBlocks.register(modEventBus);
@@ -235,10 +242,10 @@ public class Millenaire {
       goalRegistry.register(new HuntMonsterGoal());
       goalRegistry.register(new RaidVillageGoal());
       goalRegistry.register(new DefendVillageGoal());
-      goalRegistry.register(new org.millenaire.goal.impl.PursueWantedPlayerGoal());
-      goalRegistry.register(new org.millenaire.goal.impl.VisitShopGoal());
       goalRegistry.register(new HideGoal());
       goalRegistry.register(new HostileVillagerGoal());
+      goalRegistry.register(new WantedPlayerGoal());
+      goalRegistry.register(new InvestigateChestGoal());
       goalRegistry.register(new EngageTargetGoal());
       goalRegistry.register(new HiredEscortGoal());
       goalRegistry.register(
@@ -396,7 +403,6 @@ public class Millenaire {
       goalRegistry.register(new ClearOldPathGoal());
       goalRegistry.register(new BuildPathGoal());
       VisitGoalLoader.loadAll(goalRegistry);
-      goalRegistry.register(new org.millenaire.religion.goal.AttendCeremonyGoal());
       goalRegistry.register(new ForeignMerchantKeepStallGoal());
       goalRegistry.register(new MerchantVisitInnGoal());
       goalRegistry.register(new MerchantVisitBuildingGoal());
@@ -404,9 +410,6 @@ public class Millenaire {
       GatheringTypeLoader.loadAll(goalRegistry);
       goalRegistry.freezeBuiltins();
       goalRegistryInstance = goalRegistry;
-      NeoForge.EVENT_BUS.addListener(EventPriority.HIGH, false, Pre.class, org.millenaire.faction.crime.ArrestService::onLivingDamagePre);
-      NeoForge.EVENT_BUS.addListener(EventPriority.HIGH, false, LivingDeathEvent.class, org.millenaire.faction.crime.ArrestService::onLivingDeath);
-      NeoForge.EVENT_BUS.addListener(PlayerRespawnEvent.class, org.millenaire.faction.crime.ArrestService::onPlayerRespawn);
       NeoForge.EVENT_BUS.addListener(Pre.class, event -> {
          if (event.getSource().getEntity() instanceof ServerPlayer attacker && event.getEntity() instanceof ServerPlayer) {
             ItemStack weapon = attacker.getMainHandItem();
@@ -420,38 +423,23 @@ public class Millenaire {
          SpawnVillageCommand.register(event.getDispatcher());
          SpawnLoneBuildingCommand.register(event.getDispatcher());
          ReputationCommand.register(event.getDispatcher());
+         BountyCommand.register(event.getDispatcher());
          VillagesCommand.register(event.getDispatcher());
          QueryCommand.register(event.getDispatcher());
          TestCommand.register(event.getDispatcher());
          DevCommand.register(event.getDispatcher());
          TpCommand.register(event.getDispatcher());
-         WorldgenDiagCommand.register(event.getDispatcher());
-         org.millenaire.worldgen.highway.HighwayCommand.register(event.getDispatcher());
-         org.millenaire.command.NpcChatModelCommand.register(event);
-         org.millenaire.command.GossipCommand.register(event);
-         org.millenaire.companion.CompanionCommand.register(event);
-         org.millenaire.worldboss.command.WorldBossCommand.register(event.getDispatcher());
+         RoadsCommand.register(event.getDispatcher());
+         SettlementsCommand.register(event.getDispatcher());
       });
-      org.millenaire.living.LivingVillagesLifecycle.bootstrap();
-      org.millenaire.religion.ReligionLifecycle.bootstrap();
-      org.millenaire.worldboss.WorldBossDefinitions.bootstrap();
-      org.millenaire.companion.CompanionChatBridge.bootstrap();
       NeoForge.EVENT_BUS.addListener(ServerStoppingEvent.class, event -> {
-         org.millenaire.chat.NpcChatService.onServerStopping();
-         org.millenaire.companion.CompanionLifecycle.onServerStopping();
-         org.millenaire.living.LivingVillagesLifecycle.onServerStopping();
          TestPlayerManager.onServerStopping();
          TravelBookNavigationState.clearAll();
          ConvertAddonCommand.onServerStopping(event);
+         RoadNetworkService.get().onServerStopping();
+         VillageOutfitService.clearCache();
          MillenaireStructureLoader.clearCache();
          ItemHelper.clearCache();
-         WorldgenEngine.onServerStopping();
-         org.millenaire.worldgen.highway.HighwayMaterializer.onServerStopping();
-         org.millenaire.perf.compute.MillenaireComputePool.shutdown();
-         org.millenaire.map.sync.SettlementMapSyncService.onServerStopping();
-         VillageSavedData.clearLevelCache();
-         org.millenaire.perf.tick.LevelTickCache.clear();
-         org.millenaire.worldgen.prefill.SpawnRingPrefillService.clearTransientState();
          if (spawnQueueInstance != null) {
             spawnQueueInstance.reset();
          }
@@ -463,174 +451,86 @@ public class Millenaire {
          if (event.getEntity() instanceof ServerPlayer serverPlayer) {
             TravelBookNavigationState.clear(serverPlayer.getUUID());
             PlanPreviewRequestPayload.clearPrePicked(serverPlayer.getUUID());
-            org.millenaire.chat.NpcChatService.onPlayerLogout(serverPlayer);
-            org.millenaire.living.LivingVillagesLifecycle.onPlayerLogout(serverPlayer);
          }
       });
       NeoForge.EVENT_BUS.addListener(PlayerLoggedInEvent.class, event -> {
          if (event.getEntity() instanceof ServerPlayer serverPlayer) {
+            UsageReporter.tryReport(serverPlayer.server);
             ContentStatsReporter.notifyOpIfRelevant(serverPlayer);
             VersionChecker.onPlayerLogin(serverPlayer);
             DonorChecker.onPlayerLogin(serverPlayer);
             AdvancementReporter.onPlayerLogin(serverPlayer);
             ServerLevel overworld = serverPlayer.server.getLevel(Level.OVERWORLD);
             if (overworld != null) {
+               org.millenaire.village.CultureDiplomacySimulator.ensureUpToDate(overworld);
+               org.millenaire.village.diplomacy.DiplomacyEventService.pushPendingToPlayer(serverPlayer, overworld);
+               org.millenaire.crime.BountyHudSync.syncToPlayer(serverPlayer);
                PlayerQuestData data = PlayerQuestData.get(overworld, QuestRegistry::get);
 
                for (QuestInstance qi : data.getActiveQuests(serverPlayer.getUUID())) {
                   PacketDistributor.sendToPlayer(serverPlayer, QuestNetworkHelper.buildSyncPayload(qi, serverPlayer), new CustomPacketPayload[0]);
                }
-               org.millenaire.faction.crime.BountyHudSync.sync(overworld, serverPlayer);
-               org.millenaire.faction.crime.hunter.BountyHunterCustodyTicker.onPlayerLogin(serverPlayer);
-               org.millenaire.map.sync.SettlementMapSyncService.sendSnapshot(serverPlayer);
             }
          }
       });
       VillageSpawnQueue spawnQueue = new VillageSpawnQueue();
       spawnQueueInstance = spawnQueue;
-      NeoForge.EVENT_BUS.addListener(ServerTickEvent.Pre.class, event -> {
-         org.millenaire.perf.tick.ServerTickGovernor.markServerTickStart();
-      });
       NeoForge.EVENT_BUS.addListener(ServerTickEvent.Post.class, event -> {
-         UsageReporter.tryReport(event.getServer());
          TestPlayerManager.acknowledgeChunkBatch();
          ServerLevel overworld = event.getServer().getLevel(Level.OVERWORLD);
          if (overworld != null) {
-            org.millenaire.perf.tick.ServerTickGovernor.beginTick(overworld);
-            // Apply completed worker results before village/worldgen consume shared budgets.
-            org.millenaire.perf.tick.ServerTickGovernor.enter(org.millenaire.perf.tick.TickPhase.APPLY);
-            if (org.millenaire.perf.compute.MillenaireComputePool.isRunning()) {
-               org.millenaire.perf.compute.ComputeMailbox.get()
-                  .drainAndApply(overworld, org.millenaire.perf.compute.ComputeOffload.applyBudgetPerTick());
+            var villageManager = VillageSavedData.get(overworld).getVillageManager();
+            Village pendingRoad;
+            int roadRegBudget = 8;
+            while (roadRegBudget-- > 0 && (pendingRoad = villageManager.pollPendingRoadRegistration()) != null) {
+               VillageDiscovery.registerMillenaireVillage(overworld, pendingRoad);
             }
-            VillageSavedData.get(overworld).getVillageManager().tick(overworld);
-            org.millenaire.village.RoadTravelerShopScheduler.tick(overworld);
-            org.millenaire.perf.tick.ServerTickGovernor.enter(org.millenaire.perf.tick.TickPhase.CIV_FACTION);
-            if (org.millenaire.civilization.CivilizationOrchestrator.isEnabled()) {
-               org.millenaire.civilization.CivilizationOrchestrator.onServerTick(overworld);
-            } else {
-               FactionLifecycle.onServerTick(overworld);
-            }
-            if (org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
-               org.millenaire.faction.crime.hunter.BountyHunterDispatchManager.tick(overworld);
-               org.millenaire.faction.crime.hunter.BountyHunterCustodyTicker.tick(overworld);
-            } else {
-               org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.CIV_FACTION);
-            }
-            org.millenaire.perf.tick.ServerTickGovernor.enter(org.millenaire.perf.tick.TickPhase.WORLDGEN);
-            if (WorldgenEngine.isEnabled()) {
-               WorldgenEngine.onServerTick(overworld);
-            }
-            org.millenaire.worldgen.starter.StarterSettlementService.tick(overworld);
-            org.millenaire.worldgen.prefill.SpawnRingPrefillService.tick(overworld);
-            org.millenaire.perf.tick.ServerTickGovernor.enter(org.millenaire.perf.tick.TickPhase.HIGHWAY);
-            if (org.millenaire.worldgen.highway.HighwayEngine.isEnabled()) {
-               org.millenaire.worldgen.highway.HighwayEngine.tick(overworld);
-            }
-            org.millenaire.perf.tick.ServerTickGovernor.enter(org.millenaire.perf.tick.TickPhase.BOSS_QUEST_MAP);
-            org.millenaire.worldboss.WorldBossEventPlanner.tick(event.getServer());
-            // Legacy fallback keeps natural villages appearing if the Phase 4 engine stalls.
-            // Skip when the shared soft deadline is already spent so spawn cannot pile onto a hot tick.
-            boolean legacyFallback = false;
-            try {
-               legacyFallback = Boolean.TRUE.equals(MillenaireServerConfig.SERVER.worldgenLegacyFallback.get());
-            } catch (IllegalStateException ignored) {
-            }
-            if (
-               !naturalSpawnSuppressed
-                  && (!WorldgenEngine.isEnabled() || legacyFallback)
-                  && org.millenaire.perf.tick.ServerTickGovernor.hasTime()
-            ) {
+            villageManager.tick(overworld);
+            if (!naturalSpawnSuppressed) {
                spawnQueue.trySpawnNext(overworld);
-            } else if (!naturalSpawnSuppressed && (!WorldgenEngine.isEnabled() || legacyFallback)) {
-               org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.BOSS_QUEST_MAP);
             }
+            RoadNetworkService.get().tick(overworld);
+            SettlementTakeover.tick(overworld);
          }
 
-         boolean tailHasTime = overworld == null || org.millenaire.perf.tick.ServerTickGovernor.hasTime();
-         if (tailHasTime) {
-            // Each section re-checks the deadline so one slow section defers the rest instead of stacking.
-            boolean tailDeferred = false;
-            org.millenaire.chat.NpcChatService.tickSessions(event.getServer());
-            if (tailSectionHasTime(overworld)) {
-               org.millenaire.companion.CompanionLifecycle.tick(event.getServer());
-            } else {
-               tailDeferred = true;
-            }
-
-            if (!tailDeferred && tailSectionHasTime(overworld)) {
-               for (ServerPlayer player : event.getServer().getPlayerList().getPlayers()) {
-                  ServerLevel playerLevel = player.serverLevel();
+         long serverGameTime = overworld != null ? overworld.getGameTime() : 0L;
+         boolean questCadence = serverGameTime % 1000L == 0L;
+         boolean specialCadence = serverGameTime % 10L == 0L;
+         if (questCadence || specialCadence) {
+            for (ServerPlayer player : event.getServer().getPlayerList().getPlayers()) {
+               ServerLevel playerLevel = player.serverLevel();
+               if (questCadence) {
                   QuestManager.tickQuests(player, playerLevel);
+               }
+               if (specialCadence) {
                   QuestManager.tickSpecialActions(player, playerLevel);
                }
-            } else {
-               tailDeferred = true;
             }
-
-            if (!tailDeferred && tailSectionHasTime(overworld)) {
-               WaypointVisualizationManager.tick(event.getServer());
-            } else {
-               tailDeferred = true;
-            }
-            if (!tailDeferred && tailSectionHasTime(overworld)) {
-               if (overworld != null && overworld.getGameTime() % 20L == 0L) {
-                  VillageMapMarkerService.processAllPlayers(event.getServer());
-               }
-               org.millenaire.map.sync.SettlementMapSyncService.tick(event.getServer());
-            } else {
-               tailDeferred = true;
-            }
-            // Backfill Millenaire village waystones for existing worlds (every ~30s).
-            if (!tailDeferred && tailSectionHasTime(overworld)) {
-               if (overworld != null && overworld.getGameTime() % 600L == 0L) {
-                  org.millenaire.compat.WaystoneVillagePlacer.tickBackfill(overworld);
-               }
-            } else {
-               tailDeferred = true;
-            }
-            if (tailDeferred) {
-               org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.BOSS_QUEST_MAP);
-            }
-         } else {
-            org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.BOSS_QUEST_MAP);
          }
-         if (overworld != null) {
-            org.millenaire.perf.tick.ServerTickGovernor.endTick();
+
+         WaypointVisualizationManager.tick(event.getServer());
+         if (overworld != null && overworld.getGameTime() % 40L == 0L) {
+            VillageMapMarkerService.processAllPlayers(event.getServer());
          }
       });
       NeoForge.EVENT_BUS.addListener(ChunkEvent.Load.class, event -> {
-         if (naturalSpawnSuppressed) {
-            return;
-         }
          if (event.getLevel() instanceof ServerLevel serverLevel && serverLevel.dimension() == Level.OVERWORLD) {
             ChunkPos chunkPos = event.getChunk().getPos();
+            var chunkAccess = event.getChunk();
             boolean isNewChunk = event.isNewChunk();
-            // Enqueue only — server.execute still runs on the server thread and is not a worker.
-            // Heavy planning/materialization is drained from WorldgenEngine.onServerTick under budgets.
             serverLevel.getServer().execute(() -> {
-               spawnQueue.markResolved(chunkPos);
-               if (WorldgenEngine.isEnabled()) {
+               VillageDiscovery.onChunkLoad(serverLevel, chunkAccess);
+               RoadNetworkService.get().onChunkLoad(serverLevel, chunkPos);
+               if (!naturalSpawnSuppressed) {
+                  spawnQueue.markResolved(chunkPos);
                   if (isNewChunk) {
-                     WorldgenEngine.onNewChunk(serverLevel, chunkPos);
-                  } else {
-                     WorldgenEngine.onChunkAvailable(serverLevel, chunkPos);
+                     BlockPos biomeSamplePos = chunkPos.getMiddleBlockPosition(serverLevel.getMaxBuildHeight() - 1);
+                     Holder<Biome> centerBiome = serverLevel.getBiome(biomeSamplePos);
+                     if (VillageSpawnQueue.couldHostAnyVillage(ModCultures.getAllVillageTypes().values(), tag -> centerBiome.is(tag))) {
+                        spawnQueue.enqueue(chunkPos.getMiddleBlockPosition(64));
+                     }
                   }
                }
-               boolean legacyFallback = false;
-               try {
-                  legacyFallback = Boolean.TRUE.equals(MillenaireServerConfig.SERVER.worldgenLegacyFallback.get());
-               } catch (IllegalStateException ignored) {
-               }
-               if ((!WorldgenEngine.isEnabled() || legacyFallback) && isNewChunk) {
-                  BlockPos biomeSamplePos = chunkPos.getMiddleBlockPosition(serverLevel.getMaxBuildHeight() - 1);
-                  Holder<Biome> centerBiome = serverLevel.getBiome(biomeSamplePos);
-                  if (VillageSpawnQueue.couldHostAnyVillage(ModCultures.getAllVillageTypes().values(), centerBiome)) {
-                     spawnQueue.enqueue(chunkPos.getMiddleBlockPosition(64));
-                  }
-               }
-               org.millenaire.compat.WaystoneVillagePlacer.onChunkLoad(serverLevel, chunkPos);
-               org.millenaire.worldgen.highway.HighwayEngine.enqueueChunk(serverLevel, chunkPos);
             });
          }
       });
@@ -641,15 +541,6 @@ public class Millenaire {
             ServerStartedEvent.class,
             event -> {
                try {
-                  int workers = 0;
-                  try {
-                     workers = MillenaireServerConfig.SERVER.computeWorkerThreads.getAsInt();
-                  } catch (IllegalStateException ignored) {
-                  }
-                  org.millenaire.perf.compute.MillenaireComputePool.start(workers);
-                  org.millenaire.perf.tick.ServerTickGovernor.refreshConfigSnapshot();
-                  org.millenaire.chat.NpcChatService.bootstrap();
-                  org.millenaire.map.sync.SettlementMapSyncService.onServerStarting(event.getServer());
                   ContentDirectoryManager.init(event.getServer());
                   ExportTransaction.reclaimStaging(BuildingExporter.getExportedRoot(event.getServer().getServerDirectory()));
                   ContentIssueLog.startCapture();
@@ -661,7 +552,6 @@ public class Millenaire {
                   VillagerConfig.load();
                   goalRegistryInstance.resetToBuiltins();
                   CultureLoader.loadAll();
-                  WorldgenEngine.onContentLoaded();
                   if (spawnQueueInstance != null) {
                      spawnQueueInstance.invalidateBiomeIndex();
                   }
@@ -678,6 +568,11 @@ public class Millenaire {
                   ValidationReport.generate(CultureLoader.discoverCultures(), new HashSet<>(CultureLoader.BUILTIN_CULTURES));
                   ReferenceCatalogGenerator.generate(goalRegistryInstance);
                   I18nKeyAuditor.audit();
+                  ServerLevel overworld = event.getServer().getLevel(Level.OVERWORLD);
+                  if (overworld != null) {
+                     RoadNetworkService.get().onServerStarted(overworld);
+                     VillageDiscovery.syncAllMillenaire(overworld, VillageSavedData.get(overworld).getVillageManager());
+                  }
                } catch (Exception e) {
                   LOGGER.error(
                      "[Millenaire] Content loading failed — the server keeps running, but Millénaire content is incomplete or absent for this session. Check the custom content under millenaire-custom/: {}",
@@ -692,11 +587,7 @@ public class Millenaire {
                   ServerLevel overworld = event.getServer().getLevel(Level.OVERWORLD);
                   if (overworld != null) {
                      BiomeTagDisjointnessValidator.validate(overworld.registryAccess());
-                     WorldgenEngine.recoverPrematureRejects(overworld);
                      VillageRehydrator.rehydrateAll(overworld);
-                     FactionLifecycle.onWorldReady(overworld);
-                     org.millenaire.worldgen.starter.StarterSettlementService.onWorldReady(overworld);
-                     org.millenaire.worldgen.prefill.SpawnRingPrefillService.onWorldReady(overworld);
                      this.initVillagerGoals(overworld);
                   }
                } catch (Exception e) {
@@ -718,6 +609,19 @@ public class Millenaire {
                   LOGGER.debug("Goals reinitialized for villager {} (loaded from chunk)", villager.getVillagerTypeId());
                }
             }
+         }
+         if (event.getEntity() instanceof AbstractVillager abstractVillager && !event.getLevel().isClientSide()) {
+            VanillaDenierTradeHelper.convertVillagerOffers(abstractVillager);
+         }
+      });
+      NeoForge.EVENT_BUS.addListener(PlayerInteractEvent.EntityInteract.class, event -> {
+         if (!event.getLevel().isClientSide() && event.getTarget() instanceof AbstractVillager abstractVillager) {
+            VanillaDenierTradeHelper.convertVillagerOffers(abstractVillager);
+         }
+      });
+      NeoForge.EVENT_BUS.addListener(BlockEvent.BreakEvent.class, event -> {
+         if (event.getPlayer() instanceof ServerPlayer serverPlayer && event.getLevel() instanceof ServerLevel serverLevel) {
+            CrimeService.onCultureBlockBroken(serverPlayer, serverLevel, event.getPos(), event.getState());
          }
       });
    }

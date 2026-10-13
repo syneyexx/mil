@@ -28,7 +28,7 @@ public class NewBuildingProjectScreen extends AbstractMillenaireScreen {
       int parchY = (this.height - 220) / 2;
       int parchX = (this.width - 204) / 2;
       int contentStartY = parchY + 42;
-      int contentEndY = parchY + 220 - 15 - 20;
+      int contentEndY = parchY + 220 - 15;
       int availableHeight = contentEndY - contentStartY;
       this.rowsPerPage = Math.max(1, availableHeight / 18);
       this.totalPages = this.data.entries().isEmpty() ? 1 : (this.data.entries().size() + this.rowsPerPage - 1) / this.rowsPerPage;
@@ -36,15 +36,6 @@ public class NewBuildingProjectScreen extends AbstractMillenaireScreen {
       this.initPaginationButtons(parchX, parchY, 204, 220, 16, false);
       this.rebuildPageButtons();
       this.updatePaginationButtons();
-      this.addRenderableWidget(
-         Button.builder(Component.translatable("gui.millenaire.designate.open"), button -> {
-               if (this.minecraft != null) {
-                  this.minecraft.setScreen(new DesignatePurposeScreen(this.data));
-               }
-            })
-            .bounds(parchX + 17, parchY + 220 - 34, 170, 16)
-            .build()
-      );
    }
 
    @Override

@@ -71,6 +71,10 @@ public final class VillagerInteraction {
    }
 
    public static void openInfoScreen(ServerPlayer player, MillVillager villager) {
+      if (org.millenaire.crime.CrimeService.tryPickpocket(player, villager)) {
+         return;
+      }
+
       VillagerType vType = resolveVillagerType(villager);
       MillAdvancements.grant(player, MillAdvancements.FIRST_CONTACT);
       if (vType != null && villager.getVillagerTypeId() != null) {
@@ -459,6 +463,9 @@ public final class VillagerInteraction {
 
          if (totalRep < -1024) {
             player.sendSystemMessage(Component.translatable("message.millenaire.trade_boycott"));
+         } else if (villager.level() instanceof ServerLevel bountyLevel
+            && org.millenaire.crime.PlayerBountySavedData.get(bountyLevel).isTradeBanned(player.getUUID(), village.getCultureId())) {
+            player.sendSystemMessage(Component.translatable("message.millenaire.crime.trade_banned"));
          } else {
             BuildingInstance shopBuilding = null;
             BlockPos sellingPos = null;
@@ -544,67 +551,80 @@ public final class VillagerInteraction {
       if (village == null) {
          LOGGER.warn("No village for foreign merchant {} — fallback to info screen", villager.getVillagerTypeId());
          sendInfoPayload(player, villager);
+      } else if (villager.level() instanceof ServerLevel bountyLevel) {
+         VillagerType merchantType = resolveVillagerType(villager);
+         ResourceLocation merchantCulture = merchantType != null ? merchantType.culture() : village.getCultureId();
+         if (org.millenaire.crime.PlayerBountySavedData.get(bountyLevel).isTradeBanned(player.getUUID(), merchantCulture)) {
+            player.sendSystemMessage(Component.translatable("message.millenaire.crime.trade_banned"));
+            return;
+         }
+
+         sendForeignMerchantTradePayloadInner(player, villager, village);
       } else {
-         BuildingInstance market = villager.getHomeBuilding() != null ? village.getBuilding(villager.getHomeBuilding()) : null;
-         if (market == null) {
-            LOGGER.warn("No market building for foreign merchant {} — fallback to info screen", villager.getVillagerTypeId());
-            sendInfoPayload(player, villager);
-         } else {
-            VillagerType vType = resolveVillagerType(villager);
-            if (vType != null && !vType.foreignMerchantStock().isEmpty()) {
-               ResourceLocation merchantCulture = vType.culture();
-               ResourceLocation villageCulture = village.getCultureId();
-               boolean crossCulture = !merchantCulture.equals(villageCulture);
-               List<TradeGood> merchantGoods = new ArrayList<>();
-               List<TradeGood> cultureCatalog = TradeGoodsLoader.getGoods(merchantCulture);
+         sendForeignMerchantTradePayloadInner(player, villager, village);
+      }
+   }
 
-               for (Entry<ResourceLocation, Integer> entry : vType.foreignMerchantStock().entrySet()) {
-                  ResourceLocation itemId = entry.getKey();
-                  String itemStr = itemId.toString();
-                  int foreignPrice = 0;
-                  String goodId = itemStr;
+   private static void sendForeignMerchantTradePayloadInner(ServerPlayer player, MillVillager villager, Village village) {
+      BuildingInstance market = villager.getHomeBuilding() != null ? village.getBuilding(villager.getHomeBuilding()) : null;
+      if (market == null) {
+         LOGGER.warn("No market building for foreign merchant {} — fallback to info screen", villager.getVillagerTypeId());
+         sendInfoPayload(player, villager);
+      } else {
+         VillagerType vType = resolveVillagerType(villager);
+         if (vType != null && !vType.foreignMerchantStock().isEmpty()) {
+            ResourceLocation merchantCulture = vType.culture();
+            ResourceLocation villageCulture = village.getCultureId();
+            boolean crossCulture = !merchantCulture.equals(villageCulture);
+            List<TradeGood> merchantGoods = new ArrayList<>();
+            List<TradeGood> cultureCatalog = TradeGoodsLoader.getGoods(merchantCulture);
 
-                  for (TradeGood tg : cultureCatalog) {
-                     if (tg.item().equals(itemStr) && tg.foreignMerchantPrice() > 0) {
-                        foreignPrice = tg.foreignMerchantPrice();
-                        goodId = tg.id();
-                        break;
-                     }
-                  }
+            for (Entry<ResourceLocation, Integer> entry : vType.foreignMerchantStock().entrySet()) {
+               ResourceLocation itemId = entry.getKey();
+               String itemStr = itemId.toString();
+               int foreignPrice = 0;
+               String goodId = itemStr;
 
-                  if (crossCulture && foreignPrice > 0) {
-                     foreignPrice = (int)(foreignPrice * 1.5);
-                  }
-
-                  if (foreignPrice > 0) {
-                     merchantGoods.add(new TradeGood(goodId, itemStr, foreignPrice, 0, 0, entry.getValue(), false, 0, "merchant", true, foreignPrice));
+               for (TradeGood tg : cultureCatalog) {
+                  if (tg.item().equals(itemStr) && tg.foreignMerchantPrice() > 0) {
+                     foreignPrice = tg.foreignMerchantPrice();
+                     goodId = tg.id();
+                     break;
                   }
                }
 
-               if (merchantGoods.isEmpty()) {
-                  sendInfoPayload(player, villager);
-               } else {
-                  List<String> sellIds = merchantGoods.stream().map(TradeGood::id).toList();
-                  ShopProfile merchantProfile = new ShopProfile(sellIds, List.of(), List.of(), List.of());
-                  BlockPos finalStallPos = null;
-                  BuildingInstance finalMarket = market;
-                  ShopProfile finalProfile = merchantProfile;
-                  List<TradeGood> finalGoods = merchantGoods;
-                  TradeMenu previewMenu = new TradeMenu(0, player.getInventory(), village, finalMarket, finalProfile, finalGoods, finalStallPos);
-                  previewMenu.setMerchantCultureId(merchantCulture);
-                  player.openMenu(new SimpleMenuProvider((containerId, playerInv, p) -> {
-                     TradeMenu menu = new TradeMenu(containerId, playerInv, village, finalMarket, finalProfile, finalGoods, finalStallPos);
-                     menu.setMerchantCultureId(merchantCulture);
-                     return menu;
-                  }, Component.translatable("container.millenaire.trade")), previewMenu::writeToBuffer);
-                  LOGGER.debug(
-                     "Foreign merchant trade opened for {} with {} (village {})",
-                     new Object[]{player.getName().getString(), villager.getVillagerTypeId(), village.getVillageName()}
-                  );
+               if (crossCulture && foreignPrice > 0) {
+                  foreignPrice = (int)(foreignPrice * 1.5);
                }
-            } else {
-               sendInfoPayload(player, villager);
+
+               if (foreignPrice > 0) {
+                  merchantGoods.add(new TradeGood(goodId, itemStr, foreignPrice, 0, 0, entry.getValue(), false, 0, "merchant", true, foreignPrice));
+               }
             }
+
+            if (merchantGoods.isEmpty()) {
+               sendInfoPayload(player, villager);
+            } else {
+               List<String> sellIds = merchantGoods.stream().map(TradeGood::id).toList();
+               ShopProfile merchantProfile = new ShopProfile(sellIds, List.of(), List.of(), List.of());
+               BlockPos finalStallPos = null;
+               BuildingInstance finalMarket = market;
+               ShopProfile finalProfile = merchantProfile;
+               List<TradeGood> finalGoods = merchantGoods;
+               TradeMenu previewMenu = new TradeMenu(0, player.getInventory(), village, finalMarket, finalProfile, finalGoods, finalStallPos);
+               previewMenu.setMerchantCultureId(merchantCulture);
+               player.openMenu(new SimpleMenuProvider((containerId, playerInv, p) -> {
+                  TradeMenu menu = new TradeMenu(containerId, playerInv, village, finalMarket, finalProfile, finalGoods, finalStallPos);
+                  menu.setMerchantCultureId(merchantCulture);
+                  return menu;
+               }, Component.translatable("container.millenaire.trade")), previewMenu::writeToBuffer);
+               LOGGER.debug(
+                  "Foreign merchant trade opened for {} with {} (village {})",
+                  new Object[]{player.getName().getString(), villager.getVillagerTypeId(), village.getVillageName()}
+               );
+            }
+         } else {
+            sendInfoPayload(player, villager);
          }
       }
    }
@@ -773,10 +793,6 @@ public final class VillagerInteraction {
    }
 
    private static String resolveReputationLabel(int reputation, ResourceLocation cultureId) {
-      return resolveReputationLabelPublic(reputation, cultureId);
-   }
-
-   public static String resolveReputationLabelPublic(int reputation, ResourceLocation cultureId) {
       List<ReputationLabel> labels = ModCultures.getReputationLabels(cultureId);
       String label = VillageReputation.getLabel(reputation, labels);
       return label != null ? label : "Unknown";

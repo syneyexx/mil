@@ -176,8 +176,8 @@ public class PlayerCultureReputation extends SavedData {
    }
 
    public boolean hasCultureControl(UUID player, ResourceLocation cultureId) {
-      Set<ResourceLocation> set = this.cultureControlTags.get(player);
-      return set != null && set.contains(cultureId);
+      // All cultures are unlocked from the start (no chief grind required).
+      return true;
    }
 
    public void grantCultureControl(UUID player, ResourceLocation cultureId) {
@@ -202,7 +202,6 @@ public class PlayerCultureReputation extends SavedData {
       boolean added = this.discoveredVillages.computeIfAbsent(player, k -> new HashSet<>()).add(villageId);
       if (added) {
          this.setDirty();
-         org.millenaire.map.sync.SettlementMapSyncService.markDirty(villageId);
       }
 
       return added;

@@ -1,8 +1,6 @@
 {
   "sells": [
-    "bread",
-    "fd_cooked_rice",
-    "fd_hamburger"
+    "bread"
   ],
   "buys": [
     "wheat"

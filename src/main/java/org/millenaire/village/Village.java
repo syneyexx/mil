@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -42,7 +41,9 @@ import org.millenaire.building.BuildingInventory;
 import org.millenaire.building.BuildingPlan;
 import org.millenaire.building.BuildingPlanSet;
 import org.millenaire.building.ConstructionTask;
+import org.millenaire.combat.raid.IllagerRaidSupport;
 import org.millenaire.combat.raid.RaidManager;
+import org.millenaire.perf.TickPerfCounters;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.culture.BrickColourTheme;
 import org.millenaire.culture.Gender;
@@ -50,7 +51,6 @@ import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillageType;
 import org.millenaire.culture.VillagerType;
 import org.millenaire.entity.MillVillager;
-import org.millenaire.faction.FactionId;
 import org.millenaire.goal.NavigationHelperUtils;
 import org.millenaire.hire.HiringHelper;
 import org.millenaire.item.ModItems;
@@ -77,9 +77,6 @@ public class Village {
    private final VillageWaypointGraph waypointGraph = new VillageWaypointGraph();
    private final VillagePathManager pathManager = new VillagePathManager();
    private final List<BuildingInstance> buildings = new ArrayList<>();
-   /** Buildings whose construction task currently holds a builder reservation (avoids full building scans). */
-   private final Set<BuildingInstance> buildingsWithConstructionReservation = Collections.newSetFromMap(new IdentityHashMap<>());
-   private final List<BuildingInstance> reservationScratch = new ArrayList<>();
    private final Map<UUID, VillagerRecord> villagerRecords = new LinkedHashMap<>();
    private int cachedDefenderCount = -1;
    private final Map<UUID, Integer> missingCounts = new HashMap<>();
@@ -93,6 +90,16 @@ public class Village {
    private final List<ControlledQueuedProject> controlledQueue = new ArrayList<>();
    private final Set<ResourceLocation> buildingsBought = new HashSet<>();
    @Nullable
+   private transient CityStats cityStatsCache;
+   private transient boolean cityStatsDirty = true;
+   @Nullable
+   private String jobPriorityRole;
+   private long immigrantDay = -1L;
+   private int immigrantAutoToday;
+   private int immigrantManualToday;
+   private final List<UUID> raidIllagerUuids = new ArrayList<>();
+   private final List<UUID> campIllagerUuids = new ArrayList<>();
+   @Nullable
    private BrickColourTheme brickTheme;
    private static final long DUSK_TIME = 13000L;
    private long lastNightActionDay = -1L;
@@ -102,12 +109,8 @@ public class Village {
    private UUID ownerUUID;
    @Nullable
    private String ownerName;
-   /**
-    * Owning political faction. Distinct from {@link #cultureId}: culture is cultural identity,
-    * faction is political identity. Managed through {@link org.millenaire.faction.FactionManager}.
-    */
-   @Nullable
-   private FactionId factionId;
+   private boolean waystonePlaced;
+   private boolean customOutfitEnabled;
    @Nullable
    private String bannerNbt;
    private static final int MAX_CHRONICLE_SIZE = 500;
@@ -146,8 +149,6 @@ public class Village {
    private boolean forceActive = false;
    private Set<ChunkPos> loadedChunks = Set.of();
    private boolean chunksNeedRefresh = false;
-   @Nullable
-   private transient Set<ChunkPos> cachedVillageChunks;
    private boolean needsOrphanCleanup = false;
    public static final int CONTROLLED_QUEUE_CAP = 5;
    @Nullable
@@ -624,11 +625,7 @@ public class Village {
    }
 
    public ItemStack getBannerStack(RegistryAccess registryAccess) {
-      if (this.bannerNbt == null || this.bannerNbt.isBlank()) {
-         return ItemStack.EMPTY;
-      }
-      ItemStack modern = VillageBannerService.parseStoredBanner(this.bannerNbt, registryAccess);
-      return modern.isEmpty() ? VillageBannerService.parseLegacyBanner(this.bannerNbt, registryAccess) : modern;
+      return this.bannerNbt == null ? ItemStack.EMPTY : VillageBannerService.parseLegacyBanner(this.bannerNbt, registryAccess);
    }
 
    @Nullable
@@ -865,30 +862,6 @@ public class Village {
 
    public boolean isHuntUnreachable(BlockPos p, long now) {
       return this.huntUnreachable.contains(p.getX(), p.getY(), p.getZ(), now);
-   }
-
-   /** Track a building whose construction task was just reserved (avoids full building scans). */
-   public void noteConstructionReservation(BuildingInstance building) {
-      if (building != null) {
-         this.buildingsWithConstructionReservation.add(building);
-      }
-   }
-
-   public void clearConstructionReservation(BuildingInstance building) {
-      if (building != null) {
-         this.buildingsWithConstructionReservation.remove(building);
-      }
-   }
-
-   /** Rebuild reservation index after load or bulk mutation. */
-   public void rebuildConstructionReservationIndex() {
-      this.buildingsWithConstructionReservation.clear();
-      for (BuildingInstance b : this.buildings) {
-         ConstructionTask task = b.getConstructionTask();
-         if (task != null && task.isReserved()) {
-            this.buildingsWithConstructionReservation.add(b);
-         }
-      }
    }
 
    public void markDirty() {
@@ -1264,15 +1237,9 @@ public class Village {
 
    public void setChunksNeedRefresh(boolean chunksNeedRefresh) {
       this.chunksNeedRefresh = chunksNeedRefresh;
-      if (chunksNeedRefresh) {
-         this.cachedVillageChunks = null;
-      }
    }
 
    public Set<ChunkPos> computeVillageChunks() {
-      if (this.cachedVillageChunks != null) {
-         return this.cachedVillageChunks;
-      }
       AABB bounds = this.computeBounds();
       int minCX = SectionPos.blockToSectionCoord((int)bounds.minX) - 1;
       int maxCX = SectionPos.blockToSectionCoord((int)bounds.maxX) + 1;
@@ -1286,8 +1253,7 @@ public class Village {
          }
       }
 
-      this.cachedVillageChunks = Set.copyOf(chunks);
-      return this.cachedVillageChunks;
+      return chunks;
    }
 
    public void syncRecords(ServerLevel level) {
@@ -1326,14 +1292,7 @@ public class Village {
 
    public void rebuildWaypointGraph(ServerLevel level) {
       this.waypointGraph.rebuild(this.buildings, this.center, level, this);
-      // Sync rebuild publishes immediately; async rebuild calls onWaypointGraphAsyncPublished later.
-      if (!this.waypointGraph.isAsyncRebuildInFlight()) {
-         this.waypointRebuildThrottle.onRebuilt(level.getGameTime(), this.waypointGraph.structuralSignature());
-      }
-   }
-
-   public void onWaypointGraphAsyncPublished(long gameTime) {
-      this.waypointRebuildThrottle.onRebuilt(gameTime, this.waypointGraph.structuralSignature());
+      this.waypointRebuildThrottle.onRebuilt(level.getGameTime(), this.waypointGraph.structuralSignature());
    }
 
    public void markWaypointGraphDirty() {
@@ -1379,11 +1338,6 @@ public class Village {
       }
    }
 
-   /** True while a raid is planned/active/suffering — keeps backgroundTick from being staggered away. */
-   public boolean isRaidActiveOrSuffering() {
-      return this.raidState.isRaidActiveOrSuffering();
-   }
-
    public void backgroundTick(ServerLevel level) {
       long currentDay = level.getDayTime() / 24000L;
       long timeOfDay = level.getDayTime() % 24000L;
@@ -1396,11 +1350,18 @@ public class Village {
       }
 
       if (this.raidState.isRaidActiveOrSuffering()) {
+         TickPerfCounters.RAID_TICKS.incrementAndGet();
          RaidManager.tickRaid(this, level);
       }
 
-      if (level.getGameTime() % 100L == 0L && org.millenaire.perf.tick.ServerTickGovernor.hasTime()) {
+      if (level.getGameTime() % 100L == 0L) {
          this.tickHireExpiry(level);
+      }
+
+      if (this.isActive()) {
+         CityStatsService.tick(level, this);
+         ImmigrantService.tickAuto(level, this);
+         org.millenaire.combat.raid.IllagerRaidSupport.tickCampGarrison(level, this);
       }
    }
 
@@ -1436,48 +1397,26 @@ public class Village {
          }
       }
 
-      // Only walk buildings that currently hold a construction reservation (maintained set).
-      if (!this.buildingsWithConstructionReservation.isEmpty()) {
-         this.reservationScratch.clear();
-         this.reservationScratch.addAll(this.buildingsWithConstructionReservation);
-         for (int ri = 0; ri < this.reservationScratch.size(); ri++) {
-            BuildingInstance b = this.reservationScratch.get(ri);
+      if (level.getGameTime() % 20L == 0L) {
+         for (BuildingInstance b : this.buildings) {
             ConstructionTask task = b.getConstructionTask();
-            if (task == null || !task.isReserved()) {
-               this.buildingsWithConstructionReservation.remove(b);
-               continue;
-            }
-            UUID builderUuid = task.getReservedBuilder();
-            if (level.getEntity(builderUuid) == null) {
-               task.tickReservation();
-               if (task.isReservationExpired(RESERVATION_EXPIRY_TICKS)) {
-                  task.releaseReservation();
-                  this.buildingsWithConstructionReservation.remove(b);
-                  this.dirty = true;
+            if (task != null && task.isReserved()) {
+               UUID builderUuid = task.getReservedBuilder();
+               if (level.getEntity(builderUuid) == null) {
+                  task.tickReservation();
+                  if (task.isReservationExpired(200)) {
+                     task.releaseReservation();
+                     this.dirty = true;
+                  }
+               } else {
+                  task.resetReservationAge();
                }
-            } else {
-               task.resetReservationAge();
             }
          }
       }
 
-      boolean hasTime = org.millenaire.perf.tick.ServerTickGovernor.hasTime();
-      int villageHash = org.millenaire.perf.tick.VillageSimulationLod.villageHash(this);
-      VillageWorkSlice focus = VillageWorkSlice.forGameTime(level.getGameTime(), villageHash);
-      boolean allowIntegrity = VillageWorkSlice.allow(VillageWorkSlice.INTEGRITY, focus, hasTime);
-      boolean allowGrowth = VillageWorkSlice.allow(VillageWorkSlice.GROWTH, focus, hasTime);
-      boolean allowEnvironment = VillageWorkSlice.allow(VillageWorkSlice.ENVIRONMENT, focus, hasTime);
-      boolean allowMarkets = VillageWorkSlice.allow(VillageWorkSlice.MARKETS, focus, hasTime);
-      boolean allowPaths = VillageWorkSlice.allow(VillageWorkSlice.PATHS, focus, hasTime);
-      boolean allowPanels = VillageWorkSlice.allow(VillageWorkSlice.PANELS_MARVEL, focus, hasTime);
-
       if (this.waypointRebuildThrottle.isDirty()) {
-         // Defer heavy graph rebuild when the shared tick time budget is already spent.
-         if (hasTime || allowPaths) {
-            this.rebuildWaypointGraphIfStale(level, 60L);
-         } else {
-            org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.VILLAGE_NEAR);
-         }
+         this.rebuildWaypointGraphIfStale(level, 60L);
       }
 
       if (this.integrityTickCounter == 599) {
@@ -1486,24 +1425,20 @@ public class Village {
 
       this.integrityTickCounter++;
       if (this.needsOrphanCleanup || this.integrityTickCounter >= 600) {
-         if (!this.needsOrphanCleanup && !allowIntegrity) {
-            this.integrityTickCounter = 600;
-            org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.VILLAGE_NEAR);
-         } else {
-            this.needsOrphanCleanup = false;
-            this.integrityTickCounter = 0;
-            this.syncRecords(level);
-            VillageIntegrityChecker.checkIntegrity(level, this);
-            VillageIntegrityChecker.cleanupOrphanedEntities(level, this);
-            if (!level.isDay()) {
-               this.autoSpawnResidents(level);
-            }
-
-            this.reconcileInnMerchantLogs();
+         boolean wasOrphanCleanup = this.needsOrphanCleanup;
+         this.needsOrphanCleanup = false;
+         this.integrityTickCounter = 0;
+         this.syncRecords(level);
+         VillageIntegrityChecker.checkIntegrity(level, this);
+         VillageIntegrityChecker.cleanupOrphanedEntities(level, this);
+         if (!level.isDay()) {
+            this.autoSpawnResidents(level);
          }
+
+         this.reconcileInnMerchantLogs();
       }
 
-      if (this.integrityTickCounter == 300 && allowIntegrity) {
+      if (this.integrityTickCounter == 300) {
          Set<UUID> knownUuids = this.getVillagerUuids();
 
          for (BuildingInstance b : this.buildings) {
@@ -1514,29 +1449,17 @@ public class Village {
       }
 
       this.growthTickCounter++;
-      if (this.growthTickCounter >= 20) {
-         if (!allowGrowth) {
-            this.growthTickCounter = 20;
-            org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.VILLAGE_NEAR);
-         } else {
-            this.growthTickCounter = 0;
-            VillageGrowthManager.evaluateGrowth(level, this);
-            WallGrowthManager.evaluate(level, this);
-         }
+      if (this.growthTickCounter >= 60) {
+         this.growthTickCounter = 0;
+         VillageGrowthManager.evaluateGrowth(level, this);
+         WallGrowthManager.evaluate(level, this);
       }
 
-      // Stagger despawn across villages so Near villages do not all scan the same tick.
-      int despawnStagger = Math.floorMod(villageHash, 20);
-      if (Math.floorMod(level.getGameTime(), 20L) == despawnStagger) {
-         if (allowEnvironment) {
-            this.despawnDangerousMobs(level);
-         } else {
-            org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.VILLAGE_NEAR);
-         }
+      if (level.getGameTime() % 20L == 0L) {
+         this.despawnDangerousMobs(level);
       }
 
-      if (level.getGameTime() % 20L == 10L
-         && (this.isUnderAttack() || this.isRaidActiveOrSuffering() || this.chestLocked || this.cachedDefenderCount == 0)) {
+      if (level.getGameTime() % 20L == 10L) {
          this.checkBattleStatus(level, VillageSavedData.get(level));
       }
 
@@ -1544,21 +1467,14 @@ public class Village {
          this.placeNegationWandInChests(level);
       }
 
-      if (this.isPlayerControlled() && level.getGameTime() % 200L == 40L && allowMarkets) {
-         DesignatedBuildingService.refreshAll(level, this);
-      }
-
-      if (level.getGameTime() % 100L == 0L && allowEnvironment) {
+      if (level.getGameTime() % 100L == 0L) {
          this.updatePens(level, false);
       }
 
-      // Scatter seller dispatch across villages (outer gate); dispatcher itself is ungated.
-      if (Math.floorMod(level.getGameTime() + villageHash, 10) == 0) {
+      if (level.getGameTime() % 10L == 0L) {
          VillageSellerDispatcher.checkSeller(level, this);
       }
-      // Per-village due offset so markets don't all fire on gameTime%100==50 under load.
-      int marketDueOffset = Math.floorMod(villageHash, 100);
-      if (Math.floorMod(level.getGameTime(), 100L) == marketDueOffset && allowMarkets) {
+      if (level.getGameTime() % 100L == 50L) {
          boolean isDaytime = !TickConstants.isNight(level);
 
          for (BuildingInstance b : this.buildings) {
@@ -1575,30 +1491,30 @@ public class Village {
          }
       }
 
-      if (level.getGameTime() % 20L == 0L && allowEnvironment) {
+      if (level.getGameTime() % 40L == 0L) {
          VillageEnvironmentHelper.tickGroveSaplings(level, this);
       }
 
-      this.refreshGoods(level);
-      if (level.getGameTime() % 1000L == 0L && allowMarkets) {
+      if (!level.isDay() || level.getGameTime() % 100L == 0L) {
+         this.refreshGoods(level);
+      }
+      if (level.getGameTime() % 1000L == 0L) {
          this.regenerateScrollIfNeeded(level);
       }
 
-      if (allowPaths) {
-         this.pathManager.tick(level, this);
+      this.pathManager.tick(level, this);
+      if (level.getGameTime() % 20L == 0L) {
          this.pathManager.startRecalcIfDirty(level, this);
-      } else {
-         org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.VILLAGE_NEAR);
       }
       if (this.marvelManager == null && MarvelManager.isMarvelVillageType(this)) {
          this.marvelManager = new MarvelManager();
       }
 
       if (this.marvelManager != null) {
-         if (allowPanels) {
+         long tod = level.getDayTime() % 24000L;
+         boolean nightOrDawn = tod >= 13000L || tod < 2000L;
+         if (nightOrDawn || (level.getGameTime() + this.hashCode()) % 200L == 120L) {
             this.marvelManager.tick(this, level);
-         } else {
-            org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.VILLAGE_NEAR);
          }
       }
 
@@ -1612,20 +1528,15 @@ public class Village {
 
       this.panelTickCounter++;
       if (this.panelTickCounter >= 40) {
-         if (!allowPanels) {
-            this.panelTickCounter = 40;
-            org.millenaire.perf.tick.ServerTickGovernor.noteDefer(org.millenaire.perf.tick.TickPhase.VILLAGE_NEAR);
-         } else {
-            this.panelTickCounter = 0;
-            this.updatePanelDisplayLines(level);
-         }
+         this.panelTickCounter = 0;
+         this.updatePanelDisplayLines(level);
       }
 
-      if (level.getGameTime() % 200L == 0L && allowPanels) {
+      if (level.getGameTime() % 400L == 0L) {
          this.checkExplorationAdvancements(level);
       }
 
-      if (level.getGameTime() % 200L == 0L && allowPanels) {
+      if (level.getGameTime() % 400L == 0L) {
          this.checkTravelBookDiscoveries(level);
       }
    }
@@ -1663,25 +1574,118 @@ public class Village {
       this.ownerUUID = uuid;
       this.ownerName = name;
       this.markDirty();
-      org.millenaire.map.sync.SettlementMapSyncService.markDirty(this.getId());
    }
 
-   /**
-    * Political faction that owns this settlement, or {@code null} when unassigned.
-    * Prefer {@link org.millenaire.faction.FactionManager#assignVillage} to keep reverse indexes in sync.
-    */
-   @Nullable
-   public FactionId getFactionId() {
-      return this.factionId;
+   public boolean isWaystonePlaced() {
+      return this.waystonePlaced;
    }
 
-   /**
-    * Sets the persisted faction association on this village. Callers that also maintain
-    * {@link org.millenaire.faction.Faction} settlement indexes should use FactionManager APIs.
-    */
-   public void setFactionId(@Nullable FactionId factionId) {
-      this.factionId = factionId;
+   public void setWaystonePlaced(boolean placed) {
+      this.waystonePlaced = placed;
       this.markDirty();
+   }
+
+   public boolean isCustomOutfitEnabled() {
+      return this.customOutfitEnabled;
+   }
+
+   public void setCustomOutfitEnabled(boolean enabled) {
+      this.customOutfitEnabled = enabled;
+      this.markDirty();
+   }
+
+   @Nullable
+   public CityStats getCityStatsCache() {
+      return this.cityStatsCache;
+   }
+
+   public void setCityStatsCache(CityStats stats) {
+      this.cityStatsCache = stats;
+   }
+
+   public boolean isCityStatsDirty() {
+      return this.cityStatsDirty;
+   }
+
+   public void markCityStatsDirty() {
+      this.cityStatsDirty = true;
+   }
+
+   public void clearCityStatsDirty() {
+      this.cityStatsDirty = false;
+   }
+
+   @Nullable
+   public String getJobPriorityRole() {
+      return this.jobPriorityRole;
+   }
+
+   public void setJobPriorityRole(@Nullable String role) {
+      this.jobPriorityRole = role;
+      this.markCityStatsDirty();
+      this.markDirty();
+   }
+
+   public void rollImmigrantDay(long day) {
+      if (this.immigrantDay != day) {
+         this.immigrantDay = day;
+         this.immigrantAutoToday = 0;
+         this.immigrantManualToday = 0;
+      }
+   }
+
+   public int getImmigrantAutoToday() {
+      return this.immigrantAutoToday;
+   }
+
+   public int getImmigrantManualToday() {
+      return this.immigrantManualToday;
+   }
+
+   public void incrementImmigrantAutoToday() {
+      this.immigrantAutoToday++;
+   }
+
+   public void incrementImmigrantManualToday() {
+      this.immigrantManualToday++;
+   }
+
+   public long getImmigrantDay() {
+      return this.immigrantDay;
+   }
+
+   public void loadImmigrantCounters(long day, int autoToday, int manualToday) {
+      this.immigrantDay = day;
+      this.immigrantAutoToday = autoToday;
+      this.immigrantManualToday = manualToday;
+   }
+
+   public List<UUID> getRaidIllagerUuids() {
+      return this.raidIllagerUuids;
+   }
+
+   public void trackRaidIllager(UUID uuid) {
+      if (!this.raidIllagerUuids.contains(uuid)) {
+         this.raidIllagerUuids.add(uuid);
+      }
+   }
+
+   public void clearRaidIllagers() {
+      this.raidIllagerUuids.clear();
+   }
+
+   public List<UUID> getCampIllagerUuids() {
+      return this.campIllagerUuids;
+   }
+
+   public void trackCampIllager(UUID uuid) {
+      if (!this.campIllagerUuids.contains(uuid)) {
+         this.campIllagerUuids.add(uuid);
+      }
+   }
+
+   public void clearCampIllagers() {
+      this.campIllagerUuids.clear();
    }
 
    public long getLastNightActionDay() {

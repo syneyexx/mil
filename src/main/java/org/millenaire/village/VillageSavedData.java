@@ -31,7 +31,6 @@ import org.millenaire.building.BedManager;
 import org.millenaire.building.BuildingId;
 import org.millenaire.building.BuildingInstance;
 import org.millenaire.building.ConstructionTask;
-import org.millenaire.faction.FactionId;
 import org.millenaire.quest.MarvelManager;
 import org.millenaire.world.PlacedLocation;
 import org.slf4j.Logger;
@@ -40,10 +39,6 @@ public class VillageSavedData extends SavedData {
    private static final Logger LOGGER = LogUtils.getLogger();
    private static final int CURRENT_VERSION = 6;
    private static final String DATA_NAME = "millenaire_villages";
-   private static final Factory<VillageSavedData> FACTORY = new Factory<>(VillageSavedData::new, (tag, registries) -> load(tag), null);
-   /** Per-level cache — avoids allocating a new Factory + map lookup on every hot-path call. */
-   private static final Map<net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level>, VillageSavedData> LEVEL_CACHE =
-      new java.util.concurrent.ConcurrentHashMap<>();
    private final VillageManager villageManager;
    private final List<VillageSavedData.LoneBuildingEntry> loneBuildingPositions = new ArrayList<>();
    private final Set<String> globalTags = new HashSet<>();
@@ -55,23 +50,11 @@ public class VillageSavedData extends SavedData {
    }
 
    public static Factory<VillageSavedData> factory() {
-      return FACTORY;
+      return new Factory<>(VillageSavedData::new, (tag, registries) -> load(tag), null);
    }
 
    public static VillageSavedData get(ServerLevel level) {
-      net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> key = level.dimension();
-      VillageSavedData cached = LEVEL_CACHE.get(key);
-      if (cached != null) {
-         return cached;
-      }
-      VillageSavedData data = (VillageSavedData)level.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
-      LEVEL_CACHE.put(key, data);
-      return data;
-   }
-
-   /** Drop cached references when the server stops so the next world load rebinds cleanly. */
-   public static void clearLevelCache() {
-      LEVEL_CACHE.clear();
+      return (VillageSavedData)level.getDataStorage().computeIfAbsent(factory(), "millenaire_villages");
    }
 
    public VillageManager getVillageManager() {
@@ -231,13 +214,12 @@ public class VillageSavedData extends SavedData {
             buildingTag.putBoolean("player_chosen", true);
          }
 
-         if (b.isPlayerDesignated() && b.getPurpose() != null) {
-            buildingTag.putBoolean("player_designated", true);
-            buildingTag.putString("designation_purpose", b.getPurpose().id());
-            buildingTag.putInt("designated_width", b.getDesignatedWidth());
-            buildingTag.putInt("designated_depth", b.getDesignatedDepth());
-            buildingTag.putInt("designated_height", b.getDesignatedHeight());
-            buildingTag.putBoolean("designation_features_valid", b.isDesignationFeaturesValid());
+         if (b.getPlayerBuildingRole() != null) {
+            buildingTag.putString("player_building_role", b.getPlayerBuildingRole());
+         }
+
+         if (b.getPurpose() != BuildingPurpose.AUTO) {
+            buildingTag.putString("purpose", b.getPurpose().serializationName());
          }
 
          if (b.getBrickColourMapping() != null) {
@@ -414,6 +396,19 @@ public class VillageSavedData extends SavedData {
          villageTag.putBoolean("under_attack", true);
       }
 
+      if (village.getJobPriorityRole() != null) {
+         villageTag.putString("job_priority_role", village.getJobPriorityRole());
+      }
+
+      if (village.getImmigrantDay() >= 0L) {
+         villageTag.putLong("immigrant_day", village.getImmigrantDay());
+         villageTag.putInt("immigrant_auto_today", village.getImmigrantAutoToday());
+         villageTag.putInt("immigrant_manual_today", village.getImmigrantManualToday());
+      }
+
+      putUuidList(villageTag, "raid_illagers", village.getRaidIllagerUuids());
+      putUuidList(villageTag, "camp_illagers", village.getCampIllagerUuids());
+
       if (!village.getRaidsPerformed().isEmpty()) {
          ListTag list = new ListTag();
 
@@ -445,8 +440,12 @@ public class VillageSavedData extends SavedData {
          }
       }
 
-      if (village.getFactionId() != null) {
-         villageTag.putString("faction_id", village.getFactionId().asString());
+      if (village.isWaystonePlaced()) {
+         villageTag.putBoolean("waystone_placed", true);
+      }
+
+      if (village.isCustomOutfitEnabled()) {
+         villageTag.putBoolean("custom_outfit", true);
       }
 
       if (village.getBannerNbt() != null) {
@@ -544,21 +543,12 @@ public class VillageSavedData extends SavedData {
                      building.setPlayerChosen(true);
                   }
 
-                  if (buildingTag.getBoolean("player_designated")) {
-                     org.millenaire.building.BuildingPurpose purpose = org.millenaire.building.BuildingPurpose.fromId(
-                        buildingTag.getString("designation_purpose")
-                     );
-                     if (purpose != null) {
-                        building.setDesignation(
-                           purpose,
-                           buildingTag.getInt("designated_width"),
-                           buildingTag.getInt("designated_depth"),
-                           Math.max(1, buildingTag.getInt("designated_height"))
-                        );
-                        if (buildingTag.contains("designation_features_valid")) {
-                           building.setDesignationFeaturesValid(buildingTag.getBoolean("designation_features_valid"));
-                        }
-                     }
+                  if (buildingTag.contains("player_building_role")) {
+                     building.setPlayerBuildingRole(buildingTag.getString("player_building_role"));
+                  }
+
+                  if (buildingTag.contains("purpose")) {
+                     building.setPurpose(BuildingPurpose.fromName(buildingTag.getString("purpose")));
                   }
 
                   if (buildingTag.contains("brick_colours")) {
@@ -653,7 +643,6 @@ public class VillageSavedData extends SavedData {
                   LOGGER.error("Error loading building index {} of village {} — building ignored", new Object[]{j, i, e});
                }
             }
-            village.rebuildConstructionReservationIndex();
 
             ListTag villagersList = villageTag.getList("villagers", 10);
 
@@ -806,6 +795,21 @@ public class VillageSavedData extends SavedData {
                village.loadRaidsSuffered(entries);
             }
 
+            if (villageTag.contains("job_priority_role")) {
+               village.setJobPriorityRole(villageTag.getString("job_priority_role"));
+            }
+
+            if (villageTag.contains("immigrant_day")) {
+               village.loadImmigrantCounters(
+                  villageTag.getLong("immigrant_day"),
+                  villageTag.getInt("immigrant_auto_today"),
+                  villageTag.getInt("immigrant_manual_today")
+               );
+            }
+
+            loadUuidList(villageTag, "raid_illagers", village.getRaidIllagerUuids());
+            loadUuidList(villageTag, "camp_illagers", village.getCampIllagerUuids());
+
             if (villageTag.contains("parent_village_id")) {
                village.setParentVillageId(new VillageId(villageTag.getUUID("parent_village_id")));
             }
@@ -816,17 +820,12 @@ public class VillageSavedData extends SavedData {
                village.setOwner(ownerUUID, ownerName);
             }
 
-            if (villageTag.contains("faction_id")) {
-               FactionId loadedFactionId = FactionId.tryParse(villageTag.getString("faction_id"));
-               if (loadedFactionId != null) {
-                  village.setFactionId(loadedFactionId);
-               } else {
-                  LOGGER.warn(
-                     "Village {} has malformed faction_id '{}' — left unassigned for faction bootstrap repair",
-                     villageId.uuid(),
-                     villageTag.getString("faction_id")
-                  );
-               }
+            if (villageTag.getBoolean("waystone_placed")) {
+               village.setWaystonePlaced(true);
+            }
+
+            if (villageTag.getBoolean("custom_outfit")) {
+               village.setCustomOutfitEnabled(true);
             }
 
             if (villageTag.contains("banner_nbt")) {
@@ -953,6 +952,34 @@ public class VillageSavedData extends SavedData {
       }
 
       return null;
+   }
+
+   private static void putUuidList(CompoundTag tag, String key, List<UUID> uuids) {
+      if (!uuids.isEmpty()) {
+         ListTag list = new ListTag();
+
+         for (UUID uuid : uuids) {
+            CompoundTag entry = new CompoundTag();
+            entry.putUUID("id", uuid);
+            list.add(entry);
+         }
+
+         tag.put(key, list);
+      }
+   }
+
+   private static void loadUuidList(CompoundTag tag, String key, List<UUID> target) {
+      if (tag.contains(key, 9)) {
+         ListTag list = tag.getList(key, 10);
+         target.clear();
+
+         for (int i = 0; i < list.size(); i++) {
+            CompoundTag entry = list.getCompound(i);
+            if (entry.hasUUID("id")) {
+               target.add(entry.getUUID("id"));
+            }
+         }
+      }
    }
 
    public record LoneBuildingEntry(BlockPos pos, ResourceLocation type, String culture, @Nullable String generatedFor) {

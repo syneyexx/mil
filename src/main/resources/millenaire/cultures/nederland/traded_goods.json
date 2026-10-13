@@ -1,0 +1,36 @@
+{
+  "goods": [
+    {
+      "id": "wheat",
+      "item": "minecraft:wheat",
+      "selling_price": 3,
+      "buying_price": 2,
+      "reserved_quantity": 10,
+      "target_quantity": 128,
+      "category": "agriculture"
+    },
+    {
+      "id": "bread",
+      "item": "minecraft:bread",
+      "selling_price": 10,
+      "buying_price": 8,
+      "reserved_quantity": 5,
+      "target_quantity": 10,
+      "category": "agriculture"
+    },
+    {
+      "id": "cod",
+      "item": "minecraft:cod",
+      "selling_price": 6,
+      "buying_price": 4,
+      "category": "agriculture"
+    },
+    {
+      "id": "denier",
+      "item": "millenaire:denier",
+      "selling_price": 0,
+      "buying_price": 0,
+      "category": "playeritem"
+    }
+  ]
+}

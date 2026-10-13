@@ -3,9 +3,7 @@
   "biome_tags": [
     "#c:is_plains",
     "#millenaire:is_temperate_forest",
-    "#c:is_hill",
-    "#millenaire:is_mediterranean",
-    "#millenaire:is_lavender"
+    "#c:is_hill"
   ],
   "name": "Monastiriako Chorio",
   "weight": 10,

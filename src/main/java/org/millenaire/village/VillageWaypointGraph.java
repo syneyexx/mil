@@ -19,10 +19,6 @@ import net.minecraft.server.level.ServerLevel;
 import org.millenaire.building.BuildingInstance;
 import org.millenaire.building.BuildingPlan;
 import org.millenaire.culture.ModCultures;
-import org.millenaire.perf.compute.ComputeOffload;
-import org.millenaire.perf.compute.MillenaireComputePool;
-import org.millenaire.village.path.PathRoute;
-import org.millenaire.village.path.PathTerrainSnapshot;
 import org.slf4j.Logger;
 
 public class VillageWaypointGraph {
@@ -32,88 +28,11 @@ public class VillageWaypointGraph {
    public static final double MACRO_THRESHOLD = 48.0;
    private static final long WARN_REBUILD_MS = 200L;
    private volatile VillageWaypointGraph.GraphSnapshot snapshot = VillageWaypointGraph.GraphSnapshot.EMPTY;
-   private long asyncRebuildGeneration = 0L;
-   private boolean asyncRebuildInFlight = false;
 
    public void rebuild(List<BuildingInstance> buildings, BlockPos villageCenter, ServerLevel level, Village village) {
       Objects.requireNonNull(level, "ServerLevel is required for pathfind validation");
       Objects.requireNonNull(village, "Village is required so the tester binds villageId");
-      if (ComputeOffload.waypointGraph() && this.trySubmitAsyncRebuild(buildings, villageCenter, level, village)) {
-         return;
-      }
       this.rebuildInternal(buildings, villageCenter, level, village);
-   }
-
-   private boolean trySubmitAsyncRebuild(
-      List<BuildingInstance> buildings, BlockPos villageCenter, ServerLevel level, Village village
-   ) {
-      if (this.asyncRebuildInFlight) {
-         return true;
-      }
-      List<Waypoint> waypoints = collectWaypoints(buildings, villageCenter);
-      if (waypoints.size() < 2) {
-         this.snapshot = new VillageWaypointGraph.GraphSnapshot(List.copyOf(waypoints), Map.of());
-         return true;
-      }
-      List<BlockPos> anchors = waypoints.stream().map(Waypoint::pos).toList();
-      PathTerrainSnapshot terrain = PathTerrainSnapshot.captureAroundAnchors(
-         level, village, anchors, Map.of(), Set.of(), Set.of()
-      );
-      List<Waypoint> waypointCapture = List.copyOf(waypoints);
-      long generation = ++this.asyncRebuildGeneration;
-      this.asyncRebuildInFlight = true;
-      boolean submitted = MillenaireComputePool.submit(() -> {
-         long start = System.nanoTime();
-         GraphBuildResult built = buildGraph(waypointCapture, (from, to) -> pathNodesOnSnapshot(terrain, from, to));
-         long ms = (System.nanoTime() - start) / 1_000_000L;
-         return new WaypointGraphComputeResult(
-            village.getId(), generation, built.snapshot(), ms, waypointCapture.size(), built.edgeCount()
-         );
-      });
-      if (!submitted) {
-         this.asyncRebuildInFlight = false;
-         return false;
-      }
-      return true;
-   }
-
-   public boolean publishAsyncRebuild(
-      long generation,
-      GraphSnapshot graph,
-      long rebuildMillis,
-      int nodeCount,
-      int edgeCount,
-      long gameTime,
-      Village village
-   ) {
-      if (generation != this.asyncRebuildGeneration) {
-         return false;
-      }
-      this.asyncRebuildInFlight = false;
-      this.snapshot = graph;
-      LOGGER.info(
-         "[Millenaire] Waypoint graph rebuilt (async): {} nodes, {} edges in {} ms",
-         nodeCount,
-         edgeCount,
-         rebuildMillis
-      );
-      if (rebuildMillis >= WARN_REBUILD_MS) {
-         LOGGER.warn(
-            "[Millenaire] Waypoint graph rebuild SLOW (async): {} ms (>= {} ms) for {} nodes",
-            rebuildMillis,
-            WARN_REBUILD_MS,
-            nodeCount
-         );
-      }
-      village.onWaypointGraphAsyncPublished(gameTime);
-      return true;
-   }
-
-   @Nullable
-   private static List<BlockPos> pathNodesOnSnapshot(PathTerrainSnapshot terrain, BlockPos from, BlockPos to) {
-      PathRoute route = new PathRoute(from, to, "dirt", 1, 0, null, null, false);
-      var tr = terrain.searchTrace(route);
-      return tr.trace();
    }
 
    void rebuild(List<BuildingInstance> buildings, BlockPos villageCenter) {
@@ -125,69 +44,10 @@ public class VillageWaypointGraph {
       this.rebuildInternal(buildings, villageCenter, level, null);
    }
 
-   public boolean isAsyncRebuildInFlight() {
-      return this.asyncRebuildInFlight;
-   }
-
    private void rebuildInternal(List<BuildingInstance> buildings, BlockPos villageCenter, @Nullable ServerLevel level, @Nullable Village village) {
       long rebuildStartNanos = System.nanoTime();
-      List<Waypoint> newWaypoints = collectWaypoints(buildings, villageCenter);
-      int n = newWaypoints.size();
-      if (n < 2) {
-         this.snapshot = new VillageWaypointGraph.GraphSnapshot(List.copyOf(newWaypoints), Map.of());
-         long elapsedMs = (System.nanoTime() - rebuildStartNanos) / 1000000L;
-         LOGGER.info("[Millenaire] Waypoint graph rebuilt: {} nodes, 0 edges (too few) in {} ms", n, elapsedMs);
-         return;
-      }
-
-      try (WaypointTraversalTester tester = level != null ? new WaypointTraversalTester(level, village) : null) {
-         EdgeValidator validator = tester == null
-            ? (from, to) -> List.of()
-            : (from, to) -> {
-               WaypointTraversalTester.Result r = tester.findPath(from, to);
-               return r.reachable() ? r.nodes() : null;
-            };
-         GraphBuildResult built = buildGraph(newWaypoints, validator);
-         this.snapshot = built.snapshot();
-         long elapsedMs = (System.nanoTime() - rebuildStartNanos) / 1000000L;
-         LOGGER.info(
-            "[Millenaire] Waypoint graph rebuilt: {} nodes, {} edges (short: {} valid / {} rejected, long: {} valid / {} rejected / {} skipped-transitive) in {} ms",
-            n,
-            built.edgeCount(),
-            built.shortValid(),
-            built.shortRejected(),
-            built.longValidated(),
-            built.longRejected(),
-            built.longSkippedTransitive(),
-            elapsedMs
-         );
-         if (level != null && built.shortValid() + built.shortRejected() >= 4
-            && built.shortRejected() * 5 >= (built.shortValid() + built.shortRejected()) * 4) {
-            LOGGER.warn(
-               "[Millenaire] Validating tester rejected {}/{} short edges (>= 80%) — falling back to euclidean validation for this rebuild",
-               built.shortRejected(),
-               built.shortValid() + built.shortRejected()
-            );
-            GraphBuildResult permissive = buildGraph(newWaypoints, (from, to) -> List.of());
-            this.snapshot = permissive.snapshot();
-            LOGGER.warn(
-               "[Millenaire] Permissive fallback added edges (graph now {} edges total)",
-               permissive.edgeCount()
-            );
-         }
-         if (elapsedMs >= WARN_REBUILD_MS) {
-            LOGGER.warn(
-               "[Millenaire] Waypoint graph rebuild SLOW: {} ms (>= {} ms threshold) for {} nodes — see PERF roadmap",
-               elapsedMs,
-               WARN_REBUILD_MS,
-               n
-            );
-         }
-      }
-   }
-
-   private static List<Waypoint> collectWaypoints(List<BuildingInstance> buildings, BlockPos villageCenter) {
       List<Waypoint> newWaypoints = new ArrayList<>();
+      Map<Waypoint, List<WaypointEdge>> newAdjacency = new HashMap<>();
       newWaypoints.add(new Waypoint(villageCenter, null));
       Set<BlockPos> seen = new HashSet<>();
       seen.add(villageCenter);
@@ -205,109 +65,165 @@ public class VillageWaypointGraph {
       }
 
       double maxEdgeSq = 4096.0;
+
       for (BuildingInstance building : buildings) {
          if (!building.isSubBuilding() && !building.isWallSegment() && !building.hasExplicitPathStartPos()) {
             BlockPos anchor = building.resolvePathAnchor();
             if (anchor != null && !seen.contains(anchor)) {
                boolean solidWithinReach = false;
+
                for (BlockPos solid : solidAnchors) {
                   if (solid.distSqr(anchor) <= maxEdgeSq) {
                      solidWithinReach = true;
                      break;
                   }
                }
+
                if (!solidWithinReach && seen.add(anchor)) {
                   newWaypoints.add(new Waypoint(anchor, building.getId()));
                }
             }
          }
       }
-      return newWaypoints;
-   }
 
-   @FunctionalInterface
-   private interface EdgeValidator {
-      /** null = unreachable; empty or nodes = accept */
-      @Nullable
-      List<BlockPos> validate(BlockPos from, BlockPos to);
-   }
-
-   private static GraphBuildResult buildGraph(List<Waypoint> newWaypoints, EdgeValidator validator) {
-      Map<Waypoint, List<WaypointEdge>> newAdjacency = new HashMap<>();
       for (Waypoint wp : newWaypoints) {
          newAdjacency.put(wp, new ArrayList<>());
       }
+
       int n = newWaypoints.size();
-      int[] parent = new int[n];
-      for (int i = 0; i < n; i++) {
-         parent[i] = i;
-      }
-      int shortValid = 0;
-      int shortRejected = 0;
-      int longValidated = 0;
-      int longRejected = 0;
-      int longSkippedTransitive = 0;
-      double shortSq = 900.0;
-      double maxSq = 4096.0;
+      if (n < 2) {
+         this.snapshot = new VillageWaypointGraph.GraphSnapshot(List.copyOf(newWaypoints), Map.of());
+         long elapsedMs = (System.nanoTime() - rebuildStartNanos) / 1000000L;
+         LOGGER.info("[Millenaire] Waypoint graph rebuilt: {} nodes, 0 edges (too few) in {} ms", n, elapsedMs);
+      } else {
+         int[] parent = new int[n];
+         int i = 0;
 
-      for (int ix = 0; ix < n; ix++) {
-         Waypoint a = newWaypoints.get(ix);
-         for (int j = ix + 1; j < n; j++) {
-            Waypoint b = newWaypoints.get(j);
-            double distSq = a.pos().distSqr(b.pos());
-            if (distSq > shortSq) {
-               continue;
+         while (i < n) {
+            parent[i] = i++;
+         }
+
+         i = 0;
+         int shortRejected = 0;
+         int longValidated = 0;
+         int longRejected = 0;
+         int longSkippedTransitive = 0;
+
+         try (WaypointTraversalTester tester = level != null ? new WaypointTraversalTester(level, village) : null) {
+            double shortSq = 900.0;
+            double maxSq = 4096.0;
+
+            for (int ix = 0; ix < n; ix++) {
+               Waypoint a = newWaypoints.get(ix);
+
+               for (int j = ix + 1; j < n; j++) {
+                  Waypoint b = newWaypoints.get(j);
+                  double distSq = a.pos().distSqr(b.pos());
+                  if (!(distSq > shortSq)) {
+                     List<BlockPos> nodes = List.of();
+                     if (tester != null) {
+                        WaypointTraversalTester.Result r = tester.findPath(a.pos(), b.pos());
+                        if (!r.reachable()) {
+                           shortRejected++;
+                           continue;
+                        }
+
+                        nodes = r.nodes();
+                     }
+
+                     addEdge(newAdjacency, a, b, Math.sqrt(distSq), nodes);
+                     union(parent, ix, j);
+                     i++;
+                  }
+               }
             }
-            List<BlockPos> nodes = validator.validate(a.pos(), b.pos());
-            if (nodes == null) {
-               shortRejected++;
-               continue;
+
+            for (int ix = 0; ix < n; ix++) {
+               Waypoint a = newWaypoints.get(ix);
+
+               for (int j = ix + 1; j < n; j++) {
+                  Waypoint b = newWaypoints.get(j);
+                  double distSq = a.pos().distSqr(b.pos());
+                  if (!(distSq <= shortSq) && !(distSq > maxSq)) {
+                     if (find(parent, ix) == find(parent, j)) {
+                        longSkippedTransitive++;
+                     } else {
+                        List<BlockPos> nodes = List.of();
+                        if (tester != null) {
+                           WaypointTraversalTester.Result r = tester.findPath(a.pos(), b.pos());
+                           if (!r.reachable()) {
+                              longRejected++;
+                              continue;
+                           }
+
+                           nodes = r.nodes();
+                        }
+
+                        addEdge(newAdjacency, a, b, Math.sqrt(distSq), nodes);
+                        longValidated++;
+                     }
+                  }
+               }
             }
-            addEdge(newAdjacency, a, b, Math.sqrt(distSq), nodes);
-            union(parent, ix, j);
-            shortValid++;
+         }
+
+         int totalEdges = i + longValidated;
+         int shortInspected = i + shortRejected;
+         if (level != null && shortInspected >= 4 && shortRejected * 5 >= shortInspected * 4) {
+            LOGGER.warn(
+               "[Millenaire] Validating tester rejected {}/{} short edges (>= 80%) — falling back to euclidean validation for this rebuild",
+               shortRejected,
+               shortInspected
+            );
+            double maxSqLocal = 4096.0;
+            int permissiveAdded = 0;
+
+            for (int ix = 0; ix < n; ix++) {
+               Waypoint a = newWaypoints.get(ix);
+
+               for (int j = ix + 1; j < n; j++) {
+                  Waypoint b = newWaypoints.get(j);
+                  double distSq = a.pos().distSqr(b.pos());
+                  if (!(distSq > maxSqLocal)) {
+                     boolean alreadyConnected = false;
+
+                     for (WaypointEdge edge : newAdjacency.get(a)) {
+                        if (edge.target().equals(b)) {
+                           alreadyConnected = true;
+                           break;
+                        }
+                     }
+
+                     if (!alreadyConnected) {
+                        addEdge(newAdjacency, a, b, Math.sqrt(distSq), List.of());
+                        permissiveAdded++;
+                     }
+                  }
+               }
+            }
+
+            totalEdges += permissiveAdded;
+            LOGGER.warn("[Millenaire] Permissive fallback added {} edges (graph now {} edges total)", permissiveAdded, totalEdges);
+         }
+
+         Map<Waypoint, List<WaypointEdge>> publishAdj = new HashMap<>(newAdjacency.size() * 2);
+
+         for (Entry<Waypoint, List<WaypointEdge>> e : newAdjacency.entrySet()) {
+            publishAdj.put(e.getKey(), List.copyOf(e.getValue()));
+         }
+
+         this.snapshot = new VillageWaypointGraph.GraphSnapshot(List.copyOf(newWaypoints), Map.copyOf(publishAdj));
+         long elapsedMs = (System.nanoTime() - rebuildStartNanos) / 1000000L;
+         LOGGER.info(
+            "[Millenaire] Waypoint graph rebuilt: {} nodes, {} edges (short: {} valid / {} rejected, long: {} valid / {} rejected / {} skipped-transitive) in {} ms",
+            new Object[]{n, totalEdges, i, shortRejected, longValidated, longRejected, longSkippedTransitive, elapsedMs}
+         );
+         if (elapsedMs >= 200L) {
+            LOGGER.warn(
+               "[Millenaire] Waypoint graph rebuild SLOW: {} ms (>= {} ms threshold) for {} nodes — see PERF roadmap", new Object[]{elapsedMs, 200L, n}
+            );
          }
       }
-
-      for (int ix = 0; ix < n; ix++) {
-         Waypoint a = newWaypoints.get(ix);
-         for (int j = ix + 1; j < n; j++) {
-            Waypoint b = newWaypoints.get(j);
-            double distSq = a.pos().distSqr(b.pos());
-            if (distSq <= shortSq || distSq > maxSq) {
-               continue;
-            }
-            if (find(parent, ix) == find(parent, j)) {
-               longSkippedTransitive++;
-               continue;
-            }
-            List<BlockPos> nodes = validator.validate(a.pos(), b.pos());
-            if (nodes == null) {
-               longRejected++;
-               continue;
-            }
-            addEdge(newAdjacency, a, b, Math.sqrt(distSq), nodes);
-            longValidated++;
-         }
-      }
-
-      Map<Waypoint, List<WaypointEdge>> publishAdj = new HashMap<>(newAdjacency.size() * 2);
-      for (Entry<Waypoint, List<WaypointEdge>> e : newAdjacency.entrySet()) {
-         publishAdj.put(e.getKey(), List.copyOf(e.getValue()));
-      }
-      GraphSnapshot snap = new GraphSnapshot(List.copyOf(newWaypoints), Map.copyOf(publishAdj));
-      return new GraphBuildResult(snap, shortValid + longValidated, shortValid, shortRejected, longValidated, longRejected, longSkippedTransitive);
-   }
-
-   private record GraphBuildResult(
-      GraphSnapshot snapshot,
-      int edgeCount,
-      int shortValid,
-      int shortRejected,
-      int longValidated,
-      int longRejected,
-      int longSkippedTransitive
-   ) {
    }
 
    private static void addEdge(Map<Waypoint, List<WaypointEdge>> adj, Waypoint a, Waypoint b, double cost, List<BlockPos> nodes) {
@@ -500,7 +416,7 @@ public class VillageWaypointGraph {
    public record DirectedEdge(Waypoint from, Waypoint to, double cost, List<BlockPos> pathNodes) {
    }
 
-   public record GraphSnapshot(List<Waypoint> waypoints, Map<Waypoint, List<WaypointEdge>> adjacency) {
+   private record GraphSnapshot(List<Waypoint> waypoints, Map<Waypoint, List<WaypointEdge>> adjacency) {
       static final VillageWaypointGraph.GraphSnapshot EMPTY = new VillageWaypointGraph.GraphSnapshot(List.of(), Map.of());
    }
 }
