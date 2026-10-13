@@ -180,8 +180,12 @@ public final class QuestManager {
                                  switch (relation) {
                                     case "samevillage": {
                                        List<VillagerRecord> candidates = new ArrayList<>();
+                                       final int candidateCap = 12;
 
                                        for (VillagerRecord vr2 : relatedVillage.getVillagerRecords().values()) {
+                                          if (candidates.size() >= candidateCap) {
+                                             break;
+                                          }
                                           if (!assignedUuids.contains(vr2.getUuid())
                                              && (
                                                 vr2.getHomeBuilding() == null
@@ -203,8 +207,12 @@ public final class QuestManager {
                                     }
                                     case "samehouse": {
                                        List<VillagerRecord> candidates = new ArrayList<>();
+                                       final int candidateCap = 8;
 
                                        for (VillagerRecord vr2 : relatedVillage.getVillagerRecords().values()) {
+                                          if (candidates.size() >= candidateCap) {
+                                             break;
+                                          }
                                           if (!assignedUuids.contains(vr2.getUuid())
                                              && vr2.getHomeBuilding() != null
                                              && relatedRecord.getHomeBuilding() != null
@@ -253,9 +261,16 @@ public final class QuestManager {
                                           }
 
                                           for (VillagerRecord vr2 : v2.getVillagerRecords().values()) {
+                                             if (candidates.size() >= 12) {
+                                                break;
+                                             }
                                              if (!assignedUuids.contains(vr2.getUuid()) && testVillager(qvd, playerId, vr2, data)) {
                                                 candidates.add(new QuestInstanceVillager(vr2.getUuid(), v2.getId().uuid()));
                                              }
+                                          }
+                                          if (candidates.size() >= 12) {
+                                             villagers.put(qvd.key(), candidates.get((int)(Math.random() * candidates.size())));
+                                             continue label240;
                                           }
                                        }
                                     }

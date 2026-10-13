@@ -3,7 +3,9 @@ package org.millenaire.village;
 import com.mojang.logging.LogUtils;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.Map.Entry;
 import javax.annotation.Nullable;
@@ -56,6 +58,23 @@ public class VillagerRecord {
    @Nullable
    private org.millenaire.faith.OrderRole orderRole;
    private int devotion;
+   @Nullable
+   private UUID householdId;
+   @Nullable
+   private UUID spouseUuid;
+   @Nullable
+   private UUID motherUuid;
+   @Nullable
+   private UUID fatherUuid;
+   @Nullable
+   private UUID mentorUuid;
+   private final List<UUID> apprenticeUuids = new ArrayList<>();
+   private final Map<String, Integer> craftXp = new LinkedHashMap<>();
+   private final List<String> memories = new ArrayList<>();
+   private static final int MAX_APPRENTICES = 2;
+   private static final int MAX_CRAFT_SKILLS = 6;
+   private static final int MAX_MEMORIES = 8;
+   private static final int MAX_CRAFT_XP = 1000;
 
    public VillagerRecord(UUID uuid, ResourceLocation villagerTypeId, @Nullable BuildingId homeBuilding) {
       this.uuid = uuid;
@@ -320,6 +339,107 @@ public class VillagerRecord {
       this.devotion = Math.max(0, Math.min(100, devotion));
    }
 
+   @Nullable
+   public UUID getHouseholdId() {
+      return this.householdId;
+   }
+
+   public void setHouseholdId(@Nullable UUID householdId) {
+      this.householdId = householdId;
+   }
+
+   @Nullable
+   public UUID getSpouseUuid() {
+      return this.spouseUuid;
+   }
+
+   public void setSpouseUuid(@Nullable UUID spouseUuid) {
+      this.spouseUuid = spouseUuid;
+   }
+
+   @Nullable
+   public UUID getMotherUuid() {
+      return this.motherUuid;
+   }
+
+   public void setMotherUuid(@Nullable UUID motherUuid) {
+      this.motherUuid = motherUuid;
+   }
+
+   @Nullable
+   public UUID getFatherUuid() {
+      return this.fatherUuid;
+   }
+
+   public void setFatherUuid(@Nullable UUID fatherUuid) {
+      this.fatherUuid = fatherUuid;
+   }
+
+   @Nullable
+   public UUID getMentorUuid() {
+      return this.mentorUuid;
+   }
+
+   public void setMentorUuid(@Nullable UUID mentorUuid) {
+      this.mentorUuid = mentorUuid;
+   }
+
+   public List<UUID> getApprenticeUuids() {
+      return Collections.unmodifiableList(this.apprenticeUuids);
+   }
+
+   public boolean addApprentice(UUID apprentice) {
+      if (apprentice == null || this.apprenticeUuids.contains(apprentice) || this.apprenticeUuids.size() >= MAX_APPRENTICES) {
+         return false;
+      }
+      this.apprenticeUuids.add(apprentice);
+      return true;
+   }
+
+   public Map<String, Integer> getCraftXp() {
+      return Collections.unmodifiableMap(this.craftXp);
+   }
+
+   public int getCraftXp(String skill) {
+      return this.craftXp.getOrDefault(skill, 0);
+   }
+
+   public void addCraftXp(String skill, int amount) {
+      if (skill == null || skill.isEmpty() || amount <= 0) {
+         return;
+      }
+      int next = Math.min(MAX_CRAFT_XP, this.craftXp.getOrDefault(skill, 0) + amount);
+      this.craftXp.put(skill, next);
+      while (this.craftXp.size() > MAX_CRAFT_SKILLS) {
+         String lowest = null;
+         int lowestXp = Integer.MAX_VALUE;
+         for (Entry<String, Integer> e : this.craftXp.entrySet()) {
+            if (e.getValue() < lowestXp) {
+               lowestXp = e.getValue();
+               lowest = e.getKey();
+            }
+         }
+         if (lowest == null) {
+            break;
+         }
+         this.craftXp.remove(lowest);
+      }
+   }
+
+   public List<String> getMemories() {
+      return Collections.unmodifiableList(this.memories);
+   }
+
+   public void addMemory(String memory) {
+      if (memory == null || memory.isEmpty()) {
+         return;
+      }
+      this.memories.add(memory);
+      while (this.memories.size() > MAX_MEMORIES) {
+         this.memories.removeFirst();
+      }
+   }
+
    public void updateFromEntity(MillVillager villager) {
       this.villagerTypeId = villager.getVillagerTypeId();
       this.homeBuilding = villager.getHomeBuilding();
@@ -459,6 +579,44 @@ public class VillagerRecord {
       if (this.devotion > 0) {
          tag.putInt("devotion", this.devotion);
       }
+      if (this.householdId != null) {
+         tag.putUUID("household_id", this.householdId);
+      }
+      if (this.spouseUuid != null) {
+         tag.putUUID("spouse_uuid", this.spouseUuid);
+      }
+      if (this.motherUuid != null) {
+         tag.putUUID("mother_uuid", this.motherUuid);
+      }
+      if (this.fatherUuid != null) {
+         tag.putUUID("father_uuid", this.fatherUuid);
+      }
+      if (this.mentorUuid != null) {
+         tag.putUUID("mentor_uuid", this.mentorUuid);
+      }
+      if (!this.apprenticeUuids.isEmpty()) {
+         ListTag apps = new ListTag();
+         for (UUID id : this.apprenticeUuids) {
+            CompoundTag a = new CompoundTag();
+            a.putUUID("id", id);
+            apps.add(a);
+         }
+         tag.put("apprentices", apps);
+      }
+      if (!this.craftXp.isEmpty()) {
+         CompoundTag xpTag = new CompoundTag();
+         for (Entry<String, Integer> e : this.craftXp.entrySet()) {
+            xpTag.putInt(e.getKey(), e.getValue());
+         }
+         tag.put("craft_xp", xpTag);
+      }
+      if (!this.memories.isEmpty()) {
+         ListTag mem = new ListTag();
+         for (String m : this.memories) {
+            mem.add(StringTag.valueOf(m));
+         }
+         tag.put("memories", mem);
+      }
    }
 
    @Nullable
@@ -516,6 +674,42 @@ public class VillagerRecord {
          }
          if (tag.contains("devotion")) {
             record.devotion = tag.getInt("devotion");
+         }
+         if (tag.hasUUID("household_id")) {
+            record.householdId = tag.getUUID("household_id");
+         }
+         if (tag.hasUUID("spouse_uuid")) {
+            record.spouseUuid = tag.getUUID("spouse_uuid");
+         }
+         if (tag.hasUUID("mother_uuid")) {
+            record.motherUuid = tag.getUUID("mother_uuid");
+         }
+         if (tag.hasUUID("father_uuid")) {
+            record.fatherUuid = tag.getUUID("father_uuid");
+         }
+         if (tag.hasUUID("mentor_uuid")) {
+            record.mentorUuid = tag.getUUID("mentor_uuid");
+         }
+         if (tag.contains("apprentices")) {
+            ListTag apps = tag.getList("apprentices", 10);
+            for (int i = 0; i < apps.size(); i++) {
+               CompoundTag a = apps.getCompound(i);
+               if (a.hasUUID("id")) {
+                  record.apprenticeUuids.add(a.getUUID("id"));
+               }
+            }
+         }
+         if (tag.contains("craft_xp")) {
+            CompoundTag xpTag = tag.getCompound("craft_xp");
+            for (String key : xpTag.getAllKeys()) {
+               record.craftXp.put(key, xpTag.getInt(key));
+            }
+         }
+         if (tag.contains("memories")) {
+            ListTag mem = tag.getList("memories", 8);
+            for (int i = 0; i < mem.size(); i++) {
+               record.memories.add(mem.getString(i));
+            }
          }
 
          return record;

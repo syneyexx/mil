@@ -233,6 +233,7 @@ public final class NightActionHelper {
 
          child.setMothersName(mother.getFirstName() + " " + mother.getFamilyName());
          child.setFathersName(fatherName);
+         HouseholdLinks.linkChildToParents(ctx.village(), child, mother, presentMale);
          VillagerType childType = ModCultures.getVillagerType(child.getVillagerTypeId());
          Gender childGender = childType != null ? childType.gender() : Gender.MALE;
          LOGGER.info(

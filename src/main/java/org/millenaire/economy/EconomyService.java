@@ -151,7 +151,24 @@ public final class EconomyService {
             Math.max(1, result.suggestedAmount()),
             gameTime
          );
+         org.millenaire.diplomacy.TreatyService.maybeOfferFromEconomy(
+            level,
+            village,
+            result.tradePartnerVillageId(),
+            result.focusItem(),
+            Math.max(1, result.suggestedAmount()),
+            gameTime
+         );
       }
+      boolean hasFoodNeed = false;
+      for (Need n : needs.activeNeeds()) {
+         if (n.category() == NeedCategory.SUBSISTENCE) {
+            hasFoodNeed = true;
+            break;
+         }
+      }
+      village.getBudget()
+         .rankProjectsAdvice(hasFoodNeed, village.getPendingProject() != null, village.getReligionTension() > 0);
    }
 
    private static EconomySnapshot buildSnapshot(

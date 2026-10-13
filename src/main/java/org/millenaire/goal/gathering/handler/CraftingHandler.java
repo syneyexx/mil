@@ -140,6 +140,7 @@ public class CraftingHandler extends AbstractGatheringHandler {
       }
 
       LOGGER.debug("Crafting performed at building {} at {}", craftingBuilding.getPlanId(), target.navigationPos());
+      org.millenaire.village.VillagerXpService.awardCraft(ctx.villager(), ctx.village());
       return true;
    }
 

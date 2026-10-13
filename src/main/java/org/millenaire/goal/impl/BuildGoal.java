@@ -878,6 +878,7 @@ public class BuildGoal implements VillagerGoal {
             village.recordChronicleEvent(level, VillageEventType.BUILDING_COMPLETED, chronicleName, null);
             BuildGoal.LOGGER.info("Building {} completed — {} special points resolved", this.building.getPlanId(), this.building.getResolvedPoints().size());
          }
+         org.millenaire.village.VillagerXpService.awardBuild(ctx.villager(), village);
 
          if (village.getOwnerUUID() != null && this.building.isPlayerChosen()) {
             ServerPlayer owner = level.getServer().getPlayerList().getPlayer(village.getOwnerUUID());

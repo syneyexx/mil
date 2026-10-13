@@ -428,6 +428,7 @@ public class MillVillager extends PathfinderMob {
             if (record != null) {
                record.updateFromEntity(this);
                village.markVillagerKilled(this.getUUID());
+               org.millenaire.knowledge.KnowledgeService.get().onMasterLost(serverLevel, village, record);
                village.markDirty();
                village.reevaluateChestLock(serverLevel);
             }

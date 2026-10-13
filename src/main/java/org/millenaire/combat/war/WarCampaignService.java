@@ -211,6 +211,12 @@ public final class WarCampaignService {
       campaign.setSabotageTargets(pickSabotageTargets(target));
       data.setDirty();
 
+      if (campaign.playerWar() && attacker.isPlayerControlled() && attacker.getOwnerUUID() != null) {
+         ServerPlayer owner = level.getServer().getPlayerList().getPlayer(attacker.getOwnerUUID());
+         if (owner != null) {
+            WarMusterService.musterForOffense(level, owner, attacker, campaign);
+         }
+      }
       RaidManager.planRaid(attacker, target, level);
       RaidManager.startRaidForced(attacker, target, level);
       waveSpawnedThisTick = true;
@@ -358,6 +364,7 @@ public final class WarCampaignService {
          campaign.setActiveWaveId(null);
       }
       campaign.sabotageTargets().clear();
+      releaseMusterForCampaign(level, campaign);
       long interval = MillenaireServerConfig.SERVER.warWaveIntervalTicks.getAsInt();
       campaign.setNextWaveGameTime(level.getGameTime() + interval);
       if (campaign.waveIndex() >= campaign.wavesTotal()) {
@@ -372,6 +379,7 @@ public final class WarCampaignService {
    private static void endCampaign(ServerLevel level, WarCampaignSavedData data, WarCampaign campaign) {
       campaign.setPhase(WarCampaign.Phase.ENDED);
       campaign.setActiveWaveId(null);
+      releaseMusterForCampaign(level, campaign);
       data.clearWavesForCampaign(campaign.id());
       data.setDirty();
       broadcastNearCultures(
@@ -709,6 +717,16 @@ public final class WarCampaignService {
    private static boolean isNearFront(BlockPos playerPos, Village front) {
       long r = 64L;
       return playerPos.distSqr(front.getCenter()) <= r * r;
+   }
+
+   private static void releaseMusterForCampaign(ServerLevel level, WarCampaign campaign) {
+      if (campaign.attackerVillageId() == null) {
+         return;
+      }
+      Village attacker = findVillage(level, campaign.attackerVillageId());
+      if (attacker != null && attacker.getOwnerUUID() != null) {
+         WarMusterService.releaseMuster(level, attacker, attacker.getOwnerUUID());
+      }
    }
 
    @Nullable
