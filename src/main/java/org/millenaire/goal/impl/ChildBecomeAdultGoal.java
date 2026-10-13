@@ -70,12 +70,13 @@ public class ChildBecomeAdultGoal implements VillagerGoal {
       MillVillager villager = context.villager();
       VillagerType vType = ModCultures.getVillagerType(villager.getVillagerTypeId());
       Gender gender = vType != null ? vType.gender() : Gender.MALE;
-      ChildBecomeAdultGoal.TargetInfo target = this.findTargetBuilding(context, gender);
+      String parentJob = this.resolveSameGenderParentJobSuffix(context, gender);
+      ChildBecomeAdultGoal.TargetInfo target = this.findTargetBuilding(context, gender, parentJob);
       if (target == null) {
          return new ChildBecomeAdultGoal.FailedTask();
       }
 
-      String adultType = context.village().reserveSlot(target.buildingId, gender, villager.getUUID());
+      String adultType = context.village().reserveSlot(target.buildingId, gender, villager.getUUID(), parentJob);
       if (adultType == null) {
          return new ChildBecomeAdultGoal.FailedTask();
       }
@@ -86,11 +87,17 @@ public class ChildBecomeAdultGoal implements VillagerGoal {
 
    @Nullable
    private ChildBecomeAdultGoal.TargetInfo findTargetBuilding(GoalContext ctx, Gender gender) {
+      return this.findTargetBuilding(ctx, gender, this.resolveSameGenderParentJobSuffix(ctx, gender));
+   }
+
+   @Nullable
+   private ChildBecomeAdultGoal.TargetInfo findTargetBuilding(GoalContext ctx, Gender gender, @Nullable String parentJob) {
       Village village = ctx.village();
       MillVillager villager = ctx.villager();
       String familyName = villager.getFamilyName();
+      BuildingId parentHome = this.resolveSameGenderParentHome(ctx, gender);
 
-      record Candidate(BuildingId buildingId, ResourceLocation planSetId, int priority, boolean completesCouple) {
+      record Candidate(BuildingId buildingId, ResourceLocation planSetId, int priority, boolean completesCouple, boolean parentJobMatch, boolean parentHome) {
       }
 
       List<Candidate> candidates = new ArrayList<>();
@@ -103,7 +110,11 @@ public class ChildBecomeAdultGoal implements VillagerGoal {
                && !this.hasRelativeOfOppositeGender(village, ctx.level(), b.getId(), gender, familyName)) {
                Gender oppositeGender = gender == Gender.MALE ? Gender.FEMALE : Gender.MALE;
                boolean completesCouple = this.buildingHasAdultOfGender(ctx, b.getId(), oppositeGender);
-               candidates.add(new Candidate(b.getId(), b.getPlanSetId(), planSet.priorityMoveIn(), completesCouple));
+               boolean parentJobMatch = parentJob != null && this.buildingOffersJob(planSet, b, gender, parentJob);
+               boolean isParentHome = parentHome != null && parentHome.equals(b.getId());
+               candidates.add(
+                  new Candidate(b.getId(), b.getPlanSetId(), planSet.priorityMoveIn(), completesCouple, parentJobMatch, isParentHome)
+               );
             }
          }
       }
@@ -112,19 +123,76 @@ public class ChildBecomeAdultGoal implements VillagerGoal {
          return null;
       }
 
-      List<Candidate> preferred = candidates.stream().filter(Candidate::completesCouple).toList();
-      List<Candidate> pool = preferred.isEmpty() ? candidates : preferred;
-      int maxPriority = pool.stream().mapToInt(Candidate::priority).max().getAsInt();
-      List<Candidate> best = new ArrayList<>();
+      // Prefer: parent job match > parent home > completes couple > priority
+      candidates.sort((a, b) -> {
+         if (a.parentJobMatch != b.parentJobMatch) {
+            return a.parentJobMatch ? -1 : 1;
+         }
+         if (a.parentHome != b.parentHome) {
+            return a.parentHome ? -1 : 1;
+         }
+         if (a.completesCouple != b.completesCouple) {
+            return a.completesCouple ? -1 : 1;
+         }
+         return Integer.compare(b.priority, a.priority);
+      });
 
-      for (Candidate c : pool) {
-         if (c.priority() == maxPriority) {
-            best.add(c);
+      Candidate chosen = candidates.get(0);
+      return new ChildBecomeAdultGoal.TargetInfo(chosen.buildingId(), chosen.planSetId());
+   }
+
+   private boolean buildingOffersJob(BuildingPlanSet planSet, BuildingInstance building, Gender gender, String jobSuffix) {
+      List<String> roles = gender == Gender.MALE
+         ? planSet.maleResidentsAt(building.getVariant(), building.getLevel())
+         : planSet.femaleResidentsAt(building.getVariant(), building.getLevel());
+      for (String role : roles) {
+         if (jobSuffix.equals(role) || role.endsWith("_" + jobSuffix) || jobSuffix.endsWith("_" + role)) {
+            return true;
          }
       }
+      return false;
+   }
 
-      Candidate chosen = best.get(ctx.villager().getRandom().nextInt(best.size()));
-      return new ChildBecomeAdultGoal.TargetInfo(chosen.buildingId(), chosen.planSetId());
+   @Nullable
+   private String resolveSameGenderParentJobSuffix(GoalContext ctx, Gender gender) {
+      MillVillager parent = this.findSameGenderParent(ctx, gender);
+      if (parent == null) {
+         return null;
+      }
+      ResourceLocation typeId = parent.getVillagerTypeId();
+      if (typeId == null) {
+         return null;
+      }
+      String path = typeId.getPath();
+      int slash = path.lastIndexOf('/');
+      return slash >= 0 ? path.substring(slash + 1) : path;
+   }
+
+   @Nullable
+   private BuildingId resolveSameGenderParentHome(GoalContext ctx, Gender gender) {
+      MillVillager parent = this.findSameGenderParent(ctx, gender);
+      return parent != null ? parent.getHomeBuilding() : null;
+   }
+
+   @Nullable
+   private MillVillager findSameGenderParent(GoalContext ctx, Gender gender) {
+      MillVillager child = ctx.villager();
+      String parentName = gender == Gender.MALE ? child.getFathersName() : child.getMothersName();
+      if (parentName == null || parentName.isBlank()) {
+         return null;
+      }
+      for (MillVillager other : ctx.level().getEntitiesOfClass(MillVillager.class, child.getBoundingBox().inflate(128.0))) {
+         if (other != child
+            && other.isAlive()
+            && ctx.village().getId().equals(other.getVillageId())
+            && parentName.equals(other.getFirstName() + " " + other.getFamilyName())) {
+            VillagerType vt = ModCultures.getVillagerType(other.getVillagerTypeId());
+            if (vt != null && !vt.isChild() && vt.gender() == gender) {
+               return other;
+            }
+         }
+      }
+      return null;
    }
 
    private boolean hasRelativeOfOppositeGender(Village village, ServerLevel level, BuildingId buildingId, Gender teenagerGender, String familyName) {

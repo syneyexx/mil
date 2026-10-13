@@ -101,9 +101,9 @@ public final class VillagerCombat {
          return ItemStack.EMPTY;
       }
 
-      boolean preferRanged = vt.isArcher() && !this.isTargetWithinMeleeRange();
+      boolean preferRanged = (vt.isArcher() || org.millenaire.compat.TacZCompat.isLoaded()) && !this.isTargetWithinMeleeRange();
       ItemStack outfitWeapon = VillageOutfitService.getOutfitCombatWeapon(this.villager, preferRanged);
-      if (outfitWeapon != null) {
+      if (outfitWeapon != null && !outfitWeapon.isEmpty()) {
          return outfitWeapon;
       }
 
@@ -171,11 +171,24 @@ public final class VillagerCombat {
    public boolean performAttack(LivingEntity target) {
       VillagerType vt = ModCultures.getVillagerType(this.villager.getVillagerTypeId());
       boolean isArcher = vt != null && vt.isArcher();
-      boolean hasBow = this.villager.getMainHandItem().getItem() instanceof BowItem;
+      ItemStack mainHand = this.villager.getMainHandItem();
+      boolean hasBow = mainHand.getItem() instanceof BowItem;
+      boolean hasGun = org.millenaire.compat.TacZCompat.holdingGun(this.villager);
       double distance = Math.sqrt(this.villager.distanceToSqr(target));
       boolean verticalOverlap = target.getBoundingBox().maxY > this.villager.getBoundingBox().minY
          && target.getBoundingBox().minY < this.villager.getBoundingBox().maxY;
-      CombatHelper.AttackType type = CombatHelper.decideAttack(distance, isArcher, hasBow, this.getAttackCooldown(), verticalOverlap);
+
+      if (hasGun && this.getAttackCooldown() <= 0 && distance > 3.0 && distance < 48.0) {
+         if (org.millenaire.compat.TacZCompat.tryShootAt(this.villager, target)) {
+            this.setAttackCooldown(8);
+            this.pursuitTicks = 0;
+            return true;
+         }
+         this.setAttackCooldown(5);
+         return false;
+      }
+
+      CombatHelper.AttackType type = CombatHelper.decideAttack(distance, isArcher || hasGun, hasBow, this.getAttackCooldown(), verticalOverlap);
       switch (type) {
          case RANGED:
             float df = (float)Math.min(1.0, Math.max(0.1, distance / 20.0));

@@ -202,6 +202,27 @@ public final class BuildingLocationFinder {
       @Nullable TerrainReachability reachability,
       @Nullable Integer playerRotation
    ) {
+      return evaluateAnchor(
+         worldX, worldZ, map, plan, villageCenter, map.getRadius(), constraints, clearMargins, existingBuildings, reachability, playerRotation
+      );
+   }
+
+   /**
+    * @param villageRadius horizontal build radius from the village centre (blocks); checked independently of the terrain map size so large player cities can validate with a local map
+    */
+   public static BuildingLocationFinder.AnchorEvaluation evaluateAnchor(
+      int worldX,
+      int worldZ,
+      VillageTerrainMap map,
+      BuildingPlan plan,
+      BlockPos villageCenter,
+      int villageRadius,
+      PlacementConstraints constraints,
+      ClearMargins clearMargins,
+      List<BuildingInstance> existingBuildings,
+      @Nullable TerrainReachability reachability,
+      @Nullable Integer playerRotation
+   ) {
       Rotation rotation;
       if (constraints.fixedOrientation() != null) {
          int rotationOrdinal = Math.floorMod(constraints.fixedOrientation() - plan.buildingOrientation(), 4);
@@ -220,9 +241,17 @@ public final class BuildingLocationFinder {
       BlockPos pivot = PlacedLocation.pivotForNwCorner(worldX, worldZ, plan.width(), plan.depth(), rotation);
       int pivotX = pivot.getX();
       int pivotZ = pivot.getZ();
-      if (!map.inBounds(map.toLocalX(pivotX), map.toLocalZ(pivotZ))) {
+      long radiusSq = (long) villageRadius * (long) villageRadius;
+      if (outsideVillageRadius(pivotX, pivotZ, villageCenter, radiusSq)
+         || footprintOutsideVillageRadius(pivotX, pivotZ, plan.width(), plan.depth(), rotation, villageCenter, radiusSq)) {
          return new BuildingLocationFinder.AnchorEvaluation(
             null, BuildingLocationFinder.FailureReason.OUTSIDE_RADIUS, new BlockPos(worldX, villageCenter.getY(), worldZ)
+         );
+      }
+
+      if (!map.inBounds(map.toLocalX(pivotX), map.toLocalZ(pivotZ))) {
+         return new BuildingLocationFinder.AnchorEvaluation(
+            null, BuildingLocationFinder.FailureReason.GENERIC, new BlockPos(worldX, villageCenter.getY(), worldZ)
          );
       }
 
@@ -250,6 +279,28 @@ public final class BuildingLocationFinder {
 
       BlockPos pos = new BlockPos(pivotX, villageCenter.getY(), pivotZ);
       return new BuildingLocationFinder.AnchorEvaluation(new PlacedLocation(pos, rotation), null, null);
+   }
+
+   private static boolean outsideVillageRadius(int worldX, int worldZ, BlockPos villageCenter, long radiusSq) {
+      long dx = worldX - villageCenter.getX();
+      long dz = worldZ - villageCenter.getZ();
+      return dx * dx + dz * dz > radiusSq;
+   }
+
+   private static boolean footprintOutsideVillageRadius(
+      int pivotX, int pivotZ, int width, int depth, Rotation rotation, BlockPos villageCenter, long radiusSq
+   ) {
+      VillageTerrainMap.FootprintRect rect = VillageTerrainMap.computeFootprintRect(
+         pivotX, pivotZ, width, depth, ClearMargins.symmetric(0), rotation
+      );
+      int minX = rect.startX();
+      int maxX = rect.startX() + rect.width() - 1;
+      int minZ = rect.startZ();
+      int maxZ = rect.startZ() + rect.depth() - 1;
+      return outsideVillageRadius(minX, minZ, villageCenter, radiusSq)
+         || outsideVillageRadius(maxX, minZ, villageCenter, radiusSq)
+         || outsideVillageRadius(minX, maxZ, villageCenter, radiusSq)
+         || outsideVillageRadius(maxX, maxZ, villageCenter, radiusSq);
    }
 
    @Nullable

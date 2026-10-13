@@ -45,6 +45,10 @@
       "role": "core"
     },
     {
+      "plan": "millenaire:norman/church",
+      "role": "core"
+    },
+    {
       "plan": "millenaire:norman/guesthouse",
       "role": "secondary"
     },

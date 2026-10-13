@@ -63,6 +63,7 @@ import org.millenaire.building.MillenaireStructureLoader;
 import org.millenaire.command.ConvertAddonCommand;
 import org.millenaire.command.DevCommand;
 import org.millenaire.command.QueryCommand;
+import org.millenaire.command.BankCommand;
 import org.millenaire.command.BountyCommand;
 import org.millenaire.command.ReputationCommand;
 import org.millenaire.command.RoadsCommand;
@@ -118,6 +119,8 @@ import org.millenaire.goal.impl.GetToolGoal;
 import org.millenaire.goal.impl.HideGoal;
 import org.millenaire.goal.impl.HiredEscortGoal;
 import org.millenaire.goal.impl.HostileVillagerGoal;
+import org.millenaire.goal.impl.WarEscortGoal;
+import org.millenaire.goal.impl.WarSabotageGoal;
 import org.millenaire.goal.impl.InvestigateChestGoal;
 import org.millenaire.goal.impl.WantedPlayerGoal;
 import org.millenaire.goal.impl.HuntMonsterGoal;
@@ -248,6 +251,8 @@ public class Millenaire {
       goalRegistry.register(new InvestigateChestGoal());
       goalRegistry.register(new EngageTargetGoal());
       goalRegistry.register(new HiredEscortGoal());
+      goalRegistry.register(new WarEscortGoal());
+      goalRegistry.register(new WarSabotageGoal());
       goalRegistry.register(
          new SpotGatheringGoal(
             ResourceLocation.fromNamespaceAndPath("millenaire", "gather_silk"),
@@ -420,12 +425,14 @@ public class Millenaire {
       });
       NeoForge.EVENT_BUS.addListener(LivingDropsEvent.class, InuitHuntingDropHandler::onLivingDrops);
       NeoForge.EVENT_BUS.addListener(net.neoforged.neoforge.event.entity.living.LivingDeathEvent.class, org.millenaire.crime.BountyDeathHandler::onLivingDeath);
+      NeoForge.EVENT_BUS.addListener(net.neoforged.neoforge.event.entity.living.LivingDeathEvent.class, org.millenaire.combat.war.WarCampaignService::onPlayerDeath);
       NeoForge.EVENT_BUS.addListener(net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerRespawnEvent.class, org.millenaire.crime.BountyDeathHandler::onPlayerRespawn);
       NeoForge.EVENT_BUS.addListener(EventPriority.NORMAL, false, RegisterCommandsEvent.class, event -> {
          SpawnVillageCommand.register(event.getDispatcher());
          SpawnLoneBuildingCommand.register(event.getDispatcher());
          ReputationCommand.register(event.getDispatcher());
          BountyCommand.register(event.getDispatcher());
+         BankCommand.register(event.getDispatcher());
          VillagesCommand.register(event.getDispatcher());
          QueryCommand.register(event.getDispatcher());
          TestCommand.register(event.getDispatcher());
@@ -439,6 +446,8 @@ public class Millenaire {
          TravelBookNavigationState.clearAll();
          ConvertAddonCommand.onServerStopping(event);
          RoadNetworkService.get().onServerStopping();
+         org.millenaire.faith.ReligionService.onServerStopping();
+         org.millenaire.combat.war.WarCampaignService.onServerStopping();
          VillageOutfitService.clearCache();
          MillenaireStructureLoader.clearCache();
          ItemHelper.clearCache();
@@ -448,6 +457,11 @@ public class Millenaire {
 
          VersionChecker.reset();
          UsageReporter.reset();
+      });
+      NeoForge.EVENT_BUS.addListener(net.neoforged.neoforge.event.level.SleepFinishedTimeEvent.class, event -> {
+         if (event.getLevel() instanceof ServerLevel serverLevel) {
+            org.millenaire.faith.ReligionService.processCatchupAfterSleep(serverLevel, 24000L);
+         }
       });
       NeoForge.EVENT_BUS.addListener(PlayerLoggedOutEvent.class, event -> {
          if (event.getEntity() instanceof ServerPlayer serverPlayer) {
@@ -493,6 +507,8 @@ public class Millenaire {
             }
             RoadNetworkService.get().tick(overworld);
             SettlementTakeover.tick(overworld);
+            org.millenaire.faith.ReligionService.tick(overworld);
+            org.millenaire.combat.war.WarCampaignService.tick(overworld);
          }
 
          long serverGameTime = overworld != null ? overworld.getGameTime() : 0L;
@@ -555,6 +571,14 @@ public class Millenaire {
                   goalRegistryInstance.resetToBuiltins();
                   CultureLoader.loadAll();
                   org.millenaire.faith.FaithLoader.loadAll();
+                  org.millenaire.faith.RitualLoader.loadAll();
+                  org.millenaire.faith.OrderLoader.loadAll();
+                  LOGGER.info(
+                     "[Millenaire] Religion content: {} faiths, {} orders, {} rituals",
+                     org.millenaire.faith.FaithRegistry.size(),
+                     org.millenaire.faith.OrderRegistry.size(),
+                     org.millenaire.faith.RitualRegistry.size()
+                  );
                   if (spawnQueueInstance != null) {
                      spawnQueueInstance.invalidateBiomeIndex();
                   }
@@ -574,6 +598,8 @@ public class Millenaire {
                   ServerLevel overworld = event.getServer().getLevel(Level.OVERWORLD);
                   if (overworld != null) {
                      RoadNetworkService.get().onServerStarted(overworld);
+                     org.millenaire.faith.ReligionService.onServerStarted(overworld);
+                     org.millenaire.combat.war.WarCampaignService.onServerStarted(overworld);
                      VillageDiscovery.syncAllMillenaire(overworld, VillageSavedData.get(overworld).getVillageManager());
                   }
                } catch (Exception e) {
@@ -615,6 +641,7 @@ public class Millenaire {
          }
          if (event.getEntity() instanceof AbstractVillager abstractVillager && !event.getLevel().isClientSide()) {
             VanillaDenierTradeHelper.convertVillagerOffers(abstractVillager);
+            org.millenaire.compat.VanillaTacZGunGoal.tryAttach(abstractVillager);
          }
       });
       NeoForge.EVENT_BUS.addListener(PlayerInteractEvent.EntityInteract.class, event -> {

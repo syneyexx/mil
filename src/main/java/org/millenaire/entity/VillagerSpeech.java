@@ -234,7 +234,7 @@ public class VillagerSpeech {
          case "build" -> "construction";
          case "idle" -> "gorest";
          case "rest" -> "sleep";
-         case "pray" -> "gopray";
+         case "pray", "meditate", "tend_sacrifices", "pray_male_muslim", "pray_female_muslim", "pray_muslim" -> "gopray";
          case "drink" -> "godrink";
          case "play", "play_with_friends" -> "goplay";
          case "hold_service" -> "goholdaservice";

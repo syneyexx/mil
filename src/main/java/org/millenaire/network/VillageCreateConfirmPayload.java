@@ -155,7 +155,7 @@ public record VillageCreateConfirmPayload(
             if (faithName.isEmpty()) {
                faithName = sanitizedName + " Faith";
             }
-            FaithService.startPlayerFaith(founded, faithName);
+            FaithService.startPlayerFaith(serverLevel, founded, faithName);
             VillageSavedData.get(serverLevel).setDirty();
             player.sendSystemMessage(Component.translatable("gui.millenaire.village_create.faith_started", faithName));
          }

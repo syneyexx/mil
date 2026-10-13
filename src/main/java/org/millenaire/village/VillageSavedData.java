@@ -37,7 +37,7 @@ import org.slf4j.Logger;
 
 public class VillageSavedData extends SavedData {
    private static final Logger LOGGER = LogUtils.getLogger();
-   private static final int CURRENT_VERSION = 6;
+   private static final int CURRENT_VERSION = 7;
    private static final String DATA_NAME = "millenaire_villages";
    private final VillageManager villageManager;
    private final List<VillageSavedData.LoneBuildingEntry> loneBuildingPositions = new ArrayList<>();
@@ -144,7 +144,7 @@ public class VillageSavedData extends SavedData {
          }
       }
 
-      root.putInt("version", 6);
+      root.putInt("version", 7);
       root.put("villages", villagesList);
       ListTag lbList = new ListTag();
 
@@ -216,6 +216,9 @@ public class VillageSavedData extends SavedData {
 
          if (b.getPlayerBuildingRole() != null) {
             buildingTag.putString("player_building_role", b.getPlayerBuildingRole());
+         }
+         if (b.getWarDamageLevel() > 0) {
+            buildingTag.putInt("war_damage_level", b.getWarDamageLevel());
          }
 
          if (b.getPurpose() != BuildingPurpose.AUTO) {
@@ -314,6 +317,7 @@ public class VillageSavedData extends SavedData {
       villageTag.put("reputation", reputationTag);
       villageTag.putLong("lastGoodsRefresh", village.getLastGoodsRefresh());
       villageTag.putBoolean("chestLocked", village.areChestsLocked());
+      VillageTreasuryService.saveLedger(villageTag, village);
       Village.PendingProject pending = village.getPendingProject();
       if (pending != null) {
          CompoundTag pendingTag = new CompoundTag();
@@ -447,6 +451,12 @@ public class VillageSavedData extends SavedData {
       if (village.getFaithId() != null) {
          villageTag.putString("faith_id", village.getFaithId().toString());
       }
+      if (village.getFaithInstanceId() != null) {
+         villageTag.putUUID("faith_instance_id", village.getFaithInstanceId());
+      }
+      if (village.getChapterId() != null) {
+         villageTag.putUUID("chapter_id", village.getChapterId());
+      }
       if (village.getCustomFaithName() != null && !village.getCustomFaithName().isBlank()) {
          villageTag.putString("custom_faith_name", village.getCustomFaithName());
       }
@@ -455,6 +465,9 @@ public class VillageSavedData extends SavedData {
       }
       if (village.getFestivalEndsAtTick() >= 0L) {
          villageTag.putLong("festival_ends_at", village.getFestivalEndsAtTick());
+      }
+      if (village.getReligionTension() > 0) {
+         villageTag.putInt("religion_tension", village.getReligionTension());
       }
 
       if (village.isCustomOutfitEnabled()) {
@@ -507,11 +520,11 @@ public class VillageSavedData extends SavedData {
       VillageSavedData data = new VillageSavedData();
       int version = root.contains("version") ? root.getInt("version") : 0;
       LOGGER.info("Loading VillageSavedData version {}", version);
-      if (version > 6) {
+      if (version > 7) {
          LOGGER.warn(
             "This save was written by a newer Millenaire build (save version {} > supported {}). Unknown data will be dropped and the next save will downgrade the file. Back up the world before continuing.",
             version,
-            6
+            CURRENT_VERSION
          );
       }
 
@@ -558,6 +571,9 @@ public class VillageSavedData extends SavedData {
 
                   if (buildingTag.contains("player_building_role")) {
                      building.setPlayerBuildingRole(buildingTag.getString("player_building_role"));
+                  }
+                  if (buildingTag.contains("war_damage_level")) {
+                     building.setWarDamageLevel(buildingTag.getInt("war_damage_level"));
                   }
 
                   if (buildingTag.contains("purpose")) {
@@ -687,6 +703,7 @@ public class VillageSavedData extends SavedData {
             if (villageTag.contains("chestLocked")) {
                village.setChestLocked(villageTag.getBoolean("chestLocked"));
             }
+            VillageTreasuryService.loadLedger(villageTag, village);
 
             if (villageTag.contains("pending_project")) {
                try {
@@ -840,6 +857,12 @@ public class VillageSavedData extends SavedData {
             if (villageTag.contains("faith_id")) {
                village.setFaithId(ResourceLocation.parse(villageTag.getString("faith_id")));
             }
+            if (villageTag.hasUUID("faith_instance_id")) {
+               village.setFaithInstanceId(villageTag.getUUID("faith_instance_id"));
+            }
+            if (villageTag.hasUUID("chapter_id")) {
+               village.setChapterId(villageTag.getUUID("chapter_id"));
+            }
             if (villageTag.contains("custom_faith_name")) {
                village.setCustomFaithName(villageTag.getString("custom_faith_name"));
             }
@@ -848,6 +871,19 @@ public class VillageSavedData extends SavedData {
             }
             if (villageTag.contains("festival_ends_at")) {
                village.setFestivalEndsAtTick(villageTag.getLong("festival_ends_at"));
+            }
+            if (villageTag.contains("religion_tension")) {
+               village.setReligionTension(villageTag.getInt("religion_tension"));
+            }
+            // v6 → v7: assign FaithInstance UUIDs lazily on first ReligionService touch;
+            // one-shot NPC faith affiliation when migration flag present.
+            if (version < 7 && village.getFaithId() != null) {
+               for (VillagerRecord rec : village.getVillagerRecords().values()) {
+                  if (rec.getFaithInstanceId() == null) {
+                     // Will be filled when ReligionService.ensureFaithInstance runs after load.
+                     rec.setFaithInstanceId(null);
+                  }
+               }
             }
 
             if (villageTag.getBoolean("custom_outfit")) {

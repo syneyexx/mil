@@ -4,7 +4,8 @@
   "category": "houses",
   "native_name": "K'eyem",
   "tags": [
-    "sacrifices"
+    "sacrifices",
+    "pujas"
   ],
   "icon": "millenaire:mayan_statue",
   "variants": [
@@ -13,7 +14,8 @@
       "building_orientation": 1,
       "ground_level": -2,
       "tags": [
-        "sacrifices"
+        "sacrifices",
+        "pujas"
       ],
       "levels": [
         {

@@ -16,15 +16,21 @@ import org.millenaire.village.VillageEventType;
 
 /**
  * Day-batched festival calendar. Called once per village on the night edge — not from entity ticks.
+ * Festival starts are staggered by village UUID so many villages do not fire on the same tick.
  */
 public final class FaithCalendarService {
    private static final int MAX_PARTICLES = 12;
    private static final double NOTIFY_RANGE_SQ = 64.0 * 64.0;
+   /** Spread festival starts across this many night ticks after the night edge. */
+   private static final int FESTIVAL_STAGGER_SLOTS = 40;
 
    private FaithCalendarService() {
    }
 
    public static void onNightEdge(ServerLevel level, Village village, long currentDay) {
+      if (!MillenaireServerConfig.SERVER.religionEnabled.getAsBoolean()) {
+         return;
+      }
       if (village.isLoneBuilding()) {
          return;
       }
@@ -37,12 +43,25 @@ public final class FaithCalendarService {
       if (last >= 0L && currentDay - last < interval) {
          return;
       }
-      // Align to interval boundaries after first festival
       if (last < 0L && currentDay % interval != 0L) {
          return;
       }
 
+      // Stagger: only start when this village's slot matches the current night tick offset.
+      long timeOfDay = level.getDayTime() % 24000L;
+      int nightOffset = (int) Math.max(0L, timeOfDay - 13000L);
+      int slot = staggerSlot(village);
+      if (nightOffset != slot) {
+         return;
+      }
+
       startFestival(level, village, currentDay);
+   }
+
+   /** Deterministic slot in [0, FESTIVAL_STAGGER_SLOTS). */
+   public static int staggerSlot(Village village) {
+      int hash = village.getId().uuid().hashCode();
+      return Math.floorMod(hash, FESTIVAL_STAGGER_SLOTS);
    }
 
    public static void startFestival(ServerLevel level, Village village, long currentDay) {
@@ -54,13 +73,16 @@ public final class FaithCalendarService {
       village.setLastFestivalDay(currentDay);
       village.setFestivalEndsAtTick(level.getGameTime() + duration);
       village.markDirty();
+      org.millenaire.perf.TickPerfCounters.RELIGION_FESTIVAL_STARTS.incrementAndGet();
 
       String faithName = FaithService.resolveDisplayName(village);
       String festivalName = def != null ? def.festivalName() : "Festival";
       village.recordChronicleEvent(level, VillageEventType.FESTIVAL, festivalName, faithName);
 
-      BlockPos center = findChurchCenter(village);
-      spawnBudgetedVfx(level, center);
+      BlockPos center = resolveChurchCenter(village);
+      if (MillenaireServerConfig.SERVER.religionVisualEffectsEnabled.getAsBoolean()) {
+         spawnBudgetedVfx(level, center);
+      }
       notifyNearbyPlayers(level, village, center, festivalName, faithName);
    }
 
@@ -69,8 +91,9 @@ public final class FaithCalendarService {
          return false;
       }
       return switch (goalKey) {
-         case "pray", "hold_service", "preach_on_pulpit", "perform_pujas", "be_puja_performer",
-            "tend_sacrifices", "meditate", "pray_male_muslim", "pray_female_muslim", "pilgrimage" -> true;
+         case "pray", "gopray", "hold_service", "preach_on_pulpit", "perform_pujas", "be_puja_performer",
+            "tend_sacrifices", "meditate", "pray_male_muslim", "pray_female_muslim", "pray_muslim",
+            "pilgrimage" -> true;
          default -> false;
       };
    }
@@ -80,6 +103,20 @@ public final class FaithCalendarService {
          return 0;
       }
       return 80;
+   }
+
+   public static BlockPos resolveChurchCenter(Village village) {
+      BlockPos cached = village.getCachedChurchCenter();
+      if (cached != null) {
+         return cached;
+      }
+      BlockPos found = findChurchCenter(village);
+      village.setCachedChurchCenter(found);
+      return found;
+   }
+
+   public static void invalidateChurchCenter(Village village) {
+      village.setCachedChurchCenter(null);
    }
 
    private static BlockPos findChurchCenter(Village village) {
@@ -98,7 +135,8 @@ public final class FaithCalendarService {
                match = true;
                break;
             }
-            if ("praying".equals(tag) || "mosque".equals(tag) || "pujas".equals(tag) || "sacrifices".equals(tag)) {
+            if ("praying".equals(tag) || "mosque".equals(tag) || "pujas".equals(tag)
+               || "sacrifices".equals(tag) || "religious".equals(tag)) {
                match = true;
                break;
             }

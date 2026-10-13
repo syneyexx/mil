@@ -3,6 +3,7 @@
   "name": "Seigneurie",
   "weight": 0,
   "player_controlled": true,
+  "radius": 100,
   "layout": [
     {
       "plan": "millenaire:norman/playerlargefort",

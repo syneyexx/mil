@@ -14,7 +14,9 @@ public enum VillageEventType {
    CAME_OF_AGE,
    MERCHANT_ARRIVED,
    MIGRATION,
-   FESTIVAL;
+   FESTIVAL,
+   RITUAL,
+   ORDER_EXPOSED;
 
    public String i18nKey() {
       return "chronicle.millenaire." + this.name().toLowerCase(Locale.ROOT);

@@ -132,6 +132,7 @@ public final class ModPayloads {
       registrar.playToServer(ControlledRelationPayload.TYPE, ControlledRelationPayload.STREAM_CODEC, ControlledRelationPayload::handleOnServer);
       registrar.playToServer(CultureWarActionPayload.TYPE, CultureWarActionPayload.STREAM_CODEC, CultureWarActionPayload::handleOnServer);
       registrar.playToServer(ControlledCityActionPayload.TYPE, ControlledCityActionPayload.STREAM_CODEC, ControlledCityActionPayload::handleOnServer);
+      registrar.playToServer(BankActionPayload.TYPE, BankActionPayload.STREAM_CODEC, BankActionPayload::handleOnServer);
       registrar.playToServer(HireActionPayload.TYPE, HireActionPayload.STREAM_CODEC, HireActionPayload::handleOnServer);
       registrar.playToServer(ToggleStancePayload.TYPE, ToggleStancePayload.STREAM_CODEC, ToggleStancePayload::handleOnServer);
       registrar.playToServer(PlanPreviewRequestPayload.TYPE, PlanPreviewRequestPayload.STREAM_CODEC, PlanPreviewRequestPayload::handleOnServer);

@@ -18,6 +18,7 @@ public final class MillenaireServerConfig {
    public final BooleanValue generateHamlets;
    public final IntValue minVillageDistance;
    public final IntValue playerFoundTerritoryWarDistance;
+   public final IntValue playerCityDesignationRadius;
    public final IntValue minLoneBuildingDistance;
    public final IntValue minVillageLoneBuildingDistance;
    public final IntValue spawnProtectionRadius;
@@ -69,6 +70,15 @@ public final class MillenaireServerConfig {
    public final IntValue crimeRaidCityThreshold;
    public final IntValue faithFestivalIntervalDays;
    public final IntValue faithFestivalDurationTicks;
+   public final BooleanValue religionEnabled;
+   public final BooleanValue ordersEnabled;
+   public final BooleanValue npcOrderConversionEnabled;
+   public final BooleanValue religionVisualEffectsEnabled;
+   public final BooleanValue religionSupernaturalEnabled;
+   public final IntValue religionCatchupLimit;
+   public final IntValue religionPlannerThreads;
+   public final IntValue religionMinPopForOrder;
+   public final DoubleValue religionOrderSpawnChance;
    public final BooleanValue roadsEnabled;
    public final IntValue roadsWidth;
    public final IntValue roadsMaxEdgeLength;
@@ -89,6 +99,19 @@ public final class MillenaireServerConfig {
    public final BooleanValue settlementsTakeoverEnabled;
    public final IntValue settlementsMaxActivePromotions;
    public final IntValue settlementsTakeoverScanInterval;
+   public final BooleanValue bankRequiredForCityPurchases;
+   public final IntValue bankShopSurplusShare;
+   public final IntValue bankSimulatedNpcTax;
+   public final IntValue bankMaxLedgerEntries;
+   public final BooleanValue warCampaignsEnabled;
+   public final IntValue warWavesPerCampaign;
+   public final IntValue warWaveIntervalTicks;
+   public final IntValue warMaxLevy;
+   public final BooleanValue warPlayerDeathIsDefeat;
+   public final BooleanValue warBuildingDamageEnabled;
+   public final IntValue warDamageBlocksPerTick;
+   public final IntValue warDamageBlocksPerWave;
+   public final IntValue warThDamageCap;
 
    public static int getDefaultClearMargin() {
       try {
@@ -119,10 +142,15 @@ public final class MillenaireServerConfig {
          .translation("millenaire.config.minVillageDistance")
          .defineInRange("minVillageDistance", 500, 300, 1000);
       this.playerFoundTerritoryWarDistance = builder.comment(
-            "Distance under which founding a player city with the VillageCreate wand triggers unavoidable war."
+            "Distance under which founding a player city with the VillageCreate wand triggers unavoidable war. Default 100; minVillageDistance stays separate."
          )
          .translation("millenaire.config.playerFoundTerritoryWarDistance")
-         .defineInRange("playerFoundTerritoryWarDistance", 500, 100, 2000);
+         .defineInRange("playerFoundTerritoryWarDistance", 100, 50, 2000);
+      this.playerCityDesignationRadius = builder.comment(
+            "How far from a player city center the player can designate building functions (blocks). Separate from village radius (overlap/growth)."
+         )
+         .translation("millenaire.config.playerCityDesignationRadius")
+         .defineInRange("playerCityDesignationRadius", 750, 50, 2000);
       this.minLoneBuildingDistance = builder.comment("Minimum distance between two lone buildings (blocks)")
          .translation("millenaire.config.minLoneBuildingDistance")
          .defineInRange("minLoneBuildingDistance", 500, 300, 1000);
@@ -166,11 +194,16 @@ public final class MillenaireServerConfig {
          .translation("millenaire.config.keepActiveRadius")
          .defineInRange("keepActiveRadius", 200, 0, 2000);
       this.villageRadiusOverride = builder.comment(
-            new String[]{"Override all village type radii with this value (blocks).", "-1 = use per-type JSON value. Requires world restart to take effect."}
+            new String[]{
+               "Override all village type radii with this value (blocks).",
+               "-1 = use per-type JSON value (player-controlled cities use radius 100).",
+               "Does not affect playerCityDesignationRadius.",
+               "Requires world restart to take effect."
+            }
          )
          .translation("millenaire.config.villageRadiusOverride")
          .worldRestart()
-         .defineInRange("villageRadiusOverride", -1, -1, 120);
+         .defineInRange("villageRadiusOverride", -1, -1, 2000);
       this.minBuildingSpacing = builder.comment("Minimum spacing between buildings in a village (blocks)")
          .translation("millenaire.config.minBuildingSpacing")
          .worldRestart()
@@ -368,6 +401,35 @@ public final class MillenaireServerConfig {
          .translation("millenaire.config.faithFestivalDurationTicks")
          .defineInRange("festivalDurationTicks", 4000, 200, 24000);
       builder.pop();
+      builder.comment("Religion and secret orders (singleplayer-oriented; bounded tick work)").push("religion");
+      this.religionEnabled = builder.comment("Master switch for religion simulation; SavedData retained when disabled")
+         .translation("millenaire.config.religionEnabled")
+         .define("religionEnabled", true);
+      this.ordersEnabled = builder.comment("Enable secret order chapters and rituals")
+         .translation("millenaire.config.ordersEnabled")
+         .define("ordersEnabled", true);
+      this.npcOrderConversionEnabled = builder.comment("Allow NPCs to join order chapters")
+         .translation("millenaire.config.npcOrderConversionEnabled")
+         .define("npcOrderConversionEnabled", true);
+      this.religionVisualEffectsEnabled = builder.comment("Budgeted particles/sounds for festivals and rituals")
+         .translation("millenaire.config.religionVisualEffectsEnabled")
+         .define("visualEffectsEnabled", true);
+      this.religionSupernaturalEnabled = builder.comment("Reserved for later supernatural events (default off)")
+         .translation("millenaire.config.religionSupernaturalEnabled")
+         .define("supernaturalEnabled", false);
+      this.religionCatchupLimit = builder.comment("Max ritual deadlines processed after sleep/time-skip")
+         .translation("millenaire.config.religionCatchupLimit")
+         .defineInRange("catchupLimit", 16, 0, 64);
+      this.religionPlannerThreads = builder.comment("Background religion planner threads")
+         .translation("millenaire.config.religionPlannerThreads")
+         .defineInRange("plannerThreads", 2, 1, 4);
+      this.religionMinPopForOrder = builder.comment("Minimum villagers before a secret order may seed")
+         .translation("millenaire.config.religionMinPopForOrder")
+         .defineInRange("minPopForOrder", 8, 1, 64);
+      this.religionOrderSpawnChance = builder.comment("Chance a eligible village seeds an order on plan")
+         .translation("millenaire.config.religionOrderSpawnChance")
+         .defineInRange("orderSpawnChance", 0.25, 0.0, 1.0);
+      builder.pop();
       builder.comment("Inter-village road network (async planning, budgetted building)").push("roads");
       this.roadsEnabled = builder.comment("Enable automatic roads between known villages")
          .translation("millenaire.config.roadsEnabled")
@@ -433,6 +495,49 @@ public final class MillenaireServerConfig {
          .translation("millenaire.config.settlementsTakeoverScanInterval")
          .defineInRange("scanIntervalTicks", 20, 5, 200);
       builder.pop();
+      builder.pop();
+      builder.comment("Controlled city bank / treasury").push("bank");
+      this.bankRequiredForCityPurchases = builder.comment("City purchases (immigrants etc.) require treasury balance; town hall is fallback if no Bank")
+         .translation("millenaire.config.bankRequiredForCityPurchases")
+         .define("requiredForCityPurchases", true);
+      this.bankShopSurplusShare = builder.comment("Percent of player shop-buy deniers deposited into the village treasury (0-100)")
+         .translation("millenaire.config.bankShopSurplusShare")
+         .defineInRange("shopSurplusShare", 50, 0, 100);
+      this.bankSimulatedNpcTax = builder.comment("Simulated daily deniers deposited into controlled-city treasury (0 = off)")
+         .translation("millenaire.config.bankSimulatedNpcTax")
+         .defineInRange("simulatedNpcTax", 8, 0, 1000);
+      this.bankMaxLedgerEntries = builder.comment("Max treasury ledger lines kept per village")
+         .translation("millenaire.config.bankMaxLedgerEntries")
+         .defineInRange("maxLedgerEntries", 32, 8, 128);
+      builder.pop();
+      builder.comment("Wave war campaigns (raids with kill/loot/sabotage)").push("warCampaign");
+      this.warCampaignsEnabled = builder.comment("Enable wave war campaigns; when false, legacy RaidManager single raids remain")
+         .translation("millenaire.config.warCampaignsEnabled")
+         .define("enabled", true);
+      this.warWavesPerCampaign = builder.comment("Waves per campaign")
+         .translation("millenaire.config.warWavesPerCampaign")
+         .defineInRange("wavesPerCampaign", 3, 1, 8);
+      this.warWaveIntervalTicks = builder.comment("Ticks between waves")
+         .translation("millenaire.config.warWaveIntervalTicks")
+         .defineInRange("waveIntervalTicks", 6000, 200, 48000);
+      this.warMaxLevy = builder.comment("Max player muster levy size")
+         .translation("millenaire.config.warMaxLevy")
+         .defineInRange("maxLevy", 8, 1, 32);
+      this.warPlayerDeathIsDefeat = builder.comment("Player death during WAVE_FIGHT on the front counts as defeat")
+         .translation("millenaire.config.warPlayerDeathIsDefeat")
+         .define("playerDeathIsDefeat", true);
+      this.warBuildingDamageEnabled = builder.comment("Raiders sabotage buildings with budgeted block damage")
+         .translation("millenaire.config.warBuildingDamageEnabled")
+         .define("buildingDamageEnabled", true);
+      this.warDamageBlocksPerTick = builder.comment("Max war sabotage setBlock ops per tick world-wide")
+         .translation("millenaire.config.warDamageBlocksPerTick")
+         .defineInRange("damageBlocksPerTick", 12, 1, 64);
+      this.warDamageBlocksPerWave = builder.comment("Max blocks broken per wave per front")
+         .translation("millenaire.config.warDamageBlocksPerWave")
+         .defineInRange("damageBlocksPerWave", 48, 4, 512);
+      this.warThDamageCap = builder.comment("Soft warDamageLevel cap for town hall (never demolished)")
+         .translation("millenaire.config.warThDamageCap")
+         .defineInRange("thDamageCap", 40, 0, 100);
       builder.pop();
    }
 

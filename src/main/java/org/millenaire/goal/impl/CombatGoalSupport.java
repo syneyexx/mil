@@ -15,6 +15,11 @@ final class CombatGoalSupport {
    }
 
    static boolean shouldHoldAndFire(MillVillager v, double distSq) {
+      double d = Math.sqrt(distSq);
+      if (org.millenaire.compat.TacZCompat.holdingGun(v)) {
+         return d > 3.0 && d < 48.0;
+      }
+
       VillagerType vt = ModCultures.getVillagerType(v.getVillagerTypeId());
       if (vt == null || !vt.isArcher()) {
          return false;
@@ -24,7 +29,6 @@ final class CombatGoalSupport {
          return false;
       }
 
-      double d = Math.sqrt(distSq);
       return d > 5.0 && d < 20.0;
    }
 

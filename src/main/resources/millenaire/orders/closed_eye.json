@@ -1,0 +1,18 @@
+{
+  "id": "millenaire:order_closed_eye",
+  "display_name": "The Closed Eye",
+  "allowed_cultures": [],
+  "min_village_pop": 10,
+  "spawn_chance": 0.18,
+  "secrecy_default": 85,
+  "building_tags": ["praying", "archives", "religious"],
+  "clergy_preference_tags": ["religious"],
+  "rituals": [
+    "millenaire:closed_eye_initiation"
+  ],
+  "themes": {
+    "symbol": "manuscript",
+    "mood": "hidden_knowledge"
+  },
+  "allows_orders": true
+}

@@ -1,0 +1,20 @@
+{
+  "id": "millenaire:closed_eye_initiation",
+  "display_name": "Veil of the Closed Eye",
+  "capacity": 3,
+  "duration_ticks": 2200,
+  "cooldown_days": 5,
+  "start_window_min": 13000,
+  "start_window_max": 23000,
+  "gather_deadline_ticks": 6000,
+  "presence_radius": 6.0,
+  "required_goods": {
+    "minecraft:book": 1,
+    "minecraft:ink_sac": 1
+  },
+  "devotion_reward": 12,
+  "cohesion_reward": 5,
+  "secrecy_delta": 5,
+  "tension_delta": 1,
+  "order_tags": ["closed_eye_initiate"]
+}

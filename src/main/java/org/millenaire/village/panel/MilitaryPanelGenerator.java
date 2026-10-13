@@ -10,6 +10,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import org.millenaire.combat.war.WarCampaign;
+import org.millenaire.combat.war.WarCampaignService;
+import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillagerType;
 import org.millenaire.entity.MillVillager;
@@ -24,6 +27,7 @@ public final class MilitaryPanelGenerator {
       String titleKey = "panel.millenaire.title.military";
       String[] titleArgs = new String[]{village.getVillageName()};
       lines.add(raidStatusLine(village));
+      appendWarCampaignWarning(lines, village, level);
       lines.add(PanelLine.separator());
       int fighters = 0;
       List<PanelLine> fighterLines = new ArrayList<>();
@@ -176,5 +180,24 @@ public final class MilitaryPanelGenerator {
 
    private static PanelLine raidStatusLine(Village village) {
       return PanelLine.translatable(raidStatusKey(village));
+   }
+
+   private static void appendWarCampaignWarning(List<PanelLine> lines, Village village, @Nullable ServerLevel level) {
+      if (!MillenaireServerConfig.SERVER.warCampaignsEnabled.getAsBoolean() || level == null) {
+         return;
+      }
+      WarCampaign campaign = WarCampaignService.activeCampaignForVillage(level, village);
+      if (campaign == null || !campaign.isOpen()) {
+         return;
+      }
+      lines.add(
+         PanelLine.translatableWithArgs(
+            "panel.millenaire.war.campaign_waves",
+            String.valueOf(campaign.waveIndex()),
+            String.valueOf(campaign.wavesTotal()),
+            campaign.phase().name().toLowerCase()
+         )
+      );
+      lines.add(PanelLine.translatable("panel.millenaire.war.wave_warning"));
    }
 }

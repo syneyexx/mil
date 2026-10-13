@@ -3,7 +3,7 @@
   "display_name": "Mayan Faith",
   "culture": "millenaire:mayan",
   "clergy_tags": ["religious"],
-  "church_building_tags": ["sacrifices", "praying"],
+  "church_building_tags": ["sacrifices", "praying", "pujas"],
   "holy_shop": "holy_shop",
   "festival_name": "Sacred Ceremony",
   "festival_duration_ticks": 4000,

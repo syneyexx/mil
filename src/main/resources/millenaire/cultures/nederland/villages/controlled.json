@@ -3,6 +3,7 @@
   "name": "Bestuurd Dorp",
   "weight": 0,
   "player_controlled": true,
+  "radius": 100,
   "layout": [
     {
       "plan": "millenaire:norman/playerlargefort",
@@ -38,6 +39,10 @@
     },
     {
       "plan": "millenaire:norman/bakery",
+      "role": "core"
+    },
+    {
+      "plan": "millenaire:norman/church",
       "role": "core"
     },
     {

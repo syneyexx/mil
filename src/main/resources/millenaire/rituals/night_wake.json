@@ -1,0 +1,20 @@
+{
+  "id": "millenaire:night_wake",
+  "display_name": "Night Wake",
+  "capacity": 8,
+  "duration_ticks": 3000,
+  "cooldown_days": 5,
+  "start_window_min": 13000,
+  "start_window_max": 22000,
+  "gather_deadline_ticks": 8000,
+  "presence_radius": 10.0,
+  "required_goods": {
+    "minecraft:charcoal": 2,
+    "minecraft:candle": 2
+  },
+  "devotion_reward": 10,
+  "cohesion_reward": 6,
+  "secrecy_delta": 1,
+  "tension_delta": 0,
+  "order_tags": ["lastflame_wake"]
+}

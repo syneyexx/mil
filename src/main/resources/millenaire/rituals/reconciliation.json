@@ -1,0 +1,19 @@
+{
+  "id": "millenaire:reconciliation",
+  "display_name": "Reconciliation",
+  "capacity": 6,
+  "duration_ticks": 1800,
+  "cooldown_days": 4,
+  "start_window_min": 0,
+  "start_window_max": 24000,
+  "gather_deadline_ticks": 5000,
+  "presence_radius": 10.0,
+  "required_goods": {
+    "minecraft:bread": 4
+  },
+  "devotion_reward": 8,
+  "cohesion_reward": 12,
+  "secrecy_delta": 2,
+  "tension_delta": -8,
+  "order_tags": ["lastflame_reconcile"]
+}

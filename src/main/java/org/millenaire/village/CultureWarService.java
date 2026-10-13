@@ -9,6 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import org.millenaire.combat.raid.RaidManager;
+import org.millenaire.combat.war.WarCampaignService;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillageType;
@@ -102,7 +103,14 @@ public final class CultureWarService {
             ResourceLocation enemyCulture = attacker.getCultureId().equals(cultureA) ? cultureB : cultureA;
             Village target = pickWarRaidTarget(attacker, vm, enemyCulture, rng);
             if (target != null) {
-               RaidManager.planRaid(attacker, target, level);
+               if (MillenaireServerConfig.SERVER.warCampaignsEnabled.getAsBoolean()) {
+                  WarCampaignService.declareOrGet(level, cultureA, cultureB, false);
+                  if (!WarCampaignService.tryScheduleCampaignWave(level, attacker, target)) {
+                     RaidManager.planRaid(attacker, target, level);
+                  }
+               } else {
+                  RaidManager.planRaid(attacker, target, level);
+               }
                attempts++;
             }
          }
@@ -237,6 +245,14 @@ public final class CultureWarService {
          data.declareWar(ownCulture, otherCulture);
          propagateWarToVillages(level, ownCulture, otherCulture);
          data.setDirty();
+      }
+      ensureWarCampaign(level, ownCulture, otherCulture, true);
+   }
+
+   /** Start a wave campaign when culture war begins (no-op if campaigns disabled or already open). */
+   public static void ensureWarCampaign(ServerLevel level, ResourceLocation cultureA, ResourceLocation cultureB, boolean playerWar) {
+      if (MillenaireServerConfig.SERVER.warCampaignsEnabled.getAsBoolean()) {
+         WarCampaignService.declareOrGet(level, cultureA, cultureB, playerWar);
       }
    }
 

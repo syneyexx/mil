@@ -1,0 +1,82 @@
+{
+  "key": "lastflame_3_initiation",
+  "chancePerHour": 0.4,
+  "maxSimultaneous": 1,
+  "minReputation": 8192,
+  "globalTagsRequired": [
+    "lastflame_shrine_ready"
+  ],
+  "globalTagsForbidden": [],
+  "playerTagsRequired": [
+    "lastflame_shrine_ready"
+  ],
+  "playerTagsForbidden": [
+    "lastflame_initiate"
+  ],
+  "villagerDefs": [
+    {
+      "key": "keeper",
+      "villagerTypes": [
+        "norman/priest",
+        "norman/abbot",
+        "norman/monk",
+        "norman/marvelpriest",
+        "norman/vicar",
+        "norman/bishop",
+        "norman/ordervicar",
+        "byzantines/metropolit",
+        "indian/pandit",
+        "mayan/mayan_shaman",
+        "japanese/buddhistmonk",
+        "seljuk/turk_imam",
+        "inuits/shaman",
+        "nederland/priest"
+      ],
+      "requiredTags": [],
+      "forbiddenTags": []
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "villagerKey": "keeper",
+      "duration": 72,
+      "showRequiredGoods": true,
+      "requiredGoods": {
+        "minecraft:candle": 1,
+        "minecraft:paper": 1
+      },
+      "rewardGoods": {},
+      "rewardMoney": 0,
+      "rewardReputation": 256,
+      "penaltyReputation": 0,
+      "villagerTagsSuccess": [],
+      "villagerTagsFailure": [],
+      "playerTagsSuccess": [
+        "lastflame_initiate",
+        "lastflame_member"
+      ],
+      "playerTagsFailure": [],
+      "globalTagsSuccess": [],
+      "globalTagsFailure": [],
+      "clearTagsSuccess": [],
+      "clearTagsFailure": [],
+      "clearPlayerTagsSuccess": [],
+      "clearPlayerTagsFailure": [],
+      "clearGlobalTagsSuccess": [],
+      "clearGlobalTagsFailure": [],
+      "stepRequiredGlobalTags": [],
+      "stepForbiddenGlobalTags": [],
+      "stepRequiredPlayerTags": [],
+      "stepForbiddenPlayerTags": [],
+      "actionDataSuccess": [
+        {
+          "key": "lastflame_join",
+          "value": "1"
+        }
+      ],
+      "relationChanges": [],
+      "bedrockBuildings": []
+    }
+  ]
+}

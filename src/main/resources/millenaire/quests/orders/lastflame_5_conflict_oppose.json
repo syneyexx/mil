@@ -1,0 +1,80 @@
+{
+  "key": "lastflame_5_conflict_oppose",
+  "chancePerHour": 0.2,
+  "maxSimultaneous": 1,
+  "minReputation": 4096,
+  "globalTagsRequired": [],
+  "globalTagsForbidden": [
+    "lastflame_conflict_resolved"
+  ],
+  "playerTagsRequired": [
+    "lastflame_aware"
+  ],
+  "playerTagsForbidden": [
+    "lastflame_conflict_support",
+    "lastflame_conflict_reform",
+    "lastflame_conflict_leave",
+    "lastflame_conflict_oppose"
+  ],
+  "villagerDefs": [
+    {
+      "key": "leader",
+      "villagerTypes": [
+        "norman/knight",
+        "norman/seneschal",
+        "byzantines/baron_byzantine",
+        "indian/raja",
+        "mayan/mayan_king",
+        "japanese/emperor",
+        "seljuk/seljuk_sultan"
+      ],
+      "requiredTags": [],
+      "forbiddenTags": []
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "villagerKey": "leader",
+      "duration": 72,
+      "showRequiredGoods": true,
+      "requiredGoods": {},
+      "rewardGoods": {},
+      "rewardMoney": 128,
+      "rewardReputation": 256,
+      "penaltyReputation": 0,
+      "villagerTagsSuccess": [],
+      "villagerTagsFailure": [],
+      "playerTagsSuccess": [
+        "lastflame_conflict_oppose"
+      ],
+      "playerTagsFailure": [],
+      "globalTagsSuccess": [
+        "lastflame_conflict_resolved",
+        "lastflame_exposed"
+      ],
+      "globalTagsFailure": [],
+      "clearTagsSuccess": [],
+      "clearTagsFailure": [],
+      "clearPlayerTagsSuccess": [
+        "lastflame_member",
+        "lastflame_initiate"
+      ],
+      "clearPlayerTagsFailure": [],
+      "clearGlobalTagsSuccess": [],
+      "clearGlobalTagsFailure": [],
+      "stepRequiredGlobalTags": [],
+      "stepForbiddenGlobalTags": [],
+      "stepRequiredPlayerTags": [],
+      "stepForbiddenPlayerTags": [],
+      "actionDataSuccess": [
+        {
+          "key": "lastflame_oppose",
+          "value": "1"
+        }
+      ],
+      "relationChanges": [],
+      "bedrockBuildings": []
+    }
+  ]
+}

@@ -19,6 +19,7 @@ import org.millenaire.building.BuildingId;
 import org.millenaire.building.BuildingInstance;
 import org.millenaire.building.BuildingPlan;
 import org.millenaire.building.SpecialPoint;
+import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillageType;
 import org.millenaire.culture.VillagerType;
@@ -50,9 +51,23 @@ public final class PlayerBuildingDesignationService {
          return;
       }
 
+      if (role == PlayerBuildingRole.BANK && VillageTreasuryService.hasDesignatedBank(village)) {
+         BuildingInstance existingBank = VillageTreasuryService.resolve(village);
+         BuildingInstance atFeet = village.getOperationalBuildingAt(player.blockPosition());
+         if (existingBank != null && (atFeet == null || !existingBank.getId().equals(atFeet.getId()))) {
+            player.sendSystemMessage(Component.translatable("message.millenaire.designate.bank_exists"));
+            return;
+         }
+      }
+
       BlockPos feet = player.blockPosition();
       VillageType vt = ModCultures.getVillageType(village.getVillageTypeId());
-      int radius = vt != null ? vt.radius() : 80;
+      int radius;
+      if (vt != null && vt.isPlayerControlled()) {
+         radius = MillenaireServerConfig.SERVER.playerCityDesignationRadius.getAsInt();
+      } else {
+         radius = vt != null ? vt.radius() : 80;
+      }
       if (village.getCenter().distSqr(feet) > (double) radius * radius) {
          player.sendSystemMessage(Component.translatable("message.millenaire.designate.too_far"));
          return;
@@ -249,9 +264,10 @@ public final class PlayerBuildingDesignationService {
          }
       }
       // Bakery / shop: wife with seller / craft_bread
-      if (role == PlayerBuildingRole.BAKERY || role == PlayerBuildingRole.SHOP) {
+      if (role == PlayerBuildingRole.BAKERY || role == PlayerBuildingRole.SHOP || role == PlayerBuildingRole.BANK) {
          VillagerType vt = ModCultures.getVillagerType(typeId);
-         return vt != null && (vt.hasTag("seller") || shortName.contains("wife"));
+         return vt != null
+            && (vt.hasTag("seller") || shortName.contains("wife") || shortName.contains("merchant"));
       }
       if (role == PlayerBuildingRole.ARMORY) {
          return shortName.contains("smith");

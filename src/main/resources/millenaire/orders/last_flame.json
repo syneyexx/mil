@@ -1,0 +1,21 @@
+{
+  "id": "millenaire:order_last_flame",
+  "display_name": "Order of the Last Flame",
+  "allowed_cultures": [],
+  "min_village_pop": 8,
+  "spawn_chance": 0.28,
+  "secrecy_default": 75,
+  "building_tags": ["praying", "religious", "pilgrimsite"],
+  "clergy_preference_tags": ["religious"],
+  "rituals": [
+    "millenaire:initiation",
+    "millenaire:night_wake",
+    "millenaire:relic_restore",
+    "millenaire:reconciliation"
+  ],
+  "themes": {
+    "symbol": "hidden_flame",
+    "mood": "remembrance"
+  },
+  "allows_orders": true
+}

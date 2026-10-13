@@ -1,0 +1,85 @@
+{
+  "key": "lastflame_5_conflict_reform",
+  "chancePerHour": 0.25,
+  "maxSimultaneous": 1,
+  "minReputation": 8192,
+  "globalTagsRequired": [],
+  "globalTagsForbidden": [
+    "lastflame_conflict_resolved"
+  ],
+  "playerTagsRequired": [
+    "lastflame_relic_done"
+  ],
+  "playerTagsForbidden": [
+    "lastflame_conflict_support",
+    "lastflame_conflict_reform",
+    "lastflame_conflict_leave",
+    "lastflame_conflict_oppose"
+  ],
+  "villagerDefs": [
+    {
+      "key": "keeper",
+      "villagerTypes": [
+        "norman/priest",
+        "norman/abbot",
+        "norman/monk",
+        "norman/marvelpriest",
+        "norman/vicar",
+        "norman/bishop",
+        "norman/ordervicar",
+        "byzantines/metropolit",
+        "indian/pandit",
+        "mayan/mayan_shaman",
+        "japanese/buddhistmonk",
+        "seljuk/turk_imam",
+        "inuits/shaman",
+        "nederland/priest"
+      ],
+      "requiredTags": [],
+      "forbiddenTags": []
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "villagerKey": "keeper",
+      "duration": 96,
+      "showRequiredGoods": true,
+      "requiredGoods": {
+        "minecraft:bread": 8
+      },
+      "rewardGoods": {},
+      "rewardMoney": 32,
+      "rewardReputation": 192,
+      "penaltyReputation": 0,
+      "villagerTagsSuccess": [],
+      "villagerTagsFailure": [],
+      "playerTagsSuccess": [
+        "lastflame_conflict_reform"
+      ],
+      "playerTagsFailure": [],
+      "globalTagsSuccess": [
+        "lastflame_conflict_resolved"
+      ],
+      "globalTagsFailure": [],
+      "clearTagsSuccess": [],
+      "clearTagsFailure": [],
+      "clearPlayerTagsSuccess": [],
+      "clearPlayerTagsFailure": [],
+      "clearGlobalTagsSuccess": [],
+      "clearGlobalTagsFailure": [],
+      "stepRequiredGlobalTags": [],
+      "stepForbiddenGlobalTags": [],
+      "stepRequiredPlayerTags": [],
+      "stepForbiddenPlayerTags": [],
+      "actionDataSuccess": [
+        {
+          "key": "lastflame_reform",
+          "value": "1"
+        }
+      ],
+      "relationChanges": [],
+      "bedrockBuildings": []
+    }
+  ]
+}

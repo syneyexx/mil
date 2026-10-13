@@ -1,0 +1,115 @@
+{
+  "key": "lastflame_4_relic",
+  "chancePerHour": 0.35,
+  "maxSimultaneous": 1,
+  "minReputation": 8192,
+  "globalTagsRequired": [],
+  "globalTagsForbidden": [],
+  "playerTagsRequired": [
+    "lastflame_member"
+  ],
+  "playerTagsForbidden": [
+    "lastflame_relic_done"
+  ],
+  "villagerDefs": [
+    {
+      "key": "keeper",
+      "villagerTypes": [
+        "norman/priest",
+        "norman/abbot",
+        "norman/monk",
+        "norman/marvelpriest",
+        "norman/vicar",
+        "norman/bishop",
+        "norman/ordervicar",
+        "byzantines/metropolit",
+        "indian/pandit",
+        "mayan/mayan_shaman",
+        "japanese/buddhistmonk",
+        "seljuk/turk_imam",
+        "inuits/shaman",
+        "nederland/priest"
+      ],
+      "requiredTags": [],
+      "forbiddenTags": []
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "villagerKey": "keeper",
+      "duration": 96,
+      "showRequiredGoods": true,
+      "requiredGoods": {},
+      "rewardGoods": {
+        "millenaire:echo_relic": 1
+      },
+      "rewardMoney": 0,
+      "rewardReputation": 64,
+      "penaltyReputation": 0,
+      "villagerTagsSuccess": [],
+      "villagerTagsFailure": [],
+      "playerTagsSuccess": [
+        "lastflame_relic_hunt"
+      ],
+      "playerTagsFailure": [],
+      "globalTagsSuccess": [],
+      "globalTagsFailure": [],
+      "clearTagsSuccess": [],
+      "clearTagsFailure": [],
+      "clearPlayerTagsSuccess": [],
+      "clearPlayerTagsFailure": [],
+      "clearGlobalTagsSuccess": [],
+      "clearGlobalTagsFailure": [],
+      "stepRequiredGlobalTags": [],
+      "stepForbiddenGlobalTags": [],
+      "stepRequiredPlayerTags": [],
+      "stepForbiddenPlayerTags": [],
+      "actionDataSuccess": [],
+      "relationChanges": [],
+      "bedrockBuildings": []
+    },
+    {
+      "index": 1,
+      "villagerKey": "keeper",
+      "duration": 120,
+      "showRequiredGoods": true,
+      "requiredGoods": {
+        "millenaire:echo_relic": 1,
+        "minecraft:paper": 2,
+        "minecraft:candle": 1
+      },
+      "rewardGoods": {
+        "millenaire:memory_book": 1
+      },
+      "rewardMoney": 0,
+      "rewardReputation": 256,
+      "penaltyReputation": 0,
+      "villagerTagsSuccess": [],
+      "villagerTagsFailure": [],
+      "playerTagsSuccess": [
+        "lastflame_relic_done"
+      ],
+      "playerTagsFailure": [],
+      "globalTagsSuccess": [],
+      "globalTagsFailure": [],
+      "clearTagsSuccess": [],
+      "clearTagsFailure": [],
+      "clearPlayerTagsSuccess": [
+        "lastflame_relic_hunt"
+      ],
+      "clearPlayerTagsFailure": [],
+      "clearGlobalTagsSuccess": [],
+      "clearGlobalTagsFailure": [],
+      "stepRequiredGlobalTags": [],
+      "stepForbiddenGlobalTags": [],
+      "stepRequiredPlayerTags": [
+        "lastflame_relic_hunt"
+      ],
+      "stepForbiddenPlayerTags": [],
+      "actionDataSuccess": [],
+      "relationChanges": [],
+      "bedrockBuildings": []
+    }
+  ]
+}

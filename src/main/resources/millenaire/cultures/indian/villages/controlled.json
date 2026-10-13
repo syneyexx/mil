@@ -3,6 +3,7 @@
   "name": "Jaagiir",
   "weight": 0,
   "player_controlled": true,
+  "radius": 100,
   "layout": [
     {
       "plan": "millenaire:indian/playerpalace",

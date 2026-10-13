@@ -54,6 +54,8 @@ public final class GoodsRestockHelper {
                   nb += ThreadLocalRandom.current().nextInt(sg.randomNumber() + 1);
                }
 
+               // Slightly fuller villages on spawn / restock — NPCs work all day, chests should show it.
+               nb = Math.max(1, (int)Math.ceil(nb * 2.5));
                if (nb > 0) {
                   Item item = ItemHelper.resolve(sg.item());
                   if (item == null) {

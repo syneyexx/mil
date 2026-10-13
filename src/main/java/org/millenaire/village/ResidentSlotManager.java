@@ -103,6 +103,15 @@ public class ResidentSlotManager {
 
    @Nullable
    public String reserveSlot(BuildingId buildingId, Gender gender, UUID teenagerId) {
+      return this.reserveSlot(buildingId, gender, teenagerId, null);
+   }
+
+   /**
+    * Reserves a free resident slot. When {@code preferredTypeSuffix} is set (e.g. parent job),
+    * that role is chosen if still free so generations inherit work.
+    */
+   @Nullable
+   public String reserveSlot(BuildingId buildingId, Gender gender, UUID teenagerId, @Nullable String preferredTypeSuffix) {
       List<String> freeSlots = this.getFreeSlots(buildingId, gender);
       if (freeSlots.isEmpty()) {
          return null;
@@ -116,11 +125,24 @@ public class ResidentSlotManager {
          }
 
          List<String> expectedResidents = expectedResidents(planSet, building, gender);
-         int slotIndex = expectedResidents.size() - freeSlots.size();
+         String chosen = freeSlots.get(0);
+         if (preferredTypeSuffix != null && !preferredTypeSuffix.isBlank()) {
+            for (String free : freeSlots) {
+               if (preferredTypeSuffix.equals(free) || free.endsWith("_" + preferredTypeSuffix) || preferredTypeSuffix.endsWith("_" + free)) {
+                  chosen = free;
+                  break;
+               }
+            }
+         }
+
+         int slotIndex = expectedResidents.indexOf(chosen);
+         if (slotIndex < 0) {
+            slotIndex = expectedResidents.size() - freeSlots.size();
+         }
          ResidentSlotManager.SlotKey key = new ResidentSlotManager.SlotKey(building.getId(), gender, slotIndex);
          this.reservedSlots.put(key, teenagerId);
          this.village.markDirty();
-         return freeSlots.get(0);
+         return chosen;
       } else {
          return null;
       }

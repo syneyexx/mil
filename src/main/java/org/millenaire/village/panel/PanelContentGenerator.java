@@ -73,6 +73,8 @@ public final class PanelContentGenerator {
          case MARVEL_RESOURCES -> MarvelPanelGenerator.generateMarvelResources(village, level);
          case HALL_OF_FAME -> new PanelContent(PanelType.HALL_OF_FAME, "panel.millenaire.panel_type.hall_of_fame", List.of(), true, null);
          case CHRONICLE -> VillageOverviewPanelGenerator.generateChronicle(village);
+         case RELIGION -> ReligionPanelGenerator.generate(village, level, player);
+         case BANK -> level != null ? BankPanelGenerator.generate(level, village) : generateStubControlled(village, PanelType.BANK, "panel.millenaire.bank.title");
       };
    }
 
@@ -406,6 +408,8 @@ public final class PanelContentGenerator {
    private static MapData.MapTerrain computeTerrainGrid(Village village, ServerLevel level) {
       VillageType vt = ModCultures.getVillageType(village.getVillageTypeId());
       int radius = vt != null ? vt.radius() : 90;
+      // Cap panel map scan — avoid scanning full village radius every panel refresh.
+      radius = Math.min(radius, 120);
       VillageTerrainMap terrainMap = VillageTerrainMap.compute(level, village.getCenter(), radius);
       int size = terrainMap.getSize();
       int originX = village.getCenter().getX() - radius;

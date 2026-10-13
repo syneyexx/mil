@@ -47,10 +47,6 @@ public class LockpickItem extends Item {
          return InteractionResult.SUCCESS;
       }
 
-      if (!PlayerBountySavedData.crimeEnabled()) {
-         return InteractionResult.PASS;
-      }
-
       if (!(level.getBlockEntity(pos) instanceof LockedChestBlockEntity chest)) {
          return InteractionResult.PASS;
       }
@@ -59,8 +55,18 @@ public class LockpickItem extends Item {
          return InteractionResult.PASS;
       }
 
-      if (player.isCreative() || player.isSpectator()) {
+      if (player.isSpectator()) {
          return InteractionResult.PASS;
+      }
+
+      if (!PlayerBountySavedData.crimeEnabled()) {
+         player.displayClientMessage(Component.translatable("message.millenaire.crime.lockpick_crime_disabled"), true);
+         return InteractionResult.FAIL;
+      }
+
+      if (player.isCreative()) {
+         player.displayClientMessage(Component.translatable("message.millenaire.crime.lockpick_creative"), true);
+         return InteractionResult.FAIL;
       }
 
       if (!chest.isNaturallyLockedFor(player)) {
@@ -74,10 +80,12 @@ public class LockpickItem extends Item {
       }
 
       if (village != null && village.isControlledBy(player.getUUID())) {
-         return InteractionResult.PASS;
+         player.displayClientMessage(Component.translatable("message.millenaire.crime.lockpick_not_needed"), true);
+         return InteractionResult.FAIL;
       }
 
       if (chest.isPickedOpenFor(player, serverLevel.getGameTime()) || !chest.isLockedFor(player)) {
+         player.displayClientMessage(Component.translatable("message.millenaire.crime.lockpick_already"), true);
          return LockedChestBlock.openForPlayer(state, level, pos, player);
       }
 

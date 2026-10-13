@@ -69,6 +69,7 @@ public class BuildingInstance {
    private final Set<String> runtimeTags = new LinkedHashSet<>();
    @Nullable
    private String playerBuildingRole;
+   private int warDamageLevel;
    @Nullable
    private BuildingId parentBuildingId;
    private int cachedMinX = Integer.MIN_VALUE;
@@ -308,6 +309,18 @@ public class BuildingInstance {
 
    public void setPlayerBuildingRole(@Nullable String playerBuildingRole) {
       this.playerBuildingRole = playerBuildingRole == null || playerBuildingRole.isBlank() ? null : playerBuildingRole;
+   }
+
+   public int getWarDamageLevel() {
+      return this.warDamageLevel;
+   }
+
+   public void setWarDamageLevel(int warDamageLevel) {
+      this.warDamageLevel = Math.max(0, Math.min(100, warDamageLevel));
+   }
+
+   public void addWarDamage(int amount) {
+      this.setWarDamageLevel(this.warDamageLevel + amount);
    }
 
    public boolean isPlayerDesignated() {

@@ -1,0 +1,21 @@
+{
+  "id": "millenaire:relic_restore",
+  "display_name": "Relic Restoration",
+  "capacity": 3,
+  "duration_ticks": 2400,
+  "cooldown_days": 7,
+  "start_window_min": 0,
+  "start_window_max": 24000,
+  "gather_deadline_ticks": 6000,
+  "presence_radius": 8.0,
+  "required_goods": {
+    "minecraft:paper": 2,
+    "minecraft:candle": 1,
+    "millenaire:echo_relic": 1
+  },
+  "devotion_reward": 20,
+  "cohesion_reward": 10,
+  "secrecy_delta": -3,
+  "tension_delta": 2,
+  "order_tags": ["lastflame_relic"]
+}

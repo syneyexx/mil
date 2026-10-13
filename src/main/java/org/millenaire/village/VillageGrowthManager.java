@@ -55,7 +55,8 @@ public final class VillageGrowthManager {
    private static final Map<String, Integer> TIER_MULTIPLIERS = Map.of(
       "centre", 6, "townhall", 6, "start", 6, "player", 6, "core", 4, "secondary", 2, "extra", 1
    );
-   private static final Set<String> CONTROLLED_AUTO_EXCLUDED_ROLES = Set.of("player", "core", "secondary");
+   /** Player layout slots stay player-driven; core/secondary may grow organically when the queue is idle. */
+   private static final Set<String> CONTROLLED_AUTO_EXCLUDED_ROLES = Set.of("player");
    private static final List<String> TIER_ORDER = List.of("start", "player", "core", "secondary", "extra");
 
    private VillageGrowthManager() {
@@ -342,13 +343,21 @@ public final class VillageGrowthManager {
       long currentTick = level.getGameTime();
       VillageType vt = ModCultures.getVillageType(village.getVillageTypeId());
       int radius = vt != null ? vt.radius() : 90;
-      VillageTerrainMap terrainMap = VillageTerrainMap.compute(level, village.getCenter(), radius);
-      markExistingBuildingsOccupied(terrainMap, village);
-      TerrainReachability reachability = TerrainReachability.compute(terrainMap, village.getCenter());
       PlacementConstraints constraints = PlacementConstraints.resolve(planSet, slot, radius);
       ClearMargins margins = planSet.clearMargins().atLeast(constraints.clearMargin());
+      VillageTerrainMap terrainMap;
       PlacedLocation location = preResolvedLocation;
-      if (location == null) {
+      if (location != null) {
+         // Player/queue placement already validated: only need a local map for altitude.
+         int localRadius = Math.max(plan.width(), plan.depth()) + margins.maxMargin() * 2 + 8;
+         localRadius = Math.max(localRadius, 24);
+         BlockPos localCenter = new BlockPos(location.position().getX(), village.getCenter().getY(), location.position().getZ());
+         terrainMap = VillageTerrainMap.compute(level, localCenter, localRadius);
+         markExistingBuildingsOccupied(terrainMap, village);
+      } else {
+         terrainMap = VillageTerrainMap.compute(level, village.getCenter(), radius);
+         markExistingBuildingsOccupied(terrainMap, village);
+         TerrainReachability reachability = TerrainReachability.compute(terrainMap, village.getCenter());
          location = BuildingLocationFinder.findLocation(
             terrainMap, plan, village.getCenter(), constraints, margins, new ArrayList<>(village.getBuildings()), reachability
          );
@@ -1302,21 +1311,26 @@ public final class VillageGrowthManager {
    ) {
       VillageType vt = ModCultures.getVillageType(village.getVillageTypeId());
       int radius = vt != null ? vt.radius() : 90;
-      VillageTerrainMap terrainMap = VillageTerrainMap.compute(level, village.getCenter(), radius);
-      markExistingBuildingsOccupied(terrainMap, village);
-      TerrainReachability reachability = TerrainReachability.compute(terrainMap, village.getCenter());
       PlacementConstraints constraints = PlacementConstraints.resolve(planSet, slot, radius);
       ClearMargins margins = planSet.clearMargins().atLeast(constraints.clearMargin());
+      // Local map around the click — full village maps at large player-city radii are too expensive,
+      // and path-reachability from the town hall is too strict for player-planned cities.
+      int localRadius = Math.max(plan.width(), plan.depth()) + margins.maxMargin() * 2 + 16;
+      localRadius = Math.max(localRadius, 32);
+      BlockPos localCenter = new BlockPos(clickedPos.getX(), village.getCenter().getY(), clickedPos.getZ());
+      VillageTerrainMap terrainMap = VillageTerrainMap.compute(level, localCenter, localRadius);
+      markExistingBuildingsOccupied(terrainMap, village);
       return BuildingLocationFinder.evaluateAnchor(
          clickedPos.getX(),
          clickedPos.getZ(),
          terrainMap,
          plan,
          village.getCenter(),
+         radius,
          constraints,
          margins,
          new ArrayList<>(village.getBuildings()),
-         reachability,
+         null,
          playerRotation
       );
    }

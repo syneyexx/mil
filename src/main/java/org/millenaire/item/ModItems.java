@@ -51,6 +51,8 @@ public final class ModItems {
    public static final DeferredItem<PurseItem> PURSE = ITEMS.registerItem("purse", props -> new PurseItem(props.stacksTo(1)));
    public static final DeferredItem<VillageBookItem> VILLAGE_SCROLL = ITEMS.registerItem("village_scroll", props -> new VillageBookItem(props.stacksTo(1)));
    public static final DeferredItem<TravelBookItem> TRAVEL_BOOK = ITEMS.registerItem("travel_book", props -> new TravelBookItem(props.stacksTo(1)));
+   public static final DeferredItem<MemoryBookItem> MEMORY_BOOK = ITEMS.registerItem("memory_book", props -> new MemoryBookItem(props.stacksTo(1)));
+   public static final DeferredItem<EchoRelicItem> ECHO_RELIC = ITEMS.registerItem("echo_relic", props -> new EchoRelicItem(props.stacksTo(16)));
    public static final DeferredItem<LockpickItem> LOCKPICK = ITEMS.registerItem("lockpick", props -> new LockpickItem(props.stacksTo(1).durability(16)));
    public static final DeferredItem<PickaxeItem> NORMAN_PICKAXE = ITEMS.registerItem(
       "norman_pickaxe",

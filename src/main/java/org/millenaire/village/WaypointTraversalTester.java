@@ -35,9 +35,8 @@ public final class WaypointTraversalTester implements AutoCloseable {
          mob.setNoAi(true);
          mob.setSilent(true);
          mob.setInvulnerable(true);
-         if (village != null) {
-            mob.setVillageId(village.getId());
-         }
+         // Do not set villageId: the probe has no villager type, and a villageId
+         // would trigger VillageOutfitService during entity tracking (NPE on null type).
 
          AttributeInstance attr = mob.getAttribute(Attributes.FOLLOW_RANGE);
          if (attr != null) {

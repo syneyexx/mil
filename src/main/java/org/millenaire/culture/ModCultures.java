@@ -25,7 +25,7 @@ public final class ModCultures {
 
    @Nullable
    public static Culture getCulture(ResourceLocation id) {
-      return cultures.get(id);
+      return id == null ? null : cultures.get(id);
    }
 
    @Nullable
@@ -44,12 +44,12 @@ public final class ModCultures {
 
    @Nullable
    public static VillagerType getVillagerType(ResourceLocation id) {
-      return villagerTypes.get(id);
+      return id == null ? null : villagerTypes.get(id);
    }
 
    @Nullable
    public static VillageType getVillageType(ResourceLocation id) {
-      return villageTypes.get(id);
+      return id == null ? null : villageTypes.get(id);
    }
 
    public static Map<ResourceLocation, Culture> getAllCultures() {

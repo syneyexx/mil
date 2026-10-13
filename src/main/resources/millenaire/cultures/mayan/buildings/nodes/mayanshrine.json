@@ -5,7 +5,8 @@
   "native_name": "Wayib",
   "tags": [
     "pathnode",
-    "leisure"
+    "leisure",
+    "praying"
   ],
   "icon": "millenaire:mayan_statue",
   "far_from_tags": [
@@ -18,7 +19,8 @@
       "ground_level": -1,
       "tags": [
         "pathnode",
-        "leisure"
+        "leisure",
+        "praying"
       ],
       "levels": [
         {

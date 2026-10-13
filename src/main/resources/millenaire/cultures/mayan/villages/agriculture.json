@@ -92,6 +92,14 @@
       "role": "secondary"
     },
     {
+      "plan": "millenaire:mayan/mayanalter",
+      "role": "secondary"
+    },
+    {
+      "plan": "millenaire:mayan/mayanshrine",
+      "role": "secondary"
+    },
+    {
       "plan": "millenaire:mayan/mayanwell",
       "role": "secondary"
     }

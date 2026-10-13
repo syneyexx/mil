@@ -24,6 +24,8 @@ public enum PanelType {
    MARVEL_RESOURCES,
    HALL_OF_FAME,
    CHRONICLE,
+   RELIGION,
+   BANK,
    BUILDING_DEFAULT;
 
    public static PanelType fromName(String name) {

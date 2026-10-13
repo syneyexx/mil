@@ -25,6 +25,7 @@ import org.millenaire.building.BuildingId;
 import org.millenaire.building.BuildingInstance;
 import org.millenaire.combat.CombatHelper;
 import org.millenaire.combat.raid.RaidManager;
+import org.millenaire.village.VillageTreasuryService;
 import org.millenaire.culture.Culture;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillageType;
@@ -243,10 +244,7 @@ public final class CrimeService {
 
       int damage = estimateDamageDeniers(brokenState);
       if (MoneyHelper.removeDeniers(player.getInventory(), damage)) {
-         BuildingInstance townhall = village.getTownhall();
-         if (townhall != null && townhall.getInventory() != null) {
-            townhall.getInventory().add(level, ModItems.DENIER.get(), damage);
-         }
+         VillageTreasuryService.deposit(level, village, damage, VillageTreasuryService.REASON_CRIME_FINE);
          village.adjustReputation(level, player.getUUID(), CrimeConstants.VANDALISM_REP_PAID);
          VillageSavedData.get(level).setDirty();
          player.sendSystemMessage(Component.translatable("message.millenaire.crime.vandalism_paid", damage));

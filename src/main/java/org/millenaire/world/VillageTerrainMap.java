@@ -379,6 +379,11 @@ public class VillageTerrainMap {
       return this.size;
    }
 
+   /** Half-extent of the square map from its centre (blocks). */
+   public int getRadius() {
+      return (this.size - 1) / 2;
+   }
+
    public int getBaseline() {
       return this.baseline;
    }

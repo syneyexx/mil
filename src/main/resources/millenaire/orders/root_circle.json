@@ -1,0 +1,18 @@
+{
+  "id": "millenaire:order_root_circle",
+  "display_name": "The Root Circle",
+  "allowed_cultures": [],
+  "min_village_pop": 8,
+  "spawn_chance": 0.20,
+  "secrecy_default": 65,
+  "building_tags": ["pilgrimsite", "religious", "grove"],
+  "clergy_preference_tags": ["religious"],
+  "rituals": [
+    "millenaire:root_circle_vigil"
+  ],
+  "themes": {
+    "symbol": "sacred_tree",
+    "mood": "place_bound"
+  },
+  "allows_orders": true
+}

@@ -54,6 +54,8 @@ public final class ModCreativeTabs {
             output.accept((ItemLike)ModItems.NEGATION_WAND.get());
             output.accept((ItemLike)ModItems.VILLAGE_SCROLL.get());
             output.accept((ItemLike)ModItems.TRAVEL_BOOK.get());
+            output.accept((ItemLike)ModItems.MEMORY_BOOK.get());
+            output.accept((ItemLike)ModItems.ECHO_RELIC.get());
             output.accept((ItemLike)ModItems.LOCKPICK.get());
             output.accept((ItemLike)ModItems.NORMAN_SWORD.get());
             output.accept((ItemLike)ModItems.NORMAN_PICKAXE.get());

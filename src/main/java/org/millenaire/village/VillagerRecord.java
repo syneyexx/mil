@@ -49,6 +49,13 @@ public class VillagerRecord {
    private long hiredUntil;
    private boolean aggressiveStance;
    private final List<String> questTags = new ArrayList<>();
+   @Nullable
+   private UUID faithInstanceId;
+   @Nullable
+   private UUID orderChapterId;
+   @Nullable
+   private org.millenaire.faith.OrderRole orderRole;
+   private int devotion;
 
    public VillagerRecord(UUID uuid, ResourceLocation villagerTypeId, @Nullable BuildingId homeBuilding) {
       this.uuid = uuid;
@@ -278,6 +285,41 @@ public class VillagerRecord {
       return this.questTags.contains(tag);
    }
 
+   @Nullable
+   public UUID getFaithInstanceId() {
+      return this.faithInstanceId;
+   }
+
+   public void setFaithInstanceId(@Nullable UUID faithInstanceId) {
+      this.faithInstanceId = faithInstanceId;
+   }
+
+   @Nullable
+   public UUID getOrderChapterId() {
+      return this.orderChapterId;
+   }
+
+   public void setOrderChapterId(@Nullable UUID orderChapterId) {
+      this.orderChapterId = orderChapterId;
+   }
+
+   @Nullable
+   public org.millenaire.faith.OrderRole getOrderRole() {
+      return this.orderRole;
+   }
+
+   public void setOrderRole(@Nullable org.millenaire.faith.OrderRole orderRole) {
+      this.orderRole = orderRole;
+   }
+
+   public int getDevotion() {
+      return this.devotion;
+   }
+
+   public void setDevotion(int devotion) {
+      this.devotion = Math.max(0, Math.min(100, devotion));
+   }
+
    public void updateFromEntity(MillVillager villager) {
       this.villagerTypeId = villager.getVillagerTypeId();
       this.homeBuilding = villager.getHomeBuilding();
@@ -405,6 +447,18 @@ public class VillagerRecord {
 
          tag.put("questTags", tagList);
       }
+      if (this.faithInstanceId != null) {
+         tag.putUUID("faith_instance_id", this.faithInstanceId);
+      }
+      if (this.orderChapterId != null) {
+         tag.putUUID("order_chapter_id", this.orderChapterId);
+      }
+      if (this.orderRole != null) {
+         tag.putString("order_role", this.orderRole.name());
+      }
+      if (this.devotion > 0) {
+         tag.putInt("devotion", this.devotion);
+      }
    }
 
    @Nullable
@@ -450,6 +504,18 @@ public class VillagerRecord {
             for (int i = 0; i < tagList.size(); i++) {
                record.questTags.add(tagList.getString(i));
             }
+         }
+         if (tag.hasUUID("faith_instance_id")) {
+            record.faithInstanceId = tag.getUUID("faith_instance_id");
+         }
+         if (tag.hasUUID("order_chapter_id")) {
+            record.orderChapterId = tag.getUUID("order_chapter_id");
+         }
+         if (tag.contains("order_role")) {
+            record.orderRole = org.millenaire.faith.OrderRole.fromId(tag.getString("order_role"));
+         }
+         if (tag.contains("devotion")) {
+            record.devotion = tag.getInt("devotion");
          }
 
          return record;

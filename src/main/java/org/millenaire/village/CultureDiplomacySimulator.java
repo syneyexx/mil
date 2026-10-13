@@ -92,6 +92,7 @@ public final class CultureDiplomacySimulator {
       if (standing <= warThreshold || (standing < -50 && roll < 12)) {
          data.declareWar(a, b);
          CultureWarService.propagateWarToVillages(level, a, b);
+         CultureWarService.ensureWarCampaign(level, a, b, false);
          log(data, day, "declare_war", a, b, -100, null);
          notifyOwnersOfPair(level, vm, a, b, "message.millenaire.diplomacy.war_declared", a, b);
          DiplomacyEventService.offerWarDeclarationPopup(level, a, b);
@@ -120,6 +121,7 @@ public final class CultureDiplomacySimulator {
          if (next <= warThreshold) {
             data.declareWar(a, b);
             CultureWarService.propagateWarToVillages(level, a, b);
+            CultureWarService.ensureWarCampaign(level, a, b, false);
             log(data, day, "declare_war", a, b, -100, "from_border");
             notifyOwnersOfPair(level, vm, a, b, "message.millenaire.diplomacy.war_declared", a, b);
             DiplomacyEventService.offerWarDeclarationPopup(level, a, b);
@@ -142,6 +144,7 @@ public final class CultureDiplomacySimulator {
          if (next <= warThreshold) {
             data.declareWar(a, b);
             CultureWarService.propagateWarToVillages(level, a, b);
+            CultureWarService.ensureWarCampaign(level, a, b, false);
             log(data, day, "declare_war", a, b, -100, "from_drift");
             notifyOwnersOfPair(level, vm, a, b, "message.millenaire.diplomacy.war_declared", a, b);
             DiplomacyEventService.offerWarDeclarationPopup(level, a, b);

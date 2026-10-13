@@ -1,0 +1,20 @@
+{
+  "id": "millenaire:root_circle_vigil",
+  "display_name": "Root Circle Vigil",
+  "capacity": 6,
+  "duration_ticks": 2600,
+  "cooldown_days": 6,
+  "start_window_min": 10000,
+  "start_window_max": 14000,
+  "gather_deadline_ticks": 7000,
+  "presence_radius": 12.0,
+  "required_goods": {
+    "minecraft:oak_sapling": 1,
+    "minecraft:bone_meal": 2
+  },
+  "devotion_reward": 10,
+  "cohesion_reward": 8,
+  "secrecy_delta": 0,
+  "tension_delta": 0,
+  "order_tags": ["root_circle_vigil"]
+}

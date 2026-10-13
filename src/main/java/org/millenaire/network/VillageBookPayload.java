@@ -30,7 +30,7 @@ public record VillageBookPayload(
    boolean degraded
 ) implements CustomPacketPayload {
    private static final Logger LOGGER = LogUtils.getLogger();
-   private static final int MAX_SECTIONS = 7;
+   private static final int MAX_SECTIONS = 8;
    private static final int MAX_LINES = 200;
    private static final int MAX_MAP_ENTRIES = 256;
    private static final int MAX_ARGS = 8;
@@ -43,9 +43,9 @@ public record VillageBookPayload(
       ByteBufCodecs.STRING_UTF8.encode(buf, payload.cultureId);
       ByteBufCodecs.BOOL.encode(buf, payload.hasMapData);
       ByteBufCodecs.BOOL.encode(buf, payload.degraded);
-      int encSectionCount = Math.min(payload.sections.size(), 7);
+      int encSectionCount = Math.min(payload.sections.size(), MAX_SECTIONS);
       if (encSectionCount < payload.sections.size()) {
-         LOGGER.warn("VillageBookPayload: truncating sections list from {} to {} entries", payload.sections.size(), 7);
+         LOGGER.warn("VillageBookPayload: truncating sections list from {} to {} entries", payload.sections.size(), MAX_SECTIONS);
       }
 
       ByteBufCodecs.VAR_INT.encode(buf, encSectionCount);

@@ -173,7 +173,7 @@
     "pathgravelslabs"
   ],
   "outer_wall_type": "borderposts",
-  "radius": 70,
+  "radius": 100,
   "never": [
     "armoury",
     "cottonfield",

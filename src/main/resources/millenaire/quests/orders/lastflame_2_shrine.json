@@ -1,0 +1,82 @@
+{
+  "key": "lastflame_2_shrine",
+  "chancePerHour": 0.45,
+  "maxSimultaneous": 1,
+  "minReputation": 8192,
+  "globalTagsRequired": [],
+  "globalTagsForbidden": [],
+  "playerTagsRequired": [
+    "lastflame_trusted"
+  ],
+  "playerTagsForbidden": [
+    "lastflame_shrine_ready"
+  ],
+  "villagerDefs": [
+    {
+      "key": "keeper",
+      "villagerTypes": [
+        "norman/priest",
+        "norman/abbot",
+        "norman/monk",
+        "norman/marvelpriest",
+        "norman/vicar",
+        "norman/bishop",
+        "norman/ordervicar",
+        "byzantines/metropolit",
+        "indian/pandit",
+        "mayan/mayan_shaman",
+        "japanese/buddhistmonk",
+        "seljuk/turk_imam",
+        "inuits/shaman",
+        "nederland/priest"
+      ],
+      "requiredTags": [],
+      "forbiddenTags": []
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "villagerKey": "keeper",
+      "duration": 120,
+      "showRequiredGoods": true,
+      "requiredGoods": {
+        "minecraft:charcoal": 8,
+        "minecraft:candle": 4,
+        "minecraft:paper": 4
+      },
+      "rewardGoods": {},
+      "rewardMoney": 0,
+      "rewardReputation": 128,
+      "penaltyReputation": 0,
+      "villagerTagsSuccess": [],
+      "villagerTagsFailure": [],
+      "playerTagsSuccess": [
+        "lastflame_shrine_ready"
+      ],
+      "playerTagsFailure": [],
+      "globalTagsSuccess": [
+        "lastflame_shrine_ready"
+      ],
+      "globalTagsFailure": [],
+      "clearTagsSuccess": [],
+      "clearTagsFailure": [],
+      "clearPlayerTagsSuccess": [],
+      "clearPlayerTagsFailure": [],
+      "clearGlobalTagsSuccess": [],
+      "clearGlobalTagsFailure": [],
+      "stepRequiredGlobalTags": [],
+      "stepForbiddenGlobalTags": [],
+      "stepRequiredPlayerTags": [],
+      "stepForbiddenPlayerTags": [],
+      "actionDataSuccess": [
+        {
+          "key": "lastflame_shrine",
+          "value": "1"
+        }
+      ],
+      "relationChanges": [],
+      "bedrockBuildings": []
+    }
+  ]
+}

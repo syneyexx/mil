@@ -909,6 +909,14 @@ public class MillVillager extends PathfinderMob {
          if (escort != null && !goals.contains(escort)) {
             goals.add(escort);
          }
+         VillagerGoal warEscort = registry.get(org.millenaire.goal.impl.WarEscortGoal.ID);
+         if (warEscort != null && !goals.contains(warEscort)) {
+            goals.add(warEscort);
+         }
+         VillagerGoal warSabotage = registry.get(org.millenaire.goal.impl.WarSabotageGoal.ID);
+         if (warSabotage != null && !goals.contains(warSabotage)) {
+            goals.add(warSabotage);
+         }
       }
 
       this.goalScheduler = new GoalScheduler(goals);

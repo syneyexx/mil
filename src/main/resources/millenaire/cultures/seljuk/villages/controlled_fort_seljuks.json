@@ -3,6 +3,7 @@
   "name": "Yönetilen Saray",
   "weight": 0,
   "player_controlled": true,
+  "radius": 100,
   "layout": [
     {
       "plan": "millenaire:seljuk/sarayfortplayer",

@@ -122,6 +122,13 @@ public final class PanelPlacer {
             }
          }
 
+         if (building != null
+            && ("bank".equals(building.getPlayerBuildingRole())
+               || building.hasRuntimeTag("bank")
+               || building.hasRuntimeTag("treasury"))) {
+            return PanelType.BANK;
+         }
+
          return planSet == null || planSet.maleResidents().isEmpty() && planSet.femaleResidents().isEmpty()
             ? PanelType.BUILDING_DEFAULT
             : PanelType.BUILDING_DEFAULT;

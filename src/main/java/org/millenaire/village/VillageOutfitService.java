@@ -10,6 +10,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -23,14 +24,17 @@ import net.minecraft.world.item.ShieldItem;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.TridentItem;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import org.millenaire.building.BuildingId;
 import org.millenaire.building.BuildingInstance;
+import org.millenaire.compat.TacZCompat;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillagerType;
 import org.millenaire.entity.MillVillager;
 
 /**
- * Shared wardrobe for player_custom villages: gear in designated armory chests is worn/wielded
- * by all villagers with stable per-NPC variation when multiple pieces exist.
+ * Shared wardrobe for player_custom villages: gear in armory / barracks chests is worn/wielded
+ * by villagers. Guards prefer their home barracks chests; everyone can fall back to the armory.
+ * Refresh is cached every {@link #REFRESH_INTERVAL_TICKS} to avoid per-tick chest scans.
  */
 public final class VillageOutfitService {
    private static final Map<UUID, CachedPools> CACHE = new ConcurrentHashMap<>();
@@ -62,16 +66,26 @@ public final class VillageOutfitService {
       }
 
       CachedPools pools = getOrRefresh(level, village);
+      Map<EquipmentSlot, List<Item>> preferred = resolvePreferredPools(pools, villager);
       if (slot == EquipmentSlot.MAINHAND) {
-         VillagerType vt = ModCultures.getVillagerType(villager.getVillagerTypeId());
-         return pickMainhand(pools, villager.getUUID(), vt != null && vt.isArcher());
+         ResourceLocation typeId = villager.getVillagerTypeId();
+         VillagerType vt = typeId != null ? ModCultures.getVillagerType(typeId) : null;
+         ItemStack fromHome = pickMainhand(preferred, villager.getUUID(), vt != null && vt.isArcher());
+         if (!fromHome.isEmpty()) {
+            return fromHome;
+         }
+         return pickMainhand(pools.villageWide, villager.getUUID(), vt != null && vt.isArcher());
       }
-      return pickFromPool(pools, villager.getUUID(), slot);
+      ItemStack fromHome = pickFromPool(preferred, villager.getUUID(), slot);
+      if (!fromHome.isEmpty()) {
+         return fromHome;
+      }
+      return pickFromPool(pools.villageWide, villager.getUUID(), slot);
    }
 
    /**
-    * Combat weapon from the armory wardrobe, or {@code null} when custom outfit is not active.
-    * When {@code preferRanged}, prefers bow/crossbow; otherwise prefers melee, then any mainhand.
+    * Combat weapon from the wardrobe, or {@code null} when custom outfit is not active.
+    * When {@code preferRanged}, prefers bow/crossbow/TacZ guns; otherwise prefers melee, then any mainhand.
     */
    @Nullable
    public static ItemStack getOutfitCombatWeapon(MillVillager villager, boolean preferRanged) {
@@ -88,7 +102,12 @@ public final class VillageOutfitService {
       }
 
       CachedPools pools = getOrRefresh(level, village);
-      return pickMainhand(pools, villager.getUUID(), preferRanged);
+      Map<EquipmentSlot, List<Item>> preferred = resolvePreferredPools(pools, villager);
+      ItemStack fromHome = pickMainhand(preferred, villager.getUUID(), preferRanged);
+      if (!fromHome.isEmpty()) {
+         return fromHome;
+      }
+      return pickMainhand(pools.villageWide, villager.getUUID(), preferRanged);
    }
 
    public static void syncArmorSlots(MillVillager villager) {
@@ -107,8 +126,19 @@ public final class VillageOutfitService {
       }
    }
 
-   private static ItemStack pickFromPool(CachedPools pools, UUID villagerId, EquipmentSlot slot) {
-      List<Item> options = pools.bySlot.get(slot);
+   private static Map<EquipmentSlot, List<Item>> resolvePreferredPools(CachedPools pools, MillVillager villager) {
+      BuildingId homeId = villager.getHomeBuilding();
+      if (homeId != null) {
+         Map<EquipmentSlot, List<Item>> home = pools.byBuilding.get(homeId.uuid());
+         if (home != null) {
+            return home;
+         }
+      }
+      return pools.villageWide;
+   }
+
+   private static ItemStack pickFromPool(Map<EquipmentSlot, List<Item>> pools, UUID villagerId, EquipmentSlot slot) {
+      List<Item> options = pools.get(slot);
       if (options == null || options.isEmpty()) {
          return ItemStack.EMPTY;
       }
@@ -116,8 +146,8 @@ public final class VillageOutfitService {
       return new ItemStack(options.get(index));
    }
 
-   private static ItemStack pickMainhand(CachedPools pools, UUID villagerId, boolean preferRanged) {
-      List<Item> mainhand = pools.bySlot.get(EquipmentSlot.MAINHAND);
+   private static ItemStack pickMainhand(Map<EquipmentSlot, List<Item>> pools, UUID villagerId, boolean preferRanged) {
+      List<Item> mainhand = pools.get(EquipmentSlot.MAINHAND);
       if (mainhand == null || mainhand.isEmpty()) {
          return ItemStack.EMPTY;
       }
@@ -141,16 +171,12 @@ public final class VillageOutfitService {
          return cached;
       }
 
-      Map<EquipmentSlot, List<Item>> bySlot = new EnumMap<>(EquipmentSlot.class);
-      bySlot.put(EquipmentSlot.HEAD, new ArrayList<>());
-      bySlot.put(EquipmentSlot.CHEST, new ArrayList<>());
-      bySlot.put(EquipmentSlot.LEGS, new ArrayList<>());
-      bySlot.put(EquipmentSlot.FEET, new ArrayList<>());
-      bySlot.put(EquipmentSlot.MAINHAND, new ArrayList<>());
-      bySlot.put(EquipmentSlot.OFFHAND, new ArrayList<>());
+      Map<UUID, Map<EquipmentSlot, List<Item>>> byBuilding = new ConcurrentHashMap<>();
+      Map<EquipmentSlot, List<Item>> villageWide = emptySlotMap();
 
-      for (BuildingInstance armory : collectArmories(village)) {
-         for (BlockPos pos : armory.getChestPositions()) {
+      for (BuildingInstance source : collectGearSources(village)) {
+         Map<EquipmentSlot, List<Item>> buildingPools = emptySlotMap();
+         for (BlockPos pos : source.getChestPositions()) {
             if (!level.isLoaded(pos)) {
                continue;
             }
@@ -167,24 +193,44 @@ public final class VillageOutfitService {
                if (slot == null) {
                   continue;
                }
-               List<Item> list = bySlot.get(slot);
-               if (list != null && !list.contains(stack.getItem())) {
-                  list.add(stack.getItem());
-               }
+               addUnique(buildingPools.get(slot), stack.getItem());
+               addUnique(villageWide.get(slot), stack.getItem());
             }
          }
+         byBuilding.put(source.getId().uuid(), buildingPools);
       }
 
-      CachedPools fresh = new CachedPools(now, bySlot);
+      CachedPools fresh = new CachedPools(now, villageWide, byBuilding);
       CACHE.put(key, fresh);
       return fresh;
    }
 
-   private static List<BuildingInstance> collectArmories(Village village) {
+   private static void addUnique(List<Item> list, Item item) {
+      if (list != null && !list.contains(item)) {
+         list.add(item);
+      }
+   }
+
+   private static Map<EquipmentSlot, List<Item>> emptySlotMap() {
+      Map<EquipmentSlot, List<Item>> bySlot = new EnumMap<>(EquipmentSlot.class);
+      bySlot.put(EquipmentSlot.HEAD, new ArrayList<>());
+      bySlot.put(EquipmentSlot.CHEST, new ArrayList<>());
+      bySlot.put(EquipmentSlot.LEGS, new ArrayList<>());
+      bySlot.put(EquipmentSlot.FEET, new ArrayList<>());
+      bySlot.put(EquipmentSlot.MAINHAND, new ArrayList<>());
+      bySlot.put(EquipmentSlot.OFFHAND, new ArrayList<>());
+      return bySlot;
+   }
+
+   private static List<BuildingInstance> collectGearSources(Village village) {
       Set<BuildingInstance> found = new LinkedHashSet<>();
       found.addAll(village.getBuildingsWithTag("armoury"));
+      found.addAll(village.getBuildingsWithTag("patrol"));
       for (BuildingInstance building : village.getBuildings()) {
-         if (PlayerBuildingRole.ARMORY.id().equals(building.getPlayerBuildingRole())) {
+         String role = building.getPlayerBuildingRole();
+         if (PlayerBuildingRole.ARMORY.id().equals(role)
+            || PlayerBuildingRole.GUARD_BARRACKS.id().equals(role)
+            || PlayerBuildingRole.GUARD_STATION.id().equals(role)) {
             found.add(building);
          }
       }
@@ -211,17 +257,20 @@ public final class VillageOutfitService {
          || item instanceof AxeItem
          || item instanceof BowItem
          || item instanceof CrossbowItem
-         || item instanceof TridentItem;
+         || item instanceof TridentItem
+         || TacZCompat.isGunItem(item);
    }
 
    private static boolean isRangedWeapon(Item item) {
-      return item instanceof BowItem || item instanceof CrossbowItem;
+      return item instanceof BowItem || item instanceof CrossbowItem || TacZCompat.isGunItem(item);
    }
 
    public static void clearCache() {
       CACHE.clear();
    }
 
-   private record CachedPools(long refreshedAt, Map<EquipmentSlot, List<Item>> bySlot) {
+   private record CachedPools(
+      long refreshedAt, Map<EquipmentSlot, List<Item>> villageWide, Map<UUID, Map<EquipmentSlot, List<Item>>> byBuilding
+   ) {
    }
 }

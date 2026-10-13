@@ -99,22 +99,18 @@ public final class ImmigrantService {
 
       int cost = MillenaireServerConfig.SERVER.immigrantDenierCost.getAsInt();
       if (cost > 0) {
-         BuildingInstance th = village.getTownhall();
-         BuildingInventory inv = th != null ? th.getInventory() : null;
-         if (inv == null) {
+         if (!VillageTreasuryService.canAfford(level, village, cost)) {
             if (manual) {
                notify(player, Component.translatable("gui.millenaire.city.immigrant_no_funds"));
             }
             return false;
          }
-         Item denier = ModItems.DENIER.get();
-         if (inv.getCount(level, denier) < cost) {
+         if (!VillageTreasuryService.withdraw(level, village, cost, VillageTreasuryService.REASON_IMMIGRANT)) {
             if (manual) {
                notify(player, Component.translatable("gui.millenaire.city.immigrant_no_funds"));
             }
             return false;
          }
-         inv.remove(level, denier, cost);
       }
 
       MillVillager spawned = VillagerSpawnFactory.spawnInVillage(
@@ -122,10 +118,7 @@ public final class ImmigrantService {
       );
       if (spawned == null) {
          if (cost > 0) {
-            BuildingInstance th = village.getTownhall();
-            if (th != null && th.getInventory() != null) {
-               th.getInventory().add(level, ModItems.DENIER.get(), cost);
-            }
+            VillageTreasuryService.deposit(level, village, cost, VillageTreasuryService.REASON_IMMIGRANT);
          }
          if (manual) {
             notify(player, Component.translatable("gui.millenaire.city.immigrant_spawn_failed"));

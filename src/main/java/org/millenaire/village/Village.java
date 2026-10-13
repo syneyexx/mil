@@ -114,19 +114,29 @@ public class Village {
    private transient boolean waystoneNameSynced;
    /** One-shot per session: assign culture-default faith if missing. */
    private transient boolean faithDefaultChecked;
+   /** One-shot per session: queue shrine/church if ordinary village lacks worship. */
+   private transient boolean worshipInfrastructureEnsured;
    private boolean customOutfitEnabled;
    @Nullable
    private ResourceLocation faithId;
    @Nullable
+   private UUID faithInstanceId;
+   @Nullable
+   private UUID chapterId;
+   @Nullable
    private String customFaithName;
    private long lastFestivalDay = -1L;
    private long festivalEndsAtTick = -1L;
+   private int religionTension;
+   @Nullable
+   private transient BlockPos cachedChurchCenter;
    @Nullable
    private String bannerNbt;
    private static final int MAX_CHRONICLE_SIZE = 500;
    private static final int MAX_HISTORY_SIZE = 1000;
    private final List<VillageEvent> chronicle = new ArrayList<>();
    private final List<VillageHistoryEntry> history = new ArrayList<>();
+   private final List<VillageTreasuryService.LedgerEntry> treasuryLedger = new ArrayList<>();
    private long historyStartTick = -1L;
    private int panelTickCounter;
    private long lastGoodsRefresh;
@@ -475,6 +485,17 @@ public class Village {
 
    public void setUnderAttack(boolean v) {
       this.raidState.setUnderAttack(v);
+   }
+
+   public List<VillageTreasuryService.LedgerEntry> getTreasuryLedger() {
+      return this.treasuryLedger;
+   }
+
+   public void setTreasuryLedger(List<VillageTreasuryService.LedgerEntry> entries) {
+      this.treasuryLedger.clear();
+      if (entries != null) {
+         this.treasuryLedger.addAll(entries);
+      }
    }
 
    public List<String> getRaidsPerformed() {
@@ -968,7 +989,9 @@ public class Village {
       this.chunksNeedRefresh = true;
       this.allBedManagersInitialized = false;
       this.buildingsByTag = null;
+      this.cachedChurchCenter = null;
       this.dirty = true;
+      org.millenaire.faith.ReligionService.indexes().onBuildingChanged(this);
    }
 
    public void addVillager(UUID uuid, ResourceLocation villagerTypeId) {
@@ -999,6 +1022,17 @@ public class Village {
       } else {
          this.removeVillagerRecord(villagerId);
          record.setHomeBuilding(destBuilding);
+         // Order membership is village-chapter scoped: leave chapter on permanent migration.
+         if (record.getOrderChapterId() != null) {
+            org.millenaire.faith.ReligionSavedData religion = org.millenaire.faith.ReligionSavedData.get(level);
+            religion.removeMembership(org.millenaire.faith.Membership.SubjectType.VILLAGER, record.getUuid());
+            record.setOrderChapterId(null);
+            record.setOrderRole(null);
+            record.setDevotion(0);
+            if (this.chapterId != null) {
+               this.markDirty();
+            }
+         }
          destination.addVillager(record);
          if (level.getEntity(villagerId) instanceof MillVillager villager) {
             villager.setVillageId(destination.getId());
@@ -1353,9 +1387,12 @@ public class Village {
          this.waystoneNameSynced = true;
          org.millenaire.compat.WaystonePlacer.syncNameForVillage(level, this);
       }
-      if (!this.faithDefaultChecked && this.faithId == null && !this.isLoneBuilding()) {
+      if (!this.faithDefaultChecked && !this.isLoneBuilding()) {
          this.faithDefaultChecked = true;
-         org.millenaire.faith.FaithService.applyDefaultFaith(this);
+         if (this.faithId == null) {
+            org.millenaire.faith.FaithService.applyDefaultFaith(this);
+         }
+         org.millenaire.faith.ReligionService.onVillageLoaded(level, this);
       }
 
       long currentDay = level.getDayTime() / 24000L;
@@ -1365,8 +1402,12 @@ public class Village {
          VillageDiplomacyHelper.performNightlyDiplomacyDrift(level, this);
          VillageDiplomacyHelper.regenerateDiplomacyPointsForPlayers(level, this);
          RaidManager.attemptPlanNewRaid(this, level);
-         org.millenaire.faith.FaithCalendarService.onNightEdge(level, this, currentDay);
+         org.millenaire.faith.ReligionService.onVillageNightEdge(level, this);
          this.markDirty();
+      }
+      // Festival starts are staggered across early night ticks (not all villages at once).
+      if (timeOfDay >= 13000L && timeOfDay < 13040L) {
+         org.millenaire.faith.FaithCalendarService.onNightEdge(level, this, currentDay);
       }
 
       if (this.raidState.isRaidActiveOrSuffering()) {
@@ -1382,6 +1423,10 @@ public class Village {
          CityStatsService.tick(level, this);
          ImmigrantService.tickAuto(level, this);
          org.millenaire.combat.raid.IllagerRaidSupport.tickCampGarrison(level, this);
+         // Sparse chest top-ups every 10s — budgeted, not on villager AI ticks
+         if (level.getGameTime() % 200L == this.getId().uuid().getLeastSignificantBits() % 200L) {
+            ChestVitalityHelper.tickSparseRestock(level, this);
+         }
       }
    }
 
@@ -1392,6 +1437,7 @@ public class Village {
       if (!this.isLoneBuilding()) {
          LocalMerchantHelper.attemptMerchantMoves(level, this);
       }
+      VillageTreasuryService.applySimulatedDailyTax(level, this);
 
       this.pathManager.nightlyRecheck(level, this);
    }
@@ -1475,24 +1521,29 @@ public class Village {
          WallGrowthManager.evaluate(level, this);
       }
 
-      if (level.getGameTime() % 20L == 0L) {
+      // Stagger heavy background work by village id hash to avoid synchronized tick spikes.
+      int stagger = Math.floorMod(this.getId().uuid().hashCode(), 40);
+      long gameTime = level.getGameTime();
+      if (gameTime % 80L == stagger % 80) {
          this.despawnDangerousMobs(level);
+         TickPerfCounters.MOB_DESPAWN.incrementAndGet();
       }
 
-      if (level.getGameTime() % 20L == 10L) {
+      if (gameTime % 20L == 10L) {
          this.checkBattleStatus(level, VillageSavedData.get(level));
       }
 
-      if (this.isPlayerControlled() && level.getGameTime() % 1000L == 0L) {
+      if (this.isPlayerControlled() && gameTime % 1000L == 0L) {
          this.placeNegationWandInChests(level);
       }
 
-      if (level.getGameTime() % 100L == 0L) {
+      if (gameTime % 100L == 0L) {
          this.updatePens(level, false);
       }
 
-      if (level.getGameTime() % 10L == 0L) {
+      if (gameTime % 40L == stagger % 40) {
          VillageSellerDispatcher.checkSeller(level, this);
+         TickPerfCounters.SELLER_SCANS.incrementAndGet();
       }
       if (level.getGameTime() % 100L == 50L) {
          boolean isDaytime = !TickConstants.isNight(level);
@@ -1547,9 +1598,11 @@ public class Village {
       }
 
       this.panelTickCounter++;
-      if (this.panelTickCounter >= 40) {
-         this.panelTickCounter = 0;
+      int panelPeriod = 80;
+      if (this.panelTickCounter >= panelPeriod) {
+         this.panelTickCounter = Math.floorMod(this.getId().uuid().hashCode(), panelPeriod);
          this.updatePanelDisplayLines(level);
+         TickPerfCounters.PANEL_UPDATES.incrementAndGet();
       }
 
       if (level.getGameTime() % 400L == 0L) {
@@ -1645,6 +1698,56 @@ public class Village {
 
    public boolean isFestivalActive(long gameTime) {
       return this.festivalEndsAtTick > gameTime;
+   }
+
+   @Nullable
+   public UUID getFaithInstanceId() {
+      return this.faithInstanceId;
+   }
+
+   public void setFaithInstanceId(@Nullable UUID faithInstanceId) {
+      this.faithInstanceId = faithInstanceId;
+      this.markDirty();
+   }
+
+   @Nullable
+   public UUID getChapterId() {
+      return this.chapterId;
+   }
+
+   public void setChapterId(@Nullable UUID chapterId) {
+      this.chapterId = chapterId;
+      this.markDirty();
+   }
+
+   public int getReligionTension() {
+      return this.religionTension;
+   }
+
+   public void setReligionTension(int religionTension) {
+      this.religionTension = Math.max(0, Math.min(100, religionTension));
+      this.markDirty();
+   }
+
+   public void addReligionTension(int delta) {
+      setReligionTension(this.religionTension + delta);
+   }
+
+   @Nullable
+   public BlockPos getCachedChurchCenter() {
+      return this.cachedChurchCenter;
+   }
+
+   public void setCachedChurchCenter(@Nullable BlockPos cachedChurchCenter) {
+      this.cachedChurchCenter = cachedChurchCenter;
+   }
+
+   public boolean isWorshipInfrastructureEnsured() {
+      return this.worshipInfrastructureEnsured;
+   }
+
+   public void setWorshipInfrastructureEnsured(boolean worshipInfrastructureEnsured) {
+      this.worshipInfrastructureEnsured = worshipInfrastructureEnsured;
    }
 
    public boolean isCustomOutfitEnabled() {
@@ -1870,7 +1973,11 @@ public class Village {
 
    @Nullable
    public String reserveSlot(BuildingId buildingId, Gender gender, UUID teenagerId) {
-      return this.residentSlotManager.reserveSlot(buildingId, gender, teenagerId);
+      return this.residentSlotManager.reserveSlot(buildingId, gender, teenagerId, null);
+   }
+
+   public String reserveSlot(BuildingId buildingId, Gender gender, UUID teenagerId, @Nullable String preferredTypeSuffix) {
+      return this.residentSlotManager.reserveSlot(buildingId, gender, teenagerId, preferredTypeSuffix);
    }
 
    public void releaseSlot(ResidentSlotManager.SlotKey key) {

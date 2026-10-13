@@ -169,6 +169,7 @@ final class VillageTypeLoader {
             nameListVal = loneBuilding ? null : "villages";
          }
 
+         boolean playerControlled = GsonHelper.getAsBoolean(json, "player_controlled", false);
          int radius = GsonHelper.getAsInt(json, "radius", 90);
          int radiusOverride = MillenaireServerConfig.SERVER.villageRadiusOverride.getAsInt();
          if (radiusOverride > 0) {
@@ -196,7 +197,6 @@ final class VillageTypeLoader {
             allowExtraBuildings = !loneBuilding && specialType == null;
          }
 
-         boolean playerControlled = GsonHelper.getAsBoolean(json, "player_controlled", false);
          if (playerControlled) {
             allowExtraBuildings = false;
          }

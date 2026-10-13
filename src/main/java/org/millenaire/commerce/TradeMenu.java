@@ -487,6 +487,13 @@ public class TradeMenu extends AbstractContainerMenu {
                                     sp, serverLevel, this.getEffectiveCultureId(), totalCost
                                  );
                               }
+                              int share = org.millenaire.config.MillenaireServerConfig.SERVER.bankShopSurplusShare.getAsInt();
+                              if (share > 0) {
+                                 int surplus = Math.max(1, totalCost * share / 100);
+                                 org.millenaire.village.VillageTreasuryService.deposit(
+                                    serverLevel, this.village, surplus, org.millenaire.village.VillageTreasuryService.REASON_SHOP_SURPLUS
+                                 );
+                              }
                            }
 
                            if (player.level() instanceof ServerLevel sl) {

@@ -231,6 +231,7 @@ public class QuestInstance {
          this.applyGlobalTags(step.globalTagsSuccess(), step.clearGlobalTagsSuccess(), savedData);
          this.applyPlayerTags(step.playerTagsSuccess(), step.clearPlayerTagsSuccess(), PlayerQuestData.get(overworld, QuestRegistry::get));
          this.applyActionData(step.actionDataSuccess(), PlayerQuestData.get(overworld, QuestRegistry::get));
+         this.applyReligionActionHooks(player, overworld, step);
          this.applyRelationChanges(step.relationChanges(), overworld, savedData);
          String playerName = player.getName().getString();
          String locale = QuestTextRenderer.playerLocale(player);
@@ -441,6 +442,17 @@ public class QuestInstance {
    private void applyActionData(List<ActionDataEntry> entries, PlayerQuestData questData) {
       for (ActionDataEntry entry : entries) {
          questData.setActionData(this.playerId, entry.key(), entry.value());
+      }
+   }
+
+   private void applyReligionActionHooks(ServerPlayer player, ServerLevel overworld, QuestStep step) {
+      Village village = null;
+      QuestInstanceVillager currentQiv = this.villagers.get(step.villagerKey());
+      if (currentQiv != null) {
+         village = Village.resolve(overworld, new VillageId(currentQiv.getVillageId()));
+      }
+      for (ActionDataEntry entry : step.actionDataSuccess()) {
+         org.millenaire.faith.OrderConflictService.onActionData(overworld, player, village, entry.key(), entry.value());
       }
    }
 

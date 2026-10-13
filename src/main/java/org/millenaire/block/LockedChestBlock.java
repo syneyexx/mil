@@ -22,6 +22,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.phys.BlockHitResult;
 import org.millenaire.commerce.LockedChestMenu;
+import org.millenaire.item.LockpickItem;
 import org.millenaire.item.SummoningWandItem;
 
 public class LockedChestBlock extends ChestBlock {
@@ -54,7 +55,8 @@ public class LockedChestBlock extends ChestBlock {
    protected ItemInteractionResult useItemOn(
       ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult
    ) {
-      return stack.getItem() instanceof SummoningWandItem
+      // Lockpick and summoning wand must own the click — do not open the locked menu first.
+      return stack.getItem() instanceof SummoningWandItem || stack.getItem() instanceof LockpickItem
          ? ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION
          : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
    }
@@ -79,6 +81,10 @@ public class LockedChestBlock extends ChestBlock {
          Container container = ChestBlock.getContainer(block, state, level, pos, true);
          if (container == null) {
             return InteractionResult.PASS;
+         }
+
+         if (locked) {
+            player.displayClientMessage(Component.translatable("block.millenaire.locked_chest.use_lockpick"), true);
          }
 
          Component title = chest.getDisplayName();

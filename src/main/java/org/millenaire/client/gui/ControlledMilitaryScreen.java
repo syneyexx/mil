@@ -271,6 +271,16 @@ public class ControlledMilitaryScreen extends AbstractMillenaireScreen {
                0xFF000000 | color,
                false
             );
+            if (ce.atWar()) {
+               graphics.drawString(
+                  this.font,
+                  Component.translatable("gui.millenaire.controlled_military.war_wave_warning"),
+                  contentX,
+                  rowY + 2 * (9 + 1),
+                  0xFFAA0000,
+                  false
+               );
+            }
             rowY += 58;
          }
       }
