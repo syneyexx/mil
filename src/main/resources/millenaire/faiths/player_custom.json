@@ -1,0 +1,10 @@
+{
+  "id": "millenaire:player_custom",
+  "display_name": "Custom Faith",
+  "culture": null,
+  "clergy_tags": ["religious"],
+  "church_building_tags": ["praying", "mosque", "pujas", "sacrifices"],
+  "holy_shop": "holy_shop",
+  "festival_name": "Holy Festival",
+  "festival_duration_ticks": 4000
+}

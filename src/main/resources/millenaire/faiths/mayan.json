@@ -1,0 +1,11 @@
+{
+  "id": "millenaire:mayan",
+  "display_name": "Mayan Faith",
+  "culture": "millenaire:mayan",
+  "clergy_tags": ["religious"],
+  "church_building_tags": ["sacrifices", "praying"],
+  "holy_shop": "holy_shop",
+  "festival_name": "Sacred Ceremony",
+  "festival_duration_ticks": 4000,
+  "preferred_shrine": "millenaire:mayan/mayantemple"
+}

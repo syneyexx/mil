@@ -1,0 +1,11 @@
+{
+  "id": "millenaire:indian",
+  "display_name": "Hindu Faith",
+  "culture": "millenaire:indian",
+  "clergy_tags": ["religious"],
+  "church_building_tags": ["praying", "pujas"],
+  "holy_shop": "holy_shop",
+  "festival_name": "Temple Festival",
+  "festival_duration_ticks": 4000,
+  "preferred_shrine": "millenaire:indian/villagetemple"
+}

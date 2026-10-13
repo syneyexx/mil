@@ -365,6 +365,21 @@ public class TradeMenu extends AbstractContainerMenu {
       return Math.max(1, (int)Math.round(base * mult));
    }
 
+   /** 15% discount when buying from a holy shop during an active village festival. */
+   private int applyFestivalHolyShopDiscount(int base, boolean isBuyingFromShop, Player player) {
+      if (base <= 0 || !isBuyingFromShop || this.village == null || this.building == null) {
+         return base;
+      }
+      if (!(player.level() instanceof ServerLevel level) || !this.village.isFestivalActive(level.getGameTime())) {
+         return base;
+      }
+      BuildingPlan plan = ModCultures.getBuildingPlan(this.building.getPlanId());
+      if (plan == null || !"holy_shop".equals(plan.shopId())) {
+         return base;
+      }
+      return Math.max(1, (int)Math.round(base * 0.85));
+   }
+
    public boolean clickMenuButton(Player player, int buttonId) {
       if (this.serverGoods == null || this.village == null || this.building == null) {
          return false;
@@ -422,7 +437,9 @@ public class TradeMenu extends AbstractContainerMenu {
       if (good.canSell()) {
          if (this.village != null && this.building != null) {
             int playerMoney = MoneyHelper.getTotalDeniers(player.getInventory());
-            int price = this.applyCultureStandingPrice(this.resolvePrice(good, true), true, player);
+            int price = this.applyFestivalHolyShopDiscount(
+               this.applyCultureStandingPrice(this.resolvePrice(good, true), true, player), true, player
+            );
             if (price > 0) {
                int rep;
                if (player.level() instanceof ServerLevel sl) {

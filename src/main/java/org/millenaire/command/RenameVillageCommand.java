@@ -34,6 +34,7 @@ public final class RenameVillageCommand {
          String oldName = village.getVillageName();
          village.setVillageName(newName);
          village.markDirty();
+         org.millenaire.compat.WaystonePlacer.syncNameForVillage(level, village);
          src.sendSuccess(() -> Component.translatable("command.millenaire.renamevillage.success", new Object[]{oldName, newName}), true);
          return 1;
       }

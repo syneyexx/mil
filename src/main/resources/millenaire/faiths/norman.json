@@ -1,0 +1,11 @@
+{
+  "id": "millenaire:norman",
+  "display_name": "Norman Faith",
+  "culture": "millenaire:norman",
+  "clergy_tags": ["religious"],
+  "church_building_tags": ["praying"],
+  "holy_shop": "holy_shop",
+  "festival_name": "Feast Day",
+  "festival_duration_ticks": 4000,
+  "preferred_shrine": "millenaire:norman/church"
+}

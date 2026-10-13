@@ -3,6 +3,7 @@
   "building_id": "mosque",
   "category": "houses",
   "native_name": "Cami",
+  "shop": "holy_shop",
   "tags": [
     "mosque",
     "nopaths"

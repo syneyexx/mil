@@ -1,0 +1,11 @@
+{
+  "id": "millenaire:byzantines",
+  "display_name": "Orthodox Faith",
+  "culture": "millenaire:byzantines",
+  "clergy_tags": ["religious"],
+  "church_building_tags": ["praying"],
+  "holy_shop": "holy_shop",
+  "festival_name": "Holy Liturgy",
+  "festival_duration_ticks": 4000,
+  "preferred_shrine": "millenaire:byzantines/church"
+}

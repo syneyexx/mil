@@ -444,6 +444,19 @@ public class VillageSavedData extends SavedData {
          villageTag.putBoolean("waystone_placed", true);
       }
 
+      if (village.getFaithId() != null) {
+         villageTag.putString("faith_id", village.getFaithId().toString());
+      }
+      if (village.getCustomFaithName() != null && !village.getCustomFaithName().isBlank()) {
+         villageTag.putString("custom_faith_name", village.getCustomFaithName());
+      }
+      if (village.getLastFestivalDay() >= 0L) {
+         villageTag.putLong("last_festival_day", village.getLastFestivalDay());
+      }
+      if (village.getFestivalEndsAtTick() >= 0L) {
+         villageTag.putLong("festival_ends_at", village.getFestivalEndsAtTick());
+      }
+
       if (village.isCustomOutfitEnabled()) {
          villageTag.putBoolean("custom_outfit", true);
       }
@@ -822,6 +835,19 @@ public class VillageSavedData extends SavedData {
 
             if (villageTag.getBoolean("waystone_placed")) {
                village.setWaystonePlaced(true);
+            }
+
+            if (villageTag.contains("faith_id")) {
+               village.setFaithId(ResourceLocation.parse(villageTag.getString("faith_id")));
+            }
+            if (villageTag.contains("custom_faith_name")) {
+               village.setCustomFaithName(villageTag.getString("custom_faith_name"));
+            }
+            if (villageTag.contains("last_festival_day")) {
+               village.setLastFestivalDay(villageTag.getLong("last_festival_day"));
+            }
+            if (villageTag.contains("festival_ends_at")) {
+               village.setFestivalEndsAtTick(villageTag.getLong("festival_ends_at"));
             }
 
             if (villageTag.getBoolean("custom_outfit")) {

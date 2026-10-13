@@ -1,0 +1,11 @@
+{
+  "id": "millenaire:inuits",
+  "display_name": "Spirit Ways",
+  "culture": "millenaire:inuits",
+  "clergy_tags": ["religious"],
+  "church_building_tags": ["praying"],
+  "holy_shop": "holy_shop",
+  "festival_name": "Offering Night",
+  "festival_duration_ticks": 4000,
+  "preferred_shrine": "millenaire:inuits/offering"
+}

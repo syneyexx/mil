@@ -3,6 +3,7 @@
   "building_id": "church",
   "category": "special",
   "native_name": "Chapelle",
+  "shop": "holy_shop",
   "tags": [
     "praying"
   ],

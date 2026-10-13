@@ -20,6 +20,7 @@ import org.millenaire.advancement.MillAdvancements;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillageType;
+import org.millenaire.faith.FaithService;
 import org.millenaire.item.ModItems;
 import org.millenaire.item.VillageCreateWandItem;
 import org.millenaire.village.CultureWarService;
@@ -31,8 +32,9 @@ import org.millenaire.village.VillageSavedData;
 import org.millenaire.world.VillageSpawner;
 import org.slf4j.Logger;
 
-public record VillageCreateConfirmPayload(BlockPos pos, String cultureKey, String typeKey, String villageName)
-   implements CustomPacketPayload {
+public record VillageCreateConfirmPayload(
+   BlockPos pos, String cultureKey, String typeKey, String villageName, boolean startOwnFaith, String customFaithName
+) implements CustomPacketPayload {
    private static final Logger LOGGER = LogUtils.getLogger();
    public static final Type<VillageCreateConfirmPayload> TYPE = new Type(
       ResourceLocation.fromNamespaceAndPath("millenaire", "village_create_confirm")
@@ -49,6 +51,8 @@ public record VillageCreateConfirmPayload(BlockPos pos, String cultureKey, Strin
       ByteBufCodecs.STRING_UTF8.encode(buf, p.cultureKey);
       ByteBufCodecs.STRING_UTF8.encode(buf, p.typeKey);
       ByteBufCodecs.STRING_UTF8.encode(buf, p.villageName);
+      buf.writeBoolean(p.startOwnFaith);
+      ByteBufCodecs.STRING_UTF8.encode(buf, p.customFaithName != null ? p.customFaithName : "");
    }
 
    private static VillageCreateConfirmPayload decode(ByteBuf buf) {
@@ -56,6 +60,8 @@ public record VillageCreateConfirmPayload(BlockPos pos, String cultureKey, Strin
          new BlockPos(ByteBufCodecs.VAR_INT.decode(buf), ByteBufCodecs.VAR_INT.decode(buf), ByteBufCodecs.VAR_INT.decode(buf)),
          ByteBufCodecs.STRING_UTF8.decode(buf),
          ByteBufCodecs.STRING_UTF8.decode(buf),
+         ByteBufCodecs.STRING_UTF8.decode(buf),
+         buf.readBoolean(),
          ByteBufCodecs.STRING_UTF8.decode(buf)
       );
    }
@@ -137,11 +143,21 @@ public record VillageCreateConfirmPayload(BlockPos pos, String cultureKey, Strin
          if (founded != null) {
             founded.setVillageName(sanitizedName);
             VillageSavedData.get(serverLevel).setDirty();
+            org.millenaire.compat.WaystonePlacer.syncNameForVillage(serverLevel, founded);
          }
          if (founded != null && customOutfit) {
             founded.setCustomOutfitEnabled(true);
             VillageSavedData.get(serverLevel).setDirty();
             player.sendSystemMessage(Component.translatable("gui.millenaire.village_create.custom_outfit_hint"));
+         }
+         if (founded != null && payload.startOwnFaith()) {
+            String faithName = VillageCreateWandItem.sanitizeVillageName(payload.customFaithName());
+            if (faithName.isEmpty()) {
+               faithName = sanitizedName + " Faith";
+            }
+            FaithService.startPlayerFaith(founded, faithName);
+            VillageSavedData.get(serverLevel).setDirty();
+            player.sendSystemMessage(Component.translatable("gui.millenaire.village_create.faith_started", faithName));
          }
          if (founded != null && !conflictCultures.isEmpty()) {
             for (ResourceLocation enemyCulture : conflictCultures) {

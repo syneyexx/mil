@@ -3,6 +3,7 @@
   "building_id": "presbytery",
   "category": "houses",
   "native_name": "Presbytère",
+  "shop": "holy_shop",
   "max_distance": 0.8,
   "male": [
     "priest"

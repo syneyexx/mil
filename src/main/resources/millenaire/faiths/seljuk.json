@@ -1,0 +1,11 @@
+{
+  "id": "millenaire:seljuk",
+  "display_name": "Islamic Faith",
+  "culture": "millenaire:seljuk",
+  "clergy_tags": ["religious"],
+  "church_building_tags": ["mosque", "praying"],
+  "holy_shop": "holy_shop",
+  "festival_name": "Eid Gathering",
+  "festival_duration_ticks": 4000,
+  "preferred_shrine": "millenaire:seljuk/mosque"
+}

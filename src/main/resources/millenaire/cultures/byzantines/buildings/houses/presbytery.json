@@ -3,6 +3,7 @@
   "building_id": "presbytery",
   "category": "houses",
   "native_name": "Presbytéreion",
+  "shop": "holy_shop",
   "male": [
     "pastor_byzantine"
   ],

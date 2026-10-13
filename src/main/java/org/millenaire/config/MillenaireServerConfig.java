@@ -63,9 +63,12 @@ public final class MillenaireServerConfig {
    public final BooleanValue legacyAutoConvert;
    public final IntValue legacyAutoConvertMaxPngs;
    public final BooleanValue enableCrime;
+   public final BooleanValue resetBountyOnDeath;
    public final IntValue crimeTradeBanThreshold;
    public final IntValue crimeHostileThreshold;
    public final IntValue crimeRaidCityThreshold;
+   public final IntValue faithFestivalIntervalDays;
+   public final IntValue faithFestivalDurationTicks;
    public final BooleanValue roadsEnabled;
    public final IntValue roadsWidth;
    public final IntValue roadsMaxEdgeLength;
@@ -344,6 +347,9 @@ public final class MillenaireServerConfig {
       this.enableCrime = builder.comment("Enable pickpocketing, lockpicking, and culture bounty consequences")
          .translation("millenaire.config.enableCrime")
          .define("enableCrime", true);
+      this.resetBountyOnDeath = builder.comment("Clear all culture bounties when the player dies")
+         .translation("millenaire.config.resetBountyOnDeath")
+         .define("resetBountyOnDeath", true);
       this.crimeTradeBanThreshold = builder.comment("Bounty at or above this blocks trade with the player and their city")
          .translation("millenaire.config.crimeTradeBanThreshold")
          .defineInRange("tradeBanThreshold", 50, 1, 1000);
@@ -353,6 +359,14 @@ public final class MillenaireServerConfig {
       this.crimeRaidCityThreshold = builder.comment("Bounty at or above this can schedule raids against the player's controlled city")
          .translation("millenaire.config.crimeRaidCityThreshold")
          .defineInRange("raidCityThreshold", 200, 1, 1000);
+      builder.pop();
+      builder.comment("Faith / festivals (day-batched, not per-tick)").push("faith");
+      this.faithFestivalIntervalDays = builder.comment("Minecraft days between village festivals")
+         .translation("millenaire.config.faithFestivalIntervalDays")
+         .defineInRange("festivalIntervalDays", 5, 1, 40);
+      this.faithFestivalDurationTicks = builder.comment("How long a festival lasts in ticks")
+         .translation("millenaire.config.faithFestivalDurationTicks")
+         .defineInRange("festivalDurationTicks", 4000, 200, 24000);
       builder.pop();
       builder.comment("Inter-village road network (async planning, budgetted building)").push("roads");
       this.roadsEnabled = builder.comment("Enable automatic roads between known villages")

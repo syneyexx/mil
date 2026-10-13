@@ -1,0 +1,28 @@
+{
+  "sells": [
+    "bookshelf",
+    "sake",
+    "udon",
+    "ikayaki",
+    "banner_white",
+    "carpet_red",
+    "bread"
+  ],
+  "buys": [
+    "bookshelf",
+    "bread",
+    "wool_white",
+    "gold_ingot"
+  ],
+  "buys_optional": [
+    "sake",
+    "diamond",
+    "emerald"
+  ],
+  "deliver_to": [
+    "minecraft:bookshelf",
+    "minecraft:bread",
+    "minecraft:white_wool",
+    "minecraft:gold_ingot"
+  ]
+}

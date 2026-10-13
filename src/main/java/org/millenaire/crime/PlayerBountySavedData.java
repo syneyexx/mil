@@ -27,7 +27,17 @@ public class PlayerBountySavedData extends SavedData {
    }
 
    public static PlayerBountySavedData get(ServerLevel level) {
-      return (PlayerBountySavedData)level.getDataStorage().computeIfAbsent(factory(), DATA_NAME);
+      ServerLevel overworld = level.getServer().overworld();
+      return (PlayerBountySavedData)overworld.getDataStorage().computeIfAbsent(factory(), DATA_NAME);
+   }
+
+   /** Clears all culture bounties and crime-raid cooldowns for the player. */
+   public void clearAll(UUID player) {
+      boolean removedBounty = this.bounties.remove(player) != null;
+      boolean removedRaids = this.lastCrimeRaidTick.remove(player) != null;
+      if (removedBounty || removedRaids) {
+         this.setDirty();
+      }
    }
 
    public int get(UUID player, ResourceLocation cultureId) {

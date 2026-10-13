@@ -1,0 +1,25 @@
+{
+  "sells": [
+    "bookshelf",
+    "bread",
+    "cake",
+    "carpet_red",
+    "banner_white"
+  ],
+  "buys": [
+    "bookshelf",
+    "bread",
+    "wool_white",
+    "gold_ingot"
+  ],
+  "buys_optional": [
+    "diamond",
+    "emerald"
+  ],
+  "deliver_to": [
+    "minecraft:bookshelf",
+    "minecraft:bread",
+    "minecraft:white_wool",
+    "minecraft:gold_ingot"
+  ]
+}

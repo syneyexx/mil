@@ -1,0 +1,31 @@
+{
+  "sells": [
+    "bookshelf",
+    "stained_glass_white",
+    "stained_glass_yellow",
+    "carpet_red",
+    "banner_white",
+    "bread",
+    "winebasic",
+    "feta",
+    "souvlaki"
+  ],
+  "buys": [
+    "bookshelf",
+    "bread",
+    "wool_white",
+    "gold_ingot",
+    "winebasic"
+  ],
+  "buys_optional": [
+    "winefancy",
+    "diamond",
+    "emerald"
+  ],
+  "deliver_to": [
+    "minecraft:bookshelf",
+    "minecraft:bread",
+    "minecraft:white_wool",
+    "minecraft:gold_ingot"
+  ]
+}

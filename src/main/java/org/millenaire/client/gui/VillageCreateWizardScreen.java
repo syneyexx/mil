@@ -22,7 +22,10 @@ public class VillageCreateWizardScreen extends AbstractMillenaireScreen {
    private String selectedCulture = "";
    private String selectedType = "";
    private String villageName = "";
+   private boolean startOwnFaith;
+   private String faithName = "";
    private EditBox nameField;
+   private EditBox faithNameField;
    private final List<Button> stepButtons = new ArrayList<>();
 
    public VillageCreateWizardScreen(VillageCreateWizardPayload data) {
@@ -44,6 +47,10 @@ public class VillageCreateWizardScreen extends AbstractMillenaireScreen {
       if (this.nameField != null) {
          this.removeWidget(this.nameField);
          this.nameField = null;
+      }
+      if (this.faithNameField != null) {
+         this.removeWidget(this.faithNameField);
+         this.faithNameField = null;
       }
       int x = (this.width - WIDTH) / 2;
       int y = (this.height - HEIGHT) / 2;
@@ -138,22 +145,62 @@ public class VillageCreateWizardScreen extends AbstractMillenaireScreen {
             this.setInitialFocus(this.nameField);
 
             this.addStepButton(
-               Button.builder(Component.translatable("gui.millenaire.village_create.found"), b -> {
+               Button.builder(Component.translatable("gui.millenaire.village_create.next"), b -> {
                      String name = VillageCreateWandItem.sanitizeVillageName(this.villageName);
                      if (name.isEmpty() || this.selectedType.isEmpty()) {
                         return;
                      }
-                     PacketDistributor.sendToServer(
-                        new VillageCreateConfirmPayload(this.data.targetPos(), this.selectedCulture, this.selectedType, name),
-                        new CustomPacketPayload[0]
-                     );
-                     this.onClose();
+                     this.step = 5;
+                     this.rebuildStep();
                   })
-                  .bounds(x + WIDTH - 100, y + HEIGHT - 28, 84, 18)
+                  .bounds(x + WIDTH - 86, y + HEIGHT - 28, 70, 18)
                   .build()
             );
             this.nameField.setResponder(s -> {
                this.villageName = s;
+               this.rebuildNameNextButtonState();
+            });
+            this.rebuildNameNextButtonState();
+         }
+         case 5 -> {
+            this.addStepButton(
+               Button.builder(Component.translatable("gui.millenaire.village_create.faith_yes"), b -> {
+                     this.startOwnFaith = true;
+                     if (this.faithName.isBlank()) {
+                        this.faithName = VillageCreateWandItem.sanitizeVillageName(this.villageName) + " Faith";
+                     }
+                     this.step = 6;
+                     this.rebuildStep();
+                  })
+                  .bounds(x + 40, y + 70, 200, 18)
+                  .build()
+            );
+            this.addStepButton(
+               Button.builder(Component.translatable("gui.millenaire.village_create.faith_no"), b -> {
+                     this.startOwnFaith = false;
+                     this.faithName = "";
+                     this.sendFoundPacket();
+                  })
+                  .bounds(x + 40, y + 94, 200, 18)
+                  .build()
+            );
+         }
+         case 6 -> {
+            this.faithNameField = new EditBox(
+               this.font, x + 40, y + 70, 200, 18, Component.translatable("gui.millenaire.village_create.pick_faith_name")
+            );
+            this.faithNameField.setMaxLength(VillageCreateWandItem.MAX_VILLAGE_NAME_LENGTH);
+            this.faithNameField.setValue(this.faithName);
+            this.addRenderableWidget(this.faithNameField);
+            this.setInitialFocus(this.faithNameField);
+
+            this.addStepButton(
+               Button.builder(Component.translatable("gui.millenaire.village_create.found"), b -> this.sendFoundPacket())
+                  .bounds(x + WIDTH - 100, y + HEIGHT - 28, 84, 18)
+                  .build()
+            );
+            this.faithNameField.setResponder(s -> {
+               this.faithName = s;
                this.rebuildFoundButtonState();
             });
             this.rebuildFoundButtonState();
@@ -161,6 +208,24 @@ public class VillageCreateWizardScreen extends AbstractMillenaireScreen {
          default -> {
          }
       }
+   }
+
+   private void sendFoundPacket() {
+      String name = VillageCreateWandItem.sanitizeVillageName(this.villageName);
+      if (name.isEmpty() || this.selectedType.isEmpty()) {
+         return;
+      }
+      String faith = this.startOwnFaith ? VillageCreateWandItem.sanitizeVillageName(this.faithName) : "";
+      if (this.startOwnFaith && faith.isEmpty()) {
+         return;
+      }
+      PacketDistributor.sendToServer(
+         new VillageCreateConfirmPayload(
+            this.data.targetPos(), this.selectedCulture, this.selectedType, name, this.startOwnFaith, faith
+         ),
+         new CustomPacketPayload[0]
+      );
+      this.onClose();
    }
 
    private String resolveTypeKeyForCulture(String cultureKey) {
@@ -257,6 +322,22 @@ public class VillageCreateWizardScreen extends AbstractMillenaireScreen {
                graphics.drawString(this.font, Component.translatable("gui.millenaire.village_create.overlaps"), x + 16, textY, red, false);
             }
          }
+         case 5 -> {
+            for (var line : this.font.split(Component.translatable("gui.millenaire.village_create.faith_prompt"), WIDTH - 32)) {
+               graphics.drawString(this.font, line, x + 16, textY, ink, false);
+               textY += 11;
+            }
+         }
+         case 6 -> {
+            graphics.drawString(this.font, Component.translatable("gui.millenaire.village_create.pick_faith_name"), x + 16, textY, ink, false);
+            textY = y + 96;
+            String preview = VillageCreateWandItem.sanitizeVillageName(this.faithName);
+            if (!preview.isEmpty()) {
+               graphics.drawString(
+                  this.font, Component.translatable("gui.millenaire.village_create.faith_confirm", preview), x + 16, textY, ink, false
+               );
+            }
+         }
          default -> {
          }
       }
@@ -265,8 +346,13 @@ public class VillageCreateWizardScreen extends AbstractMillenaireScreen {
 
    @Override
    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-      if (this.step == 4 && this.nameField != null && this.nameField.isFocused()) {
-         this.rebuildFoundButtonState();
+      if ((this.step == 4 && this.nameField != null && this.nameField.isFocused())
+         || (this.step == 6 && this.faithNameField != null && this.faithNameField.isFocused())) {
+         if (this.step == 4) {
+            this.rebuildNameNextButtonState();
+         } else {
+            this.rebuildFoundButtonState();
+         }
       }
       return super.keyPressed(keyCode, scanCode, modifiers);
    }
@@ -275,9 +361,21 @@ public class VillageCreateWizardScreen extends AbstractMillenaireScreen {
    public boolean charTyped(char codePoint, int modifiers) {
       boolean handled = super.charTyped(codePoint, modifiers);
       if (this.step == 4) {
+         this.rebuildNameNextButtonState();
+      } else if (this.step == 6) {
          this.rebuildFoundButtonState();
       }
       return handled;
+   }
+
+   private void rebuildNameNextButtonState() {
+      if (this.stepButtons.isEmpty()) {
+         return;
+      }
+      Button next = this.stepButtons.getLast();
+      next.active = !this.data.overlapsRadius()
+         && !this.selectedType.isEmpty()
+         && !VillageCreateWandItem.sanitizeVillageName(this.villageName).isEmpty();
    }
 
    private void rebuildFoundButtonState() {
@@ -287,6 +385,7 @@ public class VillageCreateWizardScreen extends AbstractMillenaireScreen {
       Button found = this.stepButtons.getLast();
       found.active = !this.data.overlapsRadius()
          && !this.selectedType.isEmpty()
-         && !VillageCreateWandItem.sanitizeVillageName(this.villageName).isEmpty();
+         && !VillageCreateWandItem.sanitizeVillageName(this.villageName).isEmpty()
+         && (!this.startOwnFaith || !VillageCreateWandItem.sanitizeVillageName(this.faithName).isEmpty());
    }
 }

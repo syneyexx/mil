@@ -4,6 +4,7 @@
   "converter_skip": true,
   "category": "houses",
   "native_name": "Gaanv Ka Mandir",
+  "shop": "holy_shop",
   "tags": [
     "praying",
     "pujas"

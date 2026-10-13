@@ -3,12 +3,14 @@
   "building_id": "offering",
   "category": "special",
   "native_name": "Tuniglaktubvik",
+  "shop": "holy_shop",
   "female": [
     "inuit_oldlady"
   ],
   "tags": [
     "archives",
-    "nopaths"
+    "nopaths",
+    "praying"
   ],
   "icon": "sign",
   "area_to_clear": 3,

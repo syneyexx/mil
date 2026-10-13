@@ -419,6 +419,8 @@ public class Millenaire {
          }
       });
       NeoForge.EVENT_BUS.addListener(LivingDropsEvent.class, InuitHuntingDropHandler::onLivingDrops);
+      NeoForge.EVENT_BUS.addListener(net.neoforged.neoforge.event.entity.living.LivingDeathEvent.class, org.millenaire.crime.BountyDeathHandler::onLivingDeath);
+      NeoForge.EVENT_BUS.addListener(net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerRespawnEvent.class, org.millenaire.crime.BountyDeathHandler::onPlayerRespawn);
       NeoForge.EVENT_BUS.addListener(EventPriority.NORMAL, false, RegisterCommandsEvent.class, event -> {
          SpawnVillageCommand.register(event.getDispatcher());
          SpawnLoneBuildingCommand.register(event.getDispatcher());
@@ -552,6 +554,7 @@ public class Millenaire {
                   VillagerConfig.load();
                   goalRegistryInstance.resetToBuiltins();
                   CultureLoader.loadAll();
+                  org.millenaire.faith.FaithLoader.loadAll();
                   if (spawnQueueInstance != null) {
                      spawnQueueInstance.invalidateBiomeIndex();
                   }

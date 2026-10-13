@@ -591,6 +591,7 @@ public final class VillageSpawner {
          village.sendFireplacePositions(level);
       }
 
+      org.millenaire.faith.FaithService.onVillageSpawned(level, village);
       VillageNotifier.notifySpawn(level, center, village.getVillageName(), villageType);
       village.recordEvent(level, "Village founded (type: " + villageTypeId.getPath() + ", completion: " + completion + "%)");
       if (villageType.playerControlled() && controller != null && village.getOwnerName() != null) {

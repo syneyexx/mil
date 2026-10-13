@@ -166,7 +166,11 @@ public class VisitBuildingGoal implements VillagerGoal {
    @Override
    public int computePriority(GoalContext context) {
       int random = this.priorityRandom > 0 ? ThreadLocalRandom.current().nextInt(this.priorityRandom) : 0;
-      return this.basePriority + random;
+      String key = this.goalKey != null ? this.goalKey : (this.id != null ? this.id.getPath() : null);
+      int festivalBoost = org.millenaire.faith.FaithCalendarService.festivalPriorityBoost(
+         context.village(), context.gameTime(), key
+      );
+      return this.basePriority + random + festivalBoost;
    }
 
    @Override

@@ -1,0 +1,26 @@
+{
+  "sells": [
+    "inuitcarving",
+    "hidehanging",
+    "bone",
+    "leather",
+    "cauldron",
+    "straw_bed"
+  ],
+  "buys": [
+    "bone",
+    "leather",
+    "inuitcarving",
+    "hidehanging"
+  ],
+  "buys_optional": [
+    "gold_ingot",
+    "diamond",
+    "emerald"
+  ],
+  "deliver_to": [
+    "minecraft:bone",
+    "minecraft:leather",
+    "minecraft:cauldron"
+  ]
+}

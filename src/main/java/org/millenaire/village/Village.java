@@ -110,7 +110,17 @@ public class Village {
    @Nullable
    private String ownerName;
    private boolean waystonePlaced;
+   /** One-shot per session: re-apply waystone name after load. */
+   private transient boolean waystoneNameSynced;
+   /** One-shot per session: assign culture-default faith if missing. */
+   private transient boolean faithDefaultChecked;
    private boolean customOutfitEnabled;
+   @Nullable
+   private ResourceLocation faithId;
+   @Nullable
+   private String customFaithName;
+   private long lastFestivalDay = -1L;
+   private long festivalEndsAtTick = -1L;
    @Nullable
    private String bannerNbt;
    private static final int MAX_CHRONICLE_SIZE = 500;
@@ -1339,6 +1349,15 @@ public class Village {
    }
 
    public void backgroundTick(ServerLevel level) {
+      if (this.waystonePlaced && !this.waystoneNameSynced) {
+         this.waystoneNameSynced = true;
+         org.millenaire.compat.WaystonePlacer.syncNameForVillage(level, this);
+      }
+      if (!this.faithDefaultChecked && this.faithId == null && !this.isLoneBuilding()) {
+         this.faithDefaultChecked = true;
+         org.millenaire.faith.FaithService.applyDefaultFaith(this);
+      }
+
       long currentDay = level.getDayTime() / 24000L;
       long timeOfDay = level.getDayTime() % 24000L;
       if (timeOfDay >= 13000L && currentDay > this.lastNightActionDay) {
@@ -1346,6 +1365,7 @@ public class Village {
          VillageDiplomacyHelper.performNightlyDiplomacyDrift(level, this);
          VillageDiplomacyHelper.regenerateDiplomacyPointsForPlayers(level, this);
          RaidManager.attemptPlanNewRaid(this, level);
+         org.millenaire.faith.FaithCalendarService.onNightEdge(level, this, currentDay);
          this.markDirty();
       }
 
@@ -1583,6 +1603,48 @@ public class Village {
    public void setWaystonePlaced(boolean placed) {
       this.waystonePlaced = placed;
       this.markDirty();
+   }
+
+   @Nullable
+   public ResourceLocation getFaithId() {
+      return this.faithId;
+   }
+
+   public void setFaithId(@Nullable ResourceLocation faithId) {
+      this.faithId = faithId;
+      this.markDirty();
+   }
+
+   @Nullable
+   public String getCustomFaithName() {
+      return this.customFaithName;
+   }
+
+   public void setCustomFaithName(@Nullable String customFaithName) {
+      this.customFaithName = customFaithName;
+      this.markDirty();
+   }
+
+   public long getLastFestivalDay() {
+      return this.lastFestivalDay;
+   }
+
+   public void setLastFestivalDay(long lastFestivalDay) {
+      this.lastFestivalDay = lastFestivalDay;
+      this.markDirty();
+   }
+
+   public long getFestivalEndsAtTick() {
+      return this.festivalEndsAtTick;
+   }
+
+   public void setFestivalEndsAtTick(long festivalEndsAtTick) {
+      this.festivalEndsAtTick = festivalEndsAtTick;
+      this.markDirty();
+   }
+
+   public boolean isFestivalActive(long gameTime) {
+      return this.festivalEndsAtTick > gameTime;
    }
 
    public boolean isCustomOutfitEnabled() {

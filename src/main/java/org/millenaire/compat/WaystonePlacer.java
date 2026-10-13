@@ -2,7 +2,9 @@ package org.millenaire.compat;
 
 import com.mojang.logging.LogUtils;
 import java.lang.reflect.Method;
+import java.util.Iterator;
 import java.util.Optional;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -27,6 +29,7 @@ public final class WaystonePlacer {
    private static final Logger LOGGER = LogUtils.getLogger();
    private static final ResourceLocation WAYSTONE_ID = ResourceLocation.fromNamespaceAndPath("waystones", "waystone");
    private static final int REPAIR_SEARCH_RADIUS = 8;
+   private static final int[] NAME_RETRY_DELAYS_TICKS = {1, 5, 20};
 
    private WaystonePlacer() {
    }
@@ -35,20 +38,58 @@ public final class WaystonePlacer {
       return ModList.get().isLoaded("waystones");
    }
 
+   /** Resolve a non-blank display name for a Millenaire village waystone. */
+   public static String resolveVillageWaystoneName(Village village) {
+      String name = village.getVillageName();
+      if (name != null && !name.isBlank()) {
+         return name.trim();
+      }
+      if (village.getCultureId() != null) {
+         return village.getCultureId().getPath();
+      }
+      return "Village";
+   }
+
+   /**
+    * Re-apply the village name to an existing nearby waystone (create rename, /renamevillage, load).
+    * Does not place a new waystone.
+    */
+   public static void syncNameForVillage(ServerLevel level, Village village) {
+      if (!isWaystonesLoaded() || !MillenaireServerConfig.SERVER.placeWaystonesInMillenaire.getAsBoolean()) {
+         return;
+      }
+      if (!village.isWaystonePlaced()) {
+         return;
+      }
+      String name = resolveVillageWaystoneName(village);
+      Block waystone = BuiltInRegistries.BLOCK.get(WAYSTONE_ID);
+      if (waystone == null || waystone.defaultBlockState().isAir()) {
+         return;
+      }
+      BlockPos foundLower = findExistingLower(level, waystone, village.getCenter());
+      if (foundLower == null) {
+         return;
+      }
+      if (applyWaystoneNameReturning(level, foundLower, name)) {
+         return;
+      }
+      scheduleNameRetries(level, foundLower, name, null);
+   }
+
    public static void tryPlaceForMillenaireVillage(ServerLevel level, Village village) {
       if (!MillenaireServerConfig.SERVER.placeWaystonesInMillenaire.getAsBoolean()) {
          return;
       }
-      String name = village.getVillageName() != null ? village.getVillageName() : village.getCultureId().getPath();
+      String name = resolveVillageWaystoneName(village);
       if (village.isWaystonePlaced()) {
-         if (tryRepairNear(level, village.getCenter(), name)) {
+         if (tryRepairNear(level, village.getCenter(), name, village)) {
             return;
          }
          // Marked placed but missing/broken — allow a fresh place
          village.setWaystonePlaced(false);
       }
-      if (placeNear(level, village.getCenter(), name)) {
-         village.setWaystonePlaced(true);
+      if (placeNear(level, village.getCenter(), name, village)) {
+         // waystonePlaced is set only after successful naming (or scheduled retries)
       }
    }
 
@@ -56,10 +97,11 @@ public final class WaystonePlacer {
       if (!MillenaireServerConfig.SERVER.placeWaystonesInVanilla.getAsBoolean()) {
          return false;
       }
-      return placeNear(level, center, name);
+      String resolved = name != null && !name.isBlank() ? name.trim() : "Village";
+      return placeNear(level, center, resolved, null);
    }
 
-   private static boolean placeNear(ServerLevel level, BlockPos center, String name) {
+   private static boolean placeNear(ServerLevel level, BlockPos center, String name, @Nullable Village village) {
       if (!isWaystonesLoaded()) {
          return false;
       }
@@ -74,11 +116,11 @@ public final class WaystonePlacer {
          return false;
       }
 
-      return placeCompleteWaystone(level, waystone, spot, name);
+      return placeCompleteWaystone(level, waystone, spot, name, village);
    }
 
    /** Repair incomplete (lower-only) waystones near center, or rename an existing complete one. */
-   private static boolean tryRepairNear(ServerLevel level, BlockPos center, String name) {
+   private static boolean tryRepairNear(ServerLevel level, BlockPos center, String name, @Nullable Village village) {
       if (!isWaystonesLoaded()) {
          return false;
       }
@@ -112,49 +154,114 @@ public final class WaystonePlacer {
          LOGGER.info("[Millenaire] Repaired waystone upper half at {}", foundLower.toShortString());
       }
 
-      applyWaystoneName(level, foundLower, name);
-      scheduleNameRetry(level, foundLower, name);
+      if (applyWaystoneNameReturning(level, foundLower, name)) {
+         if (village != null) {
+            village.setWaystonePlaced(true);
+         }
+         return true;
+      }
+      scheduleNameRetries(level, foundLower, name, village);
+      if (village != null) {
+         village.setWaystonePlaced(true);
+      }
       return true;
    }
 
-   private static boolean placeCompleteWaystone(ServerLevel level, Block waystone, BlockPos spot, String name) {
+   private static boolean placeCompleteWaystone(
+      ServerLevel level, Block waystone, BlockPos spot, String name, @Nullable Village village
+   ) {
+      if (name == null || name.isBlank()) {
+         LOGGER.warn("[Millenaire] Refusing to place waystone with blank name at {}", spot.toShortString());
+         return false;
+      }
+
       Object placed = tryPlaceViaApi(level, spot);
       if (placed != null) {
          boolean named = configurePlacedWaystone(placed, name);
          if (!named) {
-            applyWaystoneName(level, spot, name);
-            scheduleNameRetry(level, spot, name);
+            named = applyWaystoneNameReturning(level, spot, name);
          }
-         LOGGER.info("[Millenaire] Placed waystone '{}' at {} via API", name, spot.toShortString());
+         if (named) {
+            LOGGER.info("[Millenaire] Placed waystone '{}' at {} via API", name, spot.toShortString());
+            if (village != null) {
+               village.setWaystonePlaced(true);
+            }
+            return true;
+         }
+         scheduleNameRetries(level, spot, name, village);
+         if (village != null) {
+            village.setWaystonePlaced(true);
+         }
+         LOGGER.warn("[Millenaire] Placed waystone at {} via API but naming deferred for '{}'", spot.toShortString(), name);
          return true;
       }
 
+      // setBlock fallback: physical blocks without store init often stay unnamed.
+      // Prefer failing placement over leaving a blank waystone; log loudly.
+      LOGGER.warn(
+         "[Millenaire] WaystonesAPI.placeWaystone unavailable; using setBlock fallback at {} (name may need retries)",
+         spot.toShortString()
+      );
       BlockState lower = withHalf(waystone.defaultBlockState(), DoubleBlockHalf.LOWER);
       BlockState upper = withHalf(waystone.defaultBlockState(), DoubleBlockHalf.UPPER);
       level.setBlock(spot, lower, 3);
       level.setBlock(spot.above(), upper, 3);
-      applyWaystoneName(level, spot, name);
-      scheduleNameRetry(level, spot, name);
-      LOGGER.info("[Millenaire] Placed waystone '{}' at {} via setBlock fallback", name, spot.toShortString());
+      boolean named = applyWaystoneNameReturning(level, spot, name);
+      if (named) {
+         LOGGER.info("[Millenaire] Placed waystone '{}' at {} via setBlock fallback", name, spot.toShortString());
+         if (village != null) {
+            village.setWaystonePlaced(true);
+         }
+         return true;
+      }
+      scheduleNameRetries(level, spot, name, village);
+      if (village != null) {
+         village.setWaystonePlaced(true);
+      }
+      LOGGER.warn("[Millenaire] Placed waystone at {} via setBlock; naming deferred for '{}'", spot.toShortString(), name);
       return true;
    }
 
-   private static void scheduleNameRetry(ServerLevel level, BlockPos pos, String name) {
+   private static void scheduleNameRetries(ServerLevel level, BlockPos pos, String name, @Nullable Village village) {
       if (name == null || name.isBlank()) {
          return;
       }
-      level.getServer().execute(() -> {
-         if (!applyWaystoneNameReturning(level, pos, name)) {
-            LOGGER.warn("[Millenaire] Could not set waystone name '{}' at {}", name, pos.toShortString());
+      scheduleNameRetryAt(level, pos, name, village, 0);
+   }
+
+   private static void scheduleNameRetryAt(
+      ServerLevel level, BlockPos pos, String name, @Nullable Village village, int attemptIndex
+   ) {
+      if (attemptIndex >= NAME_RETRY_DELAYS_TICKS.length) {
+         LOGGER.warn("[Millenaire] Could not set waystone name '{}' at {} after {} retries", name, pos.toShortString(), NAME_RETRY_DELAYS_TICKS.length);
+         return;
+      }
+      int delay = Math.max(1, NAME_RETRY_DELAYS_TICKS[attemptIndex]);
+      scheduleAfterTicks(level, delay, () -> {
+         if (applyWaystoneNameReturning(level, pos, name)) {
+            if (village != null) {
+               village.setWaystonePlaced(true);
+            }
+            LOGGER.info("[Millenaire] Set waystone name '{}' at {} on retry {}", name, pos.toShortString(), attemptIndex + 1);
+            return;
          }
+         scheduleNameRetryAt(level, pos, name, village, attemptIndex + 1);
       });
+   }
+
+   /** Chain server.execute calls to approximate a short delay without a tick scheduler. */
+   private static void scheduleAfterTicks(ServerLevel level, int ticks, Runnable task) {
+      if (ticks <= 1) {
+         level.getServer().execute(task);
+         return;
+      }
+      level.getServer().execute(() -> scheduleAfterTicks(level, ticks - 1, task));
    }
 
    private static BlockState withHalf(BlockState state, DoubleBlockHalf half) {
       if (state.hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF)) {
          return state.setValue(BlockStateProperties.DOUBLE_BLOCK_HALF, half);
       }
-      // Soft fallback: try any enum property named "half"
       for (var prop : state.getProperties()) {
          if ("half".equals(prop.getName()) && prop.getPossibleValues().stream().anyMatch(v -> half.name().equalsIgnoreCase(String.valueOf(v)))) {
             @SuppressWarnings({"unchecked", "rawtypes"})
@@ -163,10 +270,6 @@ public final class WaystonePlacer {
          }
       }
       return state;
-   }
-
-   private static void applyWaystoneName(ServerLevel level, BlockPos lowerPos, String name) {
-      applyWaystoneNameReturning(level, lowerPos, name);
    }
 
    private static boolean applyWaystoneNameReturning(ServerLevel level, BlockPos lowerPos, String name) {
@@ -188,6 +291,7 @@ public final class WaystonePlacer {
          Class<?> api = Class.forName("net.blay09.mods.waystones.api.WaystonesAPI");
          Object waystoneType = resolveDefaultWaystoneType();
          if (waystoneType == null) {
+            LOGGER.warn("[Millenaire] Could not resolve WaystoneType for placement");
             return null;
          }
          for (Method m : api.getMethods()) {
@@ -205,7 +309,7 @@ public final class WaystonePlacer {
             return unwrapOptional(result);
          }
       } catch (ReflectiveOperationException | RuntimeException e) {
-         LOGGER.debug("[Millenaire] WaystonesAPI.placeWaystone failed: {}", e.toString());
+         LOGGER.warn("[Millenaire] WaystonesAPI.placeWaystone failed: {}", e.toString());
       }
       return null;
    }
@@ -225,7 +329,6 @@ public final class WaystonePlacer {
             } else if (pt == String.class) {
                idArg = WAYSTONE_ID.toString();
             } else {
-               // Balm Identifier or similar — try constructing from namespace/path
                try {
                   Object identifier = pt.getConstructor(String.class, String.class).newInstance(WAYSTONE_ID.getNamespace(), WAYSTONE_ID.getPath());
                   idArg = identifier;
@@ -246,16 +349,32 @@ public final class WaystonePlacer {
                return unwrapOptional(type);
             }
          }
-         // Fallback: WaystoneType.values() / first entry matching "waystone"
+         // Fallback: WaystoneType.values() may return Stream or Iterable
          for (Method m : waystoneTypeClass.getMethods()) {
-            if ("values".equals(m.getName()) && m.getParameterCount() == 0) {
-               Object values = m.invoke(null);
-               if (values instanceof Iterable<?> iterable) {
-                  for (Object v : iterable) {
-                     if (v != null && String.valueOf(v).toLowerCase().contains("waystone") && !String.valueOf(v).toLowerCase().contains("share")) {
-                        return v;
-                     }
-                  }
+            if (!"values".equals(m.getName()) || m.getParameterCount() != 0) {
+               continue;
+            }
+            Object values = m.invoke(null);
+            Iterator<?> it = null;
+            if (values instanceof Stream<?> stream) {
+               it = stream.iterator();
+            } else if (values instanceof Iterable<?> iterable) {
+               it = iterable.iterator();
+            } else if (values != null && values.getClass().isArray()) {
+               Object[] arr = (Object[])values;
+               it = java.util.Arrays.asList(arr).iterator();
+            }
+            if (it == null) {
+               continue;
+            }
+            while (it.hasNext()) {
+               Object v = it.next();
+               if (v == null) {
+                  continue;
+               }
+               String s = String.valueOf(v).toLowerCase();
+               if (s.contains("waystone") && !s.contains("share")) {
+                  return v;
                }
             }
          }
@@ -266,6 +385,9 @@ public final class WaystonePlacer {
    }
 
    private static boolean configurePlacedWaystone(Object waystone, String name) {
+      if (name == null || name.isBlank()) {
+         return false;
+      }
       boolean named = setWaystoneDisplayName(waystone, name);
       setWaystoneVisibilityGlobal(waystone);
       return named;
@@ -330,7 +452,6 @@ public final class WaystonePlacer {
          return false;
       }
       try {
-         // WaystoneBlockEntity often exposes getWaystone() -> MutableWaystone
          for (Method m : be.getClass().getMethods()) {
             if (("getWaystone".equals(m.getName()) || "getWaystoneData".equals(m.getName())) && m.getParameterCount() == 0) {
                Object waystone = unwrapOptional(m.invoke(be));
@@ -363,6 +484,9 @@ public final class WaystonePlacer {
    }
 
    private static boolean setWaystoneDisplayName(Object waystone, String name) {
+      if (name == null || name.isBlank()) {
+         return false;
+      }
       try {
          for (Method m : waystone.getClass().getMethods()) {
             if (!"setName".equals(m.getName()) || m.getParameterCount() != 1) {
