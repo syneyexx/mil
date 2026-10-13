@@ -100,6 +100,11 @@ public final class NeedsPanelGenerator {
          for (org.millenaire.story.StorylineInstance s : org.millenaire.story.StorySavedData.get(level).activeFor(village.getId().uuid())) {
             lines.add(PanelLine.text("Story: " + s.kind() + " — " + s.summary()));
          }
+         for (org.millenaire.founding.FoundingOperation op : org.millenaire.founding.FoundingSavedData.get(level).openOps()) {
+            if (op.parentVillageId().equals(village.getId().uuid())) {
+               lines.add(PanelLine.text("Founding: " + op.state().name() + " — " + op.reason()));
+            }
+         }
       }
 
       return new PanelContent(PanelType.NEEDS, "Needs & Trade", lines);
