@@ -868,6 +868,7 @@ public final class VillageGrowthManager {
       if (husband != null && wife != null && !husband.isChild() && !wife.isChild()) {
          husband.setSpousesName(wife.getFirstName() + " " + wife.getFamilyName());
          wife.setSpousesName(husband.getFirstName() + " " + husband.getFamilyName());
+         HouseholdLinks.linkSpouses(village, husband, wife);
       }
 
       for (int i = 1; i < planSet.maleResidents().size(); i++) {

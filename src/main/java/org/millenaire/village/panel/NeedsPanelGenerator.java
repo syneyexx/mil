@@ -27,6 +27,12 @@ public final class NeedsPanelGenerator {
       ProductionChoice choice = needs.lastChoice();
       String summary = needs.lastPlanSummary();
       lines.add(PanelLine.text("Plan: " + choice.name() + (summary.isEmpty() ? "" : " — " + summary)));
+      String advice = village.getBudget().lastCouncilAdvice();
+      if (advice != null && !advice.isEmpty()) {
+         lines.add(PanelLine.text(advice));
+      }
+      String[] priorities = village.getBudget().activePriorities();
+      lines.add(PanelLine.text("Priorities: " + priorities[0] + ", " + priorities[1] + ", " + priorities[2]));
 
       List<Need> active = needs.activeNeeds();
       if (active.isEmpty()) {
@@ -86,6 +92,17 @@ public final class NeedsPanelGenerator {
                   )
                );
                shown++;
+            }
+         }
+         for (org.millenaire.diplomacy.Treaty t : org.millenaire.diplomacy.TreatySavedData.get(level).forVillage(village.getId().uuid())) {
+            lines.add(PanelLine.text("Treaty: " + t.type().name() + " trust=" + t.trust()));
+         }
+         for (org.millenaire.story.StorylineInstance s : org.millenaire.story.StorySavedData.get(level).activeFor(village.getId().uuid())) {
+            lines.add(PanelLine.text("Story: " + s.kind() + " — " + s.summary()));
+         }
+         for (org.millenaire.founding.FoundingOperation op : org.millenaire.founding.FoundingSavedData.get(level).openOps()) {
+            if (op.parentVillageId().equals(village.getId().uuid())) {
+               lines.add(PanelLine.text("Founding: " + op.state().name() + " — " + op.reason()));
             }
          }
       }

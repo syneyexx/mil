@@ -138,6 +138,7 @@ public class Village {
    private final List<VillageHistoryEntry> history = new ArrayList<>();
    private final List<VillageTreasuryService.LedgerEntry> treasuryLedger = new ArrayList<>();
    private final org.millenaire.economy.NeedService needService = new org.millenaire.economy.NeedService(this);
+   private final VillageBudget budget = new VillageBudget();
    private long historyStartTick = -1L;
    private int panelTickCounter;
    private long lastGoodsRefresh;
@@ -971,7 +972,9 @@ public class Village {
       }
 
       record.setKilled(true);
+      HouseholdLinks.onKeyVillagerLost(this, record);
       this.invalidateDefenderCount();
+      this.markDirty();
       return true;
    }
 
@@ -1859,6 +1862,10 @@ public class Village {
 
    public org.millenaire.economy.NeedService getNeedService() {
       return this.needService;
+   }
+
+   public VillageBudget getBudget() {
+      return this.budget;
    }
 
    public long getLastNightActionDay() {

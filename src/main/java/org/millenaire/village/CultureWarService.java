@@ -56,7 +56,17 @@ public final class CultureWarService {
 
          for (Village b : groupB) {
             if (bgRadius <= 0 || ac.distSqr(b.getCenter()) <= radiusSq) {
+               // Culture ≠ empire: respect village-level non-aggression treaties.
+               if (relationValue < 0
+                  && org.millenaire.diplomacy.TreatyService.blocksWar(level, a.getId().uuid(), b.getId().uuid())) {
+                  continue;
+               }
                a.adjustRelationSymmetric(level, b.getId(), relationValue, true);
+               if (relationValue < 0) {
+                  org.millenaire.diplomacy.TreatyService.onWarDeclared(
+                     level, a.getId().uuid(), b.getId().uuid(), "culture_war_propagation"
+                  );
+               }
             }
          }
       }

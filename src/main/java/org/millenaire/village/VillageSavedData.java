@@ -319,6 +319,7 @@ public class VillageSavedData extends SavedData {
       villageTag.putBoolean("chestLocked", village.areChestsLocked());
       VillageTreasuryService.saveLedger(villageTag, village);
       villageTag.put("needs", village.getNeedService().save(registries));
+      villageTag.put("budget", village.getBudget().save(registries));
       Village.PendingProject pending = village.getPendingProject();
       if (pending != null) {
          CompoundTag pendingTag = new CompoundTag();
@@ -878,6 +879,9 @@ public class VillageSavedData extends SavedData {
             }
             if (villageTag.contains("needs")) {
                village.getNeedService().load(villageTag.getCompound("needs"), net.minecraft.core.RegistryAccess.EMPTY);
+            }
+            if (villageTag.contains("budget")) {
+               village.getBudget().load(villageTag.getCompound("budget"), net.minecraft.core.RegistryAccess.EMPTY);
             }
             // v6 → v7: assign FaithInstance UUIDs lazily on first ReligionService touch;
             // one-shot NPC faith affiliation when migration flag present.

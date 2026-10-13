@@ -519,6 +519,9 @@ public class Millenaire {
             org.millenaire.combat.war.WarCampaignService.tick(overworld);
             org.millenaire.economy.EconomyService.tick(overworld);
             org.millenaire.logistics.LogisticsService.tick(overworld);
+            org.millenaire.story.EventDirector.tick(overworld);
+            org.millenaire.diplomacy.TreatyService.tick(overworld);
+            org.millenaire.founding.FoundingService.tick(overworld);
          }
 
          long serverGameTime = overworld != null ? overworld.getGameTime() : 0L;
@@ -619,6 +622,11 @@ public class Millenaire {
                      org.millenaire.combat.war.WarCampaignService.onServerStarted(overworld);
                      org.millenaire.economy.EconomyService.onServerStarted(overworld);
                      org.millenaire.logistics.LogisticsService.onServerStarted(overworld);
+                     org.millenaire.knowledge.KnowledgeService.get().validateGraph();
+                     org.millenaire.knowledge.KnowledgeSavedData.get(overworld);
+                     org.millenaire.story.StorySavedData.get(overworld);
+                     org.millenaire.diplomacy.TreatySavedData.get(overworld);
+                     org.millenaire.founding.FoundingSavedData.get(overworld);
                      VillageDiscovery.syncAllMillenaire(overworld, VillageSavedData.get(overworld).getVillageManager());
                   }
                } catch (Exception e) {
