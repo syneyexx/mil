@@ -71,7 +71,8 @@
   "initial_inventory": {
     "minecraft:oak_log": 16,
     "millenaire:seljuk_bow": 1,
-    "minecraft:arrow": 16
+    "minecraft:arrow": 16,
+    "millenaire:seljuk_scimitar": 1
   },
   "collect_goods": [
     "minecraft:oak_log",
@@ -109,7 +110,7 @@
     "millenaire:clothes_seljuk_cotton"
   ],
   "base_attack_strength": 6,
-  "default_weapon": "minecraft:stone_sword",
+  "default_weapon": "millenaire:seljuk_scimitar",
   "experience_given": 20,
   "travelbook_held_item": "minecraft:stone_sword"
 }

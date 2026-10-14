@@ -23,7 +23,8 @@
   "spawn_weight": 0,
   "initial_inventory": {
     "minecraft:bow": 1,
-    "minecraft:arrow": 64
+    "minecraft:arrow": 64,
+    "millenaire:mayan_mace": 1
   },
   "gender": "female",
   "first_name_list": "low_caste_women_names",
@@ -35,7 +36,7 @@
     "rangedweapons"
   ],
   "base_attack_strength": 6,
-  "default_weapon": "minecraft:wooden_sword",
+  "default_weapon": "millenaire:mayan_mace",
   "experience_given": 10,
   "travelbook_held_item": "millenaire:mayan_mace"
 }

@@ -12,7 +12,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.BlockPos.MutableBlockPos;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -138,6 +140,9 @@ public class MillVillager extends PathfinderMob {
    private int foreignMerchantStallId = -1;
    private int visitorNbNights = 0;
    private final VillagerInventory inventory = new VillagerInventory();
+   /** Component-aware TacZ ammo claimed from barracks/armory chests (not VillagerInventory). */
+   public static final int GEAR_AMMO_STASH_SIZE = 4;
+   private final NonNullList<ItemStack> gearAmmoStash = NonNullList.withSize(GEAR_AMMO_STASH_SIZE, ItemStack.EMPTY);
    private final VillagerSpeech speech = new VillagerSpeech(this);
    @Nullable
    private GoalScheduler goalScheduler;
@@ -853,6 +858,56 @@ public class MillVillager extends PathfinderMob {
       return this.inventory;
    }
 
+   public int getGearAmmoStashCount() {
+      int count = 0;
+      for (ItemStack stack : this.gearAmmoStash) {
+         if (!stack.isEmpty()) {
+            count++;
+         }
+      }
+      return count;
+   }
+
+   /** Stores a full ammo stack into the first free gear-ammo slot. Returns false if full. */
+   public boolean offerGearAmmo(ItemStack ammo) {
+      if (ammo == null || ammo.isEmpty()) {
+         return false;
+      }
+      for (int i = 0; i < this.gearAmmoStash.size(); i++) {
+         if (this.gearAmmoStash.get(i).isEmpty()) {
+            this.gearAmmoStash.set(i, ammo.copy());
+            return true;
+         }
+      }
+      return false;
+   }
+
+   /**
+    * Consumes up to {@code amount} ammo items from the stash for a magazine refill.
+    * Returns how many rounds were consumed (preserving stack components on remaining ammo).
+    */
+   public int consumeGearAmmo(int amount) {
+      if (amount <= 0) {
+         return 0;
+      }
+      int remaining = amount;
+      int consumed = 0;
+      for (int i = 0; i < this.gearAmmoStash.size() && remaining > 0; i++) {
+         ItemStack stack = this.gearAmmoStash.get(i);
+         if (stack.isEmpty()) {
+            continue;
+         }
+         int take = Math.min(remaining, stack.getCount());
+         stack.shrink(take);
+         if (stack.isEmpty()) {
+            this.gearAmmoStash.set(i, ItemStack.EMPTY);
+         }
+         remaining -= take;
+         consumed += take;
+      }
+      return consumed;
+   }
+
    @Nullable
    public GoalScheduler getGoalScheduler() {
       return this.goalScheduler;
@@ -1377,6 +1432,9 @@ public class MillVillager extends PathfinderMob {
    }
 
    private void applyHeldItems(VillagerTask task) {
+      if (org.millenaire.village.VillageOutfitService.protectsEquipmentSlots(this)) {
+         return;
+      }
       TravelPhase phase = task.getTravelPhase();
       List<ItemStack> mainItems = task.getHeldItems(phase);
       List<ItemStack> offItems = task.getOffHandItems(phase);
@@ -1396,6 +1454,9 @@ public class MillVillager extends PathfinderMob {
    }
 
    private void cycleHeldItems(VillagerTask task) {
+      if (org.millenaire.village.VillageOutfitService.protectsEquipmentSlots(this)) {
+         return;
+      }
       TravelPhase phase = task.getTravelPhase();
       List<ItemStack> mainItems = task.getHeldItems(phase);
       List<ItemStack> offItems = task.getOffHandItems(phase);
@@ -1436,6 +1497,12 @@ public class MillVillager extends PathfinderMob {
          return super.getItemBySlot(slot);
       }
 
+      // Custom-outfit villages store real claimed stacks on the entity. Return those
+      // directly so TacZ can mutate gun ammo/components in place.
+      if (org.millenaire.village.VillageOutfitService.protectsEquipmentSlots(this)) {
+         return super.getItemBySlot(slot);
+      }
+
       ItemStack custom = org.millenaire.village.VillageOutfitService.getOutfitPiece(this, slot);
       if (custom != null) {
          return custom;
@@ -1461,6 +1528,12 @@ public class MillVillager extends PathfinderMob {
    }
 
    private void clearHeldItems() {
+      if (org.millenaire.village.VillageOutfitService.protectsEquipmentSlots(this)) {
+         this.heldItemTick = 0;
+         this.heldItemIndex = 0;
+         this.offHandItemIndex = 0;
+         return;
+      }
       this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
       this.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
       this.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
@@ -1551,6 +1624,15 @@ public class MillVillager extends PathfinderMob {
 
       this.identity.save(tag);
       this.inventory.save(tag);
+      ListTag ammoList = new ListTag();
+      for (ItemStack stack : this.gearAmmoStash) {
+         if (!stack.isEmpty()) {
+            ammoList.add(stack.save(this.registryAccess()));
+         }
+      }
+      if (!ammoList.isEmpty()) {
+         tag.put("gearAmmoStash", ammoList);
+      }
       if (this.isVillagerSleeping()) {
          tag.putBoolean("customSleeping", true);
       }
@@ -1658,6 +1740,19 @@ public class MillVillager extends PathfinderMob {
       }
 
       this.inventory.load(tag);
+      for (int i = 0; i < this.gearAmmoStash.size(); i++) {
+         this.gearAmmoStash.set(i, ItemStack.EMPTY);
+      }
+      if (tag.contains("gearAmmoStash", 9)) {
+         ListTag ammoList = tag.getList("gearAmmoStash", 10);
+         int slot = 0;
+         for (int i = 0; i < ammoList.size() && slot < this.gearAmmoStash.size(); i++) {
+            ItemStack ammoStack = ItemStack.parseOptional(this.registryAccess(), ammoList.getCompound(i));
+            if (!ammoStack.isEmpty()) {
+               this.gearAmmoStash.set(slot++, ammoStack);
+            }
+         }
+      }
       if (tag.getBoolean("customSleeping")) {
          this.entityData.set(DATA_SLEEPING, true);
       }

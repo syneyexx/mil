@@ -28,7 +28,10 @@
     "toolssword"
   ],
   "base_attack_strength": 4,
-  "default_weapon": "minecraft:wooden_sword",
+  "default_weapon": "millenaire:mayan_mace",
   "experience_given": 5,
-  "travelbook_held_item": "minecraft:stone_sword"
+  "travelbook_held_item": "minecraft:stone_sword",
+  "initial_inventory": {
+    "millenaire:mayan_mace": 1
+  }
 }

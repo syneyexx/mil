@@ -52,8 +52,13 @@
     "rangedweapons"
   ],
   "base_attack_strength": 12,
-  "default_weapon": "minecraft:wooden_sword",
+  "default_weapon": "millenaire:seljuk_scimitar",
   "experience_given": 15,
   "hiring_cost": "20",
-  "travelbook_held_item": "millenaire:seljuk_bow"
+  "travelbook_held_item": "millenaire:seljuk_bow",
+  "initial_inventory": {
+    "millenaire:seljuk_scimitar": 1,
+    "millenaire:seljuk_bow": 1,
+    "minecraft:arrow": 64
+  }
 }
