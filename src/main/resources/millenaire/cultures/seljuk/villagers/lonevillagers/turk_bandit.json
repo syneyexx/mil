@@ -55,7 +55,8 @@
   "spawn_weight": 0,
   "initial_inventory": {
     "minecraft:bow": 1,
-    "minecraft:arrow": 16
+    "minecraft:arrow": 16,
+    "millenaire:seljuk_scimitar": 1
   },
   "collect_goods": [
     "minecraft:oak_log",
@@ -91,7 +92,7 @@
     "rangedweapons"
   ],
   "base_attack_strength": 3,
-  "default_weapon": "minecraft:wooden_sword",
+  "default_weapon": "millenaire:seljuk_scimitar",
   "experience_given": 10,
   "travelbook_held_item": "minecraft:stone_sword"
 }

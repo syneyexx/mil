@@ -60,7 +60,7 @@
     "millenaire:norman_boots"
   ],
   "base_attack_strength": 3,
-  "default_weapon": "minecraft:wooden_sword",
+  "default_weapon": "minecraft:iron_sword",
   "experience_given": 10,
   "travelbook_held_item": "minecraft:iron_sword"
 }

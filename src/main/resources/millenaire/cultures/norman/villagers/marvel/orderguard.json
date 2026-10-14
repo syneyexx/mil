@@ -38,7 +38,10 @@
   ],
   "spawn_weight": 0,
   "initial_inventory": {
-    "millenaire:norman_helmet": 1
+    "millenaire:norman_helmet": 1,
+    "millenaire:norman_sword": 1,
+    "minecraft:bow": 1,
+    "minecraft:arrow": 64
   },
   "gender": "male",
   "first_name_list": "men_names",

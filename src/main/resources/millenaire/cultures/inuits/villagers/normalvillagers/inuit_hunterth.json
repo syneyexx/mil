@@ -38,12 +38,12 @@
     "minecraft:leather_chestplate": 1,
     "minecraft:leather_leggings": 1,
     "minecraft:leather_boots": 1,
-    "minecraft:wooden_sword": 1,
     "minecraft:bow": 1,
     "minecraft:arrow": 64,
     "minecraft:wheat": 16,
     "minecraft:cauldron": 24,
-    "millenaire:snow_brick": 48
+    "millenaire:snow_brick": 48,
+    "millenaire:inuittrident": 1
   },
   "bring_back_home_goods": [
     "minecraft:beef",
@@ -79,7 +79,7 @@
     "rangedweapons"
   ],
   "base_attack_strength": 7,
-  "default_weapon": "minecraft:wooden_sword",
+  "default_weapon": "millenaire:inuittrident",
   "experience_given": 12,
   "travelbook_held_item": "millenaire:inuitbow",
   "travelbook_held_item_off_hand": "minecraft:beef"

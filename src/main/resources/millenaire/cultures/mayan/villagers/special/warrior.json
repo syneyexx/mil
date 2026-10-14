@@ -23,7 +23,8 @@
   "spawn_weight": 0,
   "initial_inventory": {
     "minecraft:bow": 1,
-    "minecraft:arrow": 64
+    "minecraft:arrow": 64,
+    "millenaire:mayan_mace": 1
   },
   "gender": "male",
   "first_name_list": "men_names",
@@ -36,7 +37,7 @@
     "armour"
   ],
   "base_attack_strength": 4,
-  "default_weapon": "minecraft:wooden_sword",
+  "default_weapon": "millenaire:mayan_mace",
   "hiring_cost": "32",
   "travelbook_held_item": "millenaire:mayan_mace"
 }

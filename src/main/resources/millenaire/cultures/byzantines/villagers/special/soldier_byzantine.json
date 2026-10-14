@@ -60,8 +60,13 @@
     "millenaire:clothes_byz_wool"
   ],
   "base_attack_strength": 12,
-  "default_weapon": "minecraft:wooden_sword",
+  "default_weapon": "millenaire:byzantine_mace",
   "experience_given": 15,
   "hiring_cost": "20",
-  "travelbook_held_item": "millenaire:byzantine_mace"
+  "travelbook_held_item": "millenaire:byzantine_mace",
+  "initial_inventory": {
+    "millenaire:byzantine_mace": 1,
+    "minecraft:bow": 1,
+    "minecraft:arrow": 64
+  }
 }

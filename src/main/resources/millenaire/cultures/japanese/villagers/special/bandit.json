@@ -22,7 +22,8 @@
   "spawn_weight": 0,
   "initial_inventory": {
     "minecraft:bow": 1,
-    "minecraft:arrow": 64
+    "minecraft:arrow": 64,
+    "millenaire:japanese_tachi": 1
   },
   "gender": "male",
   "first_name_list": "men_names",
@@ -33,7 +34,7 @@
     "toolssword"
   ],
   "base_attack_strength": 8,
-  "default_weapon": "minecraft:wooden_sword",
+  "default_weapon": "millenaire:japanese_tachi",
   "experience_given": 10,
   "hiring_cost": "32",
   "travelbook_held_item": "minecraft:iron_sword"

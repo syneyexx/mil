@@ -51,7 +51,10 @@
   ],
   "spawn_weight": 0,
   "initial_inventory": {
-    "minecraft:leather_helmet": 1
+    "minecraft:leather_helmet": 1,
+    "millenaire:norman_sword": 1,
+    "minecraft:bow": 1,
+    "minecraft:arrow": 64
   },
   "gender": "male",
   "first_name_list": "men_names",
@@ -64,7 +67,7 @@
     "rangedweapons"
   ],
   "base_attack_strength": 4,
-  "default_weapon": "minecraft:wooden_sword",
+  "default_weapon": "millenaire:norman_sword",
   "experience_given": 10,
   "hiring_cost": "32",
   "travelbook_held_item": "millenaire:norman_sword"

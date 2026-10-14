@@ -102,9 +102,15 @@ public final class VillagerCombat {
       }
 
       boolean preferRanged = (vt.isArcher() || org.millenaire.compat.TacZCompat.isLoaded()) && !this.isTargetWithinMeleeRange();
+      // Non-null means custom outfit village: use claimed gear only (may be empty until chest claim).
       ItemStack outfitWeapon = VillageOutfitService.getOutfitCombatWeapon(this.villager, preferRanged);
-      if (outfitWeapon != null && !outfitWeapon.isEmpty()) {
+      if (outfitWeapon != null) {
          return outfitWeapon;
+      }
+
+      ItemStack equipped = this.villager.getSyncedEquipment(EquipmentSlot.MAINHAND);
+      if (!equipped.isEmpty() && org.millenaire.compat.TacZCompat.isGunStack(equipped)) {
+         return equipped.copy();
       }
 
       if (preferRanged) {
@@ -212,8 +218,18 @@ public final class VillagerCombat {
 
    public void ensureCombatWeaponEquipped() {
       ItemStack weapon = this.getCombatWeapon();
-      if (!ItemStack.matches(this.villager.getMainHandItem(), weapon)) {
-         this.villager.setItemSlot(EquipmentSlot.MAINHAND, weapon);
+      if (weapon.isEmpty()) {
+         return;
+      }
+      ItemStack current = this.villager.getSyncedEquipment(EquipmentSlot.MAINHAND);
+      // Keep a real TacZ gun (with components) over a blank same-item reconstruction.
+      if (org.millenaire.compat.TacZCompat.isGunStack(current)
+         && ItemStack.isSameItem(current, weapon)
+         && !org.millenaire.compat.TacZCompat.isGunStack(weapon)) {
+         return;
+      }
+      if (!ItemStack.isSameItemSameComponents(current, weapon)) {
+         this.villager.setItemSlot(EquipmentSlot.MAINHAND, weapon.copy());
       }
    }
 

@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 public final class TacZCompat {
    private static final Logger LOGGER = LogUtils.getLogger();
    public static final String MOD_ID = "tacz";
+   private static final int DEFAULT_MAGAZINE_REFILL = 30;
 
    private static final boolean LOADED = ModList.get().isLoaded(MOD_ID);
    private static boolean resolved;
@@ -27,6 +28,8 @@ public final class TacZCompat {
 
    @Nullable
    private static Method getIGunOrNull;
+   @Nullable
+   private static Method getIAmmoOrNull;
    @Nullable
    private static Method fromLivingEntity;
    @Nullable
@@ -39,6 +42,8 @@ public final class TacZCompat {
    private static Method draw;
    @Nullable
    private static Method getCurrentAmmoCount;
+   @Nullable
+   private static Method setCurrentAmmoCount;
    @Nullable
    private static Object shootSuccess;
    @Nullable
@@ -73,6 +78,17 @@ public final class TacZCompat {
       }
       try {
          return getIGunOrNull.invoke(null, stack) != null;
+      } catch (ReflectiveOperationException e) {
+         return false;
+      }
+   }
+
+   public static boolean isAmmoStack(ItemStack stack) {
+      if (!isUsable() || stack == null || stack.isEmpty() || getIAmmoOrNull == null) {
+         return false;
+      }
+      try {
+         return getIAmmoOrNull.invoke(null, stack) != null;
       } catch (ReflectiveOperationException e) {
          return false;
       }
@@ -115,7 +131,7 @@ public final class TacZCompat {
             if (reload != null) {
                reload.invoke(operator);
             }
-            topUpAmmoFromHand(shooter);
+            topUpAmmoFromStash(shooter);
             return false;
          }
          if (result != null && result.equals(shootNotDraw) && draw != null) {
@@ -146,10 +162,31 @@ public final class TacZCompat {
       return isUsable() && (entity instanceof MillVillager || entity instanceof AbstractVillager);
    }
 
-   private static void topUpAmmoFromHand(LivingEntity shooter) {
-      // Mag-fed guns store ammo in the ItemStack NBT; reload() pulls from inventory.
-      // For Mill villagers we rely on TacZ reload + whatever ammo is already in the gun stack
-      // after the player loaded magazines into barracks chests.
+   /**
+    * Refills the held gun magazine from a MillVillager gear-ammo stash using TacZ
+    * {@code setCurrentAmmoCount}. No-op when TacZ is absent or the shooter has no stash ammo.
+    */
+   private static void topUpAmmoFromStash(LivingEntity shooter) {
+      if (!(shooter instanceof MillVillager villager) || setCurrentAmmoCount == null || getIGunOrNull == null) {
+         return;
+      }
+      ItemStack gun = shooter.getMainHandItem();
+      if (!isGunStack(gun) || villager.getGearAmmoStashCount() <= 0) {
+         return;
+      }
+      try {
+         Object iGun = getIGunOrNull.invoke(null, gun);
+         if (iGun == null) {
+            return;
+         }
+         int consumed = villager.consumeGearAmmo(DEFAULT_MAGAZINE_REFILL);
+         if (consumed <= 0) {
+            return;
+         }
+         setCurrentAmmoCount.invoke(iGun, gun, consumed);
+      } catch (ReflectiveOperationException e) {
+         LOGGER.debug("[Millenaire] TacZ ammo top-up failed: {}", e.toString());
+      }
    }
 
    private static float lookPitch(LivingEntity shooter, LivingEntity target) {
@@ -179,6 +216,15 @@ public final class TacZCompat {
          Class<?> iGun = Class.forName("com.tacz.guns.api.item.IGun");
          getIGunOrNull = iGun.getMethod("getIGunOrNull", ItemStack.class);
          getCurrentAmmoCount = iGun.getMethod("getCurrentAmmoCount", ItemStack.class);
+         setCurrentAmmoCount = iGun.getMethod("setCurrentAmmoCount", ItemStack.class, int.class);
+
+         try {
+            Class<?> iAmmo = Class.forName("com.tacz.guns.api.item.IAmmo");
+            getIAmmoOrNull = iAmmo.getMethod("getIAmmoOrNull", ItemStack.class);
+         } catch (ReflectiveOperationException ammoMissing) {
+            LOGGER.warn("[Millenaire] TacZ IAmmo unresolved — ammo stash claims disabled: {}", ammoMissing.toString());
+            getIAmmoOrNull = null;
+         }
 
          Class<?> operator = Class.forName("com.tacz.guns.api.entity.IGunOperator");
          fromLivingEntity = operator.getMethod("fromLivingEntity", LivingEntity.class);

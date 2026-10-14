@@ -58,7 +58,7 @@ public enum PlayerBuildingRole {
       5,
       false,
       false,
-      false,
+      true,
       false
    ),
    ARMORY(

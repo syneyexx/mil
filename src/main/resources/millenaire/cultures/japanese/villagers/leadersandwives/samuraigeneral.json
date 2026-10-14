@@ -31,6 +31,11 @@
     "rangedweapons"
   ],
   "base_attack_strength": 4,
-  "default_weapon": "minecraft:wooden_sword",
-  "travelbook_held_item": "millenaire:japanese_tachi"
+  "default_weapon": "millenaire:japanese_tachi",
+  "travelbook_held_item": "millenaire:japanese_tachi",
+  "initial_inventory": {
+    "millenaire:japanese_tachi": 1,
+    "millenaire:yumibow": 1,
+    "minecraft:arrow": 64
+  }
 }
