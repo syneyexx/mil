@@ -1,0 +1,10 @@
+{
+  "type": "millenaire:labyrinth",
+  "generator": {
+    "type": "millenaire:labyrinth",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "millenaire:labyrinth"
+    }
+  }
+}

@@ -122,6 +122,10 @@ Server config lives in the NeoForge Millénaire server config (keys under `gener
 - Player-placed block provenance is imperfect — road protection is conservative (natural terrain + footprints/structures), not a guarantee every player build is detected.
 - Crash consistency across multiple SavedData + chunk files is best-effort idempotent recovery, not a single atomic transaction and not a general exactly-once guarantee
 
+## Labyrinth (Het Labyrint)
+
+Optional ceremonial maze dimension (`millenaire:labyrinth`): Configuratie entry, Scharnier exit, deterministic blackstone maze, 25 hospitable **Gebondenen** (hostile only after provocation), Architect at the Core, Fallen King sequel quest `fallenking_11_thelabyrinth`. Server config under `[labyrinth]`. See `docs/LABYRINTH_ARCHITECTURE.md` and `docs/LABYRINTH_LOCAL_VALIDATION.md`.
+
 ## Documentation
 
 - `docs/CIVILIZATION_ARCHITECTURE.md`
@@ -129,6 +133,7 @@ Server config lives in the NeoForge Millénaire server config (keys under `gener
 - `docs/WORLDGEN_OVERHAUL_ARCHITECTURE.md` / `WORLDGEN_OVERHAUL_IMPLEMENTATION.md`
 - `docs/LIVING_VILLAGES_ARCHITECTURE.md` / `LIVING_VILLAGES_IMPLEMENTATION.md`
 - `docs/RELIGION_ARCHITECTURE.md` / `RELIGION_IMPLEMENTATION.md` / `RELIGION_LOCAL_VALIDATION.md`
+- `docs/LABYRINTH_ARCHITECTURE.md` / `LABYRINTH_LOCAL_VALIDATION.md`
 - Local validation docs describe owner-run checks; this agent does not execute them
 
 ## Development

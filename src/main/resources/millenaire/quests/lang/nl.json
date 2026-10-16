@@ -699,5 +699,15 @@
   "marvel_norman_4_gethelp_0_label": "Gehoor geven aan de oproep",
   "marvel_norman_5_return_0_description": "$name, we hebben bericht ontvangen dat de donaties weldra moeten arriveren! Dit zal de snelheid waarmee we deze grote kathedraal kunnen bouwen aanzienlijk verhogen. Ik kan je niet genoeg bedanken!",
   "marvel_norman_5_return_0_description_refuse": "Ik vroeg verder niets!",
-  "marvel_norman_5_return_0_description_success": "Nogmaals bedankt!"
+  "marvel_norman_5_return_0_description_success": "Nogmaals bedankt!",
+  "fallenking_11_thelabyrinth_0_label": "De Configuratie",
+  "fallenking_11_thelabyrinth_0_listing": "De sjamaan spreekt van een scharnier dat de demon kan volgen.",
+  "fallenking_11_thelabyrinth_0_description": "Yum Kaax toonde mij een kubus van verzegeld metaal. Het is een Configuratie — een sleutel tot het Labyrint voorbij de gebroken deur. Neem hem, $name. Ga voorzichtig: de bewoners zijn ordelijk, niet zielloos.",
+  "fallenking_11_thelabyrinth_0_description_success": "Houd hem dicht tot je klaar bent. Het Labyrint luistert.",
+  "fallenking_11_thelabyrinth_0_description_refuse": "Dan blijft de deur gebroken, en houdt de demon afstand.",
+  "fallenking_11_thelabyrinth_1_label": "De Kern",
+  "fallenking_11_thelabyrinth_1_listing": "Ik moet de Kern van het Labyrint bereiken en terugkeren.",
+  "fallenking_11_thelabyrinth_1_description": "Heb je in de Kern gestaan, $name? De plek die de Architect meet?",
+  "fallenking_11_thelabyrinth_1_description_success": "Dan bestaat het pad. De demon kan gevolgd worden — wanneer jij het uur kiest.",
+  "fallenking_11_thelabyrinth_1_description_refuse": "Het labyrinth wacht."
 }

@@ -150,7 +150,7 @@ public final class ReligionPlanner {
                BackgroundWorkGate.get().release(PlanDomain.RELIGION);
             }
          });
-      } catch (RejectedExecutionException | RuntimeException e) {
+      } catch (RuntimeException e) {
          this.inflightVillages.remove(snapshot.villageId());
          this.inFlight.decrementAndGet();
          BackgroundWorkGate.get().release(PlanDomain.RELIGION);

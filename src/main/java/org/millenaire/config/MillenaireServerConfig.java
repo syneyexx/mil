@@ -121,6 +121,13 @@ public final class MillenaireServerConfig {
    public final IntValue economyPlannerThreads;
    public final IntValue economyMaxNeedsPerVillage;
    public final IntValue logisticsMaxContractsPerVillage;
+   public final BooleanValue labyrinthEnabled;
+   public final BooleanValue labyrinthAllowCreativeEntry;
+   public final BooleanValue labyrinthRequireFallenKingTag;
+   public final IntValue labyrinthHostileCapPerPlayer;
+   public final BooleanValue labyrinthFrenemyInteractions;
+   public final BooleanValue labyrinthArrivalRespawn;
+   public final BooleanValue labyrinthShiftingEnabled;
 
    public static int getDefaultClearMargin() {
       try {
@@ -580,6 +587,32 @@ public final class MillenaireServerConfig {
       this.logisticsMaxContractsPerVillage = builder.comment("Max delivery contracts per village")
          .translation("millenaire.config.logisticsMaxContractsPerVillage")
          .defineInRange("maxContractsPerVillage", 8, 1, 32);
+      builder.pop();
+      builder.comment("Labyrinth dimension (Het Labyrint) — ceremonial maze with Gebondenen")
+         .push("labyrinth");
+      this.labyrinthEnabled = builder.comment("Enable the Labyrinth dimension, Configuratie entry, and Gebondene spawns")
+         .translation("millenaire.config.labyrinthEnabled")
+         .define("enabled", true);
+      this.labyrinthAllowCreativeEntry = builder.comment("Creative/spectator players may always enter via Configuratie")
+         .translation("millenaire.config.labyrinthAllowCreativeEntry")
+         .define("allowCreativeEntry", true);
+      this.labyrinthRequireFallenKingTag = builder.comment(
+            "Survival entry requires player tag fallenking_10_thebrokendoor (Fallen King sequel gate)"
+         )
+         .translation("millenaire.config.labyrinthRequireFallenKingTag")
+         .define("requireFallenKingTag", false);
+      this.labyrinthHostileCapPerPlayer = builder.comment("Max Gebondenen near a player in the Labyrinth")
+         .translation("millenaire.config.labyrinthHostileCapPerPlayer")
+         .defineInRange("hostileCapPerPlayer", 8, 2, 24);
+      this.labyrinthFrenemyInteractions = builder.comment("Allow right-click dialogue / frenemy interactions while GASTVRIJ")
+         .translation("millenaire.config.labyrinthFrenemyInteractions")
+         .define("frenemyInteractions", true);
+      this.labyrinthArrivalRespawn = builder.comment("Players who die in the Labyrinth respawn in the Arrival chamber")
+         .translation("millenaire.config.labyrinthArrivalRespawn")
+         .define("arrivalRespawn", true);
+      this.labyrinthShiftingEnabled = builder.comment("Allow scripted Core-arena wall shifts during Architect phase 3")
+         .translation("millenaire.config.labyrinthShiftingEnabled")
+         .define("shiftingEnabled", true);
       builder.pop();
    }
 

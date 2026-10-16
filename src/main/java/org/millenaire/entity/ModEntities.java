@@ -21,6 +21,7 @@ import org.millenaire.monster.ScharlakenKoninginEntity;
 import org.millenaire.monster.ZesarmigeRazernijEntity;
 import org.millenaire.monster.pack.MobKind;
 import org.millenaire.monster.pack.PackMonster;
+import org.millenaire.labyrinth.entity.GebondeneEntity;
 
 public final class ModEntities {
    private static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(Registries.ENTITY_TYPE, "millenaire");
@@ -151,6 +152,15 @@ public final class ModEntities {
          .build("millenaire:discd")
    );
 
+   public static final DeferredHolder<EntityType<?>, EntityType<GebondeneEntity>> GEBONDENE = ENTITY_TYPES.register(
+      "gebondene",
+      () -> Builder.of(GebondeneEntity::new, MobCategory.CREATURE)
+         .sized(0.6F, 1.95F)
+         .clientTrackingRange(10)
+         .fireImmune()
+         .build("millenaire:gebondene")
+   );
+
    private ModEntities() {
    }
 
@@ -178,6 +188,7 @@ public final class ModEntities {
       event.put(SDA.get(), PackMonster.attributes(MobKind.SDA).build());
       event.put(ZAVA.get(), PackMonster.attributes(MobKind.ZAVA).build());
       event.put(DISCD.get(), PackMonster.attributes(MobKind.DISCD).build());
+      event.put(GEBONDENE.get(), GebondeneEntity.createAttributes().build());
    }
 
    private static void onSpawnPlacements(RegisterSpawnPlacementsEvent event) {

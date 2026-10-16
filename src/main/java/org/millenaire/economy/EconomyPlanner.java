@@ -125,7 +125,7 @@ public final class EconomyPlanner {
                BackgroundWorkGate.get().release(PlanDomain.ECONOMY);
             }
          });
-      } catch (RejectedExecutionException | RuntimeException e) {
+      } catch (RuntimeException e) {
          this.inflightVillages.remove(snapshot.villageId());
          this.inFlight.decrementAndGet();
          BackgroundWorkGate.get().release(PlanDomain.ECONOMY);
