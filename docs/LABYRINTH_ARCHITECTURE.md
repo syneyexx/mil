@@ -25,12 +25,20 @@ Custom Millénaire dimension `millenaire:labyrinth` with a deterministic cellula
 
 ## Attitude AI
 
-`GASTVRIJ` → `GEALARMEERD` → `JACHT`. Right-click tips while hospitable. No auto-agro on sight.
+`GASTVRIJ` → `GEALARMEERD` → `JACHT`. No auto-agro on sight. Kill escalates nearby Orde; gold/denier_or reconciliation via Gastheer/Notaris/Archivaris.
+
+## Frenemy services (right-click while GASTVRIJ)
+
+Smid repair · Gastheer rest · Notaris contract buffs · Gids Core hint (~75% honest) · Schatter buyout · Sleuteldrager night vision · Archivaris lore · Naaister heal · Pelgrim lead · Blinde/Poort/Ketting/Fluit/Dans/Getuige/Spijker utilities · Architect measure (pre-fight).
+
+## Architect combat
+
+Phase pulses + summons (Rammelaar/Stille) + Core arena shifts when `shiftingEnabled` (phase 3). Loot: Configuratie + deniers.
 
 ## Config (`millenaire-server.toml` → `labyrinth`)
 
 - `enabled`, `allowCreativeEntry`, `requireFallenKingTag`
-- `hostileCapPerPlayer`, `frenemyInteractions`, `arrivalRespawn`
+- `hostileCapPerPlayer`, `frenemyInteractions`, `arrivalRespawn`, `shiftingEnabled`
 
 ## Commands
 

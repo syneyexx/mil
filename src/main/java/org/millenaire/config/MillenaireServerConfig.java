@@ -127,6 +127,7 @@ public final class MillenaireServerConfig {
    public final IntValue labyrinthHostileCapPerPlayer;
    public final BooleanValue labyrinthFrenemyInteractions;
    public final BooleanValue labyrinthArrivalRespawn;
+   public final BooleanValue labyrinthShiftingEnabled;
 
    public static int getDefaultClearMargin() {
       try {
@@ -609,6 +610,9 @@ public final class MillenaireServerConfig {
       this.labyrinthArrivalRespawn = builder.comment("Players who die in the Labyrinth respawn in the Arrival chamber")
          .translation("millenaire.config.labyrinthArrivalRespawn")
          .define("arrivalRespawn", true);
+      this.labyrinthShiftingEnabled = builder.comment("Allow scripted Core-arena wall shifts during Architect phase 3")
+         .translation("millenaire.config.labyrinthShiftingEnabled")
+         .define("shiftingEnabled", true);
       builder.pop();
    }
 

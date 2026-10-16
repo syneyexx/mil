@@ -144,15 +144,27 @@ public final class LabyrinthRooms {
          }
       }
 
+      // Open ritual dais — keep center walkable for Architect combat.
       set(chunk, centerX, floor, centerZ, CRYING);
-      set(chunk, centerX, floor + 1, centerZ, CRYING);
+      set(chunk, centerX - 1, floor, centerZ, CRYING);
+      set(chunk, centerX + 1, floor, centerZ, CRYING);
+      set(chunk, centerX, floor, centerZ - 1, CRYING);
+      set(chunk, centerX, floor, centerZ + 1, CRYING);
       placeHangingLantern(chunk, centerX, ceiling - 1, centerZ);
-      set(chunk, centerX - 1, floor + 1, centerZ, CHAIN);
-      set(chunk, centerX + 1, floor + 1, centerZ, CHAIN);
-      set(chunk, centerX, floor + 1, centerZ - 1, BARS);
-      set(chunk, centerX, floor + 1, centerZ + 1, BARS);
+      placeHangingLantern(chunk, centerX - 3, ceiling - 1, centerZ - 3);
+      placeHangingLantern(chunk, centerX + 3, ceiling - 1, centerZ + 3);
+      // Pillars around the dais (not on the center cell).
+      set(chunk, centerX - 3, floor + 1, centerZ - 3, BRICKS);
+      set(chunk, centerX - 3, floor + 2, centerZ - 3, BRICKS);
+      set(chunk, centerX - 3, floor + 3, centerZ - 3, CHAIN);
+      set(chunk, centerX + 3, floor + 1, centerZ + 3, BRICKS);
+      set(chunk, centerX + 3, floor + 2, centerZ + 3, BRICKS);
+      set(chunk, centerX + 3, floor + 3, centerZ + 3, CHAIN);
+      set(chunk, centerX - 3, floor + 1, centerZ + 3, BARS);
+      set(chunk, centerX + 3, floor + 1, centerZ - 3, BARS);
       if (random.nextBoolean()) {
          set(chunk, centerX - 2, floor + 1, centerZ - 2, CANDLE);
+         set(chunk, centerX + 2, floor + 1, centerZ + 2, CANDLE);
       }
    }
 

@@ -190,23 +190,9 @@ public class GebondeneEntity extends PathfinderMob {
             } catch (IllegalStateException ignored) {
                // config not loaded
             }
-            GebondeneKind kind = getKind();
-            player.displayClientMessage(
-               Component.translatable("labyrinth.interact." + kind.displayKeySuffix()),
-               true
-            );
-            this.level().playSound(
-               null,
-               this.getX(),
-               this.getY(),
-               this.getZ(),
-               SoundEvents.VILLAGER_AMBIENT,
-               SoundSource.NEUTRAL,
-               0.9F,
-               0.85F + this.random.nextFloat() * 0.2F
-            );
+            return GebondeneInteractions.tryInteract(this, player);
          }
-         return InteractionResult.sidedSuccess(this.level().isClientSide);
+         return InteractionResult.sidedSuccess(true);
       }
       if (getAttitude() == GebondeneAttitude.GEALARMEERD && !this.level().isClientSide) {
          player.displayClientMessage(Component.translatable("labyrinth.attitude.alarmed"), true);
@@ -219,11 +205,43 @@ public class GebondeneEntity extends PathfinderMob {
    }
 
    @Override
+   public void aiStep() {
+      super.aiStep();
+      if (!this.level().isClientSide) {
+         ArchitectCombat.tick(this);
+      } else if (getKind() == GebondeneKind.ECHO && this.tickCount % 8 == 0) {
+         this.level().addParticle(
+            net.minecraft.core.particles.ParticleTypes.END_ROD,
+            this.getX(),
+            this.getY() + 1.0,
+            this.getZ(),
+            0.0,
+            0.01,
+            0.0
+         );
+      }
+   }
+
+   @Override
    public boolean hurt(DamageSource source, float amount) {
       if (source.getEntity() instanceof Player) {
          escalateFromPlayerHit(amount);
       }
       return super.hurt(source, amount);
+   }
+
+   @Override
+   protected void dropCustomDeathLoot(net.minecraft.server.level.ServerLevel level, DamageSource source, boolean recentlyHit) {
+      super.dropCustomDeathLoot(level, source, recentlyHit);
+      GebondeneKind kind = getKind();
+      if (kind == GebondeneKind.ARCHITECT) {
+         this.spawnAtLocation(new net.minecraft.world.item.ItemStack(org.millenaire.item.ModItems.CONFIGURATIE.get()));
+         this.spawnAtLocation(new net.minecraft.world.item.ItemStack(org.millenaire.item.ModItems.DENIER_OR.get(), 4));
+      } else if (kind.tier() == GebondeneKind.Tier.LEADER || kind.tier() == GebondeneKind.Tier.GATE) {
+         this.spawnAtLocation(new net.minecraft.world.item.ItemStack(org.millenaire.item.ModItems.DENIER.get(), 4 + this.random.nextInt(6)));
+      } else if (this.random.nextFloat() < 0.35F) {
+         this.spawnAtLocation(new net.minecraft.world.item.ItemStack(org.millenaire.item.ModItems.DENIER.get(), 1 + this.random.nextInt(3)));
+      }
    }
 
    private void escalateFromPlayerHit(float amount) {

@@ -47,8 +47,9 @@ public final class LabyrinthDimensionEffects {
       if (!isInLabyrinth()) {
          return;
       }
-      event.setNearPlaneDistance(2.0F);
-      event.setFarPlaneDistance(28.0F);
+      // Tight corridors: close fog sells claustrophobia without hiding melee.
+      event.setNearPlaneDistance(1.5F);
+      event.setFarPlaneDistance(22.0F);
       event.setCanceled(true);
    }
 

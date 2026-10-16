@@ -164,7 +164,16 @@ public final class LabyrinthSpawnHandler {
          return;
       }
       entity.setKind(kind);
-      entity.setAttitude(attitude);
+      // If the nearest player already angered the Orde, spawn already hunting.
+      GebondeneAttitude spawnAttitude = attitude;
+      for (ServerPlayer nearbyPlayer : level.players()) {
+         if (nearbyPlayer.distanceToSqr(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5) < 48.0 * 48.0
+            && org.millenaire.labyrinth.entity.LabyrinthOrdeData.get(level).isHostile(nearbyPlayer.getUUID())) {
+            spawnAttitude = GebondeneAttitude.JACHT;
+            break;
+         }
+      }
+      entity.setAttitude(spawnAttitude);
       entity.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, level.getRandom().nextFloat() * 360.0F, 0.0F);
       level.addFreshEntity(entity);
    }

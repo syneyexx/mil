@@ -9,9 +9,12 @@ Owner runs these locally (agents do not claim GameTest/CI success).
 3. Right-click Configuratie → arrive at Arrival (Y≈65), soul lanterns, blackstone maze.
 4. Interact with Scharnier on lodestone → return to overworld.
 5. `/millenaire labyrinth enter` / `leave` / `status`.
-6. `/millenaire labyrinth spawn gastheer` — right-click tip; hit twice → hostility.
-7. Travel toward Core cell (~448,448) — Architect may appear, initially hospitable.
-8. Die in Labyrinth with `labyrinth.arrivalRespawn=true` → respawn at Arrival.
+6. `/millenaire labyrinth spawn smid` — hold damaged sword + iron/deniers → repair.
+7. `/millenaire labyrinth spawn gastheer` — heal/sat; spawn gids → direction tip.
+8. Hit a Gebondene twice → JACHT; kill → nearby Orde hunts; reconcile with gold offhand on Gastheer.
+9. Travel toward Core (~448, ~448) — Architect appears hospitable; attack → phased fight + summons; phase 3 shifts bars if `shiftingEnabled`.
+10. Die in Labyrinth with `arrivalRespawn=true` → respawn at Arrival.
+11. Fog should feel tight/crimson; ash/soul particles occasionally.
 
 ## Config
 

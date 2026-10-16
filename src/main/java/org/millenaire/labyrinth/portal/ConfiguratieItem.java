@@ -27,6 +27,11 @@ public class ConfiguratieItem extends Item {
    }
 
    @Override
+   public boolean isFoil(ItemStack stack) {
+      return true;
+   }
+
+   @Override
    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
       ItemStack stack = player.getItemInHand(hand);
       if (level.isClientSide()) {
