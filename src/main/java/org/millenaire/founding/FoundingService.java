@@ -239,8 +239,8 @@ public final class FoundingService {
       }
       Village spawned = null;
       long best = Long.MAX_VALUE;
-      for (Village v : manager.getAllVillages()) {
-         long d = v.getCenter().distSqr(op.targetCenter());
+      for (Village v : VillageSavedData.get(level).getVillageManager().getAllVillages()) {
+         long d = (long) v.getCenter().distSqr(op.targetCenter());
          if (d < best) {
             best = d;
             spawned = v;

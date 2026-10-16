@@ -29,6 +29,7 @@ import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.labyrinth.LabyrinthKeys;
 
 /**
@@ -182,9 +183,16 @@ public class GebondeneEntity extends PathfinderMob {
       }
       if (getAttitude() == GebondeneAttitude.GASTVRIJ) {
          if (!this.level().isClientSide) {
+            try {
+               if (!MillenaireServerConfig.SERVER.labyrinthFrenemyInteractions.getAsBoolean()) {
+                  return InteractionResult.PASS;
+               }
+            } catch (IllegalStateException ignored) {
+               // config not loaded
+            }
             GebondeneKind kind = getKind();
             player.displayClientMessage(
-               Component.translatable("labyrinth.gebondene.tip." + kind.displayKeySuffix()),
+               Component.translatable("labyrinth.interact." + kind.displayKeySuffix()),
                true
             );
             this.level().playSound(
@@ -201,7 +209,7 @@ public class GebondeneEntity extends PathfinderMob {
          return InteractionResult.sidedSuccess(this.level().isClientSide);
       }
       if (getAttitude() == GebondeneAttitude.GEALARMEERD && !this.level().isClientSide) {
-         player.displayClientMessage(Component.translatable("labyrinth.gebondene.tip.alarm"), true);
+         player.displayClientMessage(Component.translatable("labyrinth.attitude.alarmed"), true);
          this.level().playSound(
             null, this.getX(), this.getY(), this.getZ(), SoundEvents.VILLAGER_NO, SoundSource.NEUTRAL, 1.0F, 0.8F
          );
@@ -268,6 +276,26 @@ public class GebondeneEntity extends PathfinderMob {
 
    @Override
    protected Component getTypeName() {
-      return Component.translatable("entity.millenaire.gebondene." + getKind().displayKeySuffix());
+      return Component.translatable("labyrinth.gebondene." + getKind().displayKeySuffix());
+   }
+
+   @Override
+   public void die(DamageSource damageSource) {
+      if (!this.level().isClientSide && damageSource.getEntity() instanceof Player player && this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+         LabyrinthOrdeData data = LabyrinthOrdeData.get(serverLevel);
+         data.setHostile(player.getUUID(), true);
+         int[] cell = org.millenaire.labyrinth.gen.LabyrinthMaze.globalCellFromBlock(this.blockPosition().getX(), this.blockPosition().getZ());
+         int regionX = org.millenaire.labyrinth.gen.LabyrinthMaze.regionCoordFromGlobalCell(cell[0]);
+         int regionZ = org.millenaire.labyrinth.gen.LabyrinthMaze.regionCoordFromGlobalCell(cell[1]);
+         data.addReputation(player.getUUID(), regionX, regionZ, -25);
+         // Escalate nearby Bound Ones in the region after a kill.
+         for (GebondeneEntity nearby : serverLevel.getEntitiesOfClass(GebondeneEntity.class, this.getBoundingBox().inflate(48.0))) {
+            if (nearby.getAttitude() != GebondeneAttitude.JACHT) {
+               nearby.setAttitude(GebondeneAttitude.JACHT);
+            }
+         }
+         player.displayClientMessage(Component.translatable("labyrinth.attitude.hunting"), true);
+      }
+      super.die(damageSource);
    }
 }

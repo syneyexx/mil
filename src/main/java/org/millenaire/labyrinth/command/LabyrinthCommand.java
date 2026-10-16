@@ -14,6 +14,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.AABB;
+import org.millenaire.entity.ModEntities;
 import org.millenaire.labyrinth.LabyrinthKeys;
 import org.millenaire.labyrinth.entity.GebondeneAttitude;
 import org.millenaire.labyrinth.entity.GebondeneEntity;
@@ -81,42 +82,28 @@ public final class LabyrinthCommand {
          return 0;
       }
 
-      boolean enabled = LabyrinthTeleporter.isLabyrinthEnabled(player);
-      boolean inside = player.level().dimension().equals(LabyrinthKeys.LABYRINTH_LEVEL);
+      final boolean enabled = LabyrinthTeleporter.isLabyrinthEnabled(player);
+      final boolean inside = player.level().dimension().equals(LabyrinthKeys.LABYRINTH_LEVEL);
       ServerLevel labyrinth = LabyrinthTeleporter.getOrCreateLabyrinth(player.server);
-      long nearby = 0;
+      long nearbyCount = 0;
+      boolean hostileFlag = false;
+      int reputationValue = 0;
       if (player.level() instanceof ServerLevel serverLevel) {
          AABB box = player.getBoundingBox().inflate(48.0);
-         nearby = serverLevel.getEntitiesOfClass(GebondeneEntity.class, box).size();
-      }
-
-      boolean hostile = false;
-      int reputation = 0;
-      if (player.level() instanceof ServerLevel serverLevel) {
+         nearbyCount = serverLevel.getEntitiesOfClass(GebondeneEntity.class, box).size();
          LabyrinthOrdeData data = LabyrinthOrdeData.get(serverLevel);
-         hostile = data.isHostile(player.getUUID());
+         hostileFlag = data.isHostile(player.getUUID());
          int[] cell = org.millenaire.labyrinth.gen.LabyrinthMaze.globalCellFromBlock(player.blockPosition().getX(), player.blockPosition().getZ());
          int regionX = org.millenaire.labyrinth.gen.LabyrinthMaze.regionCoordFromGlobalCell(cell[0]);
          int regionZ = org.millenaire.labyrinth.gen.LabyrinthMaze.regionCoordFromGlobalCell(cell[1]);
-         reputation = data.getReputation(player.getUUID(), regionX, regionZ);
+         reputationValue = data.getReputation(player.getUUID(), regionX, regionZ);
       }
 
-      String dimPath = player.level().dimension().location().toString();
-      boolean labyrinthLoaded = labyrinth != null;
-      source.sendSuccess(
-         () -> Component.translatable(
-            "command.millenaire.labyrinth.status",
-            enabled,
-            inside,
-            dimPath,
-            labyrinthLoaded,
-            nearby,
-            hostile,
-            reputation
-         ),
-         false
-      );
-      // Also print a readable fallback line for when translations are missing.
+      final String dimPath = player.level().dimension().location().toString();
+      final boolean labyrinthLoaded = labyrinth != null;
+      final long nearby = nearbyCount;
+      final boolean hostile = hostileFlag;
+      final int reputation = reputationValue;
       source.sendSuccess(
          () -> Component.literal(
             String.format(
@@ -155,13 +142,7 @@ public final class LabyrinthCommand {
          return 0;
       }
 
-      var typeOpt = GebondeneEntity.entityType();
-      if (typeOpt.isEmpty()) {
-         source.sendFailure(Component.literal("Gebondene entity type is not registered yet (millenaire:gebondene)"));
-         return 0;
-      }
-
-      GebondeneEntity entity = typeOpt.get().create(serverLevel);
+      GebondeneEntity entity = ModEntities.GEBONDENE.get().create(serverLevel);
       if (entity == null) {
          source.sendFailure(Component.literal("Failed to create Gebondene"));
          return 0;

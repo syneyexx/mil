@@ -215,6 +215,7 @@ public class Millenaire {
       ModBlockEntities.register(modEventBus);
       ModEntities.register(modEventBus);
       ModItems.register(modEventBus);
+      org.millenaire.labyrinth.LabyrinthBootstrap.register(modEventBus);
       ModCreativeTabs.register(modEventBus);
       ModMenuTypes.MENU_TYPES.register(modEventBus);
       ModProcessors.register(modEventBus);
@@ -440,6 +441,7 @@ public class Millenaire {
          TpCommand.register(event.getDispatcher());
          RoadsCommand.register(event.getDispatcher());
          SettlementsCommand.register(event.getDispatcher());
+         org.millenaire.labyrinth.command.LabyrinthCommand.register(event.getDispatcher());
       });
       NeoForge.EVENT_BUS.addListener(ServerStoppingEvent.class, event -> {
          TestPlayerManager.onServerStopping();

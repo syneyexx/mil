@@ -1,6 +1,5 @@
 package org.millenaire.labyrinth.portal;
 
-import java.lang.reflect.Field;
 import java.util.Set;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
@@ -16,7 +15,6 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.RelativeMovement;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.common.ModConfigSpec.BooleanValue;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.labyrinth.LabyrinthKeys;
 import org.millenaire.labyrinth.entity.LabyrinthOrdeData;
@@ -33,41 +31,39 @@ public final class LabyrinthTeleporter {
    private static final String TAG_YROT = "ReturnYRot";
    private static final String TAG_XROT = "ReturnXRot";
    private static final String TAG_HAS = "HasReturn";
+   private static final String TAG_DIED_INSIDE = "DiedInside";
 
    private LabyrinthTeleporter() {
    }
 
-   /**
-    * Tries {@code MillenaireServerConfig.SERVER.labyrinthEnabled} when present;
-    * otherwise defaults to {@code true} for creative players (and {@code true} when
-    * no player context is available, so worldgen/spawn can proceed during development).
-    */
    public static boolean isLabyrinthEnabled(@Nullable Player player) {
-      Boolean configured = readLabyrinthEnabledConfig();
-      if (configured != null) {
-         return configured;
+      try {
+         return MillenaireServerConfig.SERVER.labyrinthEnabled.getAsBoolean();
+      } catch (IllegalStateException ignored) {
+         return player == null || player.getAbilities().instabuild;
       }
-      if (player != null) {
-         return player.getAbilities().instabuild;
-      }
-      return true;
    }
 
-   @Nullable
-   private static Boolean readLabyrinthEnabledConfig() {
-      try {
-         Field field = MillenaireServerConfig.SERVER.getClass().getField("labyrinthEnabled");
-         Object value = field.get(MillenaireServerConfig.SERVER);
-         if (value instanceof BooleanValue booleanValue) {
-            return booleanValue.getAsBoolean();
-         }
-         if (value instanceof Boolean boxed) {
-            return boxed;
-         }
-      } catch (ReflectiveOperationException ignored) {
-         // Field not present yet — fall through to creative default.
-      }
-      return null;
+   public static void markDiedInside(ServerPlayer player) {
+      CompoundTag root = player.getPersistentData().getCompound(PERSIST_ROOT);
+      root.putBoolean(TAG_DIED_INSIDE, true);
+      player.getPersistentData().put(PERSIST_ROOT, root);
+   }
+
+   public static boolean wasInLabyrinthBeforeDeath(ServerPlayer player) {
+      return player.getPersistentData().getCompound(PERSIST_ROOT).getBoolean(TAG_DIED_INSIDE);
+   }
+
+   public static void respawnAtArrival(ServerPlayer player, ServerLevel labyrinth) {
+      CompoundTag root = player.getPersistentData().getCompound(PERSIST_ROOT);
+      root.putBoolean(TAG_DIED_INSIDE, false);
+      player.getPersistentData().put(PERSIST_ROOT, root);
+      double x = 2.5;
+      double y = LabyrinthKeys.FLOOR_Y + 1.0;
+      double z = 2.5;
+      player.teleportTo(labyrinth, x, y, z, Set.<RelativeMovement>of(), 0.0F, 0.0F);
+      playArrivalEffects(player);
+      player.displayClientMessage(Component.translatable("labyrinth.teleport.respawn_arrival"), true);
    }
 
    public static boolean enter(ServerPlayer player) {
@@ -90,9 +86,10 @@ public final class LabyrinthTeleporter {
       storeReturn(player);
       playDepartureEffects(player);
 
-      double x = 4.5;
+      // Offset from chamber center so the player does not embed in the Scharnier pedestal.
+      double x = 2.5;
       double y = LabyrinthKeys.FLOOR_Y + 1.0;
-      double z = 4.5;
+      double z = 2.5;
       player.teleportTo(labyrinth, x, y, z, Set.<RelativeMovement>of(), 0.0F, 0.0F);
       playArrivalEffects(player);
       player.displayClientMessage(Component.translatable("labyrinth.teleport.enter"), true);

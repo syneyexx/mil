@@ -11,6 +11,7 @@ import net.minecraft.world.level.block.LecternBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import org.millenaire.block.ModBlocks;
 import org.millenaire.labyrinth.LabyrinthKeys;
 
 /**
@@ -23,6 +24,7 @@ public final class LabyrinthRooms {
    private static final BlockState POLISHED = Blocks.POLISHED_BLACKSTONE.defaultBlockState();
    private static final BlockState BRICKS = Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState();
    private static final BlockState GOLD = Blocks.GOLD_BLOCK.defaultBlockState();
+   private static final BlockState LODESTONE = Blocks.LODESTONE.defaultBlockState();
    private static final BlockState CRYING = Blocks.CRYING_OBSIDIAN.defaultBlockState();
    private static final BlockState BARS = Blocks.IRON_BARS.defaultBlockState();
    private static final BlockState CHAIN = Blocks.CHAIN.defaultBlockState().setValue(ChainBlock.AXIS, Direction.Axis.Y);
@@ -93,9 +95,10 @@ public final class LabyrinthRooms {
          }
       }
 
-      // Scharnier marker: gold block under the floor center.
+      // Exit Scharnier on a lodestone pedestal (block registered as millenaire:scharnier).
       set(chunk, centerX, floor - 1, centerZ, GOLD);
-      set(chunk, centerX, floor, centerZ, BRICKS);
+      set(chunk, centerX, floor, centerZ, LODESTONE);
+      set(chunk, centerX, floor + 1, centerZ, scharnierState());
 
       placeHangingLantern(chunk, centerX, ceiling - 1, centerZ);
       placeHangingLantern(chunk, centerX - 2, ceiling - 1, centerZ - 2);
@@ -299,6 +302,10 @@ public final class LabyrinthRooms {
 
    private static void placeHangingLantern(ChunkAccess chunk, int x, int y, int z) {
       set(chunk, x, y, z, HANGING_LANTERN);
+   }
+
+   private static BlockState scharnierState() {
+      return ModBlocks.SCHARNIER.get().defaultBlockState();
    }
 
    private static boolean inChunk(ChunkAccess chunk, int worldX, int worldZ) {

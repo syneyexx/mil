@@ -52,6 +52,8 @@ import org.millenaire.monster.client.GevallenSerafRenderer;
 import org.millenaire.monster.client.ScharlakenKoninginRenderer;
 import org.millenaire.monster.client.ZesarmigeRazernijRenderer;
 import org.millenaire.monster.pack.client.PackMonsterRenderer;
+import org.millenaire.labyrinth.client.GebondeneModel;
+import org.millenaire.labyrinth.client.GebondeneRenderer;
 
 @EventBusSubscriber(modid = "millenaire", value = Dist.CLIENT)
 public final class ClientEvents {
@@ -78,6 +80,7 @@ public final class ClientEvents {
       event.registerEntityRenderer(ModEntities.SDA.get(), PackMonsterRenderer::new);
       event.registerEntityRenderer(ModEntities.ZAVA.get(), PackMonsterRenderer::new);
       event.registerEntityRenderer(ModEntities.DISCD.get(), PackMonsterRenderer::new);
+      event.registerEntityRenderer(ModEntities.GEBONDENE.get(), GebondeneRenderer::new);
       event.registerBlockEntityRenderer((BlockEntityType)ModBlockEntities.LOCKED_CHEST.get(), LockedChestRenderer::new);
       event.registerBlockEntityRenderer((BlockEntityType)ModBlockEntities.VILLAGE_PANEL.get(), VillagePanelRenderer::new);
       event.registerBlockEntityRenderer((BlockEntityType)ModBlockEntities.FIRE_PIT.get(), FirePitRenderer::new);
@@ -97,6 +100,7 @@ public final class ClientEvents {
       event.registerLayerDefinition(MillModelLayers.MILL_VILLAGER_MALE_CLOTH_1, () -> MillMaleModel.createBodyLayer(cloth1));
       event.registerLayerDefinition(MillModelLayers.MILL_VILLAGER_FEMALE_SYM_CLOTH_1, () -> MillFemaleSymModel.createBodyLayer(cloth1));
       event.registerLayerDefinition(MillModelLayers.MILL_VILLAGER_FEMALE_ASYM_CLOTH_1, () -> MillFemaleAsymModel.createBodyLayer(cloth1));
+      event.registerLayerDefinition(GebondeneModel.LAYER_LOCATION, GebondeneModel::createBodyLayer);
    }
 
    @SubscribeEvent

@@ -12,8 +12,8 @@ import java.util.stream.Collectors;
  * The twenty-five kinds of Gebondene that inhabit the Millénaire Labyrinth.
  */
 public enum GebondeneKind {
-   ARCHITECT("architect", "architect", 0.7F, 2.1F, 36.0, 5.0, 0.26, 3.0, Tier.RARE, GebondeneAttitude.GASTVRIJ, 12),
-   SPIJKERMEESTER("spijkermeester", "spijkermeester", 0.65F, 1.9F, 32.0, 6.0, 0.27, 4.0, Tier.RARE, GebondeneAttitude.GASTVRIJ, 11),
+   ARCHITECT("architect", "architect", 1.1F, 3.0F, 280.0, 14.0, 0.24, 12.0, Tier.LEADER, GebondeneAttitude.GASTVRIJ, 80),
+   SPIJKERMEESTER("spijkermeester", "spijkermeester", 0.8F, 2.4F, 120.0, 10.0, 0.26, 8.0, Tier.LEADER, GebondeneAttitude.GASTVRIJ, 40),
    RAMMELAAR("rammelaar", "rammelaar", 0.6F, 1.8F, 22.0, 3.0, 0.30, 1.0, Tier.COMMON, GebondeneAttitude.GASTVRIJ, 5),
    STILLE("stille", "stille", 0.55F, 1.75F, 20.0, 2.0, 0.28, 1.0, Tier.COMMON, GebondeneAttitude.GASTVRIJ, 5),
    GIDS("gids", "gids", 0.6F, 1.9F, 24.0, 3.0, 0.29, 1.5, Tier.SOCIAL, GebondeneAttitude.GASTVRIJ, 7),

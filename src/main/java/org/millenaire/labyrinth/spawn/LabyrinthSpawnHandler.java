@@ -10,6 +10,8 @@ import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import org.millenaire.config.MillenaireServerConfig;
+import org.millenaire.entity.ModEntities;
 import org.millenaire.labyrinth.LabyrinthKeys;
 import org.millenaire.labyrinth.entity.GebondeneAttitude;
 import org.millenaire.labyrinth.entity.GebondeneEntity;
@@ -19,12 +21,11 @@ import org.millenaire.labyrinth.portal.LabyrinthTeleporter;
 
 /**
  * Soft ambient population for the Labyrinth: hospitable COMMON/SOCIAL Gebondene near players,
- * plus rare Poortwachter near GATE rooms.
+ * plus rare Poortwachter near GATE rooms and The Architect near the Core.
  */
 @EventBusSubscriber(modid = LabyrinthKeys.MODID)
 public final class LabyrinthSpawnHandler {
    private static final int INTERVAL_TICKS = 100;
-   private static final int NEARBY_CAP = 8;
    private static final double SCAN_RADIUS = 40.0;
    private static final List<GebondeneKind> AMBIENT_KINDS = GebondeneKind.ofTiers(
       GebondeneKind.Tier.COMMON,
@@ -55,13 +56,22 @@ public final class LabyrinthSpawnHandler {
          }
          trySpawnNearPlayer(labyrinth, player);
          maybeSpawnGatekeeper(labyrinth, player);
+         maybeSpawnArchitect(labyrinth, player);
+      }
+   }
+
+   private static int nearbyCap() {
+      try {
+         return MillenaireServerConfig.SERVER.labyrinthHostileCapPerPlayer.getAsInt();
+      } catch (IllegalStateException ignored) {
+         return 8;
       }
    }
 
    private static void trySpawnNearPlayer(ServerLevel level, ServerPlayer player) {
       AABB box = player.getBoundingBox().inflate(SCAN_RADIUS);
       int nearby = level.getEntitiesOfClass(GebondeneEntity.class, box).size();
-      if (nearby >= NEARBY_CAP) {
+      if (nearby >= nearbyCap()) {
          return;
       }
       if (AMBIENT_KINDS.isEmpty()) {
@@ -122,12 +132,34 @@ public final class LabyrinthSpawnHandler {
       spawnGebondene(level, gatePos, GebondeneKind.POORTWACHTER, GebondeneAttitude.GASTVRIJ);
    }
 
-   private static void spawnGebondene(ServerLevel level, BlockPos pos, GebondeneKind kind, GebondeneAttitude attitude) {
-      var typeOpt = GebondeneEntity.entityType();
-      if (typeOpt.isEmpty()) {
+   private static void maybeSpawnArchitect(ServerLevel level, ServerPlayer player) {
+      int coreX = LabyrinthKeys.CORE_CELL_X * LabyrinthKeys.CELL_SIZE + LabyrinthKeys.CELL_SIZE / 2;
+      int coreZ = LabyrinthKeys.CORE_CELL_Z * LabyrinthKeys.CELL_SIZE + LabyrinthKeys.CELL_SIZE / 2;
+      BlockPos core = new BlockPos(coreX, LabyrinthKeys.FLOOR_Y + 1, coreZ);
+      if (player.blockPosition().distSqr(core) > 48.0 * 48.0) {
          return;
       }
-      GebondeneEntity entity = typeOpt.get().create(level);
+      if (!level.isLoaded(core)) {
+         return;
+      }
+      AABB coreBox = new AABB(core).inflate(24.0);
+      boolean present = !level.getEntitiesOfClass(
+         GebondeneEntity.class,
+         coreBox,
+         e -> e.getKind() == GebondeneKind.ARCHITECT
+      ).isEmpty();
+      if (present) {
+         return;
+      }
+      BlockPos spawnAt = isOpenCorridorCell(level, core) ? core : findOpenCorridorNear(level, core, level.getRandom());
+      if (spawnAt == null) {
+         return;
+      }
+      spawnGebondene(level, spawnAt, GebondeneKind.ARCHITECT, GebondeneAttitude.GASTVRIJ);
+   }
+
+   private static void spawnGebondene(ServerLevel level, BlockPos pos, GebondeneKind kind, GebondeneAttitude attitude) {
+      GebondeneEntity entity = ModEntities.GEBONDENE.get().create(level);
       if (entity == null) {
          return;
       }

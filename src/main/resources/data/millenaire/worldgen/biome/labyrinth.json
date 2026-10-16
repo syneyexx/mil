@@ -1,0 +1,32 @@
+{
+  "temperature": 0.5,
+  "downfall": 0.0,
+  "has_precipitation": false,
+  "effects": {
+    "sky_color": 1447446,
+    "fog_color": 1973790,
+    "water_color": 3342336,
+    "water_fog_color": 1114129,
+    "mood_sound": {
+      "sound": "minecraft:ambient.cave",
+      "tick_delay": 400,
+      "block_search_extent": 8,
+      "offset": 2.0
+    },
+    "additions_sound": {
+      "sound": "minecraft:ambient.nether_wastes.additions",
+      "tick_chance": 0.005
+    },
+    "ambient_sound": "minecraft:ambient.basalt_deltas.loop",
+    "music": {
+      "sound": "minecraft:music.nether.basalt_deltas",
+      "min_delay": 12000,
+      "max_delay": 24000,
+      "replace_current_music": false
+    }
+  },
+  "spawners": {},
+  "spawn_costs": {},
+  "carvers": {},
+  "features": []
+}
