@@ -2,7 +2,9 @@
 
 Doel: Het Millénaire-Labyrint dichter bij de *ervaring* van Hellraiser: Revival brengen **zonder Hellraiser-IP**.
 
-Status: **Waves 1–8 gemerged** op `main`. Eerlijke vibe-audit + volgende campagne: [`LABYRINTH_REVIVAL_MASTERPLAN.md`](LABYRINTH_REVIVAL_MASTERPLAN.md) (Waves 9–14).
+Status: **Waves 1–8 gemerged** op `main`.  
+Release-ready psyche-campagne (wacht op GO): [`LABYRINTH_REVIVAL_RELEASE_PLAN.md`](LABYRINTH_REVIVAL_RELEASE_PLAN.md) (P1–P5).  
+Eerdere gap-analyse: [`LABYRINTH_REVIVAL_MASTERPLAN.md`](LABYRINTH_REVIVAL_MASTERPLAN.md).
 
 ## Ontwerpprincipes (vast)
 

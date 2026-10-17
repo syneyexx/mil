@@ -1,5 +1,8 @@
 # Het Labyrint — Eerlijke vibe-audit & masterplan (na Wave 8)
 
+> **Superseded for the release round:** zie [`LABYRINTH_REVIVAL_RELEASE_PLAN.md`](LABYRINTH_REVIVAL_RELEASE_PLAN.md)  
+> (psyche-DoD, waves P1–P5, géén Configuratie-theater). Dit document blijft als gap-analyse.
+
 ## Verdict
 
 **Nee — nog geen topniveau Hellraiser: Revival-gevoel.**
