@@ -158,8 +158,8 @@ public final class GebondeneInteractions {
          return InteractionResult.CONSUME;
       }
 
-      int coreX = LabyrinthKeys.CORE_CELL_X * LabyrinthKeys.CELL_SIZE + LabyrinthKeys.CELL_SIZE / 2;
-      int coreZ = LabyrinthKeys.CORE_CELL_Z * LabyrinthKeys.CELL_SIZE + LabyrinthKeys.CELL_SIZE / 2;
+      int coreX = LabyrinthKeys.coreCenterBlockX();
+      int coreZ = LabyrinthKeys.coreCenterBlockZ();
       double dx = coreX - player.getX();
       double dz = coreZ - player.getZ();
       // ~75% honest: sometimes invert.
@@ -239,8 +239,8 @@ public final class GebondeneInteractions {
    }
 
    private static InteractionResult pilgrimLead(GebondeneEntity host, ServerPlayer player) {
-      int coreX = LabyrinthKeys.CORE_CELL_X * LabyrinthKeys.CELL_SIZE + LabyrinthKeys.CELL_SIZE / 2;
-      int coreZ = LabyrinthKeys.CORE_CELL_Z * LabyrinthKeys.CELL_SIZE + LabyrinthKeys.CELL_SIZE / 2;
+      int coreX = LabyrinthKeys.coreCenterBlockX();
+      int coreZ = LabyrinthKeys.coreCenterBlockZ();
       host.getNavigation().moveTo(coreX + 0.5, LabyrinthKeys.FLOOR_Y + 1.0, coreZ + 0.5, 1.0);
       player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 200, 0));
       play(host, SoundEvents.AMETHYST_BLOCK_CHIME, 1.0F);

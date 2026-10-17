@@ -28,8 +28,8 @@ public final class LabyrinthProgressHandler {
       if (labyrinth == null) {
          return;
       }
-      int coreX = LabyrinthKeys.CORE_CELL_X * LabyrinthKeys.CELL_SIZE + LabyrinthKeys.CELL_SIZE / 2;
-      int coreZ = LabyrinthKeys.CORE_CELL_Z * LabyrinthKeys.CELL_SIZE + LabyrinthKeys.CELL_SIZE / 2;
+      int coreX = LabyrinthKeys.coreCenterBlockX();
+      int coreZ = LabyrinthKeys.coreCenterBlockZ();
       BlockPos core = new BlockPos(coreX, LabyrinthKeys.FLOOR_Y + 1, coreZ);
       ServerLevel overworld = event.getServer().overworld();
       PlayerQuestData questData = PlayerQuestData.get(overworld, QuestRegistry::get);

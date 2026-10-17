@@ -108,9 +108,13 @@ public final class LabyrinthSpawnHandler {
          for (int dz = -2; dz <= 2; dz++) {
             int lx = localX + dx;
             int lz = localZ + dz;
+            // Match stamp anchors only (pads resolve to GATE but are not SW).
             if (maze.getRoomType(lx, lz) == LabyrinthMaze.RoomType.GATE) {
-               int worldX = (regionX * LabyrinthKeys.REGION_SIZE + lx) * LabyrinthKeys.CELL_SIZE + LabyrinthKeys.CELL_SIZE / 2;
-               int worldZ = (regionZ * LabyrinthKeys.REGION_SIZE + lz) * LabyrinthKeys.CELL_SIZE + LabyrinthKeys.CELL_SIZE / 2;
+               int span = maze.getFootprintSpan(lx, lz);
+               int worldX = (regionX * LabyrinthKeys.REGION_SIZE + lx) * LabyrinthKeys.CELL_SIZE
+                  + (span * LabyrinthKeys.CELL_SIZE) / 2;
+               int worldZ = (regionZ * LabyrinthKeys.REGION_SIZE + lz) * LabyrinthKeys.CELL_SIZE
+                  + (span * LabyrinthKeys.CELL_SIZE) / 2;
                gatePos = new BlockPos(worldX, LabyrinthKeys.FLOOR_Y + 1, worldZ);
                break outer;
             }
@@ -133,8 +137,8 @@ public final class LabyrinthSpawnHandler {
    }
 
    private static void maybeSpawnArchitect(ServerLevel level, ServerPlayer player) {
-      int coreX = LabyrinthKeys.CORE_CELL_X * LabyrinthKeys.CELL_SIZE + LabyrinthKeys.CELL_SIZE / 2;
-      int coreZ = LabyrinthKeys.CORE_CELL_Z * LabyrinthKeys.CELL_SIZE + LabyrinthKeys.CELL_SIZE / 2;
+      int coreX = LabyrinthKeys.coreCenterBlockX();
+      int coreZ = LabyrinthKeys.coreCenterBlockZ();
       BlockPos core = new BlockPos(coreX, LabyrinthKeys.FLOOR_Y + 1, coreZ);
       if (player.blockPosition().distSqr(core) > 48.0 * 48.0) {
          return;

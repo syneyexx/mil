@@ -130,13 +130,20 @@ public final class LabyrinthCommand {
       final long nearby = nearbyCount;
       final boolean hostile = hostileFlag;
       final int reputation = reputationValue;
+      int[] statusCell = org.millenaire.labyrinth.gen.LabyrinthMaze.globalCellFromBlock(
+         player.blockPosition().getX(),
+         player.blockPosition().getZ()
+      );
+      final LabyrinthKeys.Zone zone = LabyrinthKeys.zoneAt(statusCell[0], statusCell[1]);
       source.sendSuccess(
          () -> Component.literal(
             String.format(
                Locale.ROOT,
-               "Labyrinth enabled=%s inside=%s dim=%s loaded=%s nearbyGebondene=%d hostile=%s reputation=%d",
+               "Labyrinth v%d enabled=%s inside=%s zone=%s dim=%s loaded=%s nearbyGebondene=%d hostile=%s reputation=%d",
+               LabyrinthKeys.LAYOUT_VERSION,
                enabled,
                inside,
+               zone,
                dimPath,
                labyrinthLoaded,
                nearby,

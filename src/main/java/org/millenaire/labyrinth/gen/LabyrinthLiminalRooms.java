@@ -92,10 +92,11 @@ public final class LabyrinthLiminalRooms {
                   set(chunk, x, y, z, wall);
                }
                // Fake doorway gaps on mid-edges so maze connections still read as doors.
-               int mid = LabyrinthKeys.CELL_SIZE / 2;
+               int midZ = (minZ + maxZ) / 2;
+               int midX = (minX + maxX) / 2;
                boolean doorGap =
-                  (x == minX || x == maxX) && Math.abs(z - (minZ + mid)) <= 1
-                     || (z == minZ || z == maxZ) && Math.abs(x - (minX + mid)) <= 1;
+                  (x == minX || x == maxX) && Math.abs(z - midZ) <= 1
+                     || (z == minZ || z == maxZ) && Math.abs(x - midX) <= 1;
                if (doorGap) {
                   for (int y = floor + 1; y <= floor + 2; y++) {
                      set(chunk, x, y, z, AIR);

@@ -8,7 +8,7 @@ Owner runs these locally (agents do not claim GameTest/CI success).
 
 1. New world, creative, NeoForge 1.21.1 + Millénaire.
 2. `/give @s millenaire:configuratie`
-3. Right-click Configuratie → Arrival (Y≈65). Fog should read **cold blue-grey** (unless `atmosphere=CLASSIC`).
+3. Right-click Configuratie → Arrival **nave** (~24×24, Scharnier on dais, spawn south of pedestal, Y≈65). Fog should read **cold blue-grey** (unless `atmosphere=CLASSIC`). F3 debug: `Labyrinth v2` + `zone=ARRIVAL`.
 4. Corridors feel narrower; spikes/chains denser; packed ice accents on ceilings.
 5. Find HOST_HALL / GATE / CHAPEL hub → ladder to mezzanine (~Y75).
 6. Far from Arrival (manhattan ≥12 cells): vault shaft at GATE/CORE centers → Y≈49 landing.

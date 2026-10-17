@@ -34,9 +34,9 @@ import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.labyrinth.LabyrinthKeys;
 
 /**
- * Maze chunk generator for the Labyrinth dimension.
+ * Maze chunk generator for the Labyrinth dimension (layout v2).
  * Primary band (Y64–73) plus optional vault band (Y48–56) beyond vault distance.
- * Corridors are inset for claustrophobia; spikes/chains denser under cold atmosphere.
+ * Corridors use a 3-wide plus-shaped walk channel; multi-cell chambers stamp from SW anchors.
  */
 public class LabyrinthChunkGenerator extends ChunkGenerator {
    public static final MapCodec<LabyrinthChunkGenerator> CODEC = RecordCodecBuilder.mapCodec(
@@ -141,6 +141,7 @@ public class LabyrinthChunkGenerator extends ChunkGenerator {
       }
 
       RandomSource roomRandom = RandomSource.create(seed ^ chunkPos.toLong());
+      Set<Long> stampedAnchors = new HashSet<>();
       for (long cellKey : stampedCells) {
          int globalCellX = (int) (cellKey >> 32);
          int globalCellZ = (int) cellKey;
@@ -149,13 +150,29 @@ public class LabyrinthChunkGenerator extends ChunkGenerator {
          LabyrinthMaze maze = LabyrinthMaze.forRegion(seed, regionX, regionZ);
          int localCellX = LabyrinthMaze.localCellFromGlobal(globalCellX);
          int localCellZ = LabyrinthMaze.localCellFromGlobal(globalCellZ);
-         LabyrinthMaze.RoomType type = maze.getRoomType(localCellX, localCellZ);
-         if (type == LabyrinthMaze.RoomType.NONE) {
+         LabyrinthMaze.RoomType raw = maze.getRoomType(localCellX, localCellZ);
+         if (raw == LabyrinthMaze.RoomType.NONE) {
             continue;
          }
-         int cellMinX = globalCellX * LabyrinthKeys.CELL_SIZE;
-         int cellMinZ = globalCellZ * LabyrinthKeys.CELL_SIZE;
-         LabyrinthRooms.stampRoom(chunk, type, cellMinX, cellMinZ, seed, roomRandom);
+         int anchorLocalX = maze.getAnchorLocalX(localCellX, localCellZ);
+         int anchorLocalZ = maze.getAnchorLocalZ(localCellX, localCellZ);
+         if (anchorLocalX < 0 || anchorLocalZ < 0) {
+            continue;
+         }
+         LabyrinthMaze.RoomType type = maze.getRoomType(anchorLocalX, anchorLocalZ);
+         if (!LabyrinthMaze.isStampAnchor(type)) {
+            continue;
+         }
+         int globalAnchorX = regionX * maze.regionSize() + anchorLocalX;
+         int globalAnchorZ = regionZ * maze.regionSize() + anchorLocalZ;
+         long anchorKey = (((long) globalAnchorX) << 32) | (globalAnchorZ & 0xffffffffL);
+         if (!stampedAnchors.add(anchorKey)) {
+            continue;
+         }
+         int span = maze.getFootprintSpan(anchorLocalX, anchorLocalZ);
+         int cellMinX = globalAnchorX * LabyrinthKeys.CELL_SIZE;
+         int cellMinZ = globalAnchorZ * LabyrinthKeys.CELL_SIZE;
+         LabyrinthRooms.stampRoom(chunk, type, cellMinX, cellMinZ, span, seed, roomRandom);
       }
 
       return CompletableFuture.completedFuture(chunk);
@@ -227,8 +244,8 @@ public class LabyrinthChunkGenerator extends ChunkGenerator {
          return BLACKSTONE;
       }
 
-      // Narrow interior: margin columns stay as bars/spikes instead of open air.
-      if (isMarginColumn(x, z) && !isDoorwayColumn(x, z, seed)) {
+      // Narrow corridor: non-walk columns stay as bars/spikes (skipped inside chambers).
+      if (!isChamberColumn(x, z, seed) && isMarginColumn(x, z) && !isDoorwayColumn(x, z, seed)) {
          if (y == floorY + 1) {
             int hash = Long.hashCode(Mth.getSeed(x, y, z) ^ seed);
             if ((hash & 3) == 0) {
@@ -286,29 +303,52 @@ public class LabyrinthChunkGenerator extends ChunkGenerator {
       int regionX = LabyrinthMaze.regionCoordFromGlobalCell(cell[0]);
       int regionZ = LabyrinthMaze.regionCoordFromGlobalCell(cell[1]);
       LabyrinthMaze maze = LabyrinthMaze.forRegion(seed, regionX, regionZ);
-      LabyrinthMaze.RoomType type = maze.getRoomTypeGlobal(cell[0], cell[1]);
+      LabyrinthMaze.RoomType type = maze.getResolvedRoomType(
+         LabyrinthMaze.localCellFromGlobal(cell[0]),
+         LabyrinthMaze.localCellFromGlobal(cell[1])
+      );
       if (type == LabyrinthMaze.RoomType.HOST_HALL
          || type == LabyrinthMaze.RoomType.GATE
          || type == LabyrinthMaze.RoomType.CHAPEL
          || type == LabyrinthMaze.RoomType.ROTARY
          || type == LabyrinthMaze.RoomType.CORE
-         || type == LabyrinthMaze.RoomType.AUDIENCE) {
+         || type == LabyrinthMaze.RoomType.AUDIENCE
+         || type == LabyrinthMaze.RoomType.ATRIUM
+         || type == LabyrinthMaze.RoomType.ARRIVAL) {
          // Leave air so stamps / shafts connect bands.
          return AIR;
       }
       return DEEPSLATE;
    }
 
+   /**
+    * True for interior columns outside the 3-wide plus-shaped walk channel.
+    * Corners of each cell stay choked; N–S / E–W arms stay open.
+    */
    private static boolean isMarginColumn(int blockX, int blockZ) {
       int lx = Math.floorMod(blockX, LabyrinthKeys.CELL_SIZE);
       int lz = Math.floorMod(blockZ, LabyrinthKeys.CELL_SIZE);
-      int margin = LabyrinthKeys.CORRIDOR_MARGIN;
       int last = LabyrinthKeys.CELL_SIZE - 1;
-      boolean nearWest = lx > 0 && lx <= margin;
-      boolean nearEast = lx < last && lx >= last - margin;
-      boolean nearNorth = lz > 0 && lz <= margin;
-      boolean nearSouth = lz < last && lz >= last - margin;
-      return nearWest || nearEast || nearNorth || nearSouth;
+      if (lx == 0 || lz == 0 || lx == last || lz == last) {
+         return false;
+      }
+      return !isCorridorWalkColumn(lx, lz);
+   }
+
+   private static boolean isCorridorWalkColumn(int lx, int lz) {
+      int mid = LabyrinthKeys.CELL_SIZE / 2;
+      int half = LabyrinthKeys.CORRIDOR_WALK_HALF;
+      return Math.abs(lx - mid) <= half || Math.abs(lz - mid) <= half;
+   }
+
+   private boolean isChamberColumn(int blockX, int blockZ, long seed) {
+      int[] global = LabyrinthMaze.globalCellFromBlock(blockX, blockZ);
+      int regionX = LabyrinthMaze.regionCoordFromGlobalCell(global[0]);
+      int regionZ = LabyrinthMaze.regionCoordFromGlobalCell(global[1]);
+      LabyrinthMaze maze = LabyrinthMaze.forRegion(seed, regionX, regionZ);
+      int localX = LabyrinthMaze.localCellFromGlobal(global[0]);
+      int localZ = LabyrinthMaze.localCellFromGlobal(global[1]);
+      return maze.isChamberInterior(localX, localZ);
    }
 
    private boolean isDoorwayColumn(int blockX, int blockZ, long seed) {
@@ -363,6 +403,20 @@ public class LabyrinthChunkGenerator extends ChunkGenerator {
       boolean onNorth = lz == 0;
       boolean onSouth = lz == last;
 
+      // Fully open shared walls inside a multi-cell chamber (including former corners).
+      if (onWest && maze.sameChamber(localCellX, localCellZ, localCellX - 1, localCellZ)) {
+         return true;
+      }
+      if (onEast && maze.sameChamber(localCellX, localCellZ, localCellX + 1, localCellZ)) {
+         return true;
+      }
+      if (onNorth && maze.sameChamber(localCellX, localCellZ, localCellX, localCellZ - 1)) {
+         return true;
+      }
+      if (onSouth && maze.sameChamber(localCellX, localCellZ, localCellX, localCellZ + 1)) {
+         return true;
+      }
+
       if (onWest && onNorth || onWest && onSouth || onEast && onNorth || onEast && onSouth) {
          return false;
       }
@@ -380,7 +434,11 @@ public class LabyrinthChunkGenerator extends ChunkGenerator {
          return maze.isWallOpen(localCellX, localCellZ, LabyrinthMaze.WALL_S);
       }
 
-      return true;
+      // Chamber interiors are fully hollow; corridors keep the plus-shaped channel.
+      if (maze.isChamberInterior(localCellX, localCellZ)) {
+         return true;
+      }
+      return isCorridorWalkColumn(lx, lz);
    }
 
    private static boolean hasVaultAt(int blockX, int blockZ) {
@@ -447,8 +505,11 @@ public class LabyrinthChunkGenerator extends ChunkGenerator {
       int localX = LabyrinthMaze.localCellFromGlobal(cell[0]);
       int localZ = LabyrinthMaze.localCellFromGlobal(cell[1]);
       info.add(
-         "Labyrinth cell " + cell[0] + "," + cell[1]
-            + " room=" + maze.getRoomType(localX, localZ)
+         "Labyrinth v" + LabyrinthKeys.LAYOUT_VERSION
+            + " cell " + cell[0] + "," + cell[1]
+            + " room=" + maze.getResolvedRoomType(localX, localZ)
+            + " zone=" + LabyrinthKeys.zoneAt(cell[0], cell[1])
+            + " span=" + maze.getFootprintSpan(localX, localZ)
             + " band=" + LabyrinthKeys.bandForY(pos.getY())
             + " open=" + maze.isWallOpen(localX, localZ, LabyrinthMaze.WALL_N | LabyrinthMaze.WALL_E | LabyrinthMaze.WALL_S | LabyrinthMaze.WALL_W)
       );

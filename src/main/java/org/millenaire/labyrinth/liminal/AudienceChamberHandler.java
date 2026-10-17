@@ -44,8 +44,8 @@ public final class AudienceChamberHandler {
          return;
       }
 
-      int audX = LabyrinthKeys.AUDIENCE_CELL_X * LabyrinthKeys.CELL_SIZE + LabyrinthKeys.CELL_SIZE / 2;
-      int audZ = LabyrinthKeys.AUDIENCE_CELL_Z * LabyrinthKeys.CELL_SIZE + LabyrinthKeys.CELL_SIZE / 2;
+      int audX = LabyrinthKeys.audienceCenterBlockX();
+      int audZ = LabyrinthKeys.audienceCenterBlockZ();
       BlockPos heart = new BlockPos(audX, LabyrinthKeys.FLOOR_Y + 1, audZ);
       PlayerQuestData questData = PlayerQuestData.get(overworld, QuestRegistry::get);
 
@@ -60,7 +60,11 @@ public final class AudienceChamberHandler {
          int regionX = LabyrinthMaze.regionCoordFromGlobalCell(cell[0]);
          int regionZ = LabyrinthMaze.regionCoordFromGlobalCell(cell[1]);
          LabyrinthMaze maze = LabyrinthMaze.forRegion(labyrinth.getSeed(), regionX, regionZ);
-         if (maze.getRoomTypeGlobal(cell[0], cell[1]) != LabyrinthMaze.RoomType.AUDIENCE) {
+         if (maze.getResolvedRoomType(
+               LabyrinthMaze.localCellFromGlobal(cell[0]),
+               LabyrinthMaze.localCellFromGlobal(cell[1])
+            ) != LabyrinthMaze.RoomType.AUDIENCE
+            && !LabyrinthKeys.inAudienceFootprint(cell[0], cell[1])) {
             continue;
          }
 
