@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "millenaire:block/orde_clock",
+      "y": 0
+    },
+    "facing=east": {
+      "model": "millenaire:block/orde_clock",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "millenaire:block/orde_clock",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "millenaire:block/orde_clock",
+      "y": 270
+    }
+  }
+}

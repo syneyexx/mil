@@ -74,6 +74,8 @@ Phase pulses + summons (Rammelaar/Stille) + Core arena shifts when `shiftingEnab
 
 `LabyrinthMaterials`: `ordeStone` / `ordePanel` / `bleedPlanks` / `coldVault` / `ruitHeart` — vanilla stand-ins shared by stamps (resource-pack / future block swap points).
 
+**Target block catalog (design):** see [`ORDE_BLOCK_CATALOG.md`](ORDE_BLOCK_CATALOG.md) — Cenobite/Orde-inspired set keyed to Hellraiser + Hellraiser: Revival mood (IP-clean IDs), ship waves B0–B5.
+
 ## Audio
 
 Registered events `millenaire:labyrinth.{drone,metal,whisper,chase_stinger,ruit_drone}` — vanilla placeholders; see `docs/LABYRINTH_AUDIO_SLOTS.md`.

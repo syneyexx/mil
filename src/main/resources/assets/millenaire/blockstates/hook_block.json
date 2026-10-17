@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "millenaire:block/hook_block",
+      "y": 0
+    },
+    "facing=east": {
+      "model": "millenaire:block/hook_block",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "millenaire:block/hook_block",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "millenaire:block/hook_block",
+      "y": 270
+    }
+  }
+}

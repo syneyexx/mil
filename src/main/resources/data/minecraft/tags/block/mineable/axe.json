@@ -21,6 +21,20 @@
     "millenaire:paper_wall",
     "millenaire:rosette",
     "millenaire:silk_worm",
-    "millenaire:import_table"
+    "millenaire:import_table",
+    "millenaire:bleed_planks",
+    "millenaire:bleed_planks_stairs",
+    "millenaire:bleed_planks_slab",
+    "millenaire:bleed_wallpaper",
+    "millenaire:bound_leather",
+    "millenaire:nail_studded",
+    "millenaire:crimson_band",
+    "millenaire:silk_veil",
+    "millenaire:orde_barricade",
+    "millenaire:orde_bedding",
+    "millenaire:orde_nightstand",
+    "millenaire:orde_clock",
+    "millenaire:crooked_painting",
+    "millenaire:orde_lamp"
   ]
 }

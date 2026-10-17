@@ -1,0 +1,78 @@
+{
+  "parent": "minecraft:block/block",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "particle": "millenaire:block/orde_lantern",
+    "lantern": "millenaire:block/orde_lantern"
+  },
+  "elements": [
+    {
+      "from": [
+        5,
+        1,
+        5
+      ],
+      "to": [
+        11,
+        11,
+        11
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            5,
+            5,
+            11,
+            15
+          ],
+          "texture": "#lantern"
+        },
+        "south": {
+          "uv": [
+            5,
+            5,
+            11,
+            15
+          ],
+          "texture": "#lantern"
+        },
+        "west": {
+          "uv": [
+            5,
+            5,
+            11,
+            15
+          ],
+          "texture": "#lantern"
+        },
+        "east": {
+          "uv": [
+            5,
+            5,
+            11,
+            15
+          ],
+          "texture": "#lantern"
+        },
+        "up": {
+          "uv": [
+            5,
+            0,
+            11,
+            5
+          ],
+          "texture": "#lantern"
+        },
+        "down": {
+          "uv": [
+            5,
+            11,
+            11,
+            15
+          ],
+          "texture": "#lantern"
+        }
+      }
+    }
+  ]
+}

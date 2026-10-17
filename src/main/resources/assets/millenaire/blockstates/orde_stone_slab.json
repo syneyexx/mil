@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "millenaire:block/orde_stone_slab"
+    },
+    "type=top": {
+      "model": "millenaire:block/orde_stone_slab_top"
+    },
+    "type=double": {
+      "model": "millenaire:block/orde_stone"
+    }
+  }
+}

@@ -31,12 +31,153 @@ import org.millenaire.block.mock.MockMarkerBlock;
 import org.millenaire.block.mock.MockSoilBlock;
 import org.millenaire.block.mock.MockSourceBlock;
 import org.millenaire.block.mock.MockTreeSpawnBlock;
+import org.millenaire.block.orde.HookBlock;
+import org.millenaire.block.orde.SpikeFloorBlock;
 import org.millenaire.labyrinth.portal.ScharnierBlock;
 
 public final class ModBlocks {
    public static final Blocks BLOCKS = DeferredRegister.createBlocks("millenaire");
    public static final DeferredBlock<ScharnierBlock> SCHARNIER = BLOCKS.register(
       "scharnier", key -> new ScharnierBlock(ScharnierBlock.defaultProperties().lightLevel(state -> 7))
+   );
+
+   // --- The Order / Orde block set (Cenobite-inspired catalog) ---
+   private static Properties ordeStoneProps() {
+      return Properties.of().mapColor(MapColor.COLOR_BLACK).strength(2.0F, 12.0F).sound(SoundType.STONE).requiresCorrectToolForDrops();
+   }
+
+   private static Properties ordeMetalProps() {
+      return Properties.of().mapColor(MapColor.METAL).strength(3.0F, 12.0F).sound(SoundType.METAL).requiresCorrectToolForDrops();
+   }
+
+   private static Properties ordeWoodProps() {
+      return Properties.of().mapColor(MapColor.COLOR_GRAY).strength(2.0F, 3.0F).sound(SoundType.WOOD);
+   }
+
+   public static final DeferredBlock<Block> ORDE_STONE = BLOCKS.registerSimpleBlock("orde_stone", ordeStoneProps());
+   public static final DeferredBlock<StairBlock> ORDE_STONE_STAIRS = BLOCKS.register(
+      "orde_stone_stairs", key -> new StairBlock(ORDE_STONE.get().defaultBlockState(), Properties.ofFullCopy(ORDE_STONE.get()))
+   );
+   public static final DeferredBlock<SlabBlock> ORDE_STONE_SLAB = BLOCKS.register(
+      "orde_stone_slab", key -> new SlabBlock(Properties.ofFullCopy(ORDE_STONE.get()))
+   );
+   public static final DeferredBlock<Block> ORDE_PANEL = BLOCKS.registerSimpleBlock("orde_panel", ordeStoneProps());
+   public static final DeferredBlock<StairBlock> ORDE_PANEL_STAIRS = BLOCKS.register(
+      "orde_panel_stairs", key -> new StairBlock(ORDE_PANEL.get().defaultBlockState(), Properties.ofFullCopy(ORDE_PANEL.get()))
+   );
+   public static final DeferredBlock<SlabBlock> ORDE_PANEL_SLAB = BLOCKS.register(
+      "orde_panel_slab", key -> new SlabBlock(Properties.ofFullCopy(ORDE_PANEL.get()))
+   );
+   public static final DeferredBlock<Block> ORDE_TILE = BLOCKS.registerSimpleBlock("orde_tile", ordeStoneProps());
+   public static final DeferredBlock<SlabBlock> ORDE_TILE_SLAB = BLOCKS.register(
+      "orde_tile_slab", key -> new SlabBlock(Properties.ofFullCopy(ORDE_TILE.get()))
+   );
+   public static final DeferredBlock<Block> BLEED_PLANKS = BLOCKS.registerSimpleBlock("bleed_planks", ordeWoodProps());
+   public static final DeferredBlock<StairBlock> BLEED_PLANKS_STAIRS = BLOCKS.register(
+      "bleed_planks_stairs", key -> new StairBlock(BLEED_PLANKS.get().defaultBlockState(), Properties.ofFullCopy(BLEED_PLANKS.get()))
+   );
+   public static final DeferredBlock<SlabBlock> BLEED_PLANKS_SLAB = BLOCKS.register(
+      "bleed_planks_slab", key -> new SlabBlock(Properties.ofFullCopy(BLEED_PLANKS.get()))
+   );
+   public static final DeferredBlock<Block> ORDE_BRICKS = BLOCKS.registerSimpleBlock("orde_bricks", ordeStoneProps());
+   public static final DeferredBlock<Block> ORDE_PILLAR = BLOCKS.registerSimpleBlock("orde_pillar", ordeStoneProps());
+   public static final DeferredBlock<Block> ORDE_RUNE = BLOCKS.registerSimpleBlock("orde_rune", ordeStoneProps());
+   public static final DeferredBlock<Block> ORDE_SIGIL = BLOCKS.registerSimpleBlock("orde_sigil", ordeStoneProps());
+   public static final DeferredBlock<Block> ORDE_SCRIPT = BLOCKS.registerSimpleBlock("orde_script", ordeStoneProps());
+   public static final DeferredBlock<Block> RIVETED_STONE = BLOCKS.registerSimpleBlock("riveted_stone", ordeStoneProps());
+   public static final DeferredBlock<Block> CRIMSON_BAND = BLOCKS.registerSimpleBlock(
+      "crimson_band", Properties.of().mapColor(MapColor.COLOR_RED).strength(1.5F, 4.0F).sound(SoundType.WOOL)
+   );
+   public static final DeferredBlock<Block> BOUND_LEATHER = BLOCKS.registerSimpleBlock(
+      "bound_leather", Properties.of().mapColor(MapColor.COLOR_BROWN).strength(1.0F, 3.0F).sound(SoundType.WOOL)
+   );
+   public static final DeferredBlock<Block> NAIL_STUDDED = BLOCKS.registerSimpleBlock(
+      "nail_studded", Properties.of().mapColor(MapColor.COLOR_BLACK).strength(1.2F, 4.0F).sound(SoundType.WOOL)
+   );
+   public static final DeferredBlock<Block> STRAP_BLOCK = BLOCKS.registerSimpleBlock("strap_block", ordeStoneProps());
+   public static final DeferredBlock<IronBarsBlock> ORDE_BARS = BLOCKS.register(
+      "orde_bars", key -> new IronBarsBlock(ordeMetalProps().noOcclusion())
+   );
+   public static final DeferredBlock<IronBarsBlock> SILK_VEIL = BLOCKS.register(
+      "silk_veil",
+      key -> new IronBarsBlock(Properties.of().mapColor(MapColor.COLOR_BLACK).strength(0.4F).sound(SoundType.WOOL).noOcclusion())
+   );
+   public static final DeferredBlock<Block> ORDE_GRATE = BLOCKS.registerSimpleBlock("orde_grate", ordeMetalProps());
+   public static final DeferredBlock<SpikeFloorBlock> SPIKE_FLOOR = BLOCKS.register(
+      "spike_floor", key -> new SpikeFloorBlock(ordeStoneProps())
+   );
+   public static final DeferredBlock<Block> SPIKE_WALL = BLOCKS.registerSimpleBlock("spike_wall", ordeStoneProps());
+   public static final DeferredBlock<HookBlock> HOOK_BLOCK = BLOCKS.register(
+      "hook_block", key -> new HookBlock(ordeStoneProps())
+   );
+   public static final DeferredBlock<Block> ORDE_ALTAR = BLOCKS.registerSimpleBlock("orde_altar", ordeStoneProps());
+   public static final DeferredBlock<Block> OFFERING_BOWL = BLOCKS.registerSimpleBlock("offering_bowl", ordeStoneProps());
+   public static final DeferredBlock<Block> ORDE_BRAZIER = BLOCKS.register(
+      "orde_brazier",
+      key -> new Block(ordeStoneProps().lightLevel(state -> 10))
+   );
+   public static final DeferredBlock<Block> ORDE_LANTERN = BLOCKS.register(
+      "orde_lantern",
+      key -> new Block(Properties.of().mapColor(MapColor.METAL).strength(1.0F).sound(SoundType.LANTERN).lightLevel(state -> 12).noOcclusion())
+   );
+   public static final DeferredBlock<Block> VOID_SCONCE = BLOCKS.register(
+      "void_sconce", key -> new Block(ordeStoneProps().lightLevel(state -> 4))
+   );
+   public static final DeferredBlock<Block> BLEED_WALLPAPER = BLOCKS.registerSimpleBlock(
+      "bleed_wallpaper", Properties.of().mapColor(MapColor.COLOR_GRAY).strength(0.5F).sound(SoundType.WOOL)
+   );
+   public static final DeferredBlock<Block> COLD_VAULT = BLOCKS.registerSimpleBlock(
+      "cold_vault", Properties.of().mapColor(MapColor.ICE).strength(1.5F, 6.0F).sound(SoundType.GLASS).requiresCorrectToolForDrops()
+   );
+   public static final DeferredBlock<Block> RUIT_HEART = BLOCKS.register(
+      "ruit_heart",
+      key -> new Block(Properties.of().mapColor(MapColor.COLOR_PURPLE).strength(4.0F, 20.0F).sound(SoundType.STONE).lightLevel(state -> 7).requiresCorrectToolForDrops())
+   );
+   // Kit-scene blocks from concept art (arrival / corridor / bleed bedroom / shrine)
+   public static final DeferredBlock<Block> CHEVRON_TILE = BLOCKS.registerSimpleBlock("chevron_tile", ordeStoneProps());
+   public static final DeferredBlock<Block> FLUTED_PILLAR = BLOCKS.registerSimpleBlock("fluted_pillar", ordeStoneProps());
+   public static final DeferredBlock<Block> PILLAR_BASE = BLOCKS.registerSimpleBlock("pillar_base", ordeStoneProps());
+   public static final DeferredBlock<Block> ORDE_COFFER = BLOCKS.registerSimpleBlock("orde_coffer", ordeStoneProps());
+   public static final DeferredBlock<Block> PORTAL_FRAME = BLOCKS.registerSimpleBlock("portal_frame", ordeStoneProps());
+   public static final DeferredBlock<Block> VOID_GATE = BLOCKS.register(
+      "void_gate",
+      key -> new Block(
+         Properties.of()
+            .mapColor(MapColor.COLOR_LIGHT_BLUE)
+            .strength(1.0F, 6.0F)
+            .sound(SoundType.GLASS)
+            .lightLevel(state -> 11)
+            .noOcclusion()
+      )
+   );
+   public static final DeferredBlock<Block> HANGING_HOOK = BLOCKS.register(
+      "hanging_hook",
+      key -> new Block(ordeMetalProps().noOcclusion().noCollission().instabreak())
+   );
+   public static final DeferredBlock<Block> ORDE_CENSER = BLOCKS.register(
+      "orde_censer",
+      key -> new Block(ordeMetalProps().noOcclusion().lightLevel(state -> 6))
+   );
+   public static final DeferredBlock<Block> ORDE_BARRICADE = BLOCKS.register(
+      "orde_barricade",
+      key -> new Block(ordeWoodProps().lightLevel(state -> 5).noOcclusion())
+   );
+   public static final DeferredBlock<Block> ORDE_BEDDING = BLOCKS.registerSimpleBlock(
+      "orde_bedding", Properties.of().mapColor(MapColor.WOOL).strength(0.8F).sound(SoundType.WOOL)
+   );
+   public static final DeferredBlock<Block> ORDE_NIGHTSTAND = BLOCKS.registerSimpleBlock("orde_nightstand", ordeWoodProps());
+   public static final DeferredBlock<HookBlock> ORDE_CLOCK = BLOCKS.register(
+      "orde_clock", key -> new HookBlock(ordeWoodProps())
+   );
+   public static final DeferredBlock<HookBlock> CROOKED_PAINTING = BLOCKS.register(
+      "crooked_painting", key -> new HookBlock(ordeWoodProps())
+   );
+   public static final DeferredBlock<Block> ORDE_LAMP = BLOCKS.register(
+      "orde_lamp",
+      key -> new Block(ordeWoodProps().noOcclusion().lightLevel(state -> 10))
+   );
+   public static final DeferredBlock<Block> CEILING_RECESS = BLOCKS.register(
+      "ceiling_recess", key -> new Block(ordeStoneProps().lightLevel(state -> 8))
    );
    public static final DeferredBlock<Block> TIMBER_FRAME_PLAIN = BLOCKS.registerSimpleBlock(
       "timber_frame_plain", Properties.of().mapColor(MapColor.WOOD).strength(2.0F, 5.0F).sound(SoundType.WOOD).requiresCorrectToolForDrops()

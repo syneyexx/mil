@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/stairs",
+  "textures": {
+    "bottom": "millenaire:block/orde_stone",
+    "top": "millenaire:block/orde_stone",
+    "side": "millenaire:block/orde_stone"
+  }
+}
