@@ -24,12 +24,13 @@ Status: **Waves 1–5 geïmplementeerd** op branch `cursor/labyrinth-revival-wav
 | 4 | Multi-band shafts, gate shifting, vault routes | Done |
 | 5 | KETTING combat, quest 12, lang/docs/commands | Done |
 | 6 | Puzzle persist on chunk load; Gids chase hint; Spiegelgast/Echo/Tweeling services; relic art | Done |
+| 7 | Liminal furnished rooms (bedroom/kitchen/study/parlor/nursery) + enter whispers | Done |
 
 ## Config defaults (owner-approved)
 
 - `atmosphere=COLD`
 - `puzzlesEnabled=true`, `chaseEnabled=true`, `loopRoomsEnabled=true`
-- `vaultEnabled=true`, `configCombatEnabled=true`
+- `vaultEnabled=true`, `configCombatEnabled=true`, `liminalRoomsEnabled=true`
 - Chase: nabij GATE/ROTARY **of** na Orde-escalatie
 - Nieuwe relic items: Zegel / Masker / Koord
 

@@ -5218,5 +5218,13 @@
   "labyrinth.interact.gids_chase": "De Gids holt de lantaarn. Ontsnapping helt %s — als de Orde jaagt.",
   "labyrinth.interact.spiegelgast_ok": "Glas vouwt. Je staat dichter bij de Kern dan steen toelaat.",
   "labyrinth.interact.echo_ok": "De Echo fluistert: kamers die herhalen breken als je omkeert.",
-  "labyrinth.interact.tweeling_ok": "Plekken ruilen. Een adem lang ben je niet waar je was."
+  "labyrinth.interact.tweeling_ok": "Plekken ruilen. Een adem lang ben je niet waar je was.",
+  "labyrinth.liminal.enter.bedroom": "Een slaapkamer. Iemand sliep hier. De lakens kennen de vorm nog.",
+  "labyrinth.liminal.enter.kitchen": "Een keuken. De potten zijn warm. Er kookt niets.",
+  "labyrinth.liminal.enter.study": "Een studeerkamer. De boeken leunen de verkeerde kant op.",
+  "labyrinth.liminal.enter.parlor": "Een salon. Stoelen wachten op een gesprek dat al eindigde.",
+  "labyrinth.liminal.enter.nursery": "Een kinderkamer. De mobiel draait zonder wind.",
+  "labyrinth.liminal.enter.echo": "Deze kamer is eerder gebeurd.",
+  "labyrinth.liminal.enter.generic": "Thuis, bijna. Niet van jou.",
+  "labyrinth.liminal.whisper": "Ergens sluit een deur die er niet hoort."
 }

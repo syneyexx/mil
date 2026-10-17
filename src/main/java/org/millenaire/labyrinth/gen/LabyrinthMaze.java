@@ -31,7 +31,22 @@ public final class LabyrinthMaze {
       /** Spike-pit walkway chamber — Configuratie WIEL rotates bridges. */
       ROTARY,
       /** Looping chamber — walk backward to escape. */
-      ECHO_LOOP
+      ECHO_LOOP,
+      /** Reality-bleed furnished rooms (mind-fuck domestic interiors). */
+      LIMINAL_BEDROOM,
+      LIMINAL_KITCHEN,
+      LIMINAL_STUDY,
+      LIMINAL_PARLOR,
+      LIMINAL_NURSERY
+   }
+
+   public static boolean isLiminal(RoomType type) {
+      return type == RoomType.ECHO_LOOP
+         || type == RoomType.LIMINAL_BEDROOM
+         || type == RoomType.LIMINAL_KITCHEN
+         || type == RoomType.LIMINAL_STUDY
+         || type == RoomType.LIMINAL_PARLOR
+         || type == RoomType.LIMINAL_NURSERY;
    }
 
    private static final ConcurrentHashMap<Long, LabyrinthMaze> CACHE = new ConcurrentHashMap<>();
@@ -247,11 +262,36 @@ public final class LabyrinthMaze {
                continue;
             }
 
-            if (isDeadEnd(localX, localZ) && random.nextFloat() < 0.35f) {
-               this.roomTypes[localZ][localX] = RoomType.NICHE;
+            // Reality-bleed furnished rooms — scattered so the maze feels domestic, then wrong.
+            if (LabyrinthKeys.manhattanFromArrival(globalX, globalZ) >= 5
+               && this.roomTypes[localZ][localX] == RoomType.NONE) {
+               int bleed = Math.floorMod(globalX * 17 + globalZ * 29 + this.regionX * 7, 11);
+               if (bleed == 0 || bleed == 3 || bleed == 7) {
+                  this.roomTypes[localZ][localX] = liminalVariant(globalX, globalZ, random);
+                  continue;
+               }
+            }
+
+            if (isDeadEnd(localX, localZ)) {
+               if (random.nextFloat() < 0.45f) {
+                  this.roomTypes[localZ][localX] = liminalVariant(globalX, globalZ, random);
+               } else if (random.nextFloat() < 0.35f) {
+                  this.roomTypes[localZ][localX] = RoomType.NICHE;
+               }
             }
          }
       }
+   }
+
+   private static RoomType liminalVariant(int globalX, int globalZ, Random random) {
+      int pick = Math.floorMod(globalX * 13 + globalZ * 31 + random.nextInt(3), 5);
+      return switch (pick) {
+         case 0 -> RoomType.LIMINAL_BEDROOM;
+         case 1 -> RoomType.LIMINAL_KITCHEN;
+         case 2 -> RoomType.LIMINAL_STUDY;
+         case 3 -> RoomType.LIMINAL_PARLOR;
+         default -> RoomType.LIMINAL_NURSERY;
+      };
    }
 
    private boolean isDeadEnd(int x, int z) {

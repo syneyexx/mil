@@ -5324,5 +5324,13 @@
   "labyrinth.interact.gids_chase": "The Guide cups the lantern. Escape leans %s — if the Orde hunts.",
   "labyrinth.interact.spiegelgast_ok": "Glass folds. You stand closer to the Core than stone allows.",
   "labyrinth.interact.echo_ok": "The Echo whispers: rooms that repeat break when you reverse.",
-  "labyrinth.interact.tweeling_ok": "Places trade. For a breath, you are not where you were."
+  "labyrinth.interact.tweeling_ok": "Places trade. For a breath, you are not where you were.",
+  "labyrinth.liminal.enter.bedroom": "A bedroom. Someone slept here. The sheets still know the shape.",
+  "labyrinth.liminal.enter.kitchen": "A kitchen. The pots are warm. Nothing is cooking.",
+  "labyrinth.liminal.enter.study": "A study. The books lean the wrong way.",
+  "labyrinth.liminal.enter.parlor": "A parlor. Chairs wait for a conversation that already ended.",
+  "labyrinth.liminal.enter.nursery": "A nursery. The mobile turns without wind.",
+  "labyrinth.liminal.enter.echo": "This room has happened before.",
+  "labyrinth.liminal.enter.generic": "Home, almost. Not yours.",
+  "labyrinth.liminal.whisper": "A door closes somewhere it shouldn't."
 }

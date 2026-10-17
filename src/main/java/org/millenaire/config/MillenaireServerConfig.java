@@ -134,6 +134,7 @@ public final class MillenaireServerConfig {
    public final BooleanValue labyrinthLoopRoomsEnabled;
    public final BooleanValue labyrinthVaultEnabled;
    public final BooleanValue labyrinthConfigCombatEnabled;
+   public final BooleanValue labyrinthLiminalRoomsEnabled;
 
    public static int getDefaultClearMargin() {
       try {
@@ -637,6 +638,11 @@ public final class MillenaireServerConfig {
       this.labyrinthConfigCombatEnabled = builder.comment("Allow Configuratie KETTING form combat pulse inside the Labyrinth")
          .translation("millenaire.config.labyrinthConfigCombatEnabled")
          .define("configCombatEnabled", true);
+      this.labyrinthLiminalRoomsEnabled = builder.comment(
+            "Scatter furnished reality-bleed rooms (bedroom/kitchen/study/parlor/nursery) through the maze"
+         )
+         .translation("millenaire.config.labyrinthLiminalRoomsEnabled")
+         .define("liminalRoomsEnabled", true);
       builder.pop();
    }
 

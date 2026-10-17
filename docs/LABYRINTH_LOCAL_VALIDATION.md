@@ -39,6 +39,14 @@ Owner runs these locally (agents do not claim GameTest/CI success).
 19. Spiegelgast right-click → teleport ~1 hub toward Core; Echo → loop tip; Tweeling → place-swap + invis.
 20. Schatter will buy a relic for deniers (tempting bad bargain).
 
+## Smoke — Wave 7 (liminal furnished rooms)
+
+21. Walk the maze past manhattan ~5: enter wood-floored **bedroom / kitchen / study / parlor / nursery** cells (not only blackstone).
+22. Spot wrongness: chains over beds, spikes in kitchens, false doors onto bars, crying under carpet.
+23. Enter message appears once per room type change; occasional door-close whisper.
+24. ECHO_LOOP hubs look like furnished parlors; forward still loops, reverse escapes.
+25. Config `liminalRoomsEnabled=false` falls back liminal cells to niches (fresh chunks).
+
 ## Admin helpers
 
 - `/millenaire labyrinth enter|leave|status`

@@ -75,6 +75,13 @@ public final class LabyrinthRooms {
          case NICHE -> stampNiche(chunk, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ, random);
          case ROTARY -> stampRotary(chunk, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ, worldSeed);
          case ECHO_LOOP -> stampEchoLoop(chunk, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ);
+         case LIMINAL_BEDROOM, LIMINAL_KITCHEN, LIMINAL_STUDY, LIMINAL_PARLOR, LIMINAL_NURSERY -> {
+            if (liminalEnabled()) {
+               LabyrinthLiminalRooms.stamp(chunk, type, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ, random);
+            } else {
+               stampNiche(chunk, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ, random);
+            }
+         }
          default -> {
          }
       }
@@ -380,18 +387,23 @@ public final class LabyrinthRooms {
       int centerX,
       int centerZ
    ) {
-      paveFloor(chunk, minX, minZ, maxX, maxZ, Blocks.SPRUCE_PLANKS.defaultBlockState());
-      clearInterior(chunk, minX, minZ, maxX, maxZ);
-      // Crooked "home" set dressing.
-      set(chunk, centerX - 2, LabyrinthKeys.FLOOR_Y + 1, centerZ - 1, Blocks.OAK_STAIRS.defaultBlockState());
-      set(chunk, centerX + 2, LabyrinthKeys.FLOOR_Y + 1, centerZ, Blocks.BOOKSHELF.defaultBlockState());
-      set(chunk, centerX, LabyrinthKeys.FLOOR_Y + 1, centerZ + 2, Blocks.LANTERN.defaultBlockState());
-      set(chunk, minX + 1, LabyrinthKeys.FLOOR_Y + 1, minZ + 1, Blocks.FLOWER_POT.defaultBlockState());
-      set(chunk, maxX - 1, LabyrinthKeys.FLOOR_Y + 2, maxZ - 1, CHAIN);
-      placeHangingLantern(chunk, centerX, LabyrinthKeys.CEILING_Y - 1, centerZ);
+      // Full domestic shell + parlor furniture, then loop markers.
+      LabyrinthLiminalRooms.stamp(
+         chunk,
+         LabyrinthMaze.RoomType.LIMINAL_PARLOR,
+         minX,
+         minZ,
+         maxX,
+         maxZ,
+         centerX,
+         centerZ,
+         net.minecraft.util.RandomSource.create(centerX * 31L + centerZ)
+      );
       // North doorway marker (forward) — loop handler watches crossing.
       set(chunk, centerX, LabyrinthKeys.FLOOR_Y - 1, maxZ - 1, GOLD);
       set(chunk, centerX, LabyrinthKeys.FLOOR_Y - 1, minZ + 1, CRYING);
+      // Crooked clock stand-in: note block on the parlor table.
+      set(chunk, centerX, LabyrinthKeys.FLOOR_Y + 2, centerZ, Blocks.NOTE_BLOCK.defaultBlockState());
    }
 
    private static void stampNiche(
@@ -506,6 +518,14 @@ public final class LabyrinthRooms {
 
    private static BlockState scharnierState() {
       return ModBlocks.SCHARNIER.get().defaultBlockState();
+   }
+
+   private static boolean liminalEnabled() {
+      try {
+         return org.millenaire.config.MillenaireServerConfig.SERVER.labyrinthLiminalRoomsEnabled.getAsBoolean();
+      } catch (IllegalStateException ignored) {
+         return true;
+      }
    }
 
    private static boolean inChunk(ChunkAccess chunk, int worldX, int worldZ) {

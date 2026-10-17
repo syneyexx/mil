@@ -46,7 +46,7 @@ Relics spawn once per FORGE / ARCHIVE / CHAPEL hub visit.
 
 ## Room types
 
-ARRIVAL · CORE · HOST_HALL · FORGE · ARCHIVE · CHAPEL · GATE · NICHE · **ROTARY** · **ECHO_LOOP**
+ARRIVAL · CORE · HOST_HALL · FORGE · ARCHIVE · CHAPEL · GATE · NICHE · **ROTARY** · **ECHO_LOOP** · **LIMINAL_*** (bedroom / kitchen / study / parlor / nursery)
 
 ## Attitude AI
 
@@ -65,7 +65,7 @@ Phase pulses + summons (Rammelaar/Stille) + Core arena shifts when `shiftingEnab
 - `enabled`, `allowCreativeEntry`, `requireFallenKingTag`
 - `hostileCapPerPlayer`, `frenemyInteractions`, `arrivalRespawn`, `shiftingEnabled`
 - `atmosphere` = `COLD` (default) \| `CLASSIC`
-- `puzzlesEnabled`, `chaseEnabled`, `loopRoomsEnabled`, `vaultEnabled`, `configCombatEnabled`
+- `puzzlesEnabled`, `chaseEnabled`, `loopRoomsEnabled`, `vaultEnabled`, `configCombatEnabled`, `liminalRoomsEnabled`
 
 ## Commands
 
