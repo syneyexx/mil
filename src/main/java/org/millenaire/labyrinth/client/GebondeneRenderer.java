@@ -1,6 +1,8 @@
 package org.millenaire.labyrinth.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import java.util.EnumMap;
+import java.util.Map;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
@@ -14,30 +16,31 @@ import org.millenaire.labyrinth.entity.GebondeneEntity;
 import org.millenaire.labyrinth.entity.GebondeneKind;
 
 /**
- * Renders Gebondene with per-kind textures and hostility tinting.
+ * Renders each Gebondene kind with its Blockbench/Native JSON model and texture
+ * (ref-chart silhouette, not a shared humanoid).
  */
 @OnlyIn(Dist.CLIENT)
-public class GebondeneRenderer extends MobRenderer<GebondeneEntity, GebondeneModel<GebondeneEntity>> {
-   private static final float REFERENCE_HEIGHT = 1.95F;
+public class GebondeneRenderer extends MobRenderer<GebondeneEntity, GebondeneNativeModel> {
+   private final Map<GebondeneKind, GebondeneNativeModel> models = new EnumMap<>(GebondeneKind.class);
 
    public GebondeneRenderer(EntityRendererProvider.Context context) {
-      super(context, new GebondeneModel<>(context.bakeLayer(GebondeneModel.LAYER_LOCATION)), 0.5F);
+      super(context, load(GebondeneKind.GASTHEER), 0.5F);
+      for (GebondeneKind kind : GebondeneKind.values()) {
+         models.put(kind, load(kind));
+      }
+      this.model = models.get(GebondeneKind.GASTHEER);
+   }
+
+   private static GebondeneNativeModel load(GebondeneKind kind) {
+      return new GebondeneNativeModel(kind.id());
    }
 
    @Override
    public ResourceLocation getTextureLocation(GebondeneEntity entity) {
-      GebondeneKind kind = entity.getKind();
       return ResourceLocation.fromNamespaceAndPath(
          LabyrinthKeys.MODID,
-         "textures/entity/gebondene/" + kind.id() + ".png"
+         "textures/entity/gebondene/" + entity.getKind().id() + ".png"
       );
-   }
-
-   @Override
-   protected void scale(GebondeneEntity entity, PoseStack poseStack, float partialTick) {
-      float height = entity.getKind().height();
-      float scale = height / REFERENCE_HEIGHT;
-      poseStack.scale(scale, scale, scale);
    }
 
    @Override
@@ -49,8 +52,17 @@ public class GebondeneRenderer extends MobRenderer<GebondeneEntity, GebondeneMod
       MultiBufferSource buffer,
       int packedLight
    ) {
-      this.shadowRadius = 0.4F + entity.getKind().width() * 0.35F;
+      GebondeneNativeModel kindModel = models.get(entity.getKind());
+      if (kindModel != null) {
+         this.model = kindModel;
+      }
+      this.shadowRadius = 0.35F + entity.getKind().width() * 0.4F;
       super.render(entity, entityYaw, partialTicks, poseStack, buffer, packedLight);
+   }
+
+   @Override
+   protected float getFlipDegrees(GebondeneEntity entity) {
+      return 0;
    }
 
    @Override
