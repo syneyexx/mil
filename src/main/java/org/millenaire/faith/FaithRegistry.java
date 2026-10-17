@@ -53,4 +53,9 @@ public final class FaithRegistry {
    public static ResourceLocation playerCustomId() {
       return ResourceLocation.fromNamespaceAndPath("millenaire", "player_custom");
    }
+
+   /** Player-selectable dark faith (Cenobites / De Orde). Not a culture default. */
+   public static ResourceLocation ordeId() {
+      return ResourceLocation.fromNamespaceAndPath("millenaire", "orde");
+   }
 }

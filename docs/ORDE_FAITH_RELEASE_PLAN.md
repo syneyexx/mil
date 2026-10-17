@@ -31,16 +31,17 @@ Dit is geen los “monster-mod”-feature. Het is een **religieus horror-systeem
 
 ## 1. Ontwerpbeslissing (architectuur)
 
-### 1.1 Hybride: Order-first, Faith-corrupt later
+### 1.1 Hybride: Order-first, Faith-corrupt later + player founding choice
 
 | Keuze | Besluit |
 |-------|---------|
-| Culture-default faith? | **Nee.** Norman/Mayan/etc. blijven hun faith. Niet elk dorp is Orde. |
-| Secret Order chapter? | **Ja.** Nieuw template `millenaire:order_orde` (“De Orde”). |
+| Culture-default faith? | **Nee.** Norman/Mayan/etc. blijven hun faith. Niet elk NPC-dorp is Orde. |
+| Secret Order chapter? | **Ja.** Template `millenaire:order_orde` (“De Orde”). |
+| **Player city founding?** | **Ja (v1.1+).** Wizard-stap religie: (1) eigen geloof, (2) **Cenobites**, (3) cultuur-NPC-geloof. Keuze `orde` zet faith `millenaire:orde` + force-seed Orde-chapter (min-pop skip). |
 | Faith-corrupt overlay? | **Wave O4+.** Als chapter `ACTIVE` + hoge tension: panel/chronicle spreekt van “gebroken rite” / “nieuwe eredienst” — zonder culture faith-id te wissen. |
 | Publieke Mayan-achtige offer-altars? | Hergebruik `sacrifices`-tags + nieuw shrine-plan; Mayan `tend_sacrifices` blijft soft; Orde-hard-path is apart. |
 
-**Waarom:** Last Flame bewijst dat quest → chapter → ritual werkt. Een aparte culture-faith zou alle dorpen besmetten. Orde als **infectieus geheim** = Hellraiser-achtige “ze komen als je ze roept”, niet “iedereen is cenobite”.
+**Waarom:** Last Flame bewijst dat quest → chapter → ritual werkt. Orde als **infectieus geheim** in NPC-dorpen + **expliciete keuze** bij spelersteden (Cenobites-knop).
 
 ### 1.2 Tone (fucked-up, maar Millénaire)
 

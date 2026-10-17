@@ -51,4 +51,8 @@ public final class OrderRegistry {
    public static ResourceLocation rootCircleId() {
       return ResourceLocation.fromNamespaceAndPath("millenaire", "order_root_circle");
    }
+
+   public static ResourceLocation ordeId() {
+      return ResourceLocation.fromNamespaceAndPath("millenaire", "order_orde");
+   }
 }

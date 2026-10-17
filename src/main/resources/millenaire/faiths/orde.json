@@ -1,0 +1,10 @@
+{
+  "id": "millenaire:orde",
+  "display_name": "Cenobites",
+  "culture": null,
+  "clergy_tags": ["religious"],
+  "church_building_tags": ["sacrifices", "praying", "religious"],
+  "holy_shop": "holy_shop",
+  "festival_name": "Night of the Bound",
+  "festival_duration_ticks": 4000
+}

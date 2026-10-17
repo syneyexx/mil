@@ -128,7 +128,7 @@ Optional ceremonial maze dimension (`millenaire:labyrinth`): cold liminal atmosp
 
 ### De Orde (overworld faith — planned)
 
-Secret-order overlay that brings Gebondenen liturgy into villages: 2-day ritual cadence, Spijkerliturgie / offerings, Configuratie-triggered abduction attempts (**75% player chase** — escape by running or killing hunters; **25% random NPC**), tick-budgeted so the server stays playable. **Order-first** (not a culture-default faith); IP-clean lore. Design is gated on owner-GO — see `docs/ORDE_FAITH_RELEASE_PLAN.md`, `docs/ORDE_FAITH_ARCHITECTURE.md`, `docs/ORDE_FAITH_LOCAL_VALIDATION.md`.
+Secret-order overlay that brings Gebondenen liturgy into villages: 2-day ritual cadence, Spijkerliturgie / offerings, Configuratie-triggered abduction attempts (**75% player chase** — escape by running or killing hunters; **25% random NPC**), tick-budgeted so the server stays playable. **Order-first** for NPC villages (not a culture default); **player city founding** offers **Cenobites** as a third religion choice beside own faith / culture faith. See `docs/ORDE_FAITH_RELEASE_PLAN.md`, `docs/ORDE_FAITH_ARCHITECTURE.md`, `docs/ORDE_FAITH_LOCAL_VALIDATION.md`.
 
 ## Documentation
 
