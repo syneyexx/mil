@@ -1,6 +1,7 @@
-# De Orde — Overworld Faith / Ritual Release Plan (v1)
+# De Orde — Overworld Faith / Ritual Release Plan (v1.1)
 
 **Status:** wacht op owner-GO. Geen implementatie tot GO.  
+**Versie:** 1.1 — owner-feedback: tick-budget hard; ontvoering **75% speler-poging** (ontsnappen door wegrennen of doden) / **25% random NPC**.  
 **Scope:** overworld **fucked-up geloof** van De Orde (Gebondenen / Configuratie / Spijkermeester) — geheime chapters in dorpen, rituelen, offeringen, spietsen, ontvoeringen.  
 **IP:** geen Hellraiser-namen (geen Pinhead/Leviathan/Cenobite als productnaam). Lore = **Orde / Gebondenen / Configuratie / De Ruit / Spijkermeester**.
 
@@ -55,7 +56,7 @@ Dit is geen los “monster-mod”-feature. Het is een **religieus horror-systeem
 |---------|------------|--------|
 | **Nachtwake van de Orde** (soft) | elke 2 nachten als gates OK | Devotion/secrecy/tension; VFX; geen doden |
 | **Spijkerliturgie** (hard) | max 1× / 2 dagen, alleen als hard-gates OK | Offer / spiets-spectacle; 0–1 permanent verlies óf markering |
-| **Configuratie-roep** (event) | wanneer Configuratie “opgelost” nabij chapter | Ontvoering van 1 target → Labyrinth |
+| **Configuratie-roep** (event) | wanneer Configuratie “opgelost” nabij chapter | Start **ontvoeringspoging** (zie §1.4) |
 
 Hard-gates (allemaal nodig tenzij config override):
 
@@ -65,6 +66,42 @@ Hard-gates (allemaal nodig tenzij config override):
 4. Geen active ritual; cooldown gerespecteerd
 5. Niet `EXPOSED` / `DISBANDED`
 6. Soft cap: max **1 hard-loss / 4 MC-dagen** per dorp (anti-wipe)
+
+### 1.4 Ontvoeringspoging: 75% speler / 25% NPC (v1.1)
+
+Na een geldige Configuratie-roep (of hard abduct-outcome) rol **één** target:
+
+| Roll | Target | Gedrag |
+|------|--------|--------|
+| **75%** | Speler (dichtstbijzijnde survival/adventure in range, anders skip → herrol NPC) | **Poging**, geen instant teleport. Orde-jagers (klein aantal Gebondenen / Spijkermeester-achtig) spawnen en proberen de speler te grijpen. |
+| **25%** | Random eligible NPC in het dorp | Zelfde soft-cap / non-leader regels; bij succes → `ABDUCTED` + Labyrinth-bridge |
+
+**Speler ontsnappen (verplicht speelbaar):**
+
+1. **Wegrennen** — buiten chase-radius / timeout (bv. 30–45s of X blokken van shrine) → poging **FAILED**; cooldown telt wel; chronicle “de roep mist”.
+2. **Doden** — alle actieve jagers van deze poging doden → **FAILED** (zelfde); optioneel kleine secrecy/tension hit voor de chapter.
+3. **Gegrepen** — jager bereikt grab-range + short channel (interruptible door damage) → teleport naar Labyrinth Arrival (als dim aan) of soft fail als dim uit.
+
+Geen “je bent sowieso weg” — de 75%-tak is een **fight-or-flight encounter**.
+
+NPC-tak (25%): geen chase op de speler; ritual completes met villager-abduct zoals eerder gepland.
+
+### 1.5 Tick-budget: game moet blijven lopen (harde eis)
+
+Orde mag de tick **niet** volspammen. Dit is ship-blocker, geen “later optimaliseren”.
+
+| Regel | Eis |
+|-------|-----|
+| Planning | Alleen op bestaande religion night-edge / deadline queue — **geen** per-tick village scan voor Orde |
+| Configuratie-call | **Event-driven** (item use / Scharnier return / quest actionData) — O(1) nearest-chapter lookup in chunk-range, geen world iterate |
+| Active chase | Max **1** abduction-attempt wereldwijd tegelijk (of 1 per player); tick via budgeted handler ≤ **N entities** (default 2–3 jagers) |
+| Chase tick | Skip als speler unloaded / ver weg; max **1 AI-herpath / 10–20 ticks**; hergebruik Rammelaar-achtige blink spaarzaam |
+| Rituals | Blijf binnen `RitualCoordinator.tickActiveRituals` budget (bestaande religion budgets) |
+| VFX/audio | Alleen als player ≤ 48 blokken; particle cap per attempt |
+| Planner threads | Geen extra threads; Orde deelt `religionPlannerThreads` |
+| Fail-safe | Als Post-tick board HARD pressure: **geen nieuwe** chase spawns; bestaande attempt mag time-outen naar FAILED |
+
+SLO (owner smoke): 1 Orde-chapter + 1 actieve player-chase mag de server Post-tick board niet stelselmatig overschrijden t.o.v. idle dorp.
 
 ---
 
@@ -87,23 +124,23 @@ Alles groen vóór “shippable Orde-faith”.
 8. Optionele **echte** offer-outcome: 1 non-leader target → `ABDUCTED` of `KILLED` (config: `ordeHardSacrifice`).
 9. Leaders/keepers zijn protected tenzij chapter zelf implodeert.
 
-### D. Configuratie → ontvoering
-10. Trigger “Configuratie opgelost” (zie §3.4) scheduleert `configuratie_roep` binnen ≤200 ticks als chapter in range.
-11. Victim: prefer non-member outsider of lage-devotion interested; nooit last remaining adult van een huis zonder fallback.
-12. Entity discard + `ABDUCTED` status; **IntegrityChecker respawnt niet**.
-13. Bridge: in Labyrinth verschijnt Pelgrim/Marionet (of named echo) gekoppeld aan record-UUID; of soft “taken beyond the Scharnier” als dim disabled.
-14. Overworld: missing-panel / chronicle / speech cue binnen 1 dag.
+### D. Configuratie → ontvoeringspoging
+10. Trigger “Configuratie opgelost” scheduleert `configuratie_roep` binnen ≤200 ticks als chapter in range (event-driven).
+11. Target roll: **75% speler-poging** / **25% random eligible NPC** (§1.4). Geen speler in range → herrol NPC.
+12. Speler-poging: max 2–3 jagers; ontsnappen door **wegrennen (timeout/radius)** of **jagers doden**; grab → Labyrinth. Geen instant force-teleport.
+13. NPC-succes: entity discard + `ABDUCTED`; **IntegrityChecker respawnt niet**; Labyrinth Pelgrim/Marionet of soft chronicle.
+14. Overworld: missing-panel / chronicle / speech cue binnen 1 dag (NPC); speler-fail → “roep mist” cue.
 
 ### E. Speler agency
 15. Quest-arc (minimaal): fluister → ontdek shrine → bijwonen/weigeren → expose **of** join.
 16. Expose path: chapter `EXPOSED` / disband; hard-rituals stoppen; tension spike + EventDirector `FAITH_TENSION`.
 17. Config-defaults documenteren; supernatural default **off** tot owner ship-besluit.
 
-### F. Release engineering
+### F. Release engineering & tick-budget
 18. `./gradlew compileJava` groen (owner-verify).
 19. Docs: architecture + local validation smoke.
 20. Geen Hellraiser-IP strings in code/lang.
-21. Performance: Orde-ticks binnen bestaande religion budgets; geen per-tick full-village scans.
+21. **§1.5 volledig**: event-driven calls; ≤1 actieve chase; ≤3 jagers; geen per-tick village scans; HARD-pressure spawn-block; chase SLO smoke.
 
 ---
 
@@ -139,19 +176,22 @@ Alles groen vóór “shippable Orde-faith”.
 
 ---
 
-### Wave O2 — Configuratie-roep (de “puzzle box” beat)
+### Wave O2 — Configuratie-roep + target roll + chase (de “puzzle box” beat)
 
 | # | Levering |
 |---|----------|
-| O2.1 | Hook-punten (één primaire + fallbacks): |
+| O2.1 | Hook-punten (**alleen** event-driven, geen tick-poll): |
 | | (a) Player gebruikt Configuratie **buiten** Labyrinth terwijl nearest Orde-chapter ≤ N chunks |
 | | (b) Player keert terug via Scharnier met recente Labyrinth-progress tag |
 | | (c) Quest `actionData` `orde_configuration_solved=1` (fallenking / Orde-quest) |
-| O2.2 | `OrdeCallService.onConfigurationResolved(level, player, pos)` → find chapter → schedule `orde_configuratie_roep` |
-| O2.3 | Gathering: members + optional player; als player wegblijft mag NPC-only ritual als supernatural + chapter ACTIVE |
-| O2.4 | Messaging: “De Configuratie is gehoord” / “Iemand wordt geroepen” (NL/EN) |
+| O2.2 | `OrdeCallService.onConfigurationResolved` → schedule `orde_configuratie_roep` |
+| O2.3 | Target roll: **75% player attempt** / **25% random NPC** (`playerAbductChance=0.75`) |
+| O2.4 | `OrdeAbductionAttempt` state machine: PENDING → CHASING → GRABBED / ESCAPED_RUN / ESCAPED_KILL / NPC_TAKEN / EXPIRED |
+| O2.5 | Chase: spawn ≤3 jagers; grab channel; run-away radius/timeout; kill-all → fail |
+| O2.6 | Tick path: budgeted handler (max 1 attempt; AI throttle); HARD pressure → no new spawns |
+| O2.7 | Messaging: “De Configuratie is gehoord” / chase cues / “de roep mist” (NL/EN) |
 
-**Wave-DoD:** DoD D10–D11; owner kan met Configuratie nabij chapter een ontvoeringsritueel forceren.
+**Wave-DoD:** DoD D10–D12 + F21 chase-deel; speler kan ontsnappen door rennen of doden.
 
 ---
 
@@ -159,13 +199,13 @@ Alles groen vóór “shippable Orde-faith”.
 
 | # | Levering |
 |---|----------|
-| O3.1 | Op abduct success: discard overworld entity; set `ABDUCTED`; store `labyrinthAnchor` in religion/orde SavedData |
-| O3.2 | Als `labyrinth.enabled`: spawn Gebondene kind `PELGRIM` of `MARIONET` in Arrival/Chapel band met link naar villager UUID; naam echo van dorpsnaam |
-| O3.3 | Als Labyrinth uit: soft ending — record blijft ABDUCTED; chronicle “beyond the Scharnier”; geen entity |
-| O3.4 | Rescue path (optioneel light): player vindt abductee in Labyrinth → reconciliatie quest → `transferVillagerPermanently` terug (zeldzaam, duur) |
-| O3.5 | EventDirector: `FAITH_TENSION` wanneer tension > 20 na hard rituals |
+| O3.1 | Speler GRABBED + dim aan → teleport Arrival; attempt terminal |
+| O3.2 | NPC_TAKEN: discard entity; `ABDUCTED`; `labyrinthAnchor` in SavedData |
+| O3.3 | Dim aan: spawn `PELGRIM`/`MARIONET` met link UUID; dim uit: soft chronicle only |
+| O3.4 | Rescue path (optioneel light): vind abductee → terug-transfer (zeldzaam) |
+| O3.5 | EventDirector: `FAITH_TENSION` na hard rituals / failed player hunts |
 
-**Wave-DoD:** DoD D12–D14.
+**Wave-DoD:** DoD D13–D14.
 
 ---
 
@@ -226,25 +266,32 @@ Alles groen vóór “shippable Orde-faith”.
 Nieuw optioneel veld op ritual JSON (O1.3):
 
 ```json
-"outcome": "abduct",
-"outcome_target": "non_leader_villager",
+"outcome": "abduct_attempt",
 "tension_delta": 8,
 "secrecy_delta": -5,
 "cooldown_days": 2
 ```
 
-`RitualCoordinator.succeed` branched op `outcome`: `bless` (huidig), `sacrifice`, `abduct`.
+`RitualCoordinator.succeed` → start `OrdeAbductionAttempt` (niet direct kill). Target via §1.4 roll.
 
 ### 4.3 Config (voorstel)
 
 ```toml
 [orde]
 enabled = true
-hardSacrificeEnabled = false   # spiets met permanent verlies
+hardSacrificeEnabled = false
 abductionEnabled = true
-hardLossCooldownDays = 4
+playerAbductChance = 0.75          # rest = NPC (0.25)
+maxHuntersPerAttempt = 3
+maxActiveAttemptsGlobal = 1
+chaseTimeoutTicks = 800            # ~40s @ 20 TPS
+chaseEscapeRadius = 48
+grabChannelTicks = 40
+hunterAiIntervalTicks = 15         # throttle pathing
 configurationCallRangeChunks = 8
-labyrinthBridgeEnabled = true  # respecteer ook labyrinth.enabled
+hardLossCooldownDays = 4
+labyrinthBridgeEnabled = true
+blockNewAttemptsOnHardPressure = true
 ```
 
 `religionSupernaturalEnabled` blijft master voor spectaculaire/supernatural path.
@@ -259,6 +306,8 @@ labyrinthBridgeEnabled = true  # respecteer ook labyrinth.enabled
 | Configuratie morph-UI theater | Owner; Labyrinth P-plan |
 | Orde als default culture faith | Zou alle dorpen besmetten |
 | Elke 2 dagen **altijd** een dode | Dorp-wipe; soft-cap verplicht |
+| Instant force-teleport speler (geen escape) | Owner: 75% is **poging** met run/kill escape |
+| Per-tick world/village Orde scans | §1.5 verboden; event + budgeted chase only |
 | Multiplayer grief-forced abduct zonder flags | Config + supernatural gate |
 | Volledige custom gore models | Suggestieve VFX + Gebondene art hergebruik |
 
@@ -274,15 +323,17 @@ labyrinthBridgeEnabled = true  # respecteer ook labyrinth.enabled
 | Te agressieve cadence | Soft vs hard split + soft-cap |
 | Conflict met Last Flame chapter | 1 chapter / village invariant behouden |
 | Tone te edgy voor Millénaire-publiek | Supernatural + hardSacrifice default uit |
+| Tick spam / TPS dip tijdens chase | §1.5 caps + HARD-pressure block + AI throttle |
+| Speler AFK / unloaded tijdens 75%-roll | Skip player → NPC herrol; of expire attempt |
 
 ---
 
 ## 7. Release discipline
 
 1. Eén wave → commit → push → PR updaten.  
-2. Na elke wave: compile + smoke uit local-validation doc.  
+2. Na elke wave: compile + smoke uit local-validation doc (incl. chase tick spot-check).  
 3. O5 eindigt alleen op volledige §2.  
-4. Geen code vóór owner-GO op dit v1-plan.  
+4. Geen code vóór owner-GO op dit v1.1-plan.  
 5. Parallel OK met Labyrinth P1–P5, maar **niet blokkeren** op psyche-feel.
 
 ---
@@ -295,6 +346,7 @@ labyrinthBridgeEnabled = true  # respecteer ook labyrinth.enabled
 4. Hard sacrifice default **uit**, abduction default **aan** (als supernatural aan) OK?  
 5. Labyrinth-bridge (Pelgrim/Marionet) OK als dim enabled?  
 6. Full O0 bij start (geen half fundament)?  
+7. **v1.1 locked:** 75% speler-poging (run/kill escape) / 25% NPC + §1.5 tick-budget? *(owner vroeg dit — default ja)*  
 
 **Aanbevolen:** alles ja, dan O0→O1 eerst.
 
@@ -303,6 +355,6 @@ labyrinthBridgeEnabled = true  # respecteer ook labyrinth.enabled
 ## 9. Eindantwoord
 
 **Ja — haalbaar en realistisch.**  
-Dit plan maakt van jullie cenobite-inspiratie een **shipbaar overworld-geloof**: geheime Orde-chapters, fucked-up liturgie (spiets/offer), 2-dagen ritme, en ontvoering wanneer de Configuratie wordt “gehoord” — gebouwd op religion + Labyrinth, IP-schoon, met harde anti-wipe gates.
+Shipbaar overworld-geloof: Orde-chapters, 2-dagen ritme, Spijkerliturgie, en Configuratie-roep die **meestal de speler jaagt** (ontsnappen mag) en soms een NPC meeneemt — **zonder** de tick te verzuipen.
 
-**Geen code tot jij GO geeft op v1.**
+**Geen code tot jij GO geeft op v1.1.**
