@@ -756,7 +756,7 @@
   "fallenking_11_thelabyrinth_0_description_success": "Hold it closed until you are ready. The Labyrinth listens.",
   "fallenking_11_thelabyrinth_0_description_refuse": "Then the door stays broken, and the demon keeps his distance.",
   "fallenking_11_thelabyrinth_1_label": "The Core",
-  "fallenking_11_thelabyrinth_1_listing": "I must reach the Core of the Labyrinth and return.",
+  "fallenking_11_thelabyrinth_1_listing": "I must reach the Core of the Labyrinth (beyond Arrival and the Audience of De Ruit) and return.",
   "fallenking_11_thelabyrinth_1_description": "Have you stood in the Core, $name? The place the Architect measures?",
   "fallenking_11_thelabyrinth_1_description_success": "Then the path exists. The demon can be followed — when you choose the hour.",
   "fallenking_11_thelabyrinth_1_description_refuse": "The maze waits.",

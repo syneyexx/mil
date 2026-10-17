@@ -11,6 +11,9 @@ import org.millenaire.labyrinth.LabyrinthKeys;
 /**
  * Deterministic per-region maze built with recursive backtracking plus light cycles.
  * Wall openness is stored as N/E/S/W bitflags on each cell.
+ *
+ * <p>Layout v2: special chambers claim multi-cell footprints. Non-anchor cells are
+ * {@link RoomType#CHAMBER_PAD}; stamps run only from the SW anchor.
  */
 public final class LabyrinthMaze {
    public static final int WALL_N = 1;
@@ -30,8 +33,10 @@ public final class LabyrinthMaze {
       NICHE,
       /** Spike-pit walkway chamber — Configuratie WIEL rotates bridges. */
       ROTARY,
-      /** Looping chamber — walk backward to escape. */
+      /** Looping chamber — walk backward (south) to escape. */
       ECHO_LOOP,
+      /** Second loop layout — walk backward (west) to escape. */
+      MIRROR_LOOP,
       /** Reality-bleed furnished rooms (mind-fuck domestic interiors). */
       LIMINAL_BEDROOM,
       LIMINAL_KITCHEN,
@@ -42,16 +47,29 @@ public final class LabyrinthMaze {
        * Audience with De Ruit — geometric Orde presence north of Core.
        * Original lore; not Leviathan / Hellraiser IP.
        */
-      AUDIENCE
+      AUDIENCE,
+      /** Vertical atrium / overlook connecting primary ↔ mezzanine. */
+      ATRIUM,
+      /** Occupied by a multi-cell chamber; do not stamp — resolve via anchor. */
+      CHAMBER_PAD
    }
 
    public static boolean isLiminal(RoomType type) {
       return type == RoomType.ECHO_LOOP
+         || type == RoomType.MIRROR_LOOP
          || type == RoomType.LIMINAL_BEDROOM
          || type == RoomType.LIMINAL_KITCHEN
          || type == RoomType.LIMINAL_STUDY
          || type == RoomType.LIMINAL_PARLOR
          || type == RoomType.LIMINAL_NURSERY;
+   }
+
+   public static boolean isLoopRoom(RoomType type) {
+      return type == RoomType.ECHO_LOOP || type == RoomType.MIRROR_LOOP;
+   }
+
+   public static boolean isStampAnchor(RoomType type) {
+      return type != RoomType.NONE && type != RoomType.CHAMBER_PAD;
    }
 
    private static final ConcurrentHashMap<Long, LabyrinthMaze> CACHE = new ConcurrentHashMap<>();
@@ -62,6 +80,11 @@ public final class LabyrinthMaze {
    /** Bitflags of OPEN walls per local cell. */
    private final int[][] openWalls;
    private final RoomType[][] roomTypes;
+   /** Local SW anchor for each cell (−1 if corridor / unclaimed). */
+   private final int[][] anchorLocalX;
+   private final int[][] anchorLocalZ;
+   /** Footprint span in cells for the chamber owning this cell (1 if none). */
+   private final int[][] footprintSpan;
 
    private LabyrinthMaze(long worldSeed, int regionX, int regionZ, int regionSize) {
       this.regionX = regionX;
@@ -69,8 +92,14 @@ public final class LabyrinthMaze {
       this.regionSize = regionSize;
       this.openWalls = new int[regionSize][regionSize];
       this.roomTypes = new RoomType[regionSize][regionSize];
+      this.anchorLocalX = new int[regionSize][regionSize];
+      this.anchorLocalZ = new int[regionSize][regionSize];
+      this.footprintSpan = new int[regionSize][regionSize];
       for (int z = 0; z < regionSize; z++) {
          Arrays.fill(this.roomTypes[z], RoomType.NONE);
+         Arrays.fill(this.anchorLocalX[z], -1);
+         Arrays.fill(this.anchorLocalZ[z], -1);
+         Arrays.fill(this.footprintSpan[z], 1);
       }
 
       long seed = mixSeed(worldSeed, regionX, regionZ);
@@ -123,6 +152,66 @@ public final class LabyrinthMaze {
       int localX = globalCellX - this.regionX * this.regionSize;
       int localZ = globalCellZ - this.regionZ * this.regionSize;
       return getRoomType(localX, localZ);
+   }
+
+   /** Resolved stamp type (pads → their chamber type). */
+   public RoomType getResolvedRoomType(int localCellX, int localCellZ) {
+      if (!inBounds(localCellX, localCellZ)) {
+         return RoomType.NONE;
+      }
+      RoomType type = this.roomTypes[localCellZ][localCellX];
+      if (type != RoomType.CHAMBER_PAD) {
+         return type;
+      }
+      int ax = this.anchorLocalX[localCellZ][localCellX];
+      int az = this.anchorLocalZ[localCellZ][localCellX];
+      if (ax < 0 || az < 0 || !inBounds(ax, az)) {
+         return RoomType.NONE;
+      }
+      return this.roomTypes[az][ax];
+   }
+
+   public int getFootprintSpan(int localCellX, int localCellZ) {
+      if (!inBounds(localCellX, localCellZ)) {
+         return 1;
+      }
+      return Math.max(1, this.footprintSpan[localCellZ][localCellX]);
+   }
+
+   /** Local SW anchor X for a chamber cell, or −1 if unclaimed. */
+   public int getAnchorLocalX(int localCellX, int localCellZ) {
+      if (!inBounds(localCellX, localCellZ)) {
+         return -1;
+      }
+      return this.anchorLocalX[localCellZ][localCellX];
+   }
+
+   /** Local SW anchor Z for a chamber cell, or −1 if unclaimed. */
+   public int getAnchorLocalZ(int localCellX, int localCellZ) {
+      if (!inBounds(localCellX, localCellZ)) {
+         return -1;
+      }
+      return this.anchorLocalZ[localCellZ][localCellX];
+   }
+
+   public boolean isChamberInterior(int localCellX, int localCellZ) {
+      RoomType type = getResolvedRoomType(localCellX, localCellZ);
+      return isStampAnchor(type) || type == RoomType.CHAMBER_PAD;
+   }
+
+   /** True if both cells belong to the same multi-cell chamber. */
+   public boolean sameChamber(int localX1, int localZ1, int localX2, int localZ2) {
+      if (!inBounds(localX1, localZ1) || !inBounds(localX2, localZ2)) {
+         return false;
+      }
+      int a1x = this.anchorLocalX[localZ1][localX1];
+      int a1z = this.anchorLocalZ[localZ1][localX1];
+      int a2x = this.anchorLocalX[localZ2][localX2];
+      int a2z = this.anchorLocalZ[localZ2][localX2];
+      if (a1x < 0 || a2x < 0) {
+         return false;
+      }
+      return a1x == a2x && a1z == a2z;
    }
 
    /**
@@ -226,74 +315,163 @@ public final class LabyrinthMaze {
    }
 
    private void assignSpecialRooms(Random random) {
+      // Fixed naves / arenas first (layout v2 multi-cell).
+      tryClaimGlobal(0, 0, LabyrinthKeys.ARRIVAL_SPAN, RoomType.ARRIVAL);
+      tryClaimGlobal(LabyrinthKeys.CORE_CELL_X, LabyrinthKeys.CORE_CELL_Z, LabyrinthKeys.CORE_SPAN, RoomType.CORE);
+      tryClaimGlobal(
+         LabyrinthKeys.AUDIENCE_CELL_X,
+         LabyrinthKeys.AUDIENCE_CELL_Z,
+         LabyrinthKeys.AUDIENCE_SPAN,
+         RoomType.AUDIENCE
+      );
+      linkCoreToAudience();
+
       for (int localZ = 0; localZ < this.regionSize; localZ++) {
          for (int localX = 0; localX < this.regionSize; localX++) {
+            if (this.roomTypes[localZ][localX] != RoomType.NONE) {
+               continue;
+            }
             int globalX = this.regionX * this.regionSize + localX;
             int globalZ = this.regionZ * this.regionSize + localZ;
 
-            if (globalX == 0 && globalZ == 0) {
-               this.roomTypes[localZ][localX] = RoomType.ARRIVAL;
-               continue;
-            }
-            if (globalX == LabyrinthKeys.CORE_CELL_X && globalZ == LabyrinthKeys.CORE_CELL_Z) {
-               this.roomTypes[localZ][localX] = RoomType.CORE;
-               // Doorway north into the Audience / De Ruit nave.
-               openMutual(localX, localZ, 0, -1, WALL_N, WALL_S);
-               continue;
-            }
-            if (globalX == LabyrinthKeys.AUDIENCE_CELL_X && globalZ == LabyrinthKeys.AUDIENCE_CELL_Z) {
-               this.roomTypes[localZ][localX] = RoomType.AUDIENCE;
-               // Guarantee a doorway into the Core (south wall open).
-               openMutual(localX, localZ, 0, 1, WALL_S, WALL_N);
-               continue;
-            }
-
             int spacing = LabyrinthKeys.HUB_SPACING;
-            if (globalX % spacing == 0 && globalZ % spacing == 0) {
+            if (globalX % spacing == 0 && globalZ % spacing == 0 && globalX != 0 && globalZ != 0) {
                int hubIndex = Math.floorMod(
                   (globalX / spacing) + (globalZ / spacing) * 3 + this.regionX + this.regionZ * 5,
                   7
                );
-               this.roomTypes[localZ][localX] = switch (hubIndex) {
+               RoomType hub = switch (hubIndex) {
                   case 0 -> RoomType.HOST_HALL;
                   case 1 -> RoomType.FORGE;
                   case 2 -> RoomType.ARCHIVE;
                   case 3 -> RoomType.CHAPEL;
                   case 4 -> RoomType.GATE;
                   case 5 -> RoomType.ROTARY;
-                  default -> RoomType.ECHO_LOOP;
+                  default -> (Math.floorMod(globalX + globalZ, 2) == 0)
+                     ? RoomType.ECHO_LOOP
+                     : RoomType.MIRROR_LOOP;
                };
+               int span = isLiminal(hub) ? LabyrinthKeys.SUITE_SPAN : LabyrinthKeys.ROOM_SPAN;
+               if (!claimLocal(localX, localZ, span, hub)) {
+                  claimLocal(localX, localZ, 1, hub);
+               }
                continue;
             }
 
-            // Place a rotary on the approach path toward Core (deterministic waypoints).
+            // Rotary waypoints on the approach path toward Core.
             if (globalX > 0 && globalZ > 0
                && globalX % (spacing / 2) == 0
                && globalZ % spacing == spacing / 2
                && LabyrinthKeys.manhattanFromArrival(globalX, globalZ) >= 8) {
-               this.roomTypes[localZ][localX] = RoomType.ROTARY;
+               if (!claimLocal(localX, localZ, LabyrinthKeys.ROOM_SPAN, RoomType.ROTARY)) {
+                  claimLocal(localX, localZ, 1, RoomType.ROTARY);
+               }
                continue;
             }
 
-            // Reality-bleed furnished rooms — scattered so the maze feels domestic, then wrong.
+            // Vertical atriums in Approach — overlook vocabulary (P1.4).
+            LabyrinthKeys.Zone zone = LabyrinthKeys.zoneAt(globalX, globalZ);
+            if (zone == LabyrinthKeys.Zone.APPROACH
+               && globalX % spacing == spacing / 2
+               && globalZ % spacing == 0
+               && this.roomTypes[localZ][localX] == RoomType.NONE) {
+               claimLocal(localX, localZ, LabyrinthKeys.ROOM_SPAN, RoomType.ATRIUM);
+               continue;
+            }
+
+            // Reality-bleed suites — prefer 3×3 when free.
             if (LabyrinthKeys.manhattanFromArrival(globalX, globalZ) >= 5
                && this.roomTypes[localZ][localX] == RoomType.NONE) {
                int bleed = Math.floorMod(globalX * 17 + globalZ * 29 + this.regionX * 7, 11);
                if (bleed == 0 || bleed == 3 || bleed == 7) {
-                  this.roomTypes[localZ][localX] = liminalVariant(globalX, globalZ, random);
+                  RoomType liminal = liminalVariant(globalX, globalZ, random);
+                  if (!claimLocal(localX, localZ, LabyrinthKeys.SUITE_SPAN, liminal)
+                     && !claimLocal(localX, localZ, LabyrinthKeys.ROOM_SPAN, liminal)) {
+                     claimLocal(localX, localZ, 1, liminal);
+                  }
                   continue;
                }
             }
 
-            if (isDeadEnd(localX, localZ)) {
+            if (isDeadEnd(localX, localZ) && this.roomTypes[localZ][localX] == RoomType.NONE) {
                if (random.nextFloat() < 0.45f) {
-                  this.roomTypes[localZ][localX] = liminalVariant(globalX, globalZ, random);
+                  RoomType liminal = liminalVariant(globalX, globalZ, random);
+                  if (!claimLocal(localX, localZ, LabyrinthKeys.ROOM_SPAN, liminal)) {
+                     claimLocal(localX, localZ, 1, liminal);
+                  }
                } else if (random.nextFloat() < 0.35f) {
-                  this.roomTypes[localZ][localX] = RoomType.NICHE;
+                  claimLocal(localX, localZ, 1, RoomType.NICHE);
                }
             }
          }
       }
+   }
+
+   private void linkCoreToAudience() {
+      // Open the shared edge between Core north and Audience south (global).
+      for (int dx = 0; dx < LabyrinthKeys.CORE_SPAN; dx++) {
+         int coreGx = LabyrinthKeys.CORE_CELL_X + dx;
+         int coreGz = LabyrinthKeys.CORE_CELL_Z;
+         int audGx = coreGx;
+         int audGz = LabyrinthKeys.CORE_CELL_Z - 1;
+         int coreLx = coreGx - this.regionX * this.regionSize;
+         int coreLz = coreGz - this.regionZ * this.regionSize;
+         int audLx = audGx - this.regionX * this.regionSize;
+         int audLz = audGz - this.regionZ * this.regionSize;
+         if (inBounds(coreLx, coreLz) && inBounds(audLx, audLz)) {
+            openMutual(coreLx, coreLz, 0, -1, WALL_N, WALL_S);
+         }
+      }
+   }
+
+   private void tryClaimGlobal(int globalX, int globalZ, int span, RoomType type) {
+      int localX = globalX - this.regionX * this.regionSize;
+      int localZ = globalZ - this.regionZ * this.regionSize;
+      if (!inBounds(localX, localZ)) {
+         return;
+      }
+      claimLocal(localX, localZ, span, type);
+   }
+
+   /**
+    * Claims a square footprint with SW at (localX, localZ). Opens internal walls.
+    * @return false if any cell is out of bounds or already claimed
+    */
+   private boolean claimLocal(int localX, int localZ, int span, RoomType type) {
+      if (span < 1) {
+         return false;
+      }
+      for (int dz = 0; dz < span; dz++) {
+         for (int dx = 0; dx < span; dx++) {
+            int x = localX + dx;
+            int z = localZ + dz;
+            if (!inBounds(x, z)) {
+               return false;
+            }
+            if (this.roomTypes[z][x] != RoomType.NONE) {
+               return false;
+            }
+         }
+      }
+
+      for (int dz = 0; dz < span; dz++) {
+         for (int dx = 0; dx < span; dx++) {
+            int x = localX + dx;
+            int z = localZ + dz;
+            this.roomTypes[z][x] = (dx == 0 && dz == 0) ? type : RoomType.CHAMBER_PAD;
+            this.anchorLocalX[z][x] = localX;
+            this.anchorLocalZ[z][x] = localZ;
+            this.footprintSpan[z][x] = span;
+
+            if (dx + 1 < span) {
+               openMutual(x, z, 1, 0, WALL_E, WALL_W);
+            }
+            if (dz + 1 < span) {
+               openMutual(x, z, 0, 1, WALL_S, WALL_N);
+            }
+         }
+      }
+      return true;
    }
 
    private static RoomType liminalVariant(int globalX, int globalZ, Random random) {
@@ -327,14 +505,16 @@ public final class LabyrinthMaze {
 
    private static long mixSeed(long worldSeed, int regionX, int regionZ) {
       long mixed = worldSeed ^ 0x5DEECE66DL;
+      mixed ^= (long) LabyrinthKeys.LAYOUT_VERSION * 0x9E3779B97F4A7C15L;
       mixed = mixed * 6364136223846793005L + 1442695040888963407L;
-      mixed ^= (long)regionX * 341873128712L;
-      mixed ^= (long)regionZ * 132897987541L;
+      mixed ^= (long) regionX * 341873128712L;
+      mixed ^= (long) regionZ * 132897987541L;
       return mixed;
    }
 
    private static long cacheKey(long worldSeed, int regionX, int regionZ, int regionSize) {
       long key = worldSeed;
+      key = key * 31L + LabyrinthKeys.LAYOUT_VERSION;
       key = key * 31L + regionX;
       key = key * 31L + regionZ;
       key = key * 31L + regionSize;

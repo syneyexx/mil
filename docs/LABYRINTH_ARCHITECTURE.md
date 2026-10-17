@@ -4,7 +4,9 @@
 
 Custom Millénaire dimension `millenaire:labyrinth` with a deterministic cellular maze, ceremonial **Gebondenen** (25 kinds, hospitable until provoked), entry via **Configuratie**, exit via **Scharnier** / Configuratie.
 
-**Revival-achtige uitbreiding:** Waves 1–8 on `main` ([`LABYRINTH_REVIVAL_WAVES.md`](LABYRINTH_REVIVAL_WAVES.md)). Honest vibe audit + Waves 9–14: [`LABYRINTH_REVIVAL_MASTERPLAN.md`](LABYRINTH_REVIVAL_MASTERPLAN.md). No Hellraiser IP.
+**Revival-achtige uitbreiding:** Waves 1–8 ([`LABYRINTH_REVIVAL_WAVES.md`](LABYRINTH_REVIVAL_WAVES.md)) plus **layout v2** psyche release (P1–P5) per [`LABYRINTH_REVIVAL_RELEASE_PLAN.md`](LABYRINTH_REVIVAL_RELEASE_PLAN.md). Earlier vibe audit / Waves 9–14 notes: [`LABYRINTH_REVIVAL_MASTERPLAN.md`](LABYRINTH_REVIVAL_MASTERPLAN.md). No Hellraiser IP; own lore (Configuratie forms, Orde relics, Architect, De Ruit).
+
+**Breaking:** `labyrinthLayoutVersion=2` — delete/regenerate `millenaire:labyrinth` after upgrading.
 
 ## Packages
 
@@ -29,7 +31,7 @@ Custom Millénaire dimension `millenaire:labyrinth` with a deterministic cellula
 | Primary | 64–73 | Arrival, main maze, puzzles |
 | Mezzanine | 74–82 | Hub overlooks (HOST_HALL / GATE / CHAPEL stamps) |
 
-Corridors use `CORRIDOR_MARGIN` inset + spikes/bars for claustrophobia. Cold palette mixes packed ice into walls/ceilings.
+Corridors use a **3-wide plus-shaped** walk channel (`CORRIDOR_WALK_HALF`) with bars/spikes in cell corners. Chambers claim multi-cell footprints: CORRIDOR 8 / ROOM 16 / SUITE 24 / NAVE 24–32. Zone arc: Arrival → Bleed → Orde → Approach → Core/Audience. Cold palette mixes packed ice into walls/ceilings.
 
 ## Configuratie forms
 
@@ -46,7 +48,7 @@ Relics spawn once per FORGE / ARCHIVE / CHAPEL hub visit.
 
 ## Room types
 
-ARRIVAL · CORE · **AUDIENCE (De Ruit)** · HOST_HALL · FORGE · ARCHIVE · CHAPEL · GATE · NICHE · **ROTARY** · **ECHO_LOOP** · **LIMINAL_***
+ARRIVAL (3×3 nave) · CORE (2×2) · **AUDIENCE (3×3 De Ruit)** · ATRIUM · HOST_HALL · FORGE · ARCHIVE · CHAPEL · GATE · NICHE · **ROTARY** · **ECHO_LOOP** · **LIMINAL_*** · CHAMBER_PAD
 
 ## Attitude AI
 
@@ -66,10 +68,19 @@ Phase pulses + summons (Rammelaar/Stille) + Core arena shifts when `shiftingEnab
 - `hostileCapPerPlayer`, `frenemyInteractions`, `arrivalRespawn`, `shiftingEnabled`
 - `atmosphere` = `COLD` (default) \| `CLASSIC`
 - `puzzlesEnabled`, `chaseEnabled`, `loopRoomsEnabled`, `vaultEnabled`, `configCombatEnabled`, `liminalRoomsEnabled`
+- `layoutVersion` (default 2) — informational; generation uses `LabyrinthKeys.LAYOUT_VERSION`
+
+## Materials (logical palette)
+
+`LabyrinthMaterials`: `ordeStone` / `ordePanel` / `bleedPlanks` / `coldVault` / `ruitHeart` — vanilla stand-ins shared by stamps (resource-pack / future block swap points).
+
+## Audio
+
+Registered events `millenaire:labyrinth.{drone,metal,whisper,chase_stinger,ruit_drone}` — vanilla placeholders; see `docs/LABYRINTH_AUDIO_SLOTS.md`.
 
 ## Commands
 
-`/millenaire labyrinth enter|leave|status|spawn <kind>|vorm <id>|relic <zegel|masker|koord>` (permission 2)
+`/millenaire labyrinth enter|leave|status|resetdim|spawn <kind>|vorm <id>|relic <zegel|masker|koord>` (permission 2)
 
 ## Quests
 

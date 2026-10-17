@@ -56,6 +56,7 @@ public final class LabyrinthLiminalRooms {
       int centerZ,
       RandomSource random
    ) {
+      int wrongness = wrongnessIntensity(minX, minZ, maxX, maxZ);
       shellDomestic(chunk, minX, minZ, maxX, maxZ, random);
       switch (type) {
          case LIMINAL_BEDROOM -> stampBedroom(chunk, minX, minZ, maxX, maxZ, centerX, centerZ, random);
@@ -66,7 +67,13 @@ public final class LabyrinthLiminalRooms {
          default -> {
          }
       }
-      paintWrongness(chunk, minX, minZ, maxX, maxZ, centerX, centerZ, random);
+      densifyProps(chunk, minX, minZ, maxX, maxZ, centerX, centerZ, random);
+      paintWrongness(chunk, minX, minZ, maxX, maxZ, centerX, centerZ, random, wrongness);
+   }
+
+   /** Seed-stable wrongness 0–3 for the suite footprint. */
+   public static int wrongnessIntensity(int minX, int minZ, int maxX, int maxZ) {
+      return Math.floorMod(minX * 31 + minZ * 17 + maxX * 13 + maxZ * 7, 4);
    }
 
    /** Shared domestic shell: wood walls/floor/ceiling instead of blackstone hell. */
@@ -80,8 +87,8 @@ public final class LabyrinthLiminalRooms {
    ) {
       int floor = LabyrinthKeys.FLOOR_Y;
       int ceiling = LabyrinthKeys.CEILING_Y;
-      BlockState wall = random.nextBoolean() ? PLANKS : OAK;
-      BlockState floorBlock = FLOOR_OAK;
+      BlockState wall = random.nextBoolean() ? LabyrinthMaterials.bleedPlanks() : LabyrinthMaterials.bleedOak();
+      BlockState floorBlock = LabyrinthMaterials.bleedOak();
 
       for (int x = minX; x <= maxX; x++) {
          for (int z = minZ; z <= maxZ; z++) {
@@ -92,10 +99,11 @@ public final class LabyrinthLiminalRooms {
                   set(chunk, x, y, z, wall);
                }
                // Fake doorway gaps on mid-edges so maze connections still read as doors.
-               int mid = LabyrinthKeys.CELL_SIZE / 2;
+               int midZ = (minZ + maxZ) / 2;
+               int midX = (minX + maxX) / 2;
                boolean doorGap =
-                  (x == minX || x == maxX) && Math.abs(z - (minZ + mid)) <= 1
-                     || (z == minZ || z == maxZ) && Math.abs(x - (minX + mid)) <= 1;
+                  (x == minX || x == maxX) && Math.abs(z - midZ) <= 1
+                     || (z == minZ || z == maxZ) && Math.abs(x - midX) <= 1;
                if (doorGap) {
                   for (int y = floor + 1; y <= floor + 2; y++) {
                      set(chunk, x, y, z, AIR);
@@ -255,8 +263,11 @@ public final class LabyrinthLiminalRooms {
       }
    }
 
-   /** Shared “something is off” accents after furniture. */
-   private static void paintWrongness(
+   /**
+    * Extra domestic clutter so suites read as furnished homes (≥30 props on 24×24).
+    * Placed before wrongness so the room still reads as a house for ~3s.
+    */
+   private static void densifyProps(
       ChunkAccess chunk,
       int minX,
       int minZ,
@@ -267,16 +278,61 @@ public final class LabyrinthLiminalRooms {
       RandomSource random
    ) {
       int floor = LabyrinthKeys.FLOOR_Y;
-      // Crooked picture: item frame substitute via glow item frame block if available — use painting? skip.
-      // One ceiling plank replaced with packed ice (cold bleed).
-      set(chunk, centerX + 1, LabyrinthKeys.CEILING_Y, centerZ - 1, Blocks.PACKED_ICE.defaultBlockState());
-      // Carpet corner lifted — crying underfoot.
-      if (random.nextFloat() < 0.7F) {
+      int width = maxX - minX;
+      if (width < 10) {
+         return;
+      }
+      // Shelf strips, rugs, chairs, pots — density scales with footprint.
+      for (int x = minX + 2; x <= maxX - 2; x += 3) {
+         set(chunk, x, floor + 1, minZ + 1, Blocks.OAK_SLAB.defaultBlockState());
+         set(chunk, x, floor + 1, maxZ - 1, Blocks.FLOWER_POT.defaultBlockState());
+      }
+      for (int z = minZ + 3; z <= maxZ - 3; z += 3) {
+         set(chunk, minX + 1, floor + 1, z, Blocks.BOOKSHELF.defaultBlockState());
+         set(chunk, maxX - 1, floor + 1, z, Blocks.BARREL.defaultBlockState());
+      }
+      set(chunk, centerX - 3, floor + 1, centerZ - 3, Blocks.OAK_STAIRS.defaultBlockState());
+      set(chunk, centerX + 3, floor + 1, centerZ + 3, Blocks.SPRUCE_STAIRS.defaultBlockState());
+      set(chunk, centerX - 3, floor + 1, centerZ + 3, CANDLE);
+      set(chunk, centerX + 3, floor + 1, centerZ - 3, LANTERN);
+      carpetArea(chunk, centerX - 2, centerZ - 2, centerX + 2, centerZ + 2, CARPET_GRAY);
+      // Memory lectern (P3.5) — lore stand-in; text filled by ambience / revisit.
+      set(chunk, centerX, floor + 1, minZ + 2, Blocks.LECTERN.defaultBlockState());
+      if (random.nextBoolean()) {
+         placeFalseDoor(chunk, maxX - 2, floor + 1, centerZ);
+      }
+   }
+
+   /** Shared “something is off” accents after furniture. Intensity 0–3. */
+   private static void paintWrongness(
+      ChunkAccess chunk,
+      int minX,
+      int minZ,
+      int maxX,
+      int maxZ,
+      int centerX,
+      int centerZ,
+      RandomSource random,
+      int intensity
+   ) {
+      int floor = LabyrinthKeys.FLOOR_Y;
+      // One ceiling plank replaced with packed ice (cold bleed) — always, so exit feels colder.
+      set(chunk, centerX + 1, LabyrinthKeys.CEILING_Y, centerZ - 1, LabyrinthMaterials.coldVault());
+      if (intensity >= 1 || random.nextFloat() < 0.7F) {
          set(chunk, minX + 2, floor, minZ + 2, CRYING);
          set(chunk, minX + 2, floor + 1, minZ + 2, CARPET);
       }
-      // Ladder that climbs into solid ceiling (dead end climb).
-      if (random.nextFloat() < 0.4F) {
+      if (intensity >= 2) {
+         set(chunk, maxX - 2, floor + 1, maxZ - 2, SPIKE);
+         set(chunk, centerX, floor + 3, centerZ, CHAIN);
+         set(chunk, minX + 3, LabyrinthKeys.CEILING_Y, centerZ, CRYING);
+      }
+      if (intensity >= 3) {
+         set(chunk, centerX - 1, floor + 1, centerZ, BARS);
+         set(chunk, centerX + 1, floor + 1, centerZ, Blocks.SKELETON_SKULL.defaultBlockState());
+         placeFalseDoor(chunk, minX, floor + 1, centerZ - 2);
+      }
+      if (intensity >= 1 && random.nextFloat() < 0.4F + intensity * 0.15F) {
          set(chunk, maxX - 1, floor + 1, minZ + 2, Blocks.LADDER.defaultBlockState().setValue(LadderBlock.FACING, Direction.WEST));
          set(chunk, maxX - 1, floor + 2, minZ + 2, Blocks.LADDER.defaultBlockState().setValue(LadderBlock.FACING, Direction.WEST));
          set(chunk, maxX - 1, floor + 3, minZ + 2, Blocks.LADDER.defaultBlockState().setValue(LadderBlock.FACING, Direction.WEST));

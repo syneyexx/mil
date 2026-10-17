@@ -5335,5 +5335,15 @@
   "labyrinth.liminal.whisper": "A door closes somewhere it shouldn't.",
   "labyrinth.audience.first": "You are seen. De Ruit turns — not a face, a measure.",
   "labyrinth.audience.first_sub": "Audience granted. The Orde writes your name in geometry.",
-  "labyrinth.audience.return": "De Ruit still hangs. It already knows you."
+  "labyrinth.audience.return": "De Ruit still hangs. It already knows you.",
+  "labyrinth.command.resetdim": "Labyrinth maze cache cleared (layout v%s). To fully regenerate: stop the server, delete the millenaire/labyrinth dimension folder (or DIM data for millenaire:labyrinth), then restart. Existing v1 chunks will not auto-rewrite.",
+  "labyrinth.puzzle.loop.hint_strong.echo": "The Archivaris would say: turn around. Walk back through the crying threshold — facing the way you entered.",
+  "labyrinth.puzzle.loop.hint_strong.mirror": "The Guide would whisper: face west. The crying floor is the only honest door.",
+  "labyrinth.liminal.enter.mirror": "The study folds the wrong way. East is a lie.",
+  "subtitles.millenaire.labyrinth.drone": "Labyrinth drone",
+  "subtitles.millenaire.labyrinth.metal": "Labyrinth metal",
+  "subtitles.millenaire.labyrinth.whisper": "Labyrinth whisper",
+  "subtitles.millenaire.labyrinth.chase": "Rammelaar stinger",
+  "subtitles.millenaire.labyrinth.ruit": "De Ruit presence",
+  "labyrinth.audience.approach": "The Approach stills. Something geometric waits ahead."
 }

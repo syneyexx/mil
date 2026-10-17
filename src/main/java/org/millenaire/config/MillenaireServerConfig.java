@@ -135,6 +135,8 @@ public final class MillenaireServerConfig {
    public final BooleanValue labyrinthVaultEnabled;
    public final BooleanValue labyrinthConfigCombatEnabled;
    public final BooleanValue labyrinthLiminalRoomsEnabled;
+   /** Informational / smoke — generation uses {@link org.millenaire.labyrinth.LabyrinthKeys#LAYOUT_VERSION}. */
+   public final IntValue labyrinthLayoutVersion;
 
    public static int getDefaultClearMargin() {
       try {
@@ -643,6 +645,12 @@ public final class MillenaireServerConfig {
          )
          .translation("millenaire.config.labyrinthLiminalRoomsEnabled")
          .define("liminalRoomsEnabled", true);
+      this.labyrinthLayoutVersion = builder.comment(
+            "Labyrinth layout generation version (2 = multi-cell footprints / Arrival nave). "
+               + "Changing this does not rewrite existing dims — delete/regenerate millenaire:labyrinth."
+         )
+         .translation("millenaire.config.labyrinthLayoutVersion")
+         .defineInRange("layoutVersion", org.millenaire.labyrinth.LabyrinthKeys.LAYOUT_VERSION, 1, 64);
       builder.pop();
    }
 

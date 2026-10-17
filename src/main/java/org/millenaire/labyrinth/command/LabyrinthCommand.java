@@ -20,10 +20,11 @@ import org.millenaire.labyrinth.entity.GebondeneAttitude;
 import org.millenaire.labyrinth.entity.GebondeneEntity;
 import org.millenaire.labyrinth.entity.GebondeneKind;
 import org.millenaire.labyrinth.entity.LabyrinthOrdeData;
+import org.millenaire.labyrinth.gen.LabyrinthMaze;
 import org.millenaire.labyrinth.portal.LabyrinthTeleporter;
 
 /**
- * {@code /millenaire labyrinth enter|leave|status|spawn <kind>}
+ * {@code /millenaire labyrinth enter|leave|status|resetdim|spawn <kind>}
  */
 public final class LabyrinthCommand {
    private static final SuggestionProvider<CommandSourceStack> KIND_SUGGESTIONS = (ctx, builder) -> SharedSuggestionProvider.suggest(
@@ -42,6 +43,7 @@ public final class LabyrinthCommand {
                   .then(Commands.literal("enter").executes(LabyrinthCommand::enter))
                   .then(Commands.literal("leave").executes(LabyrinthCommand::leave))
                   .then(Commands.literal("status").executes(LabyrinthCommand::status))
+                  .then(Commands.literal("resetdim").executes(LabyrinthCommand::resetDimHint))
                   .then(
                      Commands.literal("spawn")
                         .then(
@@ -100,6 +102,19 @@ public final class LabyrinthCommand {
       return LabyrinthTeleporter.leave(player) ? 1 : 0;
    }
 
+   /**
+    * Clears in-memory maze cache and prints player-facing migration instructions.
+    * Does not delete world files (operators must wipe the dim folder offline).
+    */
+   private static int resetDimHint(CommandContext<CommandSourceStack> ctx) {
+      LabyrinthMaze.clearCache();
+      ctx.getSource().sendSuccess(
+         () -> Component.translatable("labyrinth.command.resetdim", LabyrinthKeys.LAYOUT_VERSION),
+         true
+      );
+      return 1;
+   }
+
    private static int status(CommandContext<CommandSourceStack> ctx) {
       CommandSourceStack source = ctx.getSource();
       ServerPlayer player = source.getPlayer();
@@ -130,13 +145,20 @@ public final class LabyrinthCommand {
       final long nearby = nearbyCount;
       final boolean hostile = hostileFlag;
       final int reputation = reputationValue;
+      int[] statusCell = org.millenaire.labyrinth.gen.LabyrinthMaze.globalCellFromBlock(
+         player.blockPosition().getX(),
+         player.blockPosition().getZ()
+      );
+      final LabyrinthKeys.Zone zone = LabyrinthKeys.zoneAt(statusCell[0], statusCell[1]);
       source.sendSuccess(
          () -> Component.literal(
             String.format(
                Locale.ROOT,
-               "Labyrinth enabled=%s inside=%s dim=%s loaded=%s nearbyGebondene=%d hostile=%s reputation=%d",
+               "Labyrinth v%d enabled=%s inside=%s zone=%s dim=%s loaded=%s nearbyGebondene=%d hostile=%s reputation=%d",
+               LabyrinthKeys.LAYOUT_VERSION,
                enabled,
                inside,
+               zone,
                dimPath,
                labyrinthLoaded,
                nearby,

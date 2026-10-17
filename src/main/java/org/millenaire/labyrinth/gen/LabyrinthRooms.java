@@ -46,13 +46,15 @@ public final class LabyrinthRooms {
       LabyrinthMaze.RoomType type,
       int cellMinX,
       int cellMinZ,
+      int spanCells,
       long worldSeed,
       RandomSource random
    ) {
-      int cellMaxX = cellMinX + LabyrinthKeys.CELL_SIZE - 1;
-      int cellMaxZ = cellMinZ + LabyrinthKeys.CELL_SIZE - 1;
-      int centerX = cellMinX + LabyrinthKeys.CELL_SIZE / 2;
-      int centerZ = cellMinZ + LabyrinthKeys.CELL_SIZE / 2;
+      int span = Math.max(1, spanCells);
+      int cellMaxX = cellMinX + span * LabyrinthKeys.CELL_SIZE - 1;
+      int cellMaxZ = cellMinZ + span * LabyrinthKeys.CELL_SIZE - 1;
+      int centerX = (cellMinX + cellMaxX) / 2;
+      int centerZ = (cellMinZ + cellMaxZ) / 2;
 
       switch (type) {
          case ARRIVAL -> stampArrival(chunk, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ);
@@ -75,6 +77,7 @@ public final class LabyrinthRooms {
          case NICHE -> stampNiche(chunk, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ, random);
          case ROTARY -> stampRotary(chunk, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ, worldSeed);
          case ECHO_LOOP -> stampEchoLoop(chunk, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ);
+         case MIRROR_LOOP -> stampMirrorLoop(chunk, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ);
          case LIMINAL_BEDROOM, LIMINAL_KITCHEN, LIMINAL_STUDY, LIMINAL_PARLOR, LIMINAL_NURSERY -> {
             if (liminalEnabled()) {
                LabyrinthLiminalRooms.stamp(chunk, type, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ, random);
@@ -83,11 +86,16 @@ public final class LabyrinthRooms {
             }
          }
          case AUDIENCE -> LabyrinthAudienceRoom.stamp(chunk, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ);
+         case ATRIUM -> stampAtrium(chunk, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ);
          default -> {
          }
       }
    }
 
+   /**
+    * Arrival 2.0 — cold 3×3 nave/vestibule. Scharnier on a lodestone dais is the
+    * readable first composition; packed-ice vault and chain processional set liminality.
+    */
    private static void stampArrival(
       ChunkAccess chunk,
       int minX,
@@ -98,7 +106,7 @@ public final class LabyrinthRooms {
       int centerZ
    ) {
       int floor = LabyrinthKeys.FLOOR_Y;
-      int ceiling = LabyrinthKeys.CEILING_Y;
+      int naveCeil = LabyrinthKeys.MEZZ_CEILING_Y;
 
       for (int x = minX; x <= maxX; x++) {
          for (int z = minZ; z <= maxZ; z++) {
@@ -108,33 +116,92 @@ public final class LabyrinthRooms {
             boolean edge = x == minX || x == maxX || z == minZ || z == maxZ;
             set(chunk, x, floor, z, BRICKS);
             if (edge) {
-               for (int y = floor + 1; y < ceiling; y++) {
-                  set(chunk, x, y, z, BRICKS);
+               for (int y = floor + 1; y < naveCeil; y++) {
+                  BlockState wall = ((x + z + y) & 5) == 0 ? PACKED_ICE : BRICKS;
+                  set(chunk, x, y, z, wall);
                }
             } else {
-               for (int y = floor + 1; y < ceiling; y++) {
+               for (int y = floor + 1; y < naveCeil; y++) {
                   set(chunk, x, y, z, AIR);
                }
-               set(chunk, x, ceiling, z, PACKED_ICE);
+               set(chunk, x, naveCeil, z, PACKED_ICE);
             }
          }
       }
 
+      // Processional aisle toward +Z exits into the maze.
+      for (int z = minZ + 2; z <= maxZ - 2; z++) {
+         set(chunk, centerX, floor, z, POLISHED);
+         set(chunk, centerX - 1, floor, z, BRICKS);
+         set(chunk, centerX + 1, floor, z, BRICKS);
+      }
+
+      // Scharnier dais — readable first object.
       set(chunk, centerX, floor - 1, centerZ, GOLD);
       set(chunk, centerX, floor, centerZ, LODESTONE);
+      set(chunk, centerX - 1, floor, centerZ, POLISHED);
+      set(chunk, centerX + 1, floor, centerZ, POLISHED);
+      set(chunk, centerX, floor, centerZ - 1, POLISHED);
+      set(chunk, centerX, floor, centerZ + 1, POLISHED);
       set(chunk, centerX, floor + 1, centerZ, scharnierState());
 
-      placeHangingLantern(chunk, centerX, ceiling - 1, centerZ);
-      placeHangingLantern(chunk, centerX - 2, ceiling - 1, centerZ - 2);
-      placeHangingLantern(chunk, centerX + 2, ceiling - 1, centerZ + 2);
+      // Tall chain columns at nave corners (scale beat within 60s).
+      for (int[] c : new int[][] {
+         {minX + 2, minZ + 2}, {maxX - 2, minZ + 2}, {minX + 2, maxZ - 2}, {maxX - 2, maxZ - 2}
+      }) {
+         for (int y = floor + 1; y <= floor + 5; y++) {
+            set(chunk, c[0], y, c[1], BRICKS);
+         }
+         for (int y = floor + 6; y <= floor + 10; y++) {
+            set(chunk, c[0], y, c[1], CHAIN);
+         }
+      }
 
-      set(chunk, centerX, floor + 1, centerZ - 2, CHAIN);
-      set(chunk, centerX, floor + 2, centerZ - 2, CHAIN);
-      set(chunk, centerX, floor + 3, centerZ - 2, CHAIN);
+      placeHangingLantern(chunk, centerX, naveCeil - 1, centerZ);
+      placeHangingLantern(chunk, centerX - 4, naveCeil - 1, centerZ - 4);
+      placeHangingLantern(chunk, centerX + 4, naveCeil - 1, centerZ + 4);
+      placeHangingLantern(chunk, centerX - 4, naveCeil - 1, centerZ + 4);
+      placeHangingLantern(chunk, centerX + 4, naveCeil - 1, centerZ - 4);
+
+      set(chunk, centerX, floor + 1, centerZ - 3, CHAIN);
+      set(chunk, centerX, floor + 2, centerZ - 3, CHAIN);
+      set(chunk, centerX, floor + 3, centerZ - 3, CHAIN);
       set(chunk, minX + 1, floor + 1, minZ + 1, SPIKE);
       set(chunk, maxX - 1, floor + 1, maxZ - 1, SPIKE);
       set(chunk, minX + 1, floor + 1, maxZ - 1, BARS);
       set(chunk, maxX - 1, floor + 1, minZ + 1, BARS);
+
+      // Soft liminal cue: domestic carpet patch near the east wall (wrong, but quiet).
+      set(chunk, maxX - 3, floor + 1, centerZ, Blocks.GRAY_CARPET.defaultBlockState());
+      set(chunk, maxX - 4, floor + 1, centerZ, Blocks.GRAY_CARPET.defaultBlockState());
+      set(chunk, maxX - 3, floor + 1, centerZ + 1, Blocks.WHITE_CARPET.defaultBlockState());
+   }
+
+   /** Vertical overlook — open shaft + mezzanine gallery (P1.4). */
+   private static void stampAtrium(
+      ChunkAccess chunk,
+      int minX,
+      int minZ,
+      int maxX,
+      int maxZ,
+      int centerX,
+      int centerZ
+   ) {
+      paveFloor(chunk, minX, minZ, maxX, maxZ, POLISHED);
+      clearInterior(chunk, minX, minZ, maxX, maxZ);
+      stampMezzanine(chunk, minX, minZ, maxX, maxZ, centerX, centerZ);
+      // Gallery rails around the overlook hole.
+      int mezz = LabyrinthKeys.MEZZ_FLOOR_Y;
+      for (int dx = -2; dx <= 2; dx++) {
+         for (int dz = -2; dz <= 2; dz++) {
+            if (Math.abs(dx) == 2 || Math.abs(dz) == 2) {
+               set(chunk, centerX + dx, mezz + 1, centerZ + dz, BARS);
+            }
+         }
+      }
+      set(chunk, minX + 1, LabyrinthKeys.FLOOR_Y + 1, minZ + 1, SPIKE);
+      set(chunk, maxX - 1, LabyrinthKeys.FLOOR_Y + 1, maxZ - 1, SPIKE);
+      placeHangingLantern(chunk, centerX + 2, LabyrinthKeys.CEILING_Y - 1, centerZ + 2);
    }
 
    private static void stampCore(
@@ -405,6 +472,36 @@ public final class LabyrinthRooms {
       set(chunk, centerX, LabyrinthKeys.FLOOR_Y - 1, minZ + 1, CRYING);
       // Crooked clock stand-in: note block on the parlor table.
       set(chunk, centerX, LabyrinthKeys.FLOOR_Y + 2, centerZ, Blocks.NOTE_BLOCK.defaultBlockState());
+   }
+
+   /**
+    * Second soft-loop layout (east↔west). Escape by facing west through the crying threshold.
+    */
+   private static void stampMirrorLoop(
+      ChunkAccess chunk,
+      int minX,
+      int minZ,
+      int maxX,
+      int maxZ,
+      int centerX,
+      int centerZ
+   ) {
+      LabyrinthLiminalRooms.stamp(
+         chunk,
+         LabyrinthMaze.RoomType.LIMINAL_STUDY,
+         minX,
+         minZ,
+         maxX,
+         maxZ,
+         centerX,
+         centerZ,
+         net.minecraft.util.RandomSource.create(centerX * 17L + centerZ * 13L)
+      );
+      // East = forward trap; west = escape (crying underfloor).
+      set(chunk, maxX - 1, LabyrinthKeys.FLOOR_Y - 1, centerZ, GOLD);
+      set(chunk, minX + 1, LabyrinthKeys.FLOOR_Y - 1, centerZ, CRYING);
+      set(chunk, centerX, LabyrinthKeys.FLOOR_Y + 2, centerZ, Blocks.NOTE_BLOCK.defaultBlockState());
+      set(chunk, centerX, LabyrinthKeys.CEILING_Y - 1, centerZ, CHAIN);
    }
 
    private static void stampNiche(
