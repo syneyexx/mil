@@ -22,7 +22,8 @@ public class VillageCreateWizardScreen extends AbstractMillenaireScreen {
    private String selectedCulture = "";
    private String selectedType = "";
    private String villageName = "";
-   private boolean startOwnFaith;
+   /** {@link VillageCreateConfirmPayload#FAITH_CULTURE}, {@code custom}, or {@code orde}. */
+   private String faithChoice = VillageCreateConfirmPayload.FAITH_CULTURE;
    private String faithName = "";
    private EditBox nameField;
    private EditBox faithNameField;
@@ -165,23 +166,32 @@ public class VillageCreateWizardScreen extends AbstractMillenaireScreen {
          case 5 -> {
             this.addStepButton(
                Button.builder(Component.translatable("gui.millenaire.village_create.faith_yes"), b -> {
-                     this.startOwnFaith = true;
+                     this.faithChoice = VillageCreateConfirmPayload.FAITH_CUSTOM;
                      if (this.faithName.isBlank()) {
                         this.faithName = VillageCreateWandItem.sanitizeVillageName(this.villageName) + " Faith";
                      }
                      this.step = 6;
                      this.rebuildStep();
                   })
-                  .bounds(x + 40, y + 70, 200, 18)
+                  .bounds(x + 40, y + 64, 200, 18)
+                  .build()
+            );
+            this.addStepButton(
+               Button.builder(Component.translatable("gui.millenaire.village_create.faith_orde"), b -> {
+                     this.faithChoice = VillageCreateConfirmPayload.FAITH_ORDE;
+                     this.faithName = "";
+                     this.sendFoundPacket();
+                  })
+                  .bounds(x + 40, y + 86, 200, 18)
                   .build()
             );
             this.addStepButton(
                Button.builder(Component.translatable("gui.millenaire.village_create.faith_no"), b -> {
-                     this.startOwnFaith = false;
+                     this.faithChoice = VillageCreateConfirmPayload.FAITH_CULTURE;
                      this.faithName = "";
                      this.sendFoundPacket();
                   })
-                  .bounds(x + 40, y + 94, 200, 18)
+                  .bounds(x + 40, y + 108, 200, 18)
                   .build()
             );
          }
@@ -215,13 +225,16 @@ public class VillageCreateWizardScreen extends AbstractMillenaireScreen {
       if (name.isEmpty() || this.selectedType.isEmpty()) {
          return;
       }
-      String faith = this.startOwnFaith ? VillageCreateWandItem.sanitizeVillageName(this.faithName) : "";
-      if (this.startOwnFaith && faith.isEmpty()) {
+      String choice = VillageCreateConfirmPayload.normalizeFaithChoice(this.faithChoice);
+      String faith = VillageCreateConfirmPayload.FAITH_CUSTOM.equals(choice)
+         ? VillageCreateWandItem.sanitizeVillageName(this.faithName)
+         : "";
+      if (VillageCreateConfirmPayload.FAITH_CUSTOM.equals(choice) && faith.isEmpty()) {
          return;
       }
       PacketDistributor.sendToServer(
          new VillageCreateConfirmPayload(
-            this.data.targetPos(), this.selectedCulture, this.selectedType, name, this.startOwnFaith, faith
+            this.data.targetPos(), this.selectedCulture, this.selectedType, name, choice, faith
          ),
          new CustomPacketPayload[0]
       );
@@ -386,6 +399,7 @@ public class VillageCreateWizardScreen extends AbstractMillenaireScreen {
       found.active = !this.data.overlapsRadius()
          && !this.selectedType.isEmpty()
          && !VillageCreateWandItem.sanitizeVillageName(this.villageName).isEmpty()
-         && (!this.startOwnFaith || !VillageCreateWandItem.sanitizeVillageName(this.faithName).isEmpty());
+         && (!VillageCreateConfirmPayload.FAITH_CUSTOM.equals(this.faithChoice)
+            || !VillageCreateWandItem.sanitizeVillageName(this.faithName).isEmpty());
    }
 }

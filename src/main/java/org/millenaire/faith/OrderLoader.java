@@ -22,7 +22,7 @@ public final class OrderLoader {
    private static final Logger LOGGER = LogUtils.getLogger();
    private static final Gson GSON = JsonLoaderUtils.GSON;
    private static final String[] BUILTIN = {
-      "last_flame", "closed_eye", "root_circle"
+      "last_flame", "closed_eye", "root_circle", "orde"
    };
 
    private OrderLoader() {

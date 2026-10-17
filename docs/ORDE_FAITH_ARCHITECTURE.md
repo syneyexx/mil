@@ -96,10 +96,22 @@ Triggers (any one — all event-driven):
 - Reuse: `religionEnabled`, `ordersEnabled`, `religionSupernaturalEnabled`
 - New `[orde]` block: see release plan §4.3 (`playerAbductChance`, hunter/timeout caps, pressure block)
 
+## Player city founding
+
+Wizard faith step offers three choices:
+
+| Choice | Packet `faithChoice` | Effect |
+|--------|----------------------|--------|
+| Own faith | `custom` | `startPlayerFaithInstance` |
+| **Cenobites** | `orde` | `startOrdeFaithInstance` + force-seed `order_orde` chapter |
+| Culture NPC faith | `culture` | Keep spawn default |
+
+Faith template: `millenaire:orde` (`faiths/orde.json`). UI label: Cenobites.
+
 ## Non-goals
 
-- Culture-default Orde faith
-- Hellraiser IP
+- Culture-default Orde faith for all NPC villages
+- Hellraiser IP product names beyond player-facing “Cenobites” label (owner choice)
 - Configuratie morph theater
 - Uncapped bi-daily kills
 - Instant unavoidable player teleport
