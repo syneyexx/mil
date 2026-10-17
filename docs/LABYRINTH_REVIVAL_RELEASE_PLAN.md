@@ -1,187 +1,194 @@
-# Het Labyrint — Release-ready Psyche Plan (na Wave 8)
+# Het Labyrint — Release-ready Psyche Plan (v2, nagekeken)
 
-**Status:** wacht op owner-akkoord. Geen implementatie tot GO.  
-**Doel van deze werkronde:** na merge voelt Het Labyrint als een **ware Revival-psyche-ruimte** — liminaal, onheilspellend, architecturaal wrong — en is het **release-ready** binnen Millénaire (Minecraft 1.21.1 / NeoForge), **zonder Hellraiser-IP**.
+**Status:** wacht op owner-GO. Geen implementatie tot GO.  
+**Versie:** 2 — plan herzien na zelf-audit (“is dit wat ik wil shippen op release-dag?”).
 
-**Niet het doel:** Configuratie-“theater” (morph UI, vignettes, showy VFX). Functionele Configuratie blijft; spectakel is bijzaak.
+**Doel van deze werkronde:** na afronding is Het Labyrint **game-release-ready** als Millénaire-feature: Revival-**psyche** (liminaal, wrong, awe), speelbaar end-to-end, stabiel, gedocumenteerd — **zonder Hellraiser-IP**, **zonder Configuratie-theater**.
 
 ---
 
-## 1. Eerlijk startpunt
+## 0. Zelf-audit: was v1 genoeg voor release-dag?
 
-Wave 1–8 = **juiste motieven, te weinig psyche**.
+**Kort antwoord: bijna — niet helemaal.** v1 had de juiste vibe-pijlers, maar miste release-gaten die ik op een echte ship-dag niet zou accepteren:
 
-| Nu | Nodig voor Revival-psyche |
-|----|---------------------------|
-| 8×8 grid-dungeon | Ongelijke schaal, lange gangen, atriums, suites |
-| Prop-kamertjes | Huizen die 3+ seconden “echt” voelen, dan wrong |
-| De Ruit ≈ ijsdiamant | Overweldigende aanwezigheid |
-| Vanilla cave-audio | Zone-bed dat je lichaam raakt |
-| Chase = blink | Paniek-navigatie die je leert |
+| Gat in v1 | Risico op release-dag | Fix in v2 |
+|-----------|----------------------|-----------|
+| Arrival / eerste 30s niet als eigen levering | DoD A faalt terwijl P1 “zones” claimt | **P1.0 Arrival nave** expliciet |
+| Quest-pad fallenking 11/12 niet als gate | Speler strandt in nieuwe layout | **P5.0 quest continuity** |
+| Soft-lock in loops | Rage-quit / broken release | **P3.4 escape guarantees** |
+| Geen performance SLO | TPS-dip = unshippable | **§2.F + P1.5 budgets** |
+| Geen player-facing migratie | Owners weten niet dat dim weg moet | **P5.5 + README banner** |
+| “100%” klonk als Unreal | Verkeerde verwachting | **§1 ceiling** aangescherpt |
+| Art-tiers vaag | P5 eindigt cosmetisch half | **P5 shippable silhouette bar** |
+| Multiplayer/edge cases onbenoemd | Chase/loop rare bugs | **§2.E + P5.1** |
 
-**100% in deze context** = psyche-DoD hieronder gehaald op een verse Labyrinth-dimensie, compile groen, smoke-checklist door owner speelbaar — niet Unreal photorealism.
+**Conclusie:** dit v2-plan is wat ik wél wil leveren als release-ready eindresultaat. v1 was de juiste richting; v2 is de ship-bar.
+
+---
+
+## 1. Ceiling (wat “100%” wél en níet betekent)
+
+**Wel:** psyche-DoD (§2) volledig groen op verse Labyrinth-dim; compile groen; owner smoke pass; quests werkend; defaults release; migratie duidelijk.
+
+**Niet:** Unreal photorealism, custom OST zonder jouw audio-files, Hellraiser-IP, Configuratie morph-UI.
+
+Minecraft blijft Minecraft. De lat is: **“dit voelt als Revival’s Labyrinth-psyche in Millénaire”**, niet “Saber Interactive build”.
 
 ---
 
 ## 2. Definition of Done — Release Psyche (harde bar)
 
-Alles hieronder moet waar zijn vóór “klaar”:
+Alles hieronder moet waar zijn vóór “klaar”. Geen “bijna”.
 
-### A. Eerste minuut
-1. Binnen **10s** na enter: koude liminaliteit (licht, fog, audio) — geen “Nether met blauwe tint”.
-2. Binnen **60s**: minstens één moment van *“dit is geen normale Minecraft-ruimte”* (schaal, loop, of domestic bleed).
+### A. Eerste minuut (Arrival)
+1. Binnen **10s** na enter: koude liminaliteit (licht, fog, **audio**) — geen Nether-blauw.
+2. Arrival is een **bewuste eerste compositie** (niet een 8×8 hok met Scharnier).
+3. Binnen **60s**: minstens één “dit is geen normale MC-ruimte”-beat (schaal / loop / domestic bleed).
 
 ### B. Architectuur
-3. Corridors **niet** uniform 8×8-kamers; zichtbare vocabulary: smalle gang / kamer / suite / nave.
-4. Liminale **suites** ≥ 16×16 (idealiter 24) met **≥30 props** en seed-variatie in wrongness.
-5. Speler kan een suite **≥3 seconden** als “huis” lezen vóór wrongness klikt.
+4. Zichtbare vocabulary: smalle gang / kamer / suite / nave — niet uniform 8×8.
+5. Liminale **suites** ≥16×16 (target 24) met **≥30 props** + seed-variatie wrongness.
+6. Suite leest **≥3s** als huis vóór wrongness.
 
 ### C. Psyche-systemen
-6. Minstens **twee** soft-loop / reverse-escape ervaringen (niet alleen één ECHO hub).
-7. Chase dwingt **keuze** (veilige tak leerbaar); audio/presence schaalt met nabijheid.
-8. Domestic → Orde bleed voelbaar in zones (Arrival → Bleed → Orde → Approach → Audience).
+7. ≥**twee** soft-loop layouts; escape altijd mogelijk (reverse of gedocumenteerde hint); **geen soft-lock**.
+8. Chase dwingt leerbare keuze; presence/audio ∝ nabijheid; geen spawn-spam.
+9. Zone-arc voelbaar: Arrival → Bleed → Orde → Approach → Audience/Core.
 
 ### D. De Ruit
-9. Audience-nave is **groot genoeg voor awe** (multi-cell of ≥24–32 footprint, hoge plafondband).
-10. Eerste audiëntie voelt als *gezien worden* (stilte/drone + presence), niet als “ik vond een diamantje”.
+10. Audience-nave awe-schaal (≥24–32 of multi-cell; hoge band; processie ≥20).
+11. Eerste audiëntie = *gezien worden* (presence), niet “ijsdiamant gevonden”.
 
-### E. Release engineering
-11. `./gradlew compileJava` groen.
-12. Config-flags voor zware systemen; defaults aan voor release-feel.
-13. `labyrinthLayoutVersion` (breaking layout) gedocumenteerd; verse dim verplicht na upgrade.
-14. `LABYRINTH_LOCAL_VALIDATION.md` smoke A–D hierboven dekt.
-15. Geen Hellraiser-IP-namen/assets; lore blijft Configuratie / Gebondenen / Orde / De Ruit.
-16. Tick-budget: geen per-tick mass rebuilds; stamp/lazy rules behouden of verbeterd.
+### E. Content & multiplayer sanity
+12. `fallenking_11` / `fallenking_12` (of opvolger) **haalbaar** door nieuwe layout (Core-tag, Audience-tag, relics/poorten).
+13. Loops/chase/audience werken in singleplayer; geen bekende soft-lock in SMP smoke (1–2 spelers).
 
-**Configuratie-theater is expliciet géén DoD-item.**
+### F. Release engineering
+14. `./gradlew compileJava` groen.
+15. Config-flags; **defaults = release-feel aan**.
+16. `labyrinthLayoutVersion=2` + **player-facing** migratie (README + command/note: delete/regenerate dim).
+17. Validation smoke dekt §2 A–E met pass/fail.
+18. Geen Hellraiser-IP; lore = Configuratie / Gebondenen / Orde / De Ruit.
+19. Performance SLO: Labyrinth idle met 1 speler mag de server Post-tick board niet stelselmatig overschrijden; large stamps lazy/budgeted; entity cap behouden/aangescherpt.
+
+**Configuratie-theater is géén DoD-item.**
 
 ---
 
-## 3. Campagne — vijf waves tot release
+## 3. Campagne P1→P5 (ship-volgorde)
 
-Volgorde is strikt. Elke wave eindigt speelbaar + smoke; volgende start pas als DoD-stukken van die wave groen zijn.
-
-### Wave P1 — Ruimte & zones (fundament van psyche)
-
-**Waarom eerst:** Zonder schaal blijft alles “Minecraft-kamer”.
+### Wave P1 — Ruimte, Arrival, zones
 
 | # | Levering |
 |---|----------|
-| P1.1 | Layout v2: chamber footprints `CORRIDOR(8)` / `ROOM(16)` / `SUITE(24)` / `NAVE(32+)` |
-| P1.2 | Corridor vocabulary: 3-breed gangen, T-junctions, roosters boven spikes, galerij-leuning |
-| P1.3 | Zone acts (seed-stabiel): Arrival → Domestic Bleed → Orde Industrial → Approach → Core/Audience |
-| P1.4 | Vertical atriums: 2–3 banden zichtbaar (overlook), niet alleen ladderschacht |
-| P1.5 | `labyrinthLayoutVersion=2` + docs; performance budgets voor large stamps |
+| **P1.0** | **Arrival 2.0** — eerste compositie: koude nave/vestibule, Scharnier leesbaar, onmiddellijke liminal cue |
+| P1.1 | Layout v2 footprints: CORRIDOR(8) / ROOM(16) / SUITE(24) / NAVE(32+) |
+| P1.2 | Corridor vocabulary (3-breed, T’s, roosters/spikes, galerijen) |
+| P1.3 | Zone acts: Arrival → Bleed → Orde → Approach → Core/Audience |
+| P1.4 | Vertical atriums / overlooks |
+| P1.5 | `labyrinthLayoutVersion=2`; stamp budgets; lazy interior where needed |
 
-**Wave-DoD:** Fly-through toont 5 zone-karakters; corridors voelen langer/enger dan Wave 8.
+**Wave-DoD:** DoD A deels + B4; fly-through 5 zones; Arrival alleen al “release first minute”-waardig.
 
-**Breaking:** ja — verse Labyrinth-dimensie verplicht.
+**Breaking:** ja — verse dim.
 
 ---
 
-### Wave P2 — Audio presence bed (~40% vibe)
-
-**Waarom:** Psyche is half gehoor.
+### Wave P2 — Audio presence bed
 
 | # | Levering |
 |---|----------|
-| P2.1 | Sound events + layered vanilla placeholders: cold drone, metal stress, whisper bed, chase clicks, Ruit pulse |
-| P2.2 | Zone crossfade (Arrival / Bleed / Orde / Audience) |
-| P2.3 | Chase: volume/paniek ∝ afstand; stinger op blink |
-| P2.4 | Ruit: naderende drone (eigen curve, geen Warden-kloon) |
-| P2.5 | Document slot-namen voor latere echte SFX (resource-pack vriendelijk) |
+| P2.1 | Sound events + layered vanilla placeholders (drone, metal, whisper, chase, Ruit) |
+| P2.2 | Zone crossfade |
+| P2.3 | Chase proximity audio + blink stinger |
+| P2.4 | Ruit nadering-drone (eigen curve) |
+| P2.5 | Resource-pack slot docs voor latere echte SFX |
 
-**Wave-DoD:** Headphones, UI uit: “wrong” ≤10s in bleed; “presence” bij Ruit.
-
-**Theater:** geen morph-UI; alleen presence audio.
+**Wave-DoD:** DoD A1 audio; headphones “wrong” ≤10s in bleed; Ruit presence hoorbaar.
 
 ---
 
-### Wave P3 — Liminal psyche suites (mind-fuck kern)
-
-**Waarom:** Revival’s huis/bleed is het psyche-wapen.
+### Wave P3 — Liminal suites + veilige loops
 
 | # | Levering |
 |---|----------|
-| P3.1 | Multi-cell suites: appartement, lange deurengang, keuken+eetkamer, kindervleugel |
-| P3.2 | Detail density 30–60 props; scheve frames; valse deuren; dubbele meubels |
-| P3.3 | Wrongness intensity 0–3 (seed): cosmetisch → onmogelijk → Orde-bleed door muren |
-| P3.4 | Soft corridor-loops in suites (reverse = escape); ≥2 distinct loop layouts |
-| P3.5 | Memory props: lectern-lore; portraits die veranderen bij herbezoek |
-| P3.6 | Enter/exit: korte warmte-snap → terug naar cold (subtiel, geen UI-theater) |
+| P3.1 | Multi-cell suites (appartement, deurengang, keuken+eetkamer, kindervleugel) |
+| P3.2 | 30–60 props; valse deuren; scheve frames; dichtheid |
+| P3.3 | Wrongness intensity 0–3 (seed) |
+| P3.4 | ≥2 loop layouts; **escape gegarandeerd**; Gids/Archivaris hint na N fails; anti-soft-lock test |
+| P3.5 | Memory props (lectern lore; portraits change on revisit) |
+| P3.6 | Subtiele warm→cold enter/exit (geen UI-theater) |
 
-**Wave-DoD:** “Dit voelt als een huis” ≥3s; daarna wrongness; loops leerbaar.
+**Wave-DoD:** DoD B5–B6, C7.
 
 ---
 
-### Wave P4 — De Ruit & Approach (climax presence)
-
-**Waarom:** God-moment moet zwaar wegen.
+### Wave P4 — De Ruit & Approach
 
 | # | Levering |
 |---|----------|
-| P4.1 | Audience nave ≥24–32 footprint (of multi-cell); processie ≥20 blokken; hoge plafondband |
-| P4.2 | De Ruit span ~15–21; particle shell; subtiele beam naar dais (presence, geen fireworks) |
-| P4.3 | Approach corridor: stilte + drone build; silent Gebondenen in pews (kijken, geen chat) |
-| P4.4 | First-audience ritueel aangescherpt (bestaande tag); return visits sober |
-| P4.5 | Core blijft Architect-fight; Audience blijft psyche/presence (geen tweede boss verplicht) |
+| P4.1 | Awe-nave + processie |
+| P4.2 | Grote Ruit + subtiele presence (particles/beam sober) |
+| P4.3 | Approach: stilte/drone; silent pew Gebondenen |
+| P4.4 | First-audience aangescherpt; returns sober |
+| P4.5 | Core = Architect; Audience = psyche (geen verplichte 2e boss) |
 
-**Wave-DoD:** Screenshot/ervaring = “dit is de god van deze plek”.
+**Wave-DoD:** DoD D10–D11.
 
 ---
 
-### Wave P5 — Chase, materialen, release lock
-
-**Waarom:** Paniek + art consistency + ship bar.
+### Wave P5 — Chase, art, quests, release lock
 
 | # | Levering |
 |---|----------|
-| P5.1 | Chase 2.0: safe-branch blijft; betere telegraphs; geen spam-spawns; zone-aware |
-| P5.2 | Orde material set (`orde_stone` / `orde_panel` / `bleed_planks`) — breekt blackstone-monotonie |
-| P5.3 | Gebondene silhouette tiers (Leader/Gate/Social) — leesbaar zonder gore-IP |
-| P5.4 | Rammelaar presence (animatie/SFX hook); Architect meetlat-silhouet |
-| P5.5 | Full smoke rewrite; config defaults release; README/architecture sync; layout migration note |
+| **P5.0** | **Quest continuity:** fallenking_11/12 tags/routes werken in layout v2; NL/EN strings bijgewerkt |
+| P5.1 | Chase 2.0: telegraphs, caps, zone-aware; SMP sanity |
+| P5.2 | Orde materials (`orde_stone` / `orde_panel` / `bleed_planks`) |
+| P5.3 | Gebondene **shippable** silhouette tiers (Leader/Gate/Social) — duidelijk verschillend in-game |
+| P5.4 | Rammelaar + Architect presence hooks |
+| P5.5 | Full smoke §2; README migratie-banner; architecture sync; config defaults; optional `/millenaire labyrinth resetdim` (of gedocumenteerde wipe) |
 
-**Wave-DoD:** Alle §2 DoD-items afgevinkt; owner smoke A–D; compile groen.
+**Wave-DoD:** **Alle §2 items afgevinkt.** Anders geen “release-ready”.
 
 ---
 
-## 4. Expliciet buiten deze release-ronde
+## 4. Buiten scope (blijft buiten)
 
 | Out | Reden |
 |-----|--------|
-| Configuratie morph-UI / vignette / “theater” | Owner: hoeft niet |
-| Letterlijke Hellraiser-IP | Policy + lore |
-| AAA custom OST zonder owner-files | Placeholders + slots; echte stems later |
-| Pure combat-cenobite rewrite | Millénaire frenemy-ziel behouden |
-| Photoreal shaders | Buiten mod-pipeline |
+| Configuratie morph-UI / vignette / theater | Owner |
+| Hellraiser-IP | Policy |
+| Volledige custom OST zonder jouw files | Placeholders + slots |
+| Pure slashers i.p.v. frenemy-Orde | Millénaire-ziel |
+| Photoreal shaders | Pipeline |
 
 ---
 
-## 5. Werkwijze (release discipline)
+## 5. Release discipline
 
-1. Eén wave tegelijk; commit met wave-tag; push; PR-body updaten.
-2. Na elke wave: compile + smoke-sectie in validation docs.
-3. Geen “bijna klaar”: P5 eindigt alleen als §2 volledig waar is.
-4. Bij blokkade (assets): ship placeholders + documenteer owner-drop slots — vibe mag niet wachten op perfecte WAV.
-5. Fresh dim na P1; communiceer hard in README.
-
----
-
-## 6. Owner-beslissingen (antwoord = GO)
-
-Bevestig of corrigeer:
-
-1. **Akkoord** met dit psyche-DoD + waves P1→P5 (geen Configuratie-theater)?
-2. **Breaking layout v2** OK (verse Labyrinth-dimensie na P1)?
-3. **Audio placeholders** OK tot je eigen SFX drop’t?
-4. Suites mogen **meerdere chunks** beslaan?
-5. Start bij GO met **P1 full** (niet de halfslachtige 16-only shortcut)?
-
-**Aanbevolen antwoorden voor maximale Revival-psyche:** 1 ja · 2 ja · 3 ja · 4 ja · 5 ja (full P1).
+1. Eén wave; commit; push; PR updaten.  
+2. Na elke wave: compile + smoke-sectie.  
+3. P5 eindigt alleen op volledige §2.  
+4. Assets geblokkeerd → placeholders + slots; vibe wacht niet op perfecte WAV.  
+5. Na P1: harde migratie-communicatie.
 
 ---
 
-## 7. Één zin
+## 6. Owner-GO (antwoord hierop)
 
-We bouwen geen showy kubus-theater; we bouwen **ruimte, geluid, huis-bleed, god-presence en jacht** tot het Labyrint psyche aanvalt — en we stoppen pas als de release-DoD-lijst volledig groen is.
+1. Akkoord met **v2** psyche-DoD + P1→P5 (incl. Arrival P1.0 + quest gate P5.0)?  
+2. Breaking layout v2 OK?  
+3. Audio placeholders OK?  
+4. Multi-chunk suites OK?  
+5. Full P1 bij start (geen half)?  
+
+**Aanbevolen:** alles ja.
+
+---
+
+## 7. Eindantwoord op “is dit je release-eindresultaat?”
+
+**v1 was dat nog niet.**  
+**v2 wél:** dit is het plan waarmee ik op een game-release-dag zou durven zeggen dat Het Labyrint psyche-ready is — mits §2 volledig groen na P5.
+
+Geen code tot jij GO geeft op v2.
