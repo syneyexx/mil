@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "millenaire:block/spike_floor_top",
+    "bottom": "millenaire:block/spike_floor_side",
+    "side": "millenaire:block/spike_floor_side"
+  }
+}

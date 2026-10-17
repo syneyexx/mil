@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "millenaire:block/crooked_painting",
+      "y": 0
+    },
+    "facing=east": {
+      "model": "millenaire:block/crooked_painting",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "millenaire:block/crooked_painting",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "millenaire:block/crooked_painting",
+      "y": 270
+    }
+  }
+}
