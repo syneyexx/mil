@@ -1,0 +1,20 @@
+{
+  "id": "millenaire:orde_nachtwake",
+  "display_name": "Nachtwake van de Orde",
+  "capacity": 6,
+  "duration_ticks": 2400,
+  "cooldown_days": 2,
+  "start_window_min": 13000,
+  "start_window_max": 22000,
+  "gather_deadline_ticks": 6000,
+  "presence_radius": 10.0,
+  "required_goods": {
+    "minecraft:candle": 1,
+    "minecraft:iron_nugget": 1
+  },
+  "devotion_reward": 8,
+  "cohesion_reward": 4,
+  "secrecy_delta": 2,
+  "tension_delta": 3,
+  "order_tags": ["orde_wake"]
+}

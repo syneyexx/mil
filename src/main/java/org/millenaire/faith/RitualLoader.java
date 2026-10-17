@@ -22,7 +22,7 @@ public final class RitualLoader {
    private static final Gson GSON = JsonLoaderUtils.GSON;
    private static final String[] BUILTIN = {
       "initiation", "night_wake", "relic_restore", "reconciliation",
-      "closed_eye_initiation", "root_circle_vigil"
+      "closed_eye_initiation", "root_circle_vigil", "orde_nachtwake"
    };
 
    private RitualLoader() {

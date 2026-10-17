@@ -21,7 +21,8 @@ public final class FaithLoader {
    private static final Gson GSON = JsonLoaderUtils.GSON;
    /** Builtin fallback list when directory discovery is unavailable. */
    private static final String[] KNOWN_FAITHS = {
-      "norman", "byzantines", "indian", "mayan", "japanese", "seljuk", "inuits", "nederland", "illagers", "player_custom"
+      "norman", "byzantines", "indian", "mayan", "japanese", "seljuk", "inuits", "nederland", "illagers",
+      "player_custom", "orde"
    };
 
    private FaithLoader() {

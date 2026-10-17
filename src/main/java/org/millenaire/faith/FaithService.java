@@ -46,6 +46,11 @@ public final class FaithService {
       ReligionService.startPlayerFaithInstance(level, village, customName);
    }
 
+   /** Player founding chose Cenobites / De Orde as city religion. */
+   public static void startOrdeFaith(ServerLevel level, Village village) {
+      ReligionService.startOrdeFaithInstance(level, village);
+   }
+
    public static String resolveDisplayName(Village village) {
       if (village.getCustomFaithName() != null && !village.getCustomFaithName().isBlank()) {
          return village.getCustomFaithName().trim();

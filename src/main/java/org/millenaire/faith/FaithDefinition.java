@@ -26,4 +26,9 @@ public record FaithDefinition(
    public boolean isPlayerCustom() {
       return "player_custom".equals(this.id.getPath());
    }
+
+   /** Selectable at player city founding; not tied to a culture default. */
+   public boolean isOrde() {
+      return "orde".equals(this.id.getPath());
+   }
 }

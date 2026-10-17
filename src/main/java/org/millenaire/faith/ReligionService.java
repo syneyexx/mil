@@ -212,6 +212,96 @@ public final class ReligionService {
       return inst;
    }
 
+   /**
+    * Player city founding chose Cenobites / De Orde. Sets faith, queues a shrine, and
+    * seeds an Orde chapter even when the settlement is still below the normal order pop gate.
+    */
+   public static FaithInstance startOrdeFaithInstance(ServerLevel level, Village village) {
+      ReligionSavedData data = ReligionSavedData.get(level);
+      FaithDefinition def = FaithRegistry.get(FaithRegistry.ordeId());
+      String display = def != null ? def.displayName() : "Cenobites";
+      FaithInstance inst = new FaithInstance(UUID.randomUUID(), FaithRegistry.ordeId(), display);
+      data.putFaith(inst);
+      village.setFaithInstanceId(inst.id());
+      village.setFaithId(FaithRegistry.ordeId());
+      village.setCustomFaithName(null);
+      FaithService.enqueuePreferredShrine(village);
+      seedOrdeChapterForPlayerCity(level, data, village);
+      data.setDirty();
+      village.markDirty();
+      return inst;
+   }
+
+   /** Force-seed Orde chapter for a player-founded city (skips min-pop gate). */
+   public static boolean seedOrdeChapterForPlayerCity(ServerLevel level, ReligionSavedData data, Village village) {
+      if (!MillenaireServerConfig.SERVER.ordersEnabled.getAsBoolean()) {
+         return false;
+      }
+      if (data.getChapterForVillage(village.getId()) != null) {
+         return false;
+      }
+      ResourceLocation orderTemplate = OrderRegistry.ordeId();
+      OrderDefinition def = OrderRegistry.get(orderTemplate);
+      if (def == null || !def.allowsCulture(village.getCultureId())) {
+         return false;
+      }
+      OrderInstance order = new OrderInstance(UUID.randomUUID(), orderTemplate);
+      data.putOrder(order);
+      Chapter chapter = new Chapter(UUID.randomUUID(), order.id(), village.getId());
+      chapter.setSecrecy(def.secrecyDefault());
+      chapter.setStage(Chapter.Stage.SEEDED);
+      BuildingInstance shrine = findShrineBuilding(village, def);
+      if (shrine != null) {
+         chapter.setShrineBuildingId(shrine.getId());
+         chapter.setStage(Chapter.Stage.SHRINE_READY);
+      }
+      if (!data.putChapter(chapter)) {
+         return false;
+      }
+      village.setChapterId(chapter.id());
+      if (MillenaireServerConfig.SERVER.npcOrderConversionEnabled.getAsBoolean()) {
+         VillagerRecord leader = pickClergyLeader(village, def);
+         if (leader != null) {
+            joinChapter(data, village, leader, OrderRole.LEADER, 40, level.getGameTime());
+         }
+      }
+      village.markDirty();
+      data.setDirty();
+      LOGGER.info("[Religion] Seeded Orde chapter {} for player city {}", chapter.id(), village.getVillageName());
+      return true;
+   }
+
+   @Nullable
+   private static VillagerRecord pickClergyLeader(Village village, OrderDefinition def) {
+      VillagerRecord best = null;
+      int bestScore = -1;
+      for (VillagerRecord record : village.getVillagerRecords().values()) {
+         if (record.isKilled()) {
+            continue;
+         }
+         int score = 0;
+         ResourceLocation typeId = record.getVillagerTypeId();
+         if (typeId != null) {
+            VillagerType type = ModCultures.getVillagerType(typeId);
+            if (type != null) {
+               for (String tag : def.clergyPreferenceTags()) {
+                  if (type.tags().contains(tag)) {
+                     score += 20;
+                  }
+               }
+            }
+         }
+         if (score > bestScore) {
+            bestScore = score;
+            best = record;
+         }
+      }
+      return best != null ? best : village.getVillagerRecords().values().stream()
+         .filter(r -> !r.isKilled())
+         .findFirst()
+         .orElse(null);
+   }
+
    public static boolean applyResult(ServerLevel level, ReligionSavedData data, ReligionPlanResult result) {
       if (result.worldSessionId() != data.worldSessionId()) {
          return false;
