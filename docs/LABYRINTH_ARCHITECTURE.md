@@ -13,7 +13,7 @@ Custom Millénaire dimension `millenaire:labyrinth` with a deterministic cellula
 | `org.millenaire.labyrinth` | Keys, bootstrap, death/progress handlers, atmosphere enum |
 | `...gen` | Maze + chunk generator + room stamps + shifter |
 | `...portal` | Configuratie (+ vorm), Scharnier, teleporter |
-| `...puzzle` | Rotary, gates, echo loop, relic caches, puzzle SavedData |
+| `...puzzle` | Rotary, gates, echo loop, relic caches, puzzle SavedData, chunk-load restore |
 | `...chase` | Rammelaar corridor chase |
 | `...combat` | Configuratie KETTING pulse |
 | `...entity` | GebondeneEntity / Kind / Attitude / Orde SavedData / Architect |

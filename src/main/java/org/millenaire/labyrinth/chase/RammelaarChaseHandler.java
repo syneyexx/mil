@@ -129,7 +129,7 @@ public final class RammelaarChaseHandler {
    /**
     * Deterministic safe exit wall for this cell — player can learn it after failed chases.
     */
-   static int safeWallFlag(long seed, int cellX, int cellZ) {
+   public static int safeWallFlag(long seed, int cellX, int cellZ) {
       int hash = Long.hashCode(seed ^ (((long) cellX) * 341873128712L) ^ (((long) cellZ) * 132897987541L));
       return switch (Math.floorMod(hash, 4)) {
          case 0 -> LabyrinthMaze.WALL_N;

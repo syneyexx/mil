@@ -5320,5 +5320,9 @@
   "labyrinth.puzzle.gate.opened": "The %s gate unseals.",
   "labyrinth.puzzle.loop.enter": "The room repeats. Something wants you to turn back.",
   "labyrinth.puzzle.loop.hint": "Forward deepens the echo. Retreat ends it.",
-  "labyrinth.puzzle.loop.escape": "The loop breaks. Stone remembers a different door."
+  "labyrinth.puzzle.loop.escape": "The loop breaks. Stone remembers a different door.",
+  "labyrinth.interact.gids_chase": "The Guide cups the lantern. Escape leans %s — if the Orde hunts.",
+  "labyrinth.interact.spiegelgast_ok": "Glass folds. You stand closer to the Core than stone allows.",
+  "labyrinth.interact.echo_ok": "The Echo whispers: rooms that repeat break when you reverse.",
+  "labyrinth.interact.tweeling_ok": "Places trade. For a breath, you are not where you were."
 }

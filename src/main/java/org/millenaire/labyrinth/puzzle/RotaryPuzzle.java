@@ -64,6 +64,15 @@ public final class RotaryPuzzle {
       return vorm == ConfiguratieVorm.WIEL;
    }
 
+   /** Re-apply a saved rotation after chunk load. */
+   public static void applySavedRotation(ServerLevel level, int cellX, int cellZ, int rotation) {
+      int cellMinX = cellX * LabyrinthKeys.CELL_SIZE;
+      int cellMinZ = cellZ * LabyrinthKeys.CELL_SIZE;
+      int centerX = cellMinX + LabyrinthKeys.CELL_SIZE / 2;
+      int centerZ = cellMinZ + LabyrinthKeys.CELL_SIZE / 2;
+      applyWalkways(level, cellMinX, cellMinZ, centerX, centerZ, rotation);
+   }
+
    private static void applyWalkways(ServerLevel level, int minX, int minZ, int centerX, int centerZ, int rotation) {
       int maxX = minX + LabyrinthKeys.CELL_SIZE - 1;
       int maxZ = minZ + LabyrinthKeys.CELL_SIZE - 1;

@@ -5214,5 +5214,9 @@
   "labyrinth.puzzle.gate.opened": "De %s-poort ontgrendelt.",
   "labyrinth.puzzle.loop.enter": "De kamer herhaalt zich. Iets wil dat je omkeert.",
   "labyrinth.puzzle.loop.hint": "Vooruit verdiept de echo. Achteruit beëindigt hem.",
-  "labyrinth.puzzle.loop.escape": "De lus breekt. Steen herinnert een andere deur."
+  "labyrinth.puzzle.loop.escape": "De lus breekt. Steen herinnert een andere deur.",
+  "labyrinth.interact.gids_chase": "De Gids holt de lantaarn. Ontsnapping helt %s — als de Orde jaagt.",
+  "labyrinth.interact.spiegelgast_ok": "Glas vouwt. Je staat dichter bij de Kern dan steen toelaat.",
+  "labyrinth.interact.echo_ok": "De Echo fluistert: kamers die herhalen breken als je omkeert.",
+  "labyrinth.interact.tweeling_ok": "Plekken ruilen. Een adem lang ben je niet waar je was."
 }

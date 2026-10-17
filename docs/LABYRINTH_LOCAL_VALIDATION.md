@@ -32,6 +32,13 @@ Owner runs these locally (agents do not claim GameTest/CI success).
 15. Die with `arrivalRespawn=true` → Arrival.
 16. Quest path: fallenking_11 → fallenking_12 (Architect fallen tag).
 
+## Smoke — Wave 6 (persistence / frenemy polish)
+
+17. Open a rotary to E/W and a gate; leave the area until chunks unload; return — walkways/gates still open.
+18. At GATE: talk to Gids → chase-safe direction hint.
+19. Spiegelgast right-click → teleport ~1 hub toward Core; Echo → loop tip; Tweeling → place-swap + invis.
+20. Schatter will buy a relic for deniers (tempting bad bargain).
+
 ## Admin helpers
 
 - `/millenaire labyrinth enter|leave|status`

@@ -76,22 +76,32 @@ public final class GatePuzzle {
       int centerX = cellMinX + LabyrinthKeys.CELL_SIZE / 2;
       int maxZ = cellMinZ + LabyrinthKeys.CELL_SIZE - 1;
       int gateX = centerX + slot.xOffset;
-      int gateZ = maxZ - 1;
 
+      applyOpenedGate(level, cell[0], cell[1], slot);
+
+      consumeRelic(player, slot);
+      data.openGate(cell[0], cell[1], slot);
+      BlockPos fx = new BlockPos(gateX, LabyrinthKeys.FLOOR_Y + 2, maxZ - 1);
+      level.playSound(null, fx, SoundEvents.IRON_DOOR_OPEN, SoundSource.BLOCKS, 1.0F, 0.6F);
+      level.sendParticles(ParticleTypes.END_ROD, fx.getX() + 0.5, fx.getY(), fx.getZ() + 0.5, 20, 0.3, 0.8, 0.3, 0.02);
+      player.displayClientMessage(Component.translatable("labyrinth.puzzle.gate.opened", relicName(slot)), true);
+      return true;
+   }
+
+   /** Clear bars for an already-opened gate (also used on chunk restore). */
+   public static void applyOpenedGate(ServerLevel level, int cellX, int cellZ, GateSlot slot) {
+      int cellMinX = cellX * LabyrinthKeys.CELL_SIZE;
+      int cellMinZ = cellZ * LabyrinthKeys.CELL_SIZE;
+      int centerX = cellMinX + LabyrinthKeys.CELL_SIZE / 2;
+      int maxZ = cellMinZ + LabyrinthKeys.CELL_SIZE - 1;
+      int gateX = centerX + slot.xOffset;
+      int gateZ = maxZ - 1;
       for (int y = LabyrinthKeys.FLOOR_Y + 1; y <= LabyrinthKeys.FLOOR_Y + 3; y++) {
          BlockPos pos = new BlockPos(gateX, y, gateZ);
          if (level.isLoaded(pos)) {
             level.setBlock(pos, AIR, 3);
          }
       }
-
-      consumeRelic(player, slot);
-      data.openGate(cell[0], cell[1], slot);
-      BlockPos fx = new BlockPos(gateX, LabyrinthKeys.FLOOR_Y + 2, gateZ);
-      level.playSound(null, fx, SoundEvents.IRON_DOOR_OPEN, SoundSource.BLOCKS, 1.0F, 0.6F);
-      level.sendParticles(ParticleTypes.END_ROD, fx.getX() + 0.5, fx.getY(), fx.getZ() + 0.5, 20, 0.3, 0.8, 0.3, 0.02);
-      player.displayClientMessage(Component.translatable("labyrinth.puzzle.gate.opened", relicName(slot)), true);
-      return true;
    }
 
    private static GateSlot slotForVorm(ConfiguratieVorm vorm) {
