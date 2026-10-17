@@ -7,6 +7,40 @@
 
 **Huidige code-hook:** `LabyrinthMaterials` mapt vandaag naar vanilla stand-ins (`POLISHED_BLACKSTONE`, spruce planks, …). Deze catalogus zijn de **swap-targets** voor P5.2 / Orde-faith build-out.
 
+**Concept-art:** `docs/images/orde-blocks/` (gegenereerde voorbeelden — geen finale textures).
+
+---
+
+## Visual examples (concept)
+
+### Structure blocks (Tier A)
+
+![Orde structure blocks: stone, panel, tile, bleed planks](images/orde-blocks/orde-block-structure.jpg)
+
+### Metal & spikes (Tier B–C)
+
+![Orde bars, grate, spike floor/wall, hook block](images/orde-blocks/orde-block-metal-spikes.jpg)
+
+### Bound / leather (Tier D)
+
+![Bound leather, nail studded, strap block, silk veil](images/orde-blocks/orde-block-bound-leather.jpg)
+
+### Kit — Arrival vestibule
+
+![Arrival vestibule with Scharnier glow, bars, hooks](images/orde-blocks/orde-kit-arrival.jpg)
+
+### Kit — Spike corridor
+
+![Narrow Orde spike corridor with grate and cold lanterns](images/orde-blocks/orde-kit-spike-corridor.jpg)
+
+### Kit — Domestic bleed bedroom
+
+![Bedroom with wallpaper and Orde bars bleeding through the wall](images/orde-blocks/orde-kit-bleed-bedroom.jpg)
+
+### Kit — City shrine
+
+![Orde altar shrine with candlestands and offering bowl](images/orde-blocks/orde-kit-shrine.jpg)
+
 ---
 
 ## 0. Visuele wetten (waarom dit setje)
