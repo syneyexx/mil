@@ -1,6 +1,6 @@
 # Het Labyrint — Release-ready Psyche Plan (v2, nagekeken)
 
-**Status:** owner-GO ontvangen (“Maak maar”). Implementatie P1→P5 in uitvoering.  
+**Status:** owner-GO ontvangen (“Maak maar”). **P1–P5 geïmplementeerd** op `cursor/labyrinth-psyche-release-d8bb` — owner smoke §2 nog nodig vóór “release-ready” claim.  
 **Versie:** 2 — plan herzien na zelf-audit (“is dit wat ik wil shippen op release-dag?”).
 
 **Doel van deze werkronde:** na afronding is Het Labyrint **game-release-ready** als Millénaire-feature: Revival-**psyche** (liminaal, wrong, awe), speelbaar end-to-end, stabiel, gedocumenteerd — **zonder Hellraiser-IP**, **zonder Configuratie-theater**.

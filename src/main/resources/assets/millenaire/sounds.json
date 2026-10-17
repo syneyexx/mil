@@ -1,0 +1,41 @@
+{
+  "labyrinth.drone": {
+    "subtitle": "subtitles.millenaire.labyrinth.drone",
+    "sounds": [
+      { "name": "minecraft:ambient/cave/cave1", "volume": 0.35, "pitch": 0.55 },
+      { "name": "minecraft:ambient/cave/cave2", "volume": 0.35, "pitch": 0.5 },
+      { "name": "minecraft:ambient/cave/cave3", "volume": 0.3, "pitch": 0.6 }
+    ]
+  },
+  "labyrinth.metal": {
+    "subtitle": "subtitles.millenaire.labyrinth.metal",
+    "sounds": [
+      { "name": "minecraft:block/chain/fall1", "volume": 0.4, "pitch": 0.7 },
+      { "name": "minecraft:block/chain/fall2", "volume": 0.4, "pitch": 0.65 },
+      { "name": "minecraft:block/iron_trapdoor/close", "volume": 0.25, "pitch": 0.5 }
+    ]
+  },
+  "labyrinth.whisper": {
+    "subtitle": "subtitles.millenaire.labyrinth.whisper",
+    "sounds": [
+      { "name": "minecraft:entity/warden/heartbeat", "volume": 0.2, "pitch": 1.4 },
+      { "name": "minecraft:block/note_block/hat", "volume": 0.15, "pitch": 0.4 },
+      { "name": "minecraft:ambient/cave/cave7", "volume": 0.25, "pitch": 0.8 }
+    ]
+  },
+  "labyrinth.chase_stinger": {
+    "subtitle": "subtitles.millenaire.labyrinth.chase",
+    "sounds": [
+      { "name": "minecraft:entity/enderman/teleport", "volume": 0.55, "pitch": 0.55 },
+      { "name": "minecraft:entity/warden/sonic_boom", "volume": 0.15, "pitch": 1.8 }
+    ]
+  },
+  "labyrinth.ruit_drone": {
+    "subtitle": "subtitles.millenaire.labyrinth.ruit",
+    "sounds": [
+      { "name": "minecraft:block/beacon/ambient", "volume": 0.35, "pitch": 0.55 },
+      { "name": "minecraft:entity/warden/heartbeat", "volume": 0.25, "pitch": 0.45 },
+      { "name": "minecraft:block/amethyst/chime", "volume": 0.2, "pitch": 0.4 }
+    ]
+  }
+}

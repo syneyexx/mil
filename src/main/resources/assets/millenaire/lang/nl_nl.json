@@ -5229,5 +5229,15 @@
   "labyrinth.liminal.whisper": "Ergens sluit een deur die er niet hoort.",
   "labyrinth.audience.first": "Je wordt gezien. De Ruit draait — geen gezicht, een maat.",
   "labyrinth.audience.first_sub": "Audiëntie verleend. De Orde schrijft je naam in geometrie.",
-  "labyrinth.audience.return": "De Ruit hangt er nog. Het kent je al."
+  "labyrinth.audience.return": "De Ruit hangt er nog. Het kent je al.",
+  "labyrinth.command.resetdim": "Labyrint-doelcache gewist (layout v%s). Volledig hergenereren: stop de server, verwijder de millenaire/labyrinth dimensiemap, herstart. Bestaande v1-chunks herschrijven niet automatisch.",
+  "labyrinth.puzzle.loop.hint_strong.echo": "De Archivaris zou zeggen: draai om. Loop terug door de huilende drempel — kijk de kant op waar je binnenkwam.",
+  "labyrinth.puzzle.loop.hint_strong.mirror": "De Gids fluistert: kijk naar het westen. Alleen de huilende vloer is een eerlijke deur.",
+  "labyrinth.liminal.enter.mirror": "De studeerkamer vouwt de verkeerde kant op. Oost is een leugen.",
+  "subtitles.millenaire.labyrinth.drone": "Labyrint-drone",
+  "subtitles.millenaire.labyrinth.metal": "Labyrint-metaal",
+  "subtitles.millenaire.labyrinth.whisper": "Labyrint-fluistering",
+  "subtitles.millenaire.labyrinth.chase": "Rammelaar-stinger",
+  "subtitles.millenaire.labyrinth.ruit": "De Ruit aanwezigheid",
+  "labyrinth.audience.approach": "De Nadering valt stil. Iets geometrisch wacht vooruit."
 }

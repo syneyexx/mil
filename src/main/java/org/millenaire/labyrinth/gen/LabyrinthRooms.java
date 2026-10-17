@@ -77,6 +77,7 @@ public final class LabyrinthRooms {
          case NICHE -> stampNiche(chunk, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ, random);
          case ROTARY -> stampRotary(chunk, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ, worldSeed);
          case ECHO_LOOP -> stampEchoLoop(chunk, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ);
+         case MIRROR_LOOP -> stampMirrorLoop(chunk, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ);
          case LIMINAL_BEDROOM, LIMINAL_KITCHEN, LIMINAL_STUDY, LIMINAL_PARLOR, LIMINAL_NURSERY -> {
             if (liminalEnabled()) {
                LabyrinthLiminalRooms.stamp(chunk, type, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ, random);
@@ -471,6 +472,36 @@ public final class LabyrinthRooms {
       set(chunk, centerX, LabyrinthKeys.FLOOR_Y - 1, minZ + 1, CRYING);
       // Crooked clock stand-in: note block on the parlor table.
       set(chunk, centerX, LabyrinthKeys.FLOOR_Y + 2, centerZ, Blocks.NOTE_BLOCK.defaultBlockState());
+   }
+
+   /**
+    * Second soft-loop layout (east↔west). Escape by facing west through the crying threshold.
+    */
+   private static void stampMirrorLoop(
+      ChunkAccess chunk,
+      int minX,
+      int minZ,
+      int maxX,
+      int maxZ,
+      int centerX,
+      int centerZ
+   ) {
+      LabyrinthLiminalRooms.stamp(
+         chunk,
+         LabyrinthMaze.RoomType.LIMINAL_STUDY,
+         minX,
+         minZ,
+         maxX,
+         maxZ,
+         centerX,
+         centerZ,
+         net.minecraft.util.RandomSource.create(centerX * 17L + centerZ * 13L)
+      );
+      // East = forward trap; west = escape (crying underfloor).
+      set(chunk, maxX - 1, LabyrinthKeys.FLOOR_Y - 1, centerZ, GOLD);
+      set(chunk, minX + 1, LabyrinthKeys.FLOOR_Y - 1, centerZ, CRYING);
+      set(chunk, centerX, LabyrinthKeys.FLOOR_Y + 2, centerZ, Blocks.NOTE_BLOCK.defaultBlockState());
+      set(chunk, centerX, LabyrinthKeys.CEILING_Y - 1, centerZ, CHAIN);
    }
 
    private static void stampNiche(

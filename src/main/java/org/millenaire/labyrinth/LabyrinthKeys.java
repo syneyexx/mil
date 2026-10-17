@@ -259,7 +259,7 @@ public final class LabyrinthKeys {
       return switch (roomTypeName) {
          case "ARRIVAL", "AUDIENCE" -> Footprint.NAVE;
          case "CORE", "HOST_HALL", "FORGE", "ARCHIVE", "CHAPEL", "GATE", "ROTARY", "ATRIUM" -> Footprint.ROOM;
-         case "ECHO_LOOP", "LIMINAL_BEDROOM", "LIMINAL_KITCHEN", "LIMINAL_STUDY",
+         case "ECHO_LOOP", "MIRROR_LOOP", "LIMINAL_BEDROOM", "LIMINAL_KITCHEN", "LIMINAL_STUDY",
               "LIMINAL_PARLOR", "LIMINAL_NURSERY" -> Footprint.SUITE;
          default -> Footprint.CORRIDOR;
       };

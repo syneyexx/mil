@@ -35,7 +35,8 @@ public final class LabyrinthProgressHandler {
       PlayerQuestData questData = PlayerQuestData.get(overworld, QuestRegistry::get);
 
       for (ServerPlayer player : labyrinth.players()) {
-         if (player.blockPosition().distSqr(core) > 12.0 * 12.0) {
+         // Core is 2×2 cells (~16 blocks); keep a generous quest trigger radius.
+         if (player.blockPosition().distSqr(core) > 18.0 * 18.0) {
             continue;
          }
          if (questData.getPlayerTags(player.getUUID()).contains(CORE_TAG)) {

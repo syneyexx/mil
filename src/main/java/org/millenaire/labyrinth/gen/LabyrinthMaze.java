@@ -33,8 +33,10 @@ public final class LabyrinthMaze {
       NICHE,
       /** Spike-pit walkway chamber — Configuratie WIEL rotates bridges. */
       ROTARY,
-      /** Looping chamber — walk backward to escape. */
+      /** Looping chamber — walk backward (south) to escape. */
       ECHO_LOOP,
+      /** Second loop layout — walk backward (west) to escape. */
+      MIRROR_LOOP,
       /** Reality-bleed furnished rooms (mind-fuck domestic interiors). */
       LIMINAL_BEDROOM,
       LIMINAL_KITCHEN,
@@ -54,11 +56,16 @@ public final class LabyrinthMaze {
 
    public static boolean isLiminal(RoomType type) {
       return type == RoomType.ECHO_LOOP
+         || type == RoomType.MIRROR_LOOP
          || type == RoomType.LIMINAL_BEDROOM
          || type == RoomType.LIMINAL_KITCHEN
          || type == RoomType.LIMINAL_STUDY
          || type == RoomType.LIMINAL_PARLOR
          || type == RoomType.LIMINAL_NURSERY;
+   }
+
+   public static boolean isLoopRoom(RoomType type) {
+      return type == RoomType.ECHO_LOOP || type == RoomType.MIRROR_LOOP;
    }
 
    public static boolean isStampAnchor(RoomType type) {
@@ -340,7 +347,9 @@ public final class LabyrinthMaze {
                   case 3 -> RoomType.CHAPEL;
                   case 4 -> RoomType.GATE;
                   case 5 -> RoomType.ROTARY;
-                  default -> RoomType.ECHO_LOOP;
+                  default -> (Math.floorMod(globalX + globalZ, 2) == 0)
+                     ? RoomType.ECHO_LOOP
+                     : RoomType.MIRROR_LOOP;
                };
                int span = isLiminal(hub) ? LabyrinthKeys.SUITE_SPAN : LabyrinthKeys.ROOM_SPAN;
                if (!claimLocal(localX, localZ, span, hub)) {

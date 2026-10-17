@@ -124,7 +124,11 @@ Server config lives in the NeoForge Millénaire server config (keys under `gener
 
 ## Labyrinth (Het Labyrint)
 
-Optional ceremonial maze dimension (`millenaire:labyrinth`): cold liminal atmosphere, multi-band maze, furnished **reality-bleed** rooms (bedroom/kitchen/study/parlor/nursery), **Configuratie** forms, rotary & relic-gate puzzles, echo loops, Rammelaar chase, 25 hospitable **Gebondenen**, Architect at the Core, Fallen King sequels `fallenking_11` / `fallenking_12`. Server config under `[labyrinth]` (`atmosphere=COLD`, `liminalRoomsEnabled`). See `docs/LABYRINTH_ARCHITECTURE.md`, `docs/LABYRINTH_REVIVAL_WAVES.md`, and `docs/LABYRINTH_LOCAL_VALIDATION.md`.
+Optional ceremonial maze dimension (`millenaire:labyrinth`): **layout v2** multi-cell psyche (Arrival nave, suites, De Ruit Audience), cold liminal atmosphere, furnished **reality-bleed** rooms, **Configuratie** forms, rotary & relic-gate puzzles, echo/mirror loops, Rammelaar chase 2.0, 25 hospitable **Gebondenen**, Architect at the Core, Fallen King sequels `fallenking_11` / `fallenking_12`.
+
+> **Migration (layout v2):** after updating, **delete/regenerate** the `millenaire:labyrinth` dimension folder (or wipe the world dim data) so multi-cell footprints and Arrival 2.0 generate. Existing labyrinth chunks from layout v1 will not auto-rewrite. `/millenaire labyrinth status` reports `v2`. See `docs/LABYRINTH_REVIVAL_RELEASE_PLAN.md`, `docs/LABYRINTH_ARCHITECTURE.md`, `docs/LABYRINTH_AUDIO_SLOTS.md`, and `docs/LABYRINTH_LOCAL_VALIDATION.md`.
+
+Server config under `[labyrinth]` (`atmosphere=COLD`, `liminalRoomsEnabled`, `layoutVersion=2`).
 
 ## Documentation
 

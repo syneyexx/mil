@@ -29,7 +29,12 @@ Owner runs these locally (agents do not claim GameTest/CI success).
 ## Smoke — Wave 4–5 (vault / combat / quest)
 
 14. Architect at Core (~448,~448): phases, summons, ring shifts; KETTING vorm pulses hunters.
-15. Die with `arrivalRespawn=true` → Arrival.
+15. Die with `arrivalRespawn=true` → Arrival nave spawn (not 2.5,2.5).
+16. **Layout v2 zones:** fly Arrival → Bleed → Orde → Approach → Core/Audience; F3 `zone=` changes.
+17. **Audio:** headphones in Bleed ≤10s — drone/whisper/metal; near Audience — Ruit drone.
+18. **Loops:** enter ECHO_LOOP and MIRROR_LOOP; escape after ≥1 fail; hint at 3–4 loops.
+19. **Chase 2.0:** no blink in Arrival; telegraph particles before Rammelaar; safe wall learnable.
+20. `/millenaire labyrinth resetdim` prints migration wipe instructions; `status` shows `v2`.
 16. Quest path: fallenking_11 → fallenking_12 (Architect fallen tag).
 
 ## Smoke — Wave 6 (persistence / frenemy polish)

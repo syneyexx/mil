@@ -50,7 +50,8 @@ public final class AudienceChamberHandler {
       PlayerQuestData questData = PlayerQuestData.get(overworld, QuestRegistry::get);
 
       for (ServerPlayer player : labyrinth.players()) {
-         if (player.blockPosition().distSqr(heart) > 10.0 * 10.0) {
+         // 3×3 nave — greet anywhere near De Ruit heart.
+         if (player.blockPosition().distSqr(heart) > 16.0 * 16.0) {
             SESSION_GREETED.remove(player.getUUID());
             continue;
          }

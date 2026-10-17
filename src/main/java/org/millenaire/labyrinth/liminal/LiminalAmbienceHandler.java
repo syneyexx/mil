@@ -53,10 +53,16 @@ public final class LiminalAmbienceHandler {
       int regionX = LabyrinthMaze.regionCoordFromGlobalCell(cell[0]);
       int regionZ = LabyrinthMaze.regionCoordFromGlobalCell(cell[1]);
       LabyrinthMaze maze = LabyrinthMaze.forRegion(level.getSeed(), regionX, regionZ);
-      LabyrinthMaze.RoomType type = maze.getRoomTypeGlobal(cell[0], cell[1]);
+      int localX = LabyrinthMaze.localCellFromGlobal(cell[0]);
+      int localZ = LabyrinthMaze.localCellFromGlobal(cell[1]);
+      LabyrinthMaze.RoomType type = maze.getResolvedRoomType(localX, localZ);
 
       LabyrinthMaze.RoomType previous = LAST_ROOM.put(player.getUUID(), type);
       if (!LabyrinthMaze.isLiminal(type)) {
+         // Subtle cold cue when leaving a domestic suite (warm→cold, no UI theater).
+         if (previous != null && LabyrinthMaze.isLiminal(previous)) {
+            level.playSound(null, feet, SoundEvents.AMBIENT_CAVE.value(), SoundSource.AMBIENT, 0.2F, 0.45F);
+         }
          return;
       }
 
@@ -69,6 +75,7 @@ public final class LiminalAmbienceHandler {
             case LIMINAL_PARLOR -> "labyrinth.liminal.enter.parlor";
             case LIMINAL_NURSERY -> "labyrinth.liminal.enter.nursery";
             case ECHO_LOOP -> "labyrinth.liminal.enter.echo";
+            case MIRROR_LOOP -> "labyrinth.liminal.enter.mirror";
             default -> "labyrinth.liminal.enter.generic";
          };
          player.displayClientMessage(Component.translatable(key), true);

@@ -84,7 +84,15 @@ public final class LabyrinthSpawnHandler {
          return;
       }
 
-      GebondeneKind kind = AMBIENT_KINDS.get(random.nextInt(AMBIENT_KINDS.size()));
+      int[] cell = LabyrinthMaze.globalCellFromBlock(player.blockPosition().getX(), player.blockPosition().getZ());
+      LabyrinthKeys.Zone zone = LabyrinthKeys.zoneAt(cell[0], cell[1]);
+      // Approach / Audience: silent pew presence (Stille) instead of chatty social kinds.
+      GebondeneKind kind;
+      if (zone == LabyrinthKeys.Zone.APPROACH || zone == LabyrinthKeys.Zone.CORE) {
+         kind = random.nextInt(3) == 0 ? GebondeneKind.STILLE : GebondeneKind.STILTEWACHTER;
+      } else {
+         kind = AMBIENT_KINDS.get(random.nextInt(AMBIENT_KINDS.size()));
+      }
       spawnGebondene(level, spawnPos, kind, GebondeneAttitude.GASTVRIJ);
    }
 
