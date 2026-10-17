@@ -124,7 +124,7 @@ Server config lives in the NeoForge Millénaire server config (keys under `gener
 
 ## Labyrinth (Het Labyrint)
 
-Optional ceremonial maze dimension (`millenaire:labyrinth`): Configuratie entry, Scharnier exit, deterministic blackstone maze, 25 hospitable **Gebondenen** (hostile only after provocation), Architect at the Core, Fallen King sequel quest `fallenking_11_thelabyrinth`. Server config under `[labyrinth]`. See `docs/LABYRINTH_ARCHITECTURE.md` and `docs/LABYRINTH_LOCAL_VALIDATION.md`.
+Optional ceremonial maze dimension (`millenaire:labyrinth`): cold liminal atmosphere, multi-band maze (vault / primary / mezzanine), **Configuratie** forms (hinge, wheel, keys, chain), rotary & relic-gate puzzles, echo loops, Rammelaar chase, 25 hospitable **Gebondenen** (hostile only after provocation), Architect at the Core, Fallen King sequels `fallenking_11` / `fallenking_12`. Server config under `[labyrinth]` (`atmosphere=COLD` default). See `docs/LABYRINTH_ARCHITECTURE.md`, `docs/LABYRINTH_REVIVAL_WAVES.md`, and `docs/LABYRINTH_LOCAL_VALIDATION.md`.
 
 ## Documentation
 

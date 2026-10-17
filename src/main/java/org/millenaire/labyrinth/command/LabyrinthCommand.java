@@ -50,9 +50,35 @@ public final class LabyrinthCommand {
                               .executes(LabyrinthCommand::spawn)
                         )
                   )
+                  .then(
+                     Commands.literal("vorm")
+                        .then(
+                           Commands.argument("vorm", StringArgumentType.word())
+                              .suggests(VORM_SUGGESTIONS)
+                              .executes(LabyrinthCommand::setVorm)
+                        )
+                  )
+                  .then(
+                     Commands.literal("relic")
+                        .then(
+                           Commands.argument("relic", StringArgumentType.word())
+                              .suggests(RELIC_SUGGESTIONS)
+                              .executes(LabyrinthCommand::giveRelic)
+                        )
+                  )
             )
       );
    }
+
+   private static final SuggestionProvider<CommandSourceStack> VORM_SUGGESTIONS = (ctx, builder) -> SharedSuggestionProvider.suggest(
+      Arrays.stream(org.millenaire.labyrinth.portal.ConfiguratieVorm.values()).map(org.millenaire.labyrinth.portal.ConfiguratieVorm::id),
+      builder
+   );
+
+   private static final SuggestionProvider<CommandSourceStack> RELIC_SUGGESTIONS = (ctx, builder) -> SharedSuggestionProvider.suggest(
+      java.util.List.of("zegel", "masker", "koord"),
+      builder
+   );
 
    private static int enter(CommandContext<CommandSourceStack> ctx) {
       CommandSourceStack source = ctx.getSource();
@@ -155,6 +181,54 @@ public final class LabyrinthCommand {
          () -> Component.translatable("command.millenaire.labyrinth.spawned", kind.id()),
          true
       );
+      return 1;
+   }
+
+   private static int setVorm(CommandContext<CommandSourceStack> ctx) {
+      CommandSourceStack source = ctx.getSource();
+      ServerPlayer player = source.getPlayer();
+      if (player == null) {
+         source.sendFailure(Component.translatable("command.millenaire.error.player_required"));
+         return 0;
+      }
+      String vormArg = StringArgumentType.getString(ctx, "vorm");
+      var vorm = org.millenaire.labyrinth.portal.ConfiguratieVorm.byId(vormArg).orElse(null);
+      if (vorm == null) {
+         source.sendFailure(Component.literal("Unknown vorm: " + vormArg));
+         return 0;
+      }
+      var stack = player.getMainHandItem();
+      if (!(stack.getItem() instanceof org.millenaire.labyrinth.portal.ConfiguratieItem)) {
+         source.sendFailure(Component.literal("Hold a Configuratie in your main hand"));
+         return 0;
+      }
+      org.millenaire.labyrinth.portal.ConfiguratieItem.setVorm(stack, vorm);
+      source.sendSuccess(() -> Component.literal("Configuratie vorm → " + vorm.id()), true);
+      return 1;
+   }
+
+   private static int giveRelic(CommandContext<CommandSourceStack> ctx) {
+      CommandSourceStack source = ctx.getSource();
+      ServerPlayer player = source.getPlayer();
+      if (player == null) {
+         source.sendFailure(Component.translatable("command.millenaire.error.player_required"));
+         return 0;
+      }
+      String relic = StringArgumentType.getString(ctx, "relic").toLowerCase(Locale.ROOT);
+      net.minecraft.world.item.ItemStack stack = switch (relic) {
+         case "zegel" -> new net.minecraft.world.item.ItemStack(org.millenaire.item.ModItems.LABYRINTH_ZEGEL.get());
+         case "masker" -> new net.minecraft.world.item.ItemStack(org.millenaire.item.ModItems.LABYRINTH_MASKER.get());
+         case "koord" -> new net.minecraft.world.item.ItemStack(org.millenaire.item.ModItems.LABYRINTH_KOORD.get());
+         default -> null;
+      };
+      if (stack == null) {
+         source.sendFailure(Component.literal("Unknown relic: " + relic));
+         return 0;
+      }
+      if (!player.addItem(stack)) {
+         player.drop(stack, false);
+      }
+      source.sendSuccess(() -> Component.literal("Gave labyrinth relic " + relic), true);
       return 1;
    }
 }

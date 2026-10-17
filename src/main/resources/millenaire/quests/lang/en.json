@@ -759,5 +759,15 @@
   "fallenking_11_thelabyrinth_1_listing": "I must reach the Core of the Labyrinth and return.",
   "fallenking_11_thelabyrinth_1_description": "Have you stood in the Core, $name? The place the Architect measures?",
   "fallenking_11_thelabyrinth_1_description_success": "Then the path exists. The demon can be followed — when you choose the hour.",
-  "fallenking_11_thelabyrinth_1_description_refuse": "The maze waits."
+  "fallenking_11_thelabyrinth_1_description_refuse": "The maze waits.",
+  "fallenking_12_theconfiguration_0_label": "The Wheel and the Gates",
+  "fallenking_12_theconfiguration_0_listing": "The shaman pressed a Seal into my hand and spoke of wheels and gates.",
+  "fallenking_12_theconfiguration_0_description": "The Configuration can become more than a hinge, $name. Yum Kaax showed me a wheel that turns bridges over spikes, and three gates that drink seals, masks, and cords. Take this Seal. Find the others in forge, archive, and chapel. Open the way. Face the Architect. Return when the Core has measured you in blood or mercy.",
+  "fallenking_12_theconfiguration_0_description_success": "Cycle the Configuration with care. Wrong forms open nothing — or worse.",
+  "fallenking_12_theconfiguration_0_description_refuse": "Then the demon keeps the deeper corridors.",
+  "fallenking_12_theconfiguration_1_label": "The Contract Ends",
+  "fallenking_12_theconfiguration_1_listing": "I must defeat the Architect in the Core and report back.",
+  "fallenking_12_theconfiguration_1_description": "Does the Architect still measure the Core, $name?",
+  "fallenking_12_theconfiguration_1_description_success": "Then the Orde knows your name. The broken door is not the end — it is a hinge you have learned to turn. Wear that knowledge lightly.",
+  "fallenking_12_theconfiguration_1_description_refuse": "The Labyrinth waits."
 }

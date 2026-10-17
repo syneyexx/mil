@@ -27,7 +27,11 @@ public final class LabyrinthMaze {
       CHAPEL,
       GATE,
       CORE,
-      NICHE
+      NICHE,
+      /** Spike-pit walkway chamber — Configuratie WIEL rotates bridges. */
+      ROTARY,
+      /** Looping chamber — walk backward to escape. */
+      ECHO_LOOP
    }
 
    private static final ConcurrentHashMap<Long, LabyrinthMaze> CACHE = new ConcurrentHashMap<>();
@@ -220,15 +224,26 @@ public final class LabyrinthMaze {
             if (globalX % spacing == 0 && globalZ % spacing == 0) {
                int hubIndex = Math.floorMod(
                   (globalX / spacing) + (globalZ / spacing) * 3 + this.regionX + this.regionZ * 5,
-                  5
+                  7
                );
                this.roomTypes[localZ][localX] = switch (hubIndex) {
                   case 0 -> RoomType.HOST_HALL;
                   case 1 -> RoomType.FORGE;
                   case 2 -> RoomType.ARCHIVE;
                   case 3 -> RoomType.CHAPEL;
-                  default -> RoomType.GATE;
+                  case 4 -> RoomType.GATE;
+                  case 5 -> RoomType.ROTARY;
+                  default -> RoomType.ECHO_LOOP;
                };
+               continue;
+            }
+
+            // Place a rotary on the approach path toward Core (deterministic waypoints).
+            if (globalX > 0 && globalZ > 0
+               && globalX % (spacing / 2) == 0
+               && globalZ % spacing == spacing / 2
+               && LabyrinthKeys.manhattanFromArrival(globalX, globalZ) >= 8) {
+               this.roomTypes[localZ][localX] = RoomType.ROTARY;
                continue;
             }
 

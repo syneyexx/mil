@@ -57,6 +57,9 @@ public final class ModCreativeTabs {
             output.accept((ItemLike)ModItems.MEMORY_BOOK.get());
             output.accept((ItemLike)ModItems.ECHO_RELIC.get());
             output.accept((ItemLike)ModItems.CONFIGURATIE.get());
+            output.accept((ItemLike)ModItems.LABYRINTH_ZEGEL.get());
+            output.accept((ItemLike)ModItems.LABYRINTH_MASKER.get());
+            output.accept((ItemLike)ModItems.LABYRINTH_KOORD.get());
             output.accept((ItemLike)ModItems.SCHARNIER_ITEM.get());
             output.accept((ItemLike)ModItems.LOCKPICK.get());
             output.accept((ItemLike)ModItems.NORMAN_SWORD.get());
