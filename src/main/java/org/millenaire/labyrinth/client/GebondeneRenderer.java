@@ -17,8 +17,8 @@ import org.millenaire.labyrinth.entity.GebondeneKind;
 
 /**
  * Renders each Gebondene kind with its Blockbench/Native JSON model and texture.
- * {@link GebondeneModel} remains registered on the client for the main humanoid layer;
- * this renderer uses per-kind Native models without removing that path.
+ * Main's {@link GebondeneModel} humanoid layer stays registered in ClientEvents;
+ * humanoid textures are preserved under textures/entity/gebondene/humanoid/.
  */
 @OnlyIn(Dist.CLIENT)
 public class GebondeneRenderer extends MobRenderer<GebondeneEntity, GebondeneNativeModel> {
