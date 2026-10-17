@@ -4,7 +4,7 @@
 
 Custom Millénaire dimension `millenaire:labyrinth` with a deterministic cellular maze, ceremonial **Gebondenen** (25 kinds, hospitable until provoked), entry via **Configuratie**, exit via **Scharnier** / Configuratie.
 
-**Revival-achtige uitbreiding:** Waves 1–5 implemented per [`LABYRINTH_REVIVAL_WAVES.md`](LABYRINTH_REVIVAL_WAVES.md). No Hellraiser IP; own lore (Configuratie forms, Orde relics, Architect).
+**Revival-achtige uitbreiding:** Waves 1–8 on `main` ([`LABYRINTH_REVIVAL_WAVES.md`](LABYRINTH_REVIVAL_WAVES.md)). Honest vibe audit + Waves 9–14: [`LABYRINTH_REVIVAL_MASTERPLAN.md`](LABYRINTH_REVIVAL_MASTERPLAN.md). No Hellraiser IP.
 
 ## Packages
 

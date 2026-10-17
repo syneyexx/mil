@@ -2,7 +2,7 @@
 
 Doel: Het Millénaire-Labyrint dichter bij de *ervaring* van Hellraiser: Revival brengen **zonder Hellraiser-IP**.
 
-Status: **Waves 1–5 geïmplementeerd** op branch `cursor/labyrinth-revival-waves-d8bb` (bovenop baseline Labyrinth PR #18).
+Status: **Waves 1–8 gemerged** op `main`. Eerlijke vibe-audit + volgende campagne: [`LABYRINTH_REVIVAL_MASTERPLAN.md`](LABYRINTH_REVIVAL_MASTERPLAN.md) (Waves 9–14).
 
 ## Ontwerpprincipes (vast)
 
