@@ -46,7 +46,7 @@ Relics spawn once per FORGE / ARCHIVE / CHAPEL hub visit.
 
 ## Room types
 
-ARRIVAL · CORE · HOST_HALL · FORGE · ARCHIVE · CHAPEL · GATE · NICHE · **ROTARY** · **ECHO_LOOP** · **LIMINAL_*** (bedroom / kitchen / study / parlor / nursery)
+ARRIVAL · CORE · **AUDIENCE (De Ruit)** · HOST_HALL · FORGE · ARCHIVE · CHAPEL · GATE · NICHE · **ROTARY** · **ECHO_LOOP** · **LIMINAL_***
 
 ## Attitude AI
 

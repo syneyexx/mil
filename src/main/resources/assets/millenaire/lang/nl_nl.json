@@ -5168,7 +5168,7 @@
   "labyrinth.interact.schatter_refuse": "Waardeloos voor de Orde.",
   "labyrinth.interact.schatter_ok": "Getaxeerd. Je ontvangt %s deniers.",
   "labyrinth.interact.sleutel_ok": "Sleutels rinkelen. Duisternis dunner voor even.",
-  "labyrinth.interact.archivaris_ok": "Register: Kern ver ZO. Wielen draaien bruggen. Zegels in smederijen, maskers in archieven, koorden in kapellen. Echo-kamers breken als je omkeert. De Architect meet de ongewapende eerst.",
+  "labyrinth.interact.archivaris_ok": "Register: Kern ZO, dan noord — de Audiëntie. Daar hangt De Ruit: geometrie die kijkt. Relikwieën in smederij/archief/kapel. Ingerichte kamers zijn aas. Echo-kamers breken als je omkeert. De Architect meet voor De Ruit.",
   "labyrinth.interact.naaister_ok": "Draad bijt. Wonden sluiten.",
   "labyrinth.interact.pelgrim_ok": "De Pelgrim loopt. Volg de gebedskettingen.",
   "labyrinth.interact.blinde_ok": "Luister, kijk niet. Snelheid voor stilte.",
@@ -5226,5 +5226,8 @@
   "labyrinth.liminal.enter.nursery": "Een kinderkamer. De mobiel draait zonder wind.",
   "labyrinth.liminal.enter.echo": "Deze kamer is eerder gebeurd.",
   "labyrinth.liminal.enter.generic": "Thuis, bijna. Niet van jou.",
-  "labyrinth.liminal.whisper": "Ergens sluit een deur die er niet hoort."
+  "labyrinth.liminal.whisper": "Ergens sluit een deur die er niet hoort.",
+  "labyrinth.audience.first": "Je wordt gezien. De Ruit draait — geen gezicht, een maat.",
+  "labyrinth.audience.first_sub": "Audiëntie verleend. De Orde schrijft je naam in geometrie.",
+  "labyrinth.audience.return": "De Ruit hangt er nog. Het kent je al."
 }

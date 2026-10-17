@@ -25,6 +25,7 @@ Status: **Waves 1–5 geïmplementeerd** op branch `cursor/labyrinth-revival-wav
 | 5 | KETTING combat, quest 12, lang/docs/commands | Done |
 | 6 | Puzzle persist on chunk load; Gids chase hint; Spiegelgast/Echo/Tweeling services; relic art | Done |
 | 7 | Liminal furnished rooms (bedroom/kitchen/study/parlor/nursery) + enter whispers | Done |
+| 8 | Audience chamber with De Ruit (Orde geometry-god; no Leviathan IP) | Done |
 
 ## Config defaults (owner-approved)
 

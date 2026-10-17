@@ -69,6 +69,13 @@ public final class LabyrinthKeys {
    public static final int CORE_CELL_X = 56;
    public static final int CORE_CELL_Z = 56;
 
+   /**
+    * Audience chamber — north of Core. Houses De Ruit (Orde geometry-god),
+    * Millénaire analogue of an "audience with god" without Hellraiser IP.
+    */
+   public static final int AUDIENCE_CELL_X = CORE_CELL_X;
+   public static final int AUDIENCE_CELL_Z = CORE_CELL_Z - 1;
+
    /** Place a themed hub every N cells on both axes. */
    public static final int HUB_SPACING = 8;
 

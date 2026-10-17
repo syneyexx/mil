@@ -82,6 +82,7 @@ public final class LabyrinthRooms {
                stampNiche(chunk, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ, random);
             }
          }
+         case AUDIENCE -> LabyrinthAudienceRoom.stamp(chunk, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ);
          default -> {
          }
       }

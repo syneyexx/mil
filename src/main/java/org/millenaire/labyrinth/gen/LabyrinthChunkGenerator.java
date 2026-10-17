@@ -291,7 +291,8 @@ public class LabyrinthChunkGenerator extends ChunkGenerator {
          || type == LabyrinthMaze.RoomType.GATE
          || type == LabyrinthMaze.RoomType.CHAPEL
          || type == LabyrinthMaze.RoomType.ROTARY
-         || type == LabyrinthMaze.RoomType.CORE) {
+         || type == LabyrinthMaze.RoomType.CORE
+         || type == LabyrinthMaze.RoomType.AUDIENCE) {
          // Leave air so stamps / shafts connect bands.
          return AIR;
       }

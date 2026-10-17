@@ -5274,7 +5274,7 @@
   "labyrinth.interact.schatter_refuse": "Worthless to the Orde.",
   "labyrinth.interact.schatter_ok": "Appraised. You receive %s deniers.",
   "labyrinth.interact.sleutel_ok": "Keys chime. Darkness thins for a while.",
-  "labyrinth.interact.archivaris_ok": "Ledger: Core lies far SE. Wheels turn bridges. Seals sleep in forges, masks in archives, cords in chapels. Echo rooms break if you reverse. The Architect measures the unarmed first.",
+  "labyrinth.interact.archivaris_ok": "Ledger: Core SE, then north — the Audience. De Ruit hangs there: geometry that watches. Relics in forge/archive/chapel. Furnished rooms are bait. Echo rooms break if you reverse. The Architect measures for the Ruit.",
   "labyrinth.interact.naaister_ok": "Thread bites. Wounds close.",
   "labyrinth.interact.pelgrim_ok": "The Pilgrim walks. Follow the prayer-chains.",
   "labyrinth.interact.blinde_ok": "Listen, don't look. Speed for silence.",
@@ -5332,5 +5332,8 @@
   "labyrinth.liminal.enter.nursery": "A nursery. The mobile turns without wind.",
   "labyrinth.liminal.enter.echo": "This room has happened before.",
   "labyrinth.liminal.enter.generic": "Home, almost. Not yours.",
-  "labyrinth.liminal.whisper": "A door closes somewhere it shouldn't."
+  "labyrinth.liminal.whisper": "A door closes somewhere it shouldn't.",
+  "labyrinth.audience.first": "You are seen. De Ruit turns — not a face, a measure.",
+  "labyrinth.audience.first_sub": "Audience granted. The Orde writes your name in geometry.",
+  "labyrinth.audience.return": "De Ruit still hangs. It already knows you."
 }

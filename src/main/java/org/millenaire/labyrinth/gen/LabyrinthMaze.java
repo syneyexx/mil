@@ -37,7 +37,12 @@ public final class LabyrinthMaze {
       LIMINAL_KITCHEN,
       LIMINAL_STUDY,
       LIMINAL_PARLOR,
-      LIMINAL_NURSERY
+      LIMINAL_NURSERY,
+      /**
+       * Audience with De Ruit — geometric Orde presence north of Core.
+       * Original lore; not Leviathan / Hellraiser IP.
+       */
+      AUDIENCE
    }
 
    public static boolean isLiminal(RoomType type) {
@@ -232,6 +237,14 @@ public final class LabyrinthMaze {
             }
             if (globalX == LabyrinthKeys.CORE_CELL_X && globalZ == LabyrinthKeys.CORE_CELL_Z) {
                this.roomTypes[localZ][localX] = RoomType.CORE;
+               // Doorway north into the Audience / De Ruit nave.
+               openMutual(localX, localZ, 0, -1, WALL_N, WALL_S);
+               continue;
+            }
+            if (globalX == LabyrinthKeys.AUDIENCE_CELL_X && globalZ == LabyrinthKeys.AUDIENCE_CELL_Z) {
+               this.roomTypes[localZ][localX] = RoomType.AUDIENCE;
+               // Guarantee a doorway into the Core (south wall open).
+               openMutual(localX, localZ, 0, 1, WALL_S, WALL_N);
                continue;
             }
 
@@ -298,6 +311,18 @@ public final class LabyrinthMaze {
       int flags = this.openWalls[z][x];
       int count = Integer.bitCount(flags);
       return count == 1;
+   }
+
+   private void openMutual(int x, int z, int dx, int dz, int fromFlag, int toFlag) {
+      int nx = x + dx;
+      int nz = z + dz;
+      if (!inBounds(x, z)) {
+         return;
+      }
+      this.openWalls[z][x] |= fromFlag;
+      if (inBounds(nx, nz)) {
+         this.openWalls[nz][nx] |= toFlag;
+      }
    }
 
    private static long mixSeed(long worldSeed, int regionX, int regionZ) {

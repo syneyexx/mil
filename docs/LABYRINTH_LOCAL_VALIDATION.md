@@ -47,6 +47,13 @@ Owner runs these locally (agents do not claim GameTest/CI success).
 24. ECHO_LOOP hubs look like furnished parlors; forward still loops, reverse escapes.
 25. Config `liminalRoomsEnabled=false` falls back liminal cells to niches (fresh chunks).
 
+## Smoke — Wave 8 (Audiëntie / De Ruit)
+
+26. Reach Core (~448, ~448), walk **north** one cell into the tall nave.
+27. Floating ice/crying/gold lozenge (**De Ruit**) hangs above the lodestone dais.
+28. First visit: darkness + glow, audience messages, tag `labyrinth_audience_ruit`, Orde reputation bump.
+29. Return visit: quieter acknowledgment. No Leviathan/Hellraiser names.
+
 ## Admin helpers
 
 - `/millenaire labyrinth enter|leave|status`
