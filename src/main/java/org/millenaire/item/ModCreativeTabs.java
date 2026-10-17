@@ -57,6 +57,9 @@ public final class ModCreativeTabs {
             output.accept((ItemLike)ModItems.MEMORY_BOOK.get());
             output.accept((ItemLike)ModItems.ECHO_RELIC.get());
             output.accept((ItemLike)ModItems.CONFIGURATIE.get());
+            output.accept((ItemLike)ModItems.LABYRINTH_ZEGEL.get());
+            output.accept((ItemLike)ModItems.LABYRINTH_MASKER.get());
+            output.accept((ItemLike)ModItems.LABYRINTH_KOORD.get());
             output.accept((ItemLike)ModItems.SCHARNIER_ITEM.get());
             output.accept((ItemLike)ModItems.LOCKPICK.get());
             output.accept((ItemLike)ModItems.NORMAN_SWORD.get());
@@ -331,6 +334,70 @@ public final class ModCreativeTabs {
             output.accept((ItemLike)ModItems.SDA_SPAWN_EGG.get());
             output.accept((ItemLike)ModItems.ZAVA_SPAWN_EGG.get());
             output.accept((ItemLike)ModItems.DISCD_SPAWN_EGG.get());
+         })
+         .build()
+   );
+   public static final DeferredHolder<CreativeModeTab, CreativeModeTab> THE_ORDER_TAB = TABS.register(
+      "the_order",
+      () -> CreativeModeTab.builder()
+         .title(Component.translatable("itemGroup.millenaire.the_order"))
+         .icon(() -> new ItemStack((ItemLike)ModBlocks.ORDE_ALTAR.get()))
+         .displayItems((params, output) -> {
+            output.accept((ItemLike)ModBlocks.ORDE_STONE.get());
+            output.accept((ItemLike)ModBlocks.ORDE_STONE_STAIRS.get());
+            output.accept((ItemLike)ModBlocks.ORDE_STONE_SLAB.get());
+            output.accept((ItemLike)ModBlocks.ORDE_PANEL.get());
+            output.accept((ItemLike)ModBlocks.ORDE_PANEL_STAIRS.get());
+            output.accept((ItemLike)ModBlocks.ORDE_PANEL_SLAB.get());
+            output.accept((ItemLike)ModBlocks.ORDE_TILE.get());
+            output.accept((ItemLike)ModBlocks.ORDE_TILE_SLAB.get());
+            output.accept((ItemLike)ModBlocks.ORDE_BRICKS.get());
+            output.accept((ItemLike)ModBlocks.ORDE_PILLAR.get());
+            output.accept((ItemLike)ModBlocks.ORDE_RUNE.get());
+            output.accept((ItemLike)ModBlocks.ORDE_SIGIL.get());
+            output.accept((ItemLike)ModBlocks.ORDE_SCRIPT.get());
+            output.accept((ItemLike)ModBlocks.RIVETED_STONE.get());
+            output.accept((ItemLike)ModBlocks.CRIMSON_BAND.get());
+            output.accept((ItemLike)ModBlocks.BLEED_PLANKS.get());
+            output.accept((ItemLike)ModBlocks.BLEED_PLANKS_STAIRS.get());
+            output.accept((ItemLike)ModBlocks.BLEED_PLANKS_SLAB.get());
+            output.accept((ItemLike)ModBlocks.BLEED_WALLPAPER.get());
+            output.accept((ItemLike)ModBlocks.BOUND_LEATHER.get());
+            output.accept((ItemLike)ModBlocks.NAIL_STUDDED.get());
+            output.accept((ItemLike)ModBlocks.STRAP_BLOCK.get());
+            output.accept((ItemLike)ModBlocks.SILK_VEIL.get());
+            output.accept((ItemLike)ModBlocks.ORDE_BARS.get());
+            output.accept((ItemLike)ModBlocks.ORDE_GRATE.get());
+            output.accept((ItemLike)ModBlocks.SPIKE_FLOOR.get());
+            output.accept((ItemLike)ModBlocks.SPIKE_WALL.get());
+            output.accept((ItemLike)ModBlocks.HOOK_BLOCK.get());
+            output.accept((ItemLike)ModBlocks.ORDE_ALTAR.get());
+            output.accept((ItemLike)ModBlocks.OFFERING_BOWL.get());
+            output.accept((ItemLike)ModBlocks.ORDE_BRAZIER.get());
+            output.accept((ItemLike)ModBlocks.ORDE_LANTERN.get());
+            output.accept((ItemLike)ModBlocks.VOID_SCONCE.get());
+            output.accept((ItemLike)ModBlocks.COLD_VAULT.get());
+            output.accept((ItemLike)ModBlocks.RUIT_HEART.get());
+            output.accept((ItemLike)ModBlocks.CHEVRON_TILE.get());
+            output.accept((ItemLike)ModBlocks.FLUTED_PILLAR.get());
+            output.accept((ItemLike)ModBlocks.PILLAR_BASE.get());
+            output.accept((ItemLike)ModBlocks.ORDE_COFFER.get());
+            output.accept((ItemLike)ModBlocks.PORTAL_FRAME.get());
+            output.accept((ItemLike)ModBlocks.VOID_GATE.get());
+            output.accept((ItemLike)ModBlocks.HANGING_HOOK.get());
+            output.accept((ItemLike)ModBlocks.ORDE_CENSER.get());
+            output.accept((ItemLike)ModBlocks.ORDE_BARRICADE.get());
+            output.accept((ItemLike)ModBlocks.ORDE_BEDDING.get());
+            output.accept((ItemLike)ModBlocks.ORDE_NIGHTSTAND.get());
+            output.accept((ItemLike)ModBlocks.ORDE_CLOCK.get());
+            output.accept((ItemLike)ModBlocks.CROOKED_PAINTING.get());
+            output.accept((ItemLike)ModBlocks.ORDE_LAMP.get());
+            output.accept((ItemLike)ModBlocks.CEILING_RECESS.get());
+            output.accept((ItemLike)ModBlocks.SCHARNIER.get());
+            output.accept((ItemLike)ModItems.CONFIGURATIE.get());
+            output.accept((ItemLike)ModItems.LABYRINTH_ZEGEL.get());
+            output.accept((ItemLike)ModItems.LABYRINTH_MASKER.get());
+            output.accept((ItemLike)ModItems.LABYRINTH_KOORD.get());
          })
          .build()
    );

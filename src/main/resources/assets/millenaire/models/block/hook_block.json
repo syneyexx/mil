@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "top": "millenaire:block/hook_block_side",
+    "front": "millenaire:block/hook_block",
+    "side": "millenaire:block/hook_block_side"
+  }
+}

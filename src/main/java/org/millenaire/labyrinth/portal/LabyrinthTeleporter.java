@@ -58,9 +58,9 @@ public final class LabyrinthTeleporter {
       CompoundTag root = player.getPersistentData().getCompound(PERSIST_ROOT);
       root.putBoolean(TAG_DIED_INSIDE, false);
       player.getPersistentData().put(PERSIST_ROOT, root);
-      double x = 2.5;
-      double y = LabyrinthKeys.FLOOR_Y + 1.0;
-      double z = 2.5;
+      double x = LabyrinthKeys.arrivalSpawnX();
+      double y = LabyrinthKeys.arrivalSpawnY();
+      double z = LabyrinthKeys.arrivalSpawnZ();
       player.teleportTo(labyrinth, x, y, z, Set.<RelativeMovement>of(), 0.0F, 0.0F);
       playArrivalEffects(player);
       player.displayClientMessage(Component.translatable("labyrinth.teleport.respawn_arrival"), true);
@@ -86,10 +86,10 @@ public final class LabyrinthTeleporter {
       storeReturn(player);
       playDepartureEffects(player);
 
-      // Offset from chamber center so the player does not embed in the Scharnier pedestal.
-      double x = 2.5;
-      double y = LabyrinthKeys.FLOOR_Y + 1.0;
-      double z = 2.5;
+      // South of Scharnier dais in the Arrival 2.0 nave (layout v2).
+      double x = LabyrinthKeys.arrivalSpawnX();
+      double y = LabyrinthKeys.arrivalSpawnY();
+      double z = LabyrinthKeys.arrivalSpawnZ();
       player.teleportTo(labyrinth, x, y, z, Set.<RelativeMovement>of(), 0.0F, 0.0F);
       playArrivalEffects(player);
       player.displayClientMessage(Component.translatable("labyrinth.teleport.enter"), true);

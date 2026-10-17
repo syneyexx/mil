@@ -44,7 +44,67 @@ public final class ModItems {
    public static final DeferredItem<ConfiguratieItem> CONFIGURATIE = ITEMS.registerItem(
       "configuratie", props -> new ConfiguratieItem(props.stacksTo(1))
    );
+   public static final DeferredItem<LabyrinthRelicItem> LABYRINTH_ZEGEL = ITEMS.registerItem(
+      "labyrinth_zegel", props -> new LabyrinthRelicItem(props.stacksTo(1), "item.millenaire.labyrinth_zegel.desc")
+   );
+   public static final DeferredItem<LabyrinthRelicItem> LABYRINTH_MASKER = ITEMS.registerItem(
+      "labyrinth_masker", props -> new LabyrinthRelicItem(props.stacksTo(1), "item.millenaire.labyrinth_masker.desc")
+   );
+   public static final DeferredItem<LabyrinthRelicItem> LABYRINTH_KOORD = ITEMS.registerItem(
+      "labyrinth_koord", props -> new LabyrinthRelicItem(props.stacksTo(1), "item.millenaire.labyrinth_koord.desc")
+   );
    public static final DeferredItem<BlockItem> SCHARNIER_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.SCHARNIER);
+   // The Order creative set
+   public static final DeferredItem<BlockItem> ORDE_STONE_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_STONE);
+   public static final DeferredItem<BlockItem> ORDE_STONE_STAIRS_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_STONE_STAIRS);
+   public static final DeferredItem<BlockItem> ORDE_STONE_SLAB_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_STONE_SLAB);
+   public static final DeferredItem<BlockItem> ORDE_PANEL_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_PANEL);
+   public static final DeferredItem<BlockItem> ORDE_PANEL_STAIRS_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_PANEL_STAIRS);
+   public static final DeferredItem<BlockItem> ORDE_PANEL_SLAB_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_PANEL_SLAB);
+   public static final DeferredItem<BlockItem> ORDE_TILE_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_TILE);
+   public static final DeferredItem<BlockItem> ORDE_TILE_SLAB_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_TILE_SLAB);
+   public static final DeferredItem<BlockItem> BLEED_PLANKS_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.BLEED_PLANKS);
+   public static final DeferredItem<BlockItem> BLEED_PLANKS_STAIRS_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.BLEED_PLANKS_STAIRS);
+   public static final DeferredItem<BlockItem> BLEED_PLANKS_SLAB_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.BLEED_PLANKS_SLAB);
+   public static final DeferredItem<BlockItem> ORDE_BRICKS_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_BRICKS);
+   public static final DeferredItem<BlockItem> ORDE_PILLAR_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_PILLAR);
+   public static final DeferredItem<BlockItem> ORDE_RUNE_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_RUNE);
+   public static final DeferredItem<BlockItem> ORDE_SIGIL_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_SIGIL);
+   public static final DeferredItem<BlockItem> ORDE_SCRIPT_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_SCRIPT);
+   public static final DeferredItem<BlockItem> RIVETED_STONE_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.RIVETED_STONE);
+   public static final DeferredItem<BlockItem> CRIMSON_BAND_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.CRIMSON_BAND);
+   public static final DeferredItem<BlockItem> BOUND_LEATHER_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.BOUND_LEATHER);
+   public static final DeferredItem<BlockItem> NAIL_STUDDED_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.NAIL_STUDDED);
+   public static final DeferredItem<BlockItem> STRAP_BLOCK_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.STRAP_BLOCK);
+   public static final DeferredItem<BlockItem> ORDE_BARS_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_BARS);
+   public static final DeferredItem<BlockItem> SILK_VEIL_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.SILK_VEIL);
+   public static final DeferredItem<BlockItem> ORDE_GRATE_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_GRATE);
+   public static final DeferredItem<BlockItem> SPIKE_FLOOR_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.SPIKE_FLOOR);
+   public static final DeferredItem<BlockItem> SPIKE_WALL_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.SPIKE_WALL);
+   public static final DeferredItem<BlockItem> HOOK_BLOCK_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.HOOK_BLOCK);
+   public static final DeferredItem<BlockItem> ORDE_ALTAR_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_ALTAR);
+   public static final DeferredItem<BlockItem> OFFERING_BOWL_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.OFFERING_BOWL);
+   public static final DeferredItem<BlockItem> ORDE_BRAZIER_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_BRAZIER);
+   public static final DeferredItem<BlockItem> ORDE_LANTERN_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_LANTERN);
+   public static final DeferredItem<BlockItem> VOID_SCONCE_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.VOID_SCONCE);
+   public static final DeferredItem<BlockItem> BLEED_WALLPAPER_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.BLEED_WALLPAPER);
+   public static final DeferredItem<BlockItem> COLD_VAULT_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.COLD_VAULT);
+   public static final DeferredItem<BlockItem> RUIT_HEART_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.RUIT_HEART);
+   public static final DeferredItem<BlockItem> CHEVRON_TILE_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.CHEVRON_TILE);
+   public static final DeferredItem<BlockItem> FLUTED_PILLAR_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.FLUTED_PILLAR);
+   public static final DeferredItem<BlockItem> PILLAR_BASE_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.PILLAR_BASE);
+   public static final DeferredItem<BlockItem> ORDE_COFFER_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_COFFER);
+   public static final DeferredItem<BlockItem> PORTAL_FRAME_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.PORTAL_FRAME);
+   public static final DeferredItem<BlockItem> VOID_GATE_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.VOID_GATE);
+   public static final DeferredItem<BlockItem> HANGING_HOOK_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.HANGING_HOOK);
+   public static final DeferredItem<BlockItem> ORDE_CENSER_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_CENSER);
+   public static final DeferredItem<BlockItem> ORDE_BARRICADE_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_BARRICADE);
+   public static final DeferredItem<BlockItem> ORDE_BEDDING_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_BEDDING);
+   public static final DeferredItem<BlockItem> ORDE_NIGHTSTAND_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_NIGHTSTAND);
+   public static final DeferredItem<BlockItem> ORDE_CLOCK_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_CLOCK);
+   public static final DeferredItem<BlockItem> CROOKED_PAINTING_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.CROOKED_PAINTING);
+   public static final DeferredItem<BlockItem> ORDE_LAMP_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_LAMP);
+   public static final DeferredItem<BlockItem> CEILING_RECESS_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.CEILING_RECESS);
    public static final DeferredItem<CoinItem> DENIER = ITEMS.registerItem("denier", props -> new CoinItem(props.stacksTo(64)));
    public static final DeferredItem<CoinItem> DENIER_ARGENT = ITEMS.registerItem("denier_argent", props -> new CoinItem(props.stacksTo(64)));
    public static final DeferredItem<CoinItem> DENIER_OR = ITEMS.registerItem("denier_or", props -> new CoinItem(props.stacksTo(64)));

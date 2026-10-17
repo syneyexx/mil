@@ -28,14 +28,15 @@ public final class LabyrinthProgressHandler {
       if (labyrinth == null) {
          return;
       }
-      int coreX = LabyrinthKeys.CORE_CELL_X * LabyrinthKeys.CELL_SIZE + LabyrinthKeys.CELL_SIZE / 2;
-      int coreZ = LabyrinthKeys.CORE_CELL_Z * LabyrinthKeys.CELL_SIZE + LabyrinthKeys.CELL_SIZE / 2;
+      int coreX = LabyrinthKeys.coreCenterBlockX();
+      int coreZ = LabyrinthKeys.coreCenterBlockZ();
       BlockPos core = new BlockPos(coreX, LabyrinthKeys.FLOOR_Y + 1, coreZ);
       ServerLevel overworld = event.getServer().overworld();
       PlayerQuestData questData = PlayerQuestData.get(overworld, QuestRegistry::get);
 
       for (ServerPlayer player : labyrinth.players()) {
-         if (player.blockPosition().distSqr(core) > 12.0 * 12.0) {
+         // Core is 2×2 cells (~16 blocks); keep a generous quest trigger radius.
+         if (player.blockPosition().distSqr(core) > 18.0 * 18.0) {
             continue;
          }
          if (questData.getPlayerTags(player.getUUID()).contains(CORE_TAG)) {

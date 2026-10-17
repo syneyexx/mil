@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -23,18 +25,18 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkGeneratorStructureState;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.blending.Blender;
 import net.minecraft.world.level.levelgen.structure.StructureSet;
-import net.minecraft.core.Direction;
+import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.labyrinth.LabyrinthKeys;
 
 /**
- * Maze chunk generator for the Labyrinth dimension.
- * Carves navigable corridors into a deepslate/blackstone shell between FLOOR_Y and CEILING_Y.
+ * Maze chunk generator for the Labyrinth dimension (layout v2).
+ * Primary band (Y64–73) plus optional vault band (Y48–56) beyond vault distance.
+ * Corridors use a 3-wide plus-shaped walk channel; multi-cell chambers stamp from SW anchors.
  */
 public class LabyrinthChunkGenerator extends ChunkGenerator {
    public static final MapCodec<LabyrinthChunkGenerator> CODEC = RecordCodecBuilder.mapCodec(
@@ -51,6 +53,9 @@ public class LabyrinthChunkGenerator extends ChunkGenerator {
    private static final BlockState BARS = Blocks.IRON_BARS.defaultBlockState();
    private static final BlockState CHAIN = Blocks.CHAIN.defaultBlockState().setValue(ChainBlock.AXIS, Direction.Axis.Y);
    private static final BlockState HANGING_LANTERN = Blocks.SOUL_LANTERN.defaultBlockState().setValue(LanternBlock.HANGING, true);
+   private static final BlockState SPIKE = Blocks.POINTED_DRIPSTONE.defaultBlockState();
+   private static final BlockState PACKED_ICE = Blocks.PACKED_ICE.defaultBlockState();
+   private static final BlockState BLUE_ICE = Blocks.BLUE_ICE.defaultBlockState();
 
    private volatile long worldSeed;
 
@@ -83,7 +88,6 @@ public class LabyrinthChunkGenerator extends ChunkGenerator {
       ChunkAccess chunk,
       GenerationStep.Carving step
    ) {
-      // Maze geometry is authored in fillFromNoise; no vanilla carvers.
    }
 
    @Override
@@ -131,45 +135,101 @@ public class LabyrinthChunkGenerator extends ChunkGenerator {
             }
 
             int[] cell = LabyrinthMaze.globalCellFromBlock(worldX, worldZ);
-            long cellKey = (((long)cell[0]) << 32) | (cell[1] & 0xffffffffL);
+            long cellKey = (((long) cell[0]) << 32) | (cell[1] & 0xffffffffL);
             stampedCells.add(cellKey);
          }
       }
 
       RandomSource roomRandom = RandomSource.create(seed ^ chunkPos.toLong());
+      Set<Long> stampedAnchors = new HashSet<>();
       for (long cellKey : stampedCells) {
-         int globalCellX = (int)(cellKey >> 32);
-         int globalCellZ = (int)cellKey;
+         int globalCellX = (int) (cellKey >> 32);
+         int globalCellZ = (int) cellKey;
          int regionX = LabyrinthMaze.regionCoordFromGlobalCell(globalCellX);
          int regionZ = LabyrinthMaze.regionCoordFromGlobalCell(globalCellZ);
          LabyrinthMaze maze = LabyrinthMaze.forRegion(seed, regionX, regionZ);
          int localCellX = LabyrinthMaze.localCellFromGlobal(globalCellX);
          int localCellZ = LabyrinthMaze.localCellFromGlobal(globalCellZ);
-         LabyrinthMaze.RoomType type = maze.getRoomType(localCellX, localCellZ);
-         if (type == LabyrinthMaze.RoomType.NONE) {
+         LabyrinthMaze.RoomType raw = maze.getRoomType(localCellX, localCellZ);
+         if (raw == LabyrinthMaze.RoomType.NONE) {
             continue;
          }
-         int cellMinX = globalCellX * LabyrinthKeys.CELL_SIZE;
-         int cellMinZ = globalCellZ * LabyrinthKeys.CELL_SIZE;
-         LabyrinthRooms.stampRoom(chunk, type, cellMinX, cellMinZ, seed, roomRandom);
+         int anchorLocalX = maze.getAnchorLocalX(localCellX, localCellZ);
+         int anchorLocalZ = maze.getAnchorLocalZ(localCellX, localCellZ);
+         if (anchorLocalX < 0 || anchorLocalZ < 0) {
+            continue;
+         }
+         LabyrinthMaze.RoomType type = maze.getRoomType(anchorLocalX, anchorLocalZ);
+         if (!LabyrinthMaze.isStampAnchor(type)) {
+            continue;
+         }
+         int globalAnchorX = regionX * maze.regionSize() + anchorLocalX;
+         int globalAnchorZ = regionZ * maze.regionSize() + anchorLocalZ;
+         long anchorKey = (((long) globalAnchorX) << 32) | (globalAnchorZ & 0xffffffffL);
+         if (!stampedAnchors.add(anchorKey)) {
+            continue;
+         }
+         int span = maze.getFootprintSpan(anchorLocalX, anchorLocalZ);
+         int cellMinX = globalAnchorX * LabyrinthKeys.CELL_SIZE;
+         int cellMinZ = globalAnchorZ * LabyrinthKeys.CELL_SIZE;
+         LabyrinthRooms.stampRoom(chunk, type, cellMinX, cellMinZ, span, seed, roomRandom);
       }
 
       return CompletableFuture.completedFuture(chunk);
    }
 
-   /**
-    * Picks the block for a world position: solid shell outside the Y band,
-    * maze walls/floor/ceiling inside, with sparse lanterns/bars/chains in corridors.
-    */
    private BlockState chooseBlock(int x, int y, int z, long seed, RandomSource random) {
-      if (y < LabyrinthKeys.FLOOR_Y) {
+      // Fill between bands with solid rock so levels feel sealed.
+      if (y < LabyrinthKeys.VAULT_FLOOR_Y) {
          return DEEPSLATE;
       }
-      if (y > LabyrinthKeys.CEILING_Y) {
+      if (y > LabyrinthKeys.MEZZ_CEILING_Y) {
          return AIR;
       }
-      if (y == LabyrinthKeys.CEILING_Y) {
-         return isCorridorOpenAt(x, z, seed) ? DEEPSLATE : wallMaterial(x, y, z);
+
+      boolean inPrimary = y >= LabyrinthKeys.FLOOR_Y && y <= LabyrinthKeys.CEILING_Y;
+      boolean inVault = y >= LabyrinthKeys.VAULT_FLOOR_Y && y <= LabyrinthKeys.VAULT_CEILING_Y;
+      boolean betweenBands = y > LabyrinthKeys.VAULT_CEILING_Y && y < LabyrinthKeys.FLOOR_Y;
+
+      if (betweenBands) {
+         return shaftOrFill(x, y, z, seed);
+      }
+      if (y > LabyrinthKeys.CEILING_Y && y < LabyrinthKeys.MEZZ_FLOOR_Y) {
+         return shaftOrFill(x, y, z, seed);
+      }
+      // Mezzanine air above primary is filled solid except where room stamps carve later.
+      if (y >= LabyrinthKeys.MEZZ_FLOOR_Y && y <= LabyrinthKeys.MEZZ_CEILING_Y) {
+         return wallMaterial(x, y, z);
+      }
+
+      if (inVault) {
+         return chooseBandBlock(x, y, z, seed, random, LabyrinthKeys.VAULT_FLOOR_Y, LabyrinthKeys.VAULT_CEILING_Y, true);
+      }
+      if (inPrimary) {
+         return chooseBandBlock(x, y, z, seed, random, LabyrinthKeys.FLOOR_Y, LabyrinthKeys.CEILING_Y, false);
+      }
+      return DEEPSLATE;
+   }
+
+   private BlockState chooseBandBlock(
+      int x,
+      int y,
+      int z,
+      long seed,
+      RandomSource random,
+      int floorY,
+      int ceilingY,
+      boolean vaultBand
+   ) {
+      if (vaultBand && !vaultEnabled()) {
+         return DEEPSLATE;
+      }
+      if (vaultBand && !hasVaultAt(x, z)) {
+         return DEEPSLATE;
+      }
+
+      if (y == ceilingY) {
+         return isCorridorOpenAt(x, z, seed) ? (coldPalette() ? PACKED_ICE : DEEPSLATE) : wallMaterial(x, y, z);
       }
 
       boolean corridor = isCorridorOpenAt(x, z, seed);
@@ -177,34 +237,146 @@ public class LabyrinthChunkGenerator extends ChunkGenerator {
          return wallMaterial(x, y, z);
       }
 
-      if (y == LabyrinthKeys.FLOOR_Y) {
+      if (y == floorY) {
+         if (vaultBand) {
+            return coldPalette() && ((x + z) & 7) == 0 ? BLUE_ICE : BLACKSTONE;
+         }
          return BLACKSTONE;
       }
 
-      // Interior air band with sparse accents.
-      if (y == LabyrinthKeys.CEILING_Y - 1) {
-         int hash = Long.hashCode(Mth.getSeed(x, y, z) ^ seed);
-         if ((hash & 63) == 0) {
-            return HANGING_LANTERN;
-         }
-         if ((hash & 63) == 1) {
-            return CHAIN;
-         }
-      }
-      if (y == LabyrinthKeys.FLOOR_Y + 1) {
-         int hash = Long.hashCode(Mth.getSeed(x, 0, z) ^ (seed * 31L));
-         if ((hash & 127) == 0) {
+      // Narrow corridor: non-walk columns stay as bars/spikes (skipped inside chambers).
+      if (!isChamberColumn(x, z, seed) && isMarginColumn(x, z) && !isDoorwayColumn(x, z, seed)) {
+         if (y == floorY + 1) {
+            int hash = Long.hashCode(Mth.getSeed(x, y, z) ^ seed);
+            if ((hash & 3) == 0) {
+               return SPIKE;
+            }
             return BARS;
          }
-         if ((hash & 127) == 1) {
+         if (y < ceilingY) {
+            return BARS;
+         }
+      }
+
+      if (y == ceilingY - 1) {
+         int hash = Long.hashCode(Mth.getSeed(x, y, z) ^ seed);
+         int mask = coldPalette() ? 31 : 63;
+         if ((hash & mask) == 0) {
+            return HANGING_LANTERN;
+         }
+         if ((hash & mask) <= 2) {
             return CHAIN;
+         }
+         if (coldPalette() && (hash & mask) == 3) {
+            return SPIKE;
+         }
+      }
+      if (y == floorY + 1) {
+         int hash = Long.hashCode(Mth.getSeed(x, 0, z) ^ (seed * 31L));
+         int mask = coldPalette() ? 63 : 127;
+         if ((hash & mask) == 0) {
+            return BARS;
+         }
+         if ((hash & mask) == 1) {
+            return CHAIN;
+         }
+         if ((hash & mask) == 2) {
+            return SPIKE;
          }
       }
       return AIR;
    }
 
+   /**
+    * Between floor bands: solid fill unless this column is a vertical shaft cell
+    * (hub rooms stamp actual shafts; generator pre-opens a seed-stable sparse set).
+    */
+   private BlockState shaftOrFill(int x, int y, int z, long seed) {
+      int[] cell = LabyrinthMaze.globalCellFromBlock(x, z);
+      int lx = Math.floorMod(x, LabyrinthKeys.CELL_SIZE);
+      int lz = Math.floorMod(z, LabyrinthKeys.CELL_SIZE);
+      int mid = LabyrinthKeys.CELL_SIZE / 2;
+      boolean centerColumn = lx == mid && lz == mid;
+      if (!centerColumn) {
+         return DEEPSLATE;
+      }
+      int regionX = LabyrinthMaze.regionCoordFromGlobalCell(cell[0]);
+      int regionZ = LabyrinthMaze.regionCoordFromGlobalCell(cell[1]);
+      LabyrinthMaze maze = LabyrinthMaze.forRegion(seed, regionX, regionZ);
+      LabyrinthMaze.RoomType type = maze.getResolvedRoomType(
+         LabyrinthMaze.localCellFromGlobal(cell[0]),
+         LabyrinthMaze.localCellFromGlobal(cell[1])
+      );
+      if (type == LabyrinthMaze.RoomType.HOST_HALL
+         || type == LabyrinthMaze.RoomType.GATE
+         || type == LabyrinthMaze.RoomType.CHAPEL
+         || type == LabyrinthMaze.RoomType.ROTARY
+         || type == LabyrinthMaze.RoomType.CORE
+         || type == LabyrinthMaze.RoomType.AUDIENCE
+         || type == LabyrinthMaze.RoomType.ATRIUM
+         || type == LabyrinthMaze.RoomType.ARRIVAL) {
+         // Leave air so stamps / shafts connect bands.
+         return AIR;
+      }
+      return DEEPSLATE;
+   }
+
+   /**
+    * True for interior columns outside the 3-wide plus-shaped walk channel.
+    * Corners of each cell stay choked; N–S / E–W arms stay open.
+    */
+   private static boolean isMarginColumn(int blockX, int blockZ) {
+      int lx = Math.floorMod(blockX, LabyrinthKeys.CELL_SIZE);
+      int lz = Math.floorMod(blockZ, LabyrinthKeys.CELL_SIZE);
+      int last = LabyrinthKeys.CELL_SIZE - 1;
+      if (lx == 0 || lz == 0 || lx == last || lz == last) {
+         return false;
+      }
+      return !isCorridorWalkColumn(lx, lz);
+   }
+
+   private static boolean isCorridorWalkColumn(int lx, int lz) {
+      int mid = LabyrinthKeys.CELL_SIZE / 2;
+      int half = LabyrinthKeys.CORRIDOR_WALK_HALF;
+      return Math.abs(lx - mid) <= half || Math.abs(lz - mid) <= half;
+   }
+
+   private boolean isChamberColumn(int blockX, int blockZ, long seed) {
+      int[] global = LabyrinthMaze.globalCellFromBlock(blockX, blockZ);
+      int regionX = LabyrinthMaze.regionCoordFromGlobalCell(global[0]);
+      int regionZ = LabyrinthMaze.regionCoordFromGlobalCell(global[1]);
+      LabyrinthMaze maze = LabyrinthMaze.forRegion(seed, regionX, regionZ);
+      int localX = LabyrinthMaze.localCellFromGlobal(global[0]);
+      int localZ = LabyrinthMaze.localCellFromGlobal(global[1]);
+      return maze.isChamberInterior(localX, localZ);
+   }
+
+   private boolean isDoorwayColumn(int blockX, int blockZ, long seed) {
+      int lx = Math.floorMod(blockX, LabyrinthKeys.CELL_SIZE);
+      int lz = Math.floorMod(blockZ, LabyrinthKeys.CELL_SIZE);
+      int last = LabyrinthKeys.CELL_SIZE - 1;
+      int mid = LabyrinthKeys.CELL_SIZE / 2;
+      // Doorways sit on cell edges at mid — keep them fully open.
+      if ((lx == 0 || lx == last) && Math.abs(lz - mid) <= 1) {
+         return isCorridorOpenAt(blockX, blockZ, seed);
+      }
+      if ((lz == 0 || lz == last) && Math.abs(lx - mid) <= 1) {
+         return isCorridorOpenAt(blockX, blockZ, seed);
+      }
+      return false;
+   }
+
    private BlockState wallMaterial(int x, int y, int z) {
-      int mix = Math.floorMod(x * 3 + z * 7 + y * 11, 5);
+      int mix = Math.floorMod(x * 3 + z * 7 + y * 11, 7);
+      if (coldPalette()) {
+         return switch (mix) {
+            case 0, 1 -> DEEPSLATE;
+            case 2, 3 -> BLACKSTONE;
+            case 4 -> POLISHED;
+            case 5 -> PACKED_ICE;
+            default -> DEEPSLATE;
+         };
+      }
       return switch (mix) {
          case 0, 1 -> DEEPSLATE;
          case 2, 3 -> BLACKSTONE;
@@ -212,9 +384,6 @@ public class LabyrinthChunkGenerator extends ChunkGenerator {
       };
    }
 
-   /**
-    * True when this block column is inside a navigable corridor (not a closed wall).
-    */
    boolean isCorridorOpenAt(int blockX, int blockZ, long seed) {
       int[] global = LabyrinthMaze.globalCellFromBlock(blockX, blockZ);
       int globalCellX = global[0];
@@ -234,8 +403,21 @@ public class LabyrinthChunkGenerator extends ChunkGenerator {
       boolean onNorth = lz == 0;
       boolean onSouth = lz == last;
 
+      // Fully open shared walls inside a multi-cell chamber (including former corners).
+      if (onWest && maze.sameChamber(localCellX, localCellZ, localCellX - 1, localCellZ)) {
+         return true;
+      }
+      if (onEast && maze.sameChamber(localCellX, localCellZ, localCellX + 1, localCellZ)) {
+         return true;
+      }
+      if (onNorth && maze.sameChamber(localCellX, localCellZ, localCellX, localCellZ - 1)) {
+         return true;
+      }
+      if (onSouth && maze.sameChamber(localCellX, localCellZ, localCellX, localCellZ + 1)) {
+         return true;
+      }
+
       if (onWest && onNorth || onWest && onSouth || onEast && onNorth || onEast && onSouth) {
-         // Corners stay solid so openings read as doorways.
          return false;
       }
 
@@ -252,8 +434,33 @@ public class LabyrinthChunkGenerator extends ChunkGenerator {
          return maze.isWallOpen(localCellX, localCellZ, LabyrinthMaze.WALL_S);
       }
 
-      // Cell interior is always walkable.
-      return true;
+      // Chamber interiors are fully hollow; corridors keep the plus-shaped channel.
+      if (maze.isChamberInterior(localCellX, localCellZ)) {
+         return true;
+      }
+      return isCorridorWalkColumn(lx, lz);
+   }
+
+   private static boolean hasVaultAt(int blockX, int blockZ) {
+      int[] cell = LabyrinthMaze.globalCellFromBlock(blockX, blockZ);
+      return LabyrinthKeys.manhattanFromArrival(cell[0], cell[1]) >= LabyrinthKeys.VAULT_START_DISTANCE;
+   }
+
+   private static boolean vaultEnabled() {
+      try {
+         return MillenaireServerConfig.SERVER.labyrinthVaultEnabled.getAsBoolean();
+      } catch (IllegalStateException ignored) {
+         return true;
+      }
+   }
+
+   private static boolean coldPalette() {
+      try {
+         return MillenaireServerConfig.SERVER.labyrinthAtmosphere.get()
+            != org.millenaire.labyrinth.LabyrinthAtmosphere.CLASSIC;
+      } catch (IllegalStateException ignored) {
+         return true;
+      }
    }
 
    @Override
@@ -298,8 +505,12 @@ public class LabyrinthChunkGenerator extends ChunkGenerator {
       int localX = LabyrinthMaze.localCellFromGlobal(cell[0]);
       int localZ = LabyrinthMaze.localCellFromGlobal(cell[1]);
       info.add(
-         "Labyrinth cell " + cell[0] + "," + cell[1]
-            + " room=" + maze.getRoomType(localX, localZ)
+         "Labyrinth v" + LabyrinthKeys.LAYOUT_VERSION
+            + " cell " + cell[0] + "," + cell[1]
+            + " room=" + maze.getResolvedRoomType(localX, localZ)
+            + " zone=" + LabyrinthKeys.zoneAt(cell[0], cell[1])
+            + " span=" + maze.getFootprintSpan(localX, localZ)
+            + " band=" + LabyrinthKeys.bandForY(pos.getY())
             + " open=" + maze.isWallOpen(localX, localZ, LabyrinthMaze.WALL_N | LabyrinthMaze.WALL_E | LabyrinthMaze.WALL_S | LabyrinthMaze.WALL_W)
       );
    }

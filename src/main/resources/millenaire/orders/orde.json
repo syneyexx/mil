@@ -1,0 +1,18 @@
+{
+  "id": "millenaire:order_orde",
+  "display_name": "De Orde",
+  "allowed_cultures": [],
+  "min_village_pop": 1,
+  "spawn_chance": 0.0,
+  "secrecy_default": 90,
+  "building_tags": ["sacrifices", "religious", "praying"],
+  "clergy_preference_tags": ["religious"],
+  "rituals": [
+    "millenaire:orde_nachtwake"
+  ],
+  "themes": {
+    "symbol": "configuration",
+    "mood": "bound_hospitality"
+  },
+  "allows_orders": true
+}

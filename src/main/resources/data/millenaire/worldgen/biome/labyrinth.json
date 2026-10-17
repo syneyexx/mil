@@ -1,28 +1,34 @@
 {
-  "temperature": 0.5,
+  "temperature": 0.15,
   "downfall": 0.0,
   "has_precipitation": false,
   "effects": {
-    "sky_color": 1447446,
-    "fog_color": 1973790,
-    "water_color": 3342336,
-    "water_fog_color": 1114129,
+    "sky_color": 790527,
+    "fog_color": 1052688,
+    "water_color": 2170169,
+    "water_fog_color": 658234,
     "mood_sound": {
       "sound": "minecraft:ambient.cave",
-      "tick_delay": 400,
+      "tick_delay": 320,
       "block_search_extent": 8,
       "offset": 2.0
     },
     "additions_sound": {
-      "sound": "minecraft:ambient.nether_wastes.additions",
-      "tick_chance": 0.005
+      "sound": "minecraft:block.chain.fall",
+      "tick_chance": 0.004
     },
-    "ambient_sound": "minecraft:ambient.basalt_deltas.loop",
+    "ambient_sound": "minecraft:ambient.soul_sand_valley.loop",
     "music": {
-      "sound": "minecraft:music.nether.basalt_deltas",
+      "sound": "minecraft:music.nether.soul_sand_valley",
       "min_delay": 12000,
       "max_delay": 24000,
       "replace_current_music": false
+    },
+    "particle": {
+      "options": {
+        "type": "minecraft:white_ash"
+      },
+      "probability": 0.004
     }
   },
   "spawners": {},

@@ -124,7 +124,15 @@ Server config lives in the NeoForge Millénaire server config (keys under `gener
 
 ## Labyrinth (Het Labyrint)
 
-Optional ceremonial maze dimension (`millenaire:labyrinth`): Configuratie entry, Scharnier exit, deterministic blackstone maze, 25 hospitable **Gebondenen** (hostile only after provocation), Architect at the Core, Fallen King sequel quest `fallenking_11_thelabyrinth`. Server config under `[labyrinth]`. See `docs/LABYRINTH_ARCHITECTURE.md` and `docs/LABYRINTH_LOCAL_VALIDATION.md`.
+Optional ceremonial maze dimension (`millenaire:labyrinth`): **layout v2** multi-cell psyche (Arrival nave, suites, De Ruit Audience), cold liminal atmosphere, furnished **reality-bleed** rooms, **Configuratie** forms, rotary & relic-gate puzzles, echo/mirror loops, Rammelaar chase 2.0, 25 hospitable **Gebondenen**, Architect at the Core, Fallen King sequels `fallenking_11` / `fallenking_12`.
+
+> **Migration (layout v2):** after updating, **delete/regenerate** the `millenaire:labyrinth` dimension folder (or wipe the world dim data) so multi-cell footprints and Arrival 2.0 generate. Existing labyrinth chunks from layout v1 will not auto-rewrite. `/millenaire labyrinth status` reports `v2`. See `docs/LABYRINTH_REVIVAL_RELEASE_PLAN.md`, `docs/LABYRINTH_ARCHITECTURE.md`, `docs/LABYRINTH_AUDIO_SLOTS.md`, and `docs/LABYRINTH_LOCAL_VALIDATION.md`.
+
+Server config under `[labyrinth]` (`atmosphere=COLD`, `liminalRoomsEnabled`, `layoutVersion=2`).
+
+### De Orde (overworld faith — planned)
+
+Secret-order overlay that brings Gebondenen liturgy into villages: 2-day ritual cadence, Spijkerliturgie / offerings, Configuratie-triggered abduction attempts (**75% player chase** — escape by running or killing hunters; **25% random NPC**), tick-budgeted so the server stays playable. **Order-first** for NPC villages (not a culture default); **player city founding** offers **Cenobites** as a third religion choice beside own faith / culture faith. See `docs/ORDE_FAITH_RELEASE_PLAN.md`, `docs/ORDE_FAITH_ARCHITECTURE.md`, `docs/ORDE_FAITH_LOCAL_VALIDATION.md`.
 
 ## Documentation
 
@@ -134,6 +142,8 @@ Optional ceremonial maze dimension (`millenaire:labyrinth`): Configuratie entry,
 - `docs/LIVING_VILLAGES_ARCHITECTURE.md` / `LIVING_VILLAGES_IMPLEMENTATION.md`
 - `docs/RELIGION_ARCHITECTURE.md` / `RELIGION_IMPLEMENTATION.md` / `RELIGION_LOCAL_VALIDATION.md`
 - `docs/LABYRINTH_ARCHITECTURE.md` / `LABYRINTH_LOCAL_VALIDATION.md`
+- `docs/ORDE_FAITH_RELEASE_PLAN.md` / `ORDE_FAITH_ARCHITECTURE.md` / `ORDE_FAITH_LOCAL_VALIDATION.md`
+- `docs/ORDE_BLOCK_CATALOG.md` — example Cenobite/Orde block set (design; LabyrinthMaterials swap targets)
 - Local validation docs describe owner-run checks; this agent does not execute them
 
 ## Development

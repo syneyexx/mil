@@ -23,14 +23,14 @@ import org.millenaire.labyrinth.gen.LabyrinthMaze;
 import org.millenaire.labyrinth.portal.LabyrinthTeleporter;
 
 /**
- * Natural Labyrinth population: every {@link GebondeneKind} can appear.
- * Common/social fill corridors; gate/rare/leader are rarer but never excluded.
- * Poortwachter prefers GATE rooms; Architect prefers the Core.
+ * Soft ambient population for the Labyrinth on the main systems.
+ * Every {@link GebondeneKind} can appear (weighted by tier); Poortwachter prefers GATE rooms
+ * and The Architect prefers the Core. Approach/Core bias silent kinds; Orde hostility flips spawn attitude.
  */
 @EventBusSubscriber(modid = LabyrinthKeys.MODID)
 public final class LabyrinthSpawnHandler {
-   private static final int INTERVAL_TICKS = 80;
-   private static final double SCAN_RADIUS = 48.0;
+   private static final int INTERVAL_TICKS = 100;
+   private static final double SCAN_RADIUS = 40.0;
 
    /** Relative spawn weights so every kind can roll, rarer tiers less often. */
    private static final Map<GebondeneKind.Tier, Integer> TIER_WEIGHT = tierWeights();
@@ -89,32 +89,29 @@ public final class LabyrinthSpawnHandler {
       }
 
       RandomSource random = level.getRandom();
-      // Attempt up to two ambient spawns per interval so rarer kinds still appear over time.
-      int attempts = 1 + (nearby < nearbyCap() / 2 ? 1 : 0);
-      for (int i = 0; i < attempts; i++) {
-         if (level.getEntitiesOfClass(GebondeneEntity.class, box).size() >= nearbyCap()) {
-            break;
-         }
-         BlockPos spawnPos = findOpenCorridorNear(level, player.blockPosition(), random);
-         if (spawnPos == null) {
-            continue;
-         }
-         GebondeneKind kind = pickWeightedKind(random, spawnPos, level);
-         if (kind == null) {
-            continue;
-         }
-         // Soft uniqueness: skip if that exact kind already saturates the scan.
-         long sameKind = level.getEntitiesOfClass(
-            GebondeneEntity.class,
-            box,
-            e -> e.getKind() == kind
-         ).size();
-         int kindCap = kindCap(kind);
-         if (sameKind >= kindCap) {
-            continue;
-         }
-         spawnGebondene(level, spawnPos, kind, GebondeneAttitude.GASTVRIJ);
+      BlockPos spawnPos = findOpenCorridorNear(level, player.blockPosition(), random);
+      if (spawnPos == null) {
+         return;
       }
+
+      int[] cell = LabyrinthMaze.globalCellFromBlock(player.blockPosition().getX(), player.blockPosition().getZ());
+      LabyrinthKeys.Zone zone = LabyrinthKeys.zoneAt(cell[0], cell[1]);
+      GebondeneKind kind;
+      // Approach / Audience: silent pew presence instead of chatty social kinds.
+      if (zone == LabyrinthKeys.Zone.APPROACH || zone == LabyrinthKeys.Zone.CORE) {
+         kind = random.nextInt(3) == 0 ? GebondeneKind.STILLE : GebondeneKind.STILTEWACHTER;
+      } else {
+         kind = pickWeightedKind(random, spawnPos, level);
+         if (kind == null) {
+            return;
+         }
+      }
+
+      long sameKind = level.getEntitiesOfClass(GebondeneEntity.class, box, e -> e.getKind() == kind).size();
+      if (sameKind >= kindCap(kind)) {
+         return;
+      }
+      spawnGebondene(level, spawnPos, kind, GebondeneAttitude.GASTVRIJ);
    }
 
    private static int kindCap(GebondeneKind kind) {
@@ -138,13 +135,12 @@ public final class LabyrinthSpawnHandler {
       int localX = LabyrinthMaze.localCellFromGlobal(cell[0]);
       int localZ = LabyrinthMaze.localCellFromGlobal(cell[1]);
       LabyrinthMaze.RoomType room = maze.getRoomType(localX, localZ);
-      boolean nearCore = pos.distSqr(
-         new BlockPos(
-            LabyrinthKeys.CORE_CELL_X * LabyrinthKeys.CELL_SIZE + LabyrinthKeys.CELL_SIZE / 2,
-            LabyrinthKeys.FLOOR_Y + 1,
-            LabyrinthKeys.CORE_CELL_Z * LabyrinthKeys.CELL_SIZE + LabyrinthKeys.CELL_SIZE / 2
-         )
-      ) < 40.0 * 40.0;
+      BlockPos core = new BlockPos(
+         LabyrinthKeys.coreCenterBlockX(),
+         LabyrinthKeys.FLOOR_Y + 1,
+         LabyrinthKeys.coreCenterBlockZ()
+      );
+      boolean nearCore = pos.distSqr(core) < 40.0 * 40.0;
 
       for (GebondeneKind kind : GebondeneKind.values()) {
          int weight = TIER_WEIGHT.getOrDefault(kind.tier(), 1);
@@ -179,7 +175,7 @@ public final class LabyrinthSpawnHandler {
 
    private static void maybeSpawnGatekeeper(ServerLevel level, ServerPlayer player) {
       RandomSource random = level.getRandom();
-      if (random.nextInt(24) != 0) {
+      if (random.nextInt(40) != 0) {
          return;
       }
 
@@ -190,15 +186,20 @@ public final class LabyrinthSpawnHandler {
       int localX = LabyrinthMaze.localCellFromGlobal(cell[0]);
       int localZ = LabyrinthMaze.localCellFromGlobal(cell[1]);
 
+      // Search a small neighbourhood for a GATE cell.
       BlockPos gatePos = null;
       outer:
       for (int dx = -2; dx <= 2; dx++) {
          for (int dz = -2; dz <= 2; dz++) {
             int lx = localX + dx;
             int lz = localZ + dz;
+            // Match stamp anchors only (pads resolve to GATE but are not SW).
             if (maze.getRoomType(lx, lz) == LabyrinthMaze.RoomType.GATE) {
-               int worldX = (regionX * LabyrinthKeys.REGION_SIZE + lx) * LabyrinthKeys.CELL_SIZE + LabyrinthKeys.CELL_SIZE / 2;
-               int worldZ = (regionZ * LabyrinthKeys.REGION_SIZE + lz) * LabyrinthKeys.CELL_SIZE + LabyrinthKeys.CELL_SIZE / 2;
+               int span = maze.getFootprintSpan(lx, lz);
+               int worldX = (regionX * LabyrinthKeys.REGION_SIZE + lx) * LabyrinthKeys.CELL_SIZE
+                  + (span * LabyrinthKeys.CELL_SIZE) / 2;
+               int worldZ = (regionZ * LabyrinthKeys.REGION_SIZE + lz) * LabyrinthKeys.CELL_SIZE
+                  + (span * LabyrinthKeys.CELL_SIZE) / 2;
                gatePos = new BlockPos(worldX, LabyrinthKeys.FLOOR_Y + 1, worldZ);
                break outer;
             }
@@ -208,24 +209,21 @@ public final class LabyrinthSpawnHandler {
          return;
       }
 
-      AABB gateBox = new AABB(gatePos).inflate(8.0);
-      // Prefer a GATE-tier inhabitant at gates (not only Poortwachter).
-      List<GebondeneKind> gateKinds = GebondeneKind.ofTiers(GebondeneKind.Tier.GATE);
-      boolean alreadyGate = !level.getEntitiesOfClass(
+      AABB gateBox = new AABB(gatePos).inflate(6.0);
+      boolean already = !level.getEntitiesOfClass(
          GebondeneEntity.class,
          gateBox,
-         e -> e.getKind().tier() == GebondeneKind.Tier.GATE
+         e -> e.getKind() == GebondeneKind.POORTWACHTER
       ).isEmpty();
-      if (alreadyGate || gateKinds.isEmpty()) {
+      if (already) {
          return;
       }
-      GebondeneKind kind = gateKinds.get(random.nextInt(gateKinds.size()));
-      spawnGebondene(level, gatePos, kind, GebondeneAttitude.GASTVRIJ);
+      spawnGebondene(level, gatePos, GebondeneKind.POORTWACHTER, GebondeneAttitude.GASTVRIJ);
    }
 
    private static void maybeSpawnArchitect(ServerLevel level, ServerPlayer player) {
-      int coreX = LabyrinthKeys.CORE_CELL_X * LabyrinthKeys.CELL_SIZE + LabyrinthKeys.CELL_SIZE / 2;
-      int coreZ = LabyrinthKeys.CORE_CELL_Z * LabyrinthKeys.CELL_SIZE + LabyrinthKeys.CELL_SIZE / 2;
+      int coreX = LabyrinthKeys.coreCenterBlockX();
+      int coreZ = LabyrinthKeys.coreCenterBlockZ();
       BlockPos core = new BlockPos(coreX, LabyrinthKeys.FLOOR_Y + 1, coreZ);
       if (player.blockPosition().distSqr(core) > 48.0 * 48.0) {
          return;
@@ -247,22 +245,6 @@ public final class LabyrinthSpawnHandler {
          return;
       }
       spawnGebondene(level, spawnAt, GebondeneKind.ARCHITECT, GebondeneAttitude.GASTVRIJ);
-      // Bring a lieutenant so Spijkermeester/Klokkenluider are not Core-orphans.
-      RandomSource random = level.getRandom();
-      if (random.nextBoolean()) {
-         BlockPos lieutenant = findOpenCorridorNear(level, spawnAt, random);
-         if (lieutenant != null) {
-            GebondeneKind escort = random.nextBoolean() ? GebondeneKind.SPIJKERMEESTER : GebondeneKind.KLOKKENLUIDER;
-            long same = level.getEntitiesOfClass(
-               GebondeneEntity.class,
-               coreBox,
-               e -> e.getKind() == escort
-            ).size();
-            if (same == 0) {
-               spawnGebondene(level, lieutenant, escort, GebondeneAttitude.GASTVRIJ);
-            }
-         }
-      }
    }
 
    private static void spawnGebondene(ServerLevel level, BlockPos pos, GebondeneKind kind, GebondeneAttitude attitude) {
@@ -271,6 +253,7 @@ public final class LabyrinthSpawnHandler {
          return;
       }
       entity.setKind(kind);
+      // If the nearest player already angered the Orde, spawn already hunting.
       GebondeneAttitude spawnAttitude = attitude;
       for (ServerPlayer nearbyPlayer : level.players()) {
          if (nearbyPlayer.distanceToSqr(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5) < 48.0 * 48.0
@@ -285,9 +268,9 @@ public final class LabyrinthSpawnHandler {
    }
 
    private static BlockPos findOpenCorridorNear(ServerLevel level, BlockPos origin, RandomSource random) {
-      for (int attempt = 0; attempt < 16; attempt++) {
-         int dx = random.nextInt(21) - 10;
-         int dz = random.nextInt(21) - 10;
+      for (int attempt = 0; attempt < 12; attempt++) {
+         int dx = random.nextInt(17) - 8;
+         int dz = random.nextInt(17) - 8;
          if (dx == 0 && dz == 0) {
             continue;
          }

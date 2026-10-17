@@ -20,10 +20,11 @@ import org.millenaire.labyrinth.entity.GebondeneAttitude;
 import org.millenaire.labyrinth.entity.GebondeneEntity;
 import org.millenaire.labyrinth.entity.GebondeneKind;
 import org.millenaire.labyrinth.entity.LabyrinthOrdeData;
+import org.millenaire.labyrinth.gen.LabyrinthMaze;
 import org.millenaire.labyrinth.portal.LabyrinthTeleporter;
 
 /**
- * {@code /millenaire labyrinth enter|leave|status|spawn <kind>}
+ * {@code /millenaire labyrinth enter|leave|status|resetdim|spawn <kind>}
  */
 public final class LabyrinthCommand {
    private static final SuggestionProvider<CommandSourceStack> KIND_SUGGESTIONS = (ctx, builder) -> SharedSuggestionProvider.suggest(
@@ -42,6 +43,7 @@ public final class LabyrinthCommand {
                   .then(Commands.literal("enter").executes(LabyrinthCommand::enter))
                   .then(Commands.literal("leave").executes(LabyrinthCommand::leave))
                   .then(Commands.literal("status").executes(LabyrinthCommand::status))
+                  .then(Commands.literal("resetdim").executes(LabyrinthCommand::resetDimHint))
                   .then(
                      Commands.literal("spawn")
                         .then(
@@ -50,9 +52,35 @@ public final class LabyrinthCommand {
                               .executes(LabyrinthCommand::spawn)
                         )
                   )
+                  .then(
+                     Commands.literal("vorm")
+                        .then(
+                           Commands.argument("vorm", StringArgumentType.word())
+                              .suggests(VORM_SUGGESTIONS)
+                              .executes(LabyrinthCommand::setVorm)
+                        )
+                  )
+                  .then(
+                     Commands.literal("relic")
+                        .then(
+                           Commands.argument("relic", StringArgumentType.word())
+                              .suggests(RELIC_SUGGESTIONS)
+                              .executes(LabyrinthCommand::giveRelic)
+                        )
+                  )
             )
       );
    }
+
+   private static final SuggestionProvider<CommandSourceStack> VORM_SUGGESTIONS = (ctx, builder) -> SharedSuggestionProvider.suggest(
+      Arrays.stream(org.millenaire.labyrinth.portal.ConfiguratieVorm.values()).map(org.millenaire.labyrinth.portal.ConfiguratieVorm::id),
+      builder
+   );
+
+   private static final SuggestionProvider<CommandSourceStack> RELIC_SUGGESTIONS = (ctx, builder) -> SharedSuggestionProvider.suggest(
+      java.util.List.of("zegel", "masker", "koord"),
+      builder
+   );
 
    private static int enter(CommandContext<CommandSourceStack> ctx) {
       CommandSourceStack source = ctx.getSource();
@@ -72,6 +100,19 @@ public final class LabyrinthCommand {
          return 0;
       }
       return LabyrinthTeleporter.leave(player) ? 1 : 0;
+   }
+
+   /**
+    * Clears in-memory maze cache and prints player-facing migration instructions.
+    * Does not delete world files (operators must wipe the dim folder offline).
+    */
+   private static int resetDimHint(CommandContext<CommandSourceStack> ctx) {
+      LabyrinthMaze.clearCache();
+      ctx.getSource().sendSuccess(
+         () -> Component.translatable("labyrinth.command.resetdim", LabyrinthKeys.LAYOUT_VERSION),
+         true
+      );
+      return 1;
    }
 
    private static int status(CommandContext<CommandSourceStack> ctx) {
@@ -104,13 +145,20 @@ public final class LabyrinthCommand {
       final long nearby = nearbyCount;
       final boolean hostile = hostileFlag;
       final int reputation = reputationValue;
+      int[] statusCell = org.millenaire.labyrinth.gen.LabyrinthMaze.globalCellFromBlock(
+         player.blockPosition().getX(),
+         player.blockPosition().getZ()
+      );
+      final LabyrinthKeys.Zone zone = LabyrinthKeys.zoneAt(statusCell[0], statusCell[1]);
       source.sendSuccess(
          () -> Component.literal(
             String.format(
                Locale.ROOT,
-               "Labyrinth enabled=%s inside=%s dim=%s loaded=%s nearbyGebondene=%d hostile=%s reputation=%d",
+               "Labyrinth v%d enabled=%s inside=%s zone=%s dim=%s loaded=%s nearbyGebondene=%d hostile=%s reputation=%d",
+               LabyrinthKeys.LAYOUT_VERSION,
                enabled,
                inside,
+               zone,
                dimPath,
                labyrinthLoaded,
                nearby,
@@ -155,6 +203,54 @@ public final class LabyrinthCommand {
          () -> Component.translatable("command.millenaire.labyrinth.spawned", kind.id()),
          true
       );
+      return 1;
+   }
+
+   private static int setVorm(CommandContext<CommandSourceStack> ctx) {
+      CommandSourceStack source = ctx.getSource();
+      ServerPlayer player = source.getPlayer();
+      if (player == null) {
+         source.sendFailure(Component.translatable("command.millenaire.error.player_required"));
+         return 0;
+      }
+      String vormArg = StringArgumentType.getString(ctx, "vorm");
+      var vorm = org.millenaire.labyrinth.portal.ConfiguratieVorm.byId(vormArg).orElse(null);
+      if (vorm == null) {
+         source.sendFailure(Component.literal("Unknown vorm: " + vormArg));
+         return 0;
+      }
+      var stack = player.getMainHandItem();
+      if (!(stack.getItem() instanceof org.millenaire.labyrinth.portal.ConfiguratieItem)) {
+         source.sendFailure(Component.literal("Hold a Configuratie in your main hand"));
+         return 0;
+      }
+      org.millenaire.labyrinth.portal.ConfiguratieItem.setVorm(stack, vorm);
+      source.sendSuccess(() -> Component.literal("Configuratie vorm → " + vorm.id()), true);
+      return 1;
+   }
+
+   private static int giveRelic(CommandContext<CommandSourceStack> ctx) {
+      CommandSourceStack source = ctx.getSource();
+      ServerPlayer player = source.getPlayer();
+      if (player == null) {
+         source.sendFailure(Component.translatable("command.millenaire.error.player_required"));
+         return 0;
+      }
+      String relic = StringArgumentType.getString(ctx, "relic").toLowerCase(Locale.ROOT);
+      net.minecraft.world.item.ItemStack stack = switch (relic) {
+         case "zegel" -> new net.minecraft.world.item.ItemStack(org.millenaire.item.ModItems.LABYRINTH_ZEGEL.get());
+         case "masker" -> new net.minecraft.world.item.ItemStack(org.millenaire.item.ModItems.LABYRINTH_MASKER.get());
+         case "koord" -> new net.minecraft.world.item.ItemStack(org.millenaire.item.ModItems.LABYRINTH_KOORD.get());
+         default -> null;
+      };
+      if (stack == null) {
+         source.sendFailure(Component.literal("Unknown relic: " + relic));
+         return 0;
+      }
+      if (!player.addItem(stack)) {
+         player.drop(stack, false);
+      }
+      source.sendSuccess(() -> Component.literal("Gave labyrinth relic " + relic), true);
       return 1;
    }
 }

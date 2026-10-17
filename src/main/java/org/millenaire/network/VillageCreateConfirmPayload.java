@@ -3,6 +3,7 @@ package org.millenaire.network;
 import com.mojang.logging.LogUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -20,6 +21,7 @@ import org.millenaire.advancement.MillAdvancements;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.culture.ModCultures;
 import org.millenaire.culture.VillageType;
+import org.millenaire.faith.FaithRegistry;
 import org.millenaire.faith.FaithService;
 import org.millenaire.item.ModItems;
 import org.millenaire.item.VillageCreateWandItem;
@@ -33,7 +35,13 @@ import org.millenaire.world.VillageSpawner;
 import org.slf4j.Logger;
 
 public record VillageCreateConfirmPayload(
-   BlockPos pos, String cultureKey, String typeKey, String villageName, boolean startOwnFaith, String customFaithName
+   BlockPos pos,
+   String cultureKey,
+   String typeKey,
+   String villageName,
+   /** {@code culture}, {@code custom}, or {@code orde} (Cenobites). */
+   String faithChoice,
+   String customFaithName
 ) implements CustomPacketPayload {
    private static final Logger LOGGER = LogUtils.getLogger();
    public static final Type<VillageCreateConfirmPayload> TYPE = new Type(
@@ -44,6 +52,10 @@ public record VillageCreateConfirmPayload(
    );
    private static final PayloadRateLimiter RATE_LIMITER = new PayloadRateLimiter(1000L);
 
+   public static final String FAITH_CULTURE = "culture";
+   public static final String FAITH_CUSTOM = "custom";
+   public static final String FAITH_ORDE = "orde";
+
    private static void encode(ByteBuf buf, VillageCreateConfirmPayload p) {
       ByteBufCodecs.VAR_INT.encode(buf, p.pos.getX());
       ByteBufCodecs.VAR_INT.encode(buf, p.pos.getY());
@@ -51,7 +63,7 @@ public record VillageCreateConfirmPayload(
       ByteBufCodecs.STRING_UTF8.encode(buf, p.cultureKey);
       ByteBufCodecs.STRING_UTF8.encode(buf, p.typeKey);
       ByteBufCodecs.STRING_UTF8.encode(buf, p.villageName);
-      buf.writeBoolean(p.startOwnFaith);
+      ByteBufCodecs.STRING_UTF8.encode(buf, normalizeFaithChoice(p.faithChoice));
       ByteBufCodecs.STRING_UTF8.encode(buf, p.customFaithName != null ? p.customFaithName : "");
    }
 
@@ -61,9 +73,21 @@ public record VillageCreateConfirmPayload(
          ByteBufCodecs.STRING_UTF8.decode(buf),
          ByteBufCodecs.STRING_UTF8.decode(buf),
          ByteBufCodecs.STRING_UTF8.decode(buf),
-         buf.readBoolean(),
+         ByteBufCodecs.STRING_UTF8.decode(buf),
          ByteBufCodecs.STRING_UTF8.decode(buf)
       );
+   }
+
+   public static String normalizeFaithChoice(String raw) {
+      if (raw == null || raw.isBlank()) {
+         return FAITH_CULTURE;
+      }
+      String key = raw.trim().toLowerCase(Locale.ROOT);
+      return switch (key) {
+         case FAITH_CUSTOM, "own", "player_custom" -> FAITH_CUSTOM;
+         case FAITH_ORDE, "cenobites", "cenobite" -> FAITH_ORDE;
+         default -> FAITH_CULTURE;
+      };
    }
 
    @Override
@@ -100,6 +124,12 @@ public record VillageCreateConfirmPayload(
          String sanitizedName = VillageCreateWandItem.sanitizeVillageName(payload.villageName);
          if (sanitizedName.isEmpty()) {
             player.sendSystemMessage(Component.translatable("gui.millenaire.village_create.name_required"));
+            return;
+         }
+
+         String faithChoice = normalizeFaithChoice(payload.faithChoice());
+         if (FAITH_ORDE.equals(faithChoice) && FaithRegistry.get(FaithRegistry.ordeId()) == null) {
+            player.sendSystemMessage(Component.translatable("gui.millenaire.village_create.faith_orde_unavailable"));
             return;
          }
 
@@ -150,14 +180,8 @@ public record VillageCreateConfirmPayload(
             VillageSavedData.get(serverLevel).setDirty();
             player.sendSystemMessage(Component.translatable("gui.millenaire.village_create.custom_outfit_hint"));
          }
-         if (founded != null && payload.startOwnFaith()) {
-            String faithName = VillageCreateWandItem.sanitizeVillageName(payload.customFaithName());
-            if (faithName.isEmpty()) {
-               faithName = sanitizedName + " Faith";
-            }
-            FaithService.startPlayerFaith(serverLevel, founded, faithName);
-            VillageSavedData.get(serverLevel).setDirty();
-            player.sendSystemMessage(Component.translatable("gui.millenaire.village_create.faith_started", faithName));
+         if (founded != null) {
+            applyFoundingFaith(serverLevel, player, founded, faithChoice, sanitizedName, payload.customFaithName());
          }
          if (founded != null && !conflictCultures.isEmpty()) {
             for (ResourceLocation enemyCulture : conflictCultures) {
@@ -185,6 +209,36 @@ public record VillageCreateConfirmPayload(
          );
          MillAdvancements.grant(player, MillAdvancements.SUMMONING_WAND);
       });
+   }
+
+   private static void applyFoundingFaith(
+      ServerLevel serverLevel,
+      ServerPlayer player,
+      Village founded,
+      String faithChoice,
+      String sanitizedName,
+      String customFaithName
+   ) {
+      switch (faithChoice) {
+         case FAITH_CUSTOM -> {
+            String faithName = VillageCreateWandItem.sanitizeVillageName(customFaithName);
+            if (faithName.isEmpty()) {
+               faithName = sanitizedName + " Faith";
+            }
+            FaithService.startPlayerFaith(serverLevel, founded, faithName);
+            VillageSavedData.get(serverLevel).setDirty();
+            player.sendSystemMessage(Component.translatable("gui.millenaire.village_create.faith_started", faithName));
+         }
+         case FAITH_ORDE -> {
+            FaithService.startOrdeFaith(serverLevel, founded);
+            VillageSavedData.get(serverLevel).setDirty();
+            String ordeName = FaithService.resolveDisplayName(serverLevel, founded);
+            player.sendSystemMessage(Component.translatable("gui.millenaire.village_create.faith_orde_started", ordeName));
+         }
+         default -> {
+            // Culture default already applied on spawn.
+         }
+      }
    }
 
    private static VillageType resolveVillageType(VillageCreateConfirmPayload payload, boolean customOutfit) {

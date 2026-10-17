@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/inner_stairs",
+  "textures": {
+    "bottom": "millenaire:block/bleed_planks",
+    "top": "millenaire:block/bleed_planks",
+    "side": "millenaire:block/bleed_planks"
+  }
+}

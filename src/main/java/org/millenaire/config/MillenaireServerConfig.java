@@ -128,6 +128,15 @@ public final class MillenaireServerConfig {
    public final BooleanValue labyrinthFrenemyInteractions;
    public final BooleanValue labyrinthArrivalRespawn;
    public final BooleanValue labyrinthShiftingEnabled;
+   public final EnumValue<org.millenaire.labyrinth.LabyrinthAtmosphere> labyrinthAtmosphere;
+   public final BooleanValue labyrinthPuzzlesEnabled;
+   public final BooleanValue labyrinthChaseEnabled;
+   public final BooleanValue labyrinthLoopRoomsEnabled;
+   public final BooleanValue labyrinthVaultEnabled;
+   public final BooleanValue labyrinthConfigCombatEnabled;
+   public final BooleanValue labyrinthLiminalRoomsEnabled;
+   /** Informational / smoke — generation uses {@link org.millenaire.labyrinth.LabyrinthKeys#LAYOUT_VERSION}. */
+   public final IntValue labyrinthLayoutVersion;
 
    public static int getDefaultClearMargin() {
       try {
@@ -613,6 +622,35 @@ public final class MillenaireServerConfig {
       this.labyrinthShiftingEnabled = builder.comment("Allow scripted Core-arena wall shifts during Architect phase 3")
          .translation("millenaire.config.labyrinthShiftingEnabled")
          .define("shiftingEnabled", true);
+      this.labyrinthAtmosphere = builder.comment("Labyrinth palette: COLD (Revival-like blue-grey) or CLASSIC (crimson)")
+         .translation("millenaire.config.labyrinthAtmosphere")
+         .defineEnum("atmosphere", org.millenaire.labyrinth.LabyrinthAtmosphere.COLD);
+      this.labyrinthPuzzlesEnabled = builder.comment("Enable Configuratie puzzle rooms (rotary walkways, relic gates)")
+         .translation("millenaire.config.labyrinthPuzzlesEnabled")
+         .define("puzzlesEnabled", true);
+      this.labyrinthChaseEnabled = builder.comment("Enable Rammelaar corridor chase when Orde is alarmed or near GATE rooms")
+         .translation("millenaire.config.labyrinthChaseEnabled")
+         .define("chaseEnabled", true);
+      this.labyrinthLoopRoomsEnabled = builder.comment("Enable Echo loop chambers (walk backward to escape)")
+         .translation("millenaire.config.labyrinthLoopRoomsEnabled")
+         .define("loopRoomsEnabled", true);
+      this.labyrinthVaultEnabled = builder.comment("Carve lower vault floor band beyond vaultStartDistance from Arrival")
+         .translation("millenaire.config.labyrinthVaultEnabled")
+         .define("vaultEnabled", true);
+      this.labyrinthConfigCombatEnabled = builder.comment("Allow Configuratie KETTING form combat pulse inside the Labyrinth")
+         .translation("millenaire.config.labyrinthConfigCombatEnabled")
+         .define("configCombatEnabled", true);
+      this.labyrinthLiminalRoomsEnabled = builder.comment(
+            "Scatter furnished reality-bleed rooms (bedroom/kitchen/study/parlor/nursery) through the maze"
+         )
+         .translation("millenaire.config.labyrinthLiminalRoomsEnabled")
+         .define("liminalRoomsEnabled", true);
+      this.labyrinthLayoutVersion = builder.comment(
+            "Labyrinth layout generation version (2 = multi-cell footprints / Arrival nave). "
+               + "Changing this does not rewrite existing dims — delete/regenerate millenaire:labyrinth."
+         )
+         .translation("millenaire.config.labyrinthLayoutVersion")
+         .defineInRange("layoutVersion", org.millenaire.labyrinth.LabyrinthKeys.LAYOUT_VERSION, 1, 64);
       builder.pop();
    }
 
