@@ -131,7 +131,7 @@ public final class WarPlanner {
                BackgroundWorkGate.get().release(PlanDomain.WAR);
             }
          });
-      } catch (RejectedExecutionException | RuntimeException e) {
+      } catch (RuntimeException e) {
          this.inflightCampaigns.remove(snapshot.campaignId());
          this.inFlight.decrementAndGet();
          BackgroundWorkGate.get().release(PlanDomain.WAR);

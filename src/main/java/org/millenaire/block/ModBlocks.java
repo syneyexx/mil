@@ -31,9 +31,13 @@ import org.millenaire.block.mock.MockMarkerBlock;
 import org.millenaire.block.mock.MockSoilBlock;
 import org.millenaire.block.mock.MockSourceBlock;
 import org.millenaire.block.mock.MockTreeSpawnBlock;
+import org.millenaire.labyrinth.portal.ScharnierBlock;
 
 public final class ModBlocks {
    public static final Blocks BLOCKS = DeferredRegister.createBlocks("millenaire");
+   public static final DeferredBlock<ScharnierBlock> SCHARNIER = BLOCKS.register(
+      "scharnier", key -> new ScharnierBlock(ScharnierBlock.defaultProperties().lightLevel(state -> 7))
+   );
    public static final DeferredBlock<Block> TIMBER_FRAME_PLAIN = BLOCKS.registerSimpleBlock(
       "timber_frame_plain", Properties.of().mapColor(MapColor.WOOD).strength(2.0F, 5.0F).sound(SoundType.WOOD).requiresCorrectToolForDrops()
    );

@@ -1,0 +1,99 @@
+{
+  "key": "fallenking_11_thelabyrinth",
+  "chancePerHour": 1.0,
+  "maxSimultaneous": 1,
+  "minReputation": 0,
+  "globalTagsRequired": [],
+  "globalTagsForbidden": [],
+  "playerTagsRequired": [
+    "fallenking_10_thebrokendoor"
+  ],
+  "playerTagsForbidden": [
+    "fallenking_11_thelabyrinth"
+  ],
+  "villagerDefs": [
+    {
+      "key": "kingshaman",
+      "villagerTypes": [
+        "mayan/questshaman"
+      ],
+      "requiredTags": [],
+      "forbiddenTags": []
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "villagerKey": "kingshaman",
+      "duration": 1048,
+      "showRequiredGoods": true,
+      "requiredGoods": {},
+      "rewardGoods": {
+        "millenaire:configuratie": 1
+      },
+      "rewardMoney": 0,
+      "rewardReputation": 64,
+      "penaltyReputation": 0,
+      "villagerTagsSuccess": [],
+      "villagerTagsFailure": [],
+      "playerTagsSuccess": [
+        "fallenking_11_thelabyrinth_start"
+      ],
+      "playerTagsFailure": [],
+      "globalTagsSuccess": [],
+      "globalTagsFailure": [],
+      "clearTagsSuccess": [],
+      "clearTagsFailure": [],
+      "clearPlayerTagsSuccess": [],
+      "clearPlayerTagsFailure": [],
+      "clearGlobalTagsSuccess": [],
+      "clearGlobalTagsFailure": [],
+      "stepRequiredGlobalTags": [],
+      "stepForbiddenGlobalTags": [],
+      "stepRequiredPlayerTags": [],
+      "stepForbiddenPlayerTags": [],
+      "actionDataSuccess": [],
+      "relationChanges": [],
+      "bedrockBuildings": []
+    },
+    {
+      "index": 1,
+      "villagerKey": "kingshaman",
+      "duration": 1048,
+      "showRequiredGoods": true,
+      "requiredGoods": {},
+      "rewardGoods": {},
+      "rewardMoney": 0,
+      "rewardReputation": 256,
+      "penaltyReputation": 0,
+      "villagerTagsSuccess": [],
+      "villagerTagsFailure": [],
+      "playerTagsSuccess": [
+        "fallenking_11_thelabyrinth"
+      ],
+      "playerTagsFailure": [],
+      "globalTagsSuccess": [],
+      "globalTagsFailure": [],
+      "clearTagsSuccess": [],
+      "clearTagsFailure": [],
+      "clearPlayerTagsSuccess": [],
+      "clearPlayerTagsFailure": [],
+      "clearGlobalTagsSuccess": [],
+      "clearGlobalTagsFailure": [],
+      "stepRequiredGlobalTags": [],
+      "stepForbiddenGlobalTags": [],
+      "stepRequiredPlayerTags": [
+        "explored_labyrinth_core"
+      ],
+      "stepForbiddenPlayerTags": [],
+      "actionDataSuccess": [
+        {
+          "key": "fallenkingqueststatus",
+          "value": "11"
+        }
+      ],
+      "relationChanges": [],
+      "bedrockBuildings": []
+    }
+  ]
+}

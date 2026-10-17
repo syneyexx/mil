@@ -37,9 +37,23 @@ import net.neoforged.neoforge.registries.DeferredRegister.Items;
 import org.millenaire.block.ModBlocks;
 import org.millenaire.entity.ModEntities;
 import org.millenaire.entity.WallDecorationType;
+import org.millenaire.labyrinth.portal.ConfiguratieItem;
 
 public final class ModItems {
    public static final Items ITEMS = DeferredRegister.createItems("millenaire");
+   public static final DeferredItem<ConfiguratieItem> CONFIGURATIE = ITEMS.registerItem(
+      "configuratie", props -> new ConfiguratieItem(props.stacksTo(1))
+   );
+   public static final DeferredItem<LabyrinthRelicItem> LABYRINTH_ZEGEL = ITEMS.registerItem(
+      "labyrinth_zegel", props -> new LabyrinthRelicItem(props.stacksTo(1), "item.millenaire.labyrinth_zegel.desc")
+   );
+   public static final DeferredItem<LabyrinthRelicItem> LABYRINTH_MASKER = ITEMS.registerItem(
+      "labyrinth_masker", props -> new LabyrinthRelicItem(props.stacksTo(1), "item.millenaire.labyrinth_masker.desc")
+   );
+   public static final DeferredItem<LabyrinthRelicItem> LABYRINTH_KOORD = ITEMS.registerItem(
+      "labyrinth_koord", props -> new LabyrinthRelicItem(props.stacksTo(1), "item.millenaire.labyrinth_koord.desc")
+   );
+   public static final DeferredItem<BlockItem> SCHARNIER_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.SCHARNIER);
    public static final DeferredItem<CoinItem> DENIER = ITEMS.registerItem("denier", props -> new CoinItem(props.stacksTo(64)));
    public static final DeferredItem<CoinItem> DENIER_ARGENT = ITEMS.registerItem("denier_argent", props -> new CoinItem(props.stacksTo(64)));
    public static final DeferredItem<CoinItem> DENIER_OR = ITEMS.registerItem("denier_or", props -> new CoinItem(props.stacksTo(64)));
