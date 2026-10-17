@@ -220,7 +220,13 @@ public class GebondeneNativeModel extends EntityModel<GebondeneEntity> {
       if (entity.hurtTime > 0) {
          applyClip("hurt", Math.max(0, (entity.hurtDuration - entity.hurtTime) / 20.0F), 1);
       }
-      Bone head = bones.get("head");
+      applyHeadLook("head", headYaw, headPitch);
+      applyHeadLook("a_head", headYaw, headPitch);
+      applyHeadLook("b_head", headYaw, headPitch);
+   }
+
+   private void applyHeadLook(String boneName, float headYaw, float headPitch) {
+      Bone head = bones.get(boneName);
       if (head != null) {
          head.animatedRotation.add(Math.max(-12, Math.min(12, headPitch)), Math.max(-18, Math.min(18, headYaw)), 0);
       }

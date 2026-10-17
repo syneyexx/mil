@@ -1,0 +1,193 @@
+{
+  "status": "PASS",
+  "models": 21,
+  "checks": [
+    "JSON parse",
+    "unique cube and group IDs",
+    "complete single-parent hierarchy",
+    "positive cube extents",
+    "finite coordinates",
+    "6 textured faces per cube",
+    "UV bounds 0..256",
+    "256x256 RGBA texture",
+    "external PNG equals embedded texture",
+    "rotated geometry bounds",
+    "feet y=0",
+    "total height <=3 blocks"
+  ],
+  "limitations": [
+    "Not opened in the Blockbench application in this environment.",
+    "Not exported to the target repository custom monster schema.",
+    "No Minecraft render, animation, material or collision integration test."
+  ],
+  "results": [
+    {
+      "model": "gids",
+      "checks": "PASS",
+      "cubes": 180,
+      "groups": 15,
+      "min_y": 0.0,
+      "total_height_blocks": 2.3
+    },
+    {
+      "model": "kettingzuster",
+      "checks": "PASS",
+      "cubes": 425,
+      "groups": 14,
+      "min_y": 0.0,
+      "total_height_blocks": 2.3
+    },
+    {
+      "model": "spiegelgast",
+      "checks": "PASS",
+      "cubes": 46,
+      "groups": 14,
+      "min_y": 0.0,
+      "total_height_blocks": 2.4
+    },
+    {
+      "model": "poortwachter",
+      "checks": "PASS",
+      "cubes": 78,
+      "groups": 15,
+      "min_y": 0.0,
+      "total_height_blocks": 2.5914
+    },
+    {
+      "model": "fluitende",
+      "checks": "PASS",
+      "cubes": 72,
+      "groups": 15,
+      "min_y": 0.0,
+      "total_height_blocks": 2.5
+    },
+    {
+      "model": "naaister",
+      "checks": "PASS",
+      "cubes": 53,
+      "groups": 16,
+      "min_y": 0.0,
+      "total_height_blocks": 2.5
+    },
+    {
+      "model": "tweeling",
+      "checks": "PASS",
+      "cubes": 162,
+      "groups": 28,
+      "min_y": 0.0,
+      "total_height_blocks": 1.8
+    },
+    {
+      "model": "echo",
+      "checks": "PASS",
+      "cubes": 50,
+      "groups": 14,
+      "min_y": 0.0,
+      "total_height_blocks": 2.3
+    },
+    {
+      "model": "gastheer",
+      "checks": "PASS",
+      "cubes": 65,
+      "groups": 14,
+      "min_y": 0.0,
+      "total_height_blocks": 2.4
+    },
+    {
+      "model": "notaris",
+      "checks": "PASS",
+      "cubes": 64,
+      "groups": 15,
+      "min_y": 0.0,
+      "total_height_blocks": 2.4
+    },
+    {
+      "model": "blinde",
+      "checks": "PASS",
+      "cubes": 176,
+      "groups": 14,
+      "min_y": 0.0,
+      "total_height_blocks": 2.409
+    },
+    {
+      "model": "smid",
+      "checks": "PASS",
+      "cubes": 59,
+      "groups": 15,
+      "min_y": 0.0,
+      "total_height_blocks": 2.4
+    },
+    {
+      "model": "archivaris",
+      "checks": "PASS",
+      "cubes": 191,
+      "groups": 15,
+      "min_y": 0.0,
+      "total_height_blocks": 2.4
+    },
+    {
+      "model": "schatter",
+      "checks": "PASS",
+      "cubes": 75,
+      "groups": 15,
+      "min_y": 0.0,
+      "total_height_blocks": 2.5
+    },
+    {
+      "model": "danseres",
+      "checks": "PASS",
+      "cubes": 92,
+      "groups": 14,
+      "min_y": 0.0,
+      "total_height_blocks": 2.5
+    },
+    {
+      "model": "klokkenluider",
+      "checks": "PASS",
+      "cubes": 207,
+      "groups": 14,
+      "min_y": 0.0,
+      "total_height_blocks": 2.75
+    },
+    {
+      "model": "marionet",
+      "checks": "PASS",
+      "cubes": 86,
+      "groups": 15,
+      "min_y": 0.0,
+      "total_height_blocks": 2.8567
+    },
+    {
+      "model": "pelgrim",
+      "checks": "PASS",
+      "cubes": 360,
+      "groups": 15,
+      "min_y": 0.0,
+      "total_height_blocks": 2.3
+    },
+    {
+      "model": "stiltewachter",
+      "checks": "PASS",
+      "cubes": 148,
+      "groups": 14,
+      "min_y": 0.0,
+      "total_height_blocks": 2.3
+    },
+    {
+      "model": "sleuteldrager",
+      "checks": "PASS",
+      "cubes": 192,
+      "groups": 14,
+      "min_y": 0.0,
+      "total_height_blocks": 2.2978
+    },
+    {
+      "model": "getuige",
+      "checks": "PASS",
+      "cubes": 102,
+      "groups": 15,
+      "min_y": 0.0,
+      "total_height_blocks": 2.3173
+    }
+  ]
+}

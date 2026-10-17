@@ -1,0 +1,548 @@
+[
+  {
+    "id": "gids",
+    "name": "De Gids",
+    "body_height_blocks": 2.3,
+    "bounds_units": [
+      [
+        -8.096,
+        0.0,
+        -3.864
+      ],
+      [
+        8.74,
+        36.8,
+        3.68
+      ]
+    ],
+    "total_height_blocks": 2.3,
+    "cube_count": 180,
+    "group_count": 15,
+    "model": "mobs/gids/gids.bbmodel",
+    "texture": "mobs/gids/gids.png",
+    "texture_size": [
+      256,
+      256
+    ]
+  },
+  {
+    "id": "kettingzuster",
+    "name": "De Kettingzuster",
+    "body_height_blocks": 2.3,
+    "bounds_units": [
+      [
+        -9.420158452659718,
+        0.0,
+        -3.864
+      ],
+      [
+        9.406458452659718,
+        36.8,
+        3.68
+      ]
+    ],
+    "total_height_blocks": 2.3,
+    "cube_count": 425,
+    "group_count": 14,
+    "model": "mobs/kettingzuster/kettingzuster.bbmodel",
+    "texture": "mobs/kettingzuster/kettingzuster.png",
+    "texture_size": [
+      256,
+      256
+    ]
+  },
+  {
+    "id": "spiegelgast",
+    "name": "De Spiegelgast",
+    "body_height_blocks": 2.4,
+    "bounds_units": [
+      [
+        -8.915368077651484,
+        0.0,
+        -3.84
+      ],
+      [
+        8.915368077651484,
+        38.4,
+        3.12
+      ]
+    ],
+    "total_height_blocks": 2.4,
+    "cube_count": 46,
+    "group_count": 14,
+    "model": "mobs/spiegelgast/spiegelgast.bbmodel",
+    "texture": "mobs/spiegelgast/spiegelgast.png",
+    "texture_size": [
+      256,
+      256
+    ]
+  },
+  {
+    "id": "poortwachter",
+    "name": "De Poortwachter",
+    "body_height_blocks": 2.5,
+    "bounds_units": [
+      [
+        -10.0,
+        0.0,
+        -5.3
+      ],
+      [
+        14.461939480782384,
+        41.461939480782384,
+        4.0
+      ]
+    ],
+    "total_height_blocks": 2.5914,
+    "cube_count": 78,
+    "group_count": 15,
+    "model": "mobs/poortwachter/poortwachter.bbmodel",
+    "texture": "mobs/poortwachter/poortwachter.png",
+    "texture_size": [
+      256,
+      256
+    ]
+  },
+  {
+    "id": "fluitende",
+    "name": "De Fluitende",
+    "body_height_blocks": 2.5,
+    "bounds_units": [
+      [
+        -10.622586150232905,
+        0.0,
+        -4.45
+      ],
+      [
+        8.8,
+        40.0,
+        4.0
+      ]
+    ],
+    "total_height_blocks": 2.5,
+    "cube_count": 72,
+    "group_count": 15,
+    "model": "mobs/fluitende/fluitende.bbmodel",
+    "texture": "mobs/fluitende/fluitende.png",
+    "texture_size": [
+      256,
+      256
+    ]
+  },
+  {
+    "id": "naaister",
+    "name": "De Naaister",
+    "body_height_blocks": 2.5,
+    "bounds_units": [
+      [
+        -9.5,
+        0.0,
+        -4.15
+      ],
+      [
+        9.5,
+        40.0,
+        4.1
+      ]
+    ],
+    "total_height_blocks": 2.5,
+    "cube_count": 53,
+    "group_count": 16,
+    "model": "mobs/naaister/naaister.bbmodel",
+    "texture": "mobs/naaister/naaister.png",
+    "texture_size": [
+      256,
+      256
+    ]
+  },
+  {
+    "id": "tweeling",
+    "name": "De Tweeling",
+    "body_height_blocks": 1.8,
+    "bounds_units": [
+      [
+        -11.232,
+        0.0,
+        -2.656
+      ],
+      [
+        11.232,
+        28.8,
+        2.5600000000000005
+      ]
+    ],
+    "total_height_blocks": 1.8,
+    "cube_count": 162,
+    "group_count": 28,
+    "model": "mobs/tweeling/tweeling.bbmodel",
+    "texture": "mobs/tweeling/tweeling.png",
+    "texture_size": [
+      256,
+      256
+    ]
+  },
+  {
+    "id": "echo",
+    "name": "De Echo",
+    "body_height_blocks": 2.3,
+    "bounds_units": [
+      [
+        -7.59,
+        0.0,
+        -3.818
+      ],
+      [
+        7.59,
+        36.8,
+        3.128
+      ]
+    ],
+    "total_height_blocks": 2.3,
+    "cube_count": 50,
+    "group_count": 14,
+    "model": "mobs/echo/echo.bbmodel",
+    "texture": "mobs/echo/echo.png",
+    "texture_size": [
+      256,
+      256
+    ]
+  },
+  {
+    "id": "gastheer",
+    "name": "De Gastheer",
+    "body_height_blocks": 2.4,
+    "bounds_units": [
+      [
+        -8.448,
+        0.0,
+        -3.984
+      ],
+      [
+        8.448,
+        38.4,
+        3.84
+      ]
+    ],
+    "total_height_blocks": 2.4,
+    "cube_count": 65,
+    "group_count": 14,
+    "model": "mobs/gastheer/gastheer.bbmodel",
+    "texture": "mobs/gastheer/gastheer.png",
+    "texture_size": [
+      256,
+      256
+    ]
+  },
+  {
+    "id": "notaris",
+    "name": "De Notaris",
+    "body_height_blocks": 2.4,
+    "bounds_units": [
+      [
+        -9.6,
+        0.0,
+        -4.656
+      ],
+      [
+        11.699912316607254,
+        38.4,
+        3.84
+      ]
+    ],
+    "total_height_blocks": 2.4,
+    "cube_count": 64,
+    "group_count": 15,
+    "model": "mobs/notaris/notaris.bbmodel",
+    "texture": "mobs/notaris/notaris.png",
+    "texture_size": [
+      256,
+      256
+    ]
+  },
+  {
+    "id": "blinde",
+    "name": "De Blinde",
+    "body_height_blocks": 2.4,
+    "bounds_units": [
+      [
+        -8.448,
+        0.0,
+        -4.032
+      ],
+      [
+        8.448,
+        38.544,
+        3.84
+      ]
+    ],
+    "total_height_blocks": 2.409,
+    "cube_count": 176,
+    "group_count": 14,
+    "model": "mobs/blinde/blinde.bbmodel",
+    "texture": "mobs/blinde/blinde.png",
+    "texture_size": [
+      256,
+      256
+    ]
+  },
+  {
+    "id": "smid",
+    "name": "De Smid",
+    "body_height_blocks": 2.4,
+    "bounds_units": [
+      [
+        -14.30244334292811,
+        0.0,
+        -4.032
+      ],
+      [
+        9.6,
+        38.4,
+        3.36
+      ]
+    ],
+    "total_height_blocks": 2.4,
+    "cube_count": 59,
+    "group_count": 15,
+    "model": "mobs/smid/smid.bbmodel",
+    "texture": "mobs/smid/smid.png",
+    "texture_size": [
+      256,
+      256
+    ]
+  },
+  {
+    "id": "archivaris",
+    "name": "De Archivaris",
+    "body_height_blocks": 2.4,
+    "bounds_units": [
+      [
+        -8.448,
+        0.0,
+        -4.032
+      ],
+      [
+        8.64,
+        38.4,
+        3.84
+      ]
+    ],
+    "total_height_blocks": 2.4,
+    "cube_count": 191,
+    "group_count": 15,
+    "model": "mobs/archivaris/archivaris.bbmodel",
+    "texture": "mobs/archivaris/archivaris.png",
+    "texture_size": [
+      256,
+      256
+    ]
+  },
+  {
+    "id": "schatter",
+    "name": "De Schatter",
+    "body_height_blocks": 2.5,
+    "bounds_units": [
+      [
+        -16.0,
+        0.0,
+        -4.425
+      ],
+      [
+        8.8,
+        40.0,
+        4.0
+      ]
+    ],
+    "total_height_blocks": 2.5,
+    "cube_count": 75,
+    "group_count": 15,
+    "model": "mobs/schatter/schatter.bbmodel",
+    "texture": "mobs/schatter/schatter.png",
+    "texture_size": [
+      256,
+      256
+    ]
+  },
+  {
+    "id": "danseres",
+    "name": "De Danseres",
+    "body_height_blocks": 2.5,
+    "bounds_units": [
+      [
+        -21.0,
+        0.0,
+        -4.2
+      ],
+      [
+        21.0,
+        40.0,
+        3.65
+      ]
+    ],
+    "total_height_blocks": 2.5,
+    "cube_count": 92,
+    "group_count": 14,
+    "model": "mobs/danseres/danseres.bbmodel",
+    "texture": "mobs/danseres/danseres.png",
+    "texture_size": [
+      256,
+      256
+    ]
+  },
+  {
+    "id": "klokkenluider",
+    "name": "De Klokkenluider",
+    "body_height_blocks": 2.75,
+    "bounds_units": [
+      [
+        -11.0,
+        0.0,
+        -6.82
+      ],
+      [
+        11.0,
+        44.0,
+        4.51
+      ]
+    ],
+    "total_height_blocks": 2.75,
+    "cube_count": 207,
+    "group_count": 14,
+    "model": "mobs/klokkenluider/klokkenluider.bbmodel",
+    "texture": "mobs/klokkenluider/klokkenluider.png",
+    "texture_size": [
+      256,
+      256
+    ]
+  },
+  {
+    "id": "marionet",
+    "name": "De Marionet",
+    "body_height_blocks": 2.5,
+    "bounds_units": [
+      [
+        -11.70787466549557,
+        0.0,
+        -4.4
+      ],
+      [
+        11.707874665495572,
+        45.707874665495574,
+        3.4
+      ]
+    ],
+    "total_height_blocks": 2.8567,
+    "cube_count": 86,
+    "group_count": 15,
+    "model": "mobs/marionet/marionet.bbmodel",
+    "texture": "mobs/marionet/marionet.png",
+    "texture_size": [
+      256,
+      256
+    ]
+  },
+  {
+    "id": "pelgrim",
+    "name": "De Pelgrim",
+    "body_height_blocks": 2.3,
+    "bounds_units": [
+      [
+        -11.5,
+        0.0,
+        -3.864
+      ],
+      [
+        8.096,
+        36.8,
+        3.772
+      ]
+    ],
+    "total_height_blocks": 2.3,
+    "cube_count": 360,
+    "group_count": 15,
+    "model": "mobs/pelgrim/pelgrim.bbmodel",
+    "texture": "mobs/pelgrim/pelgrim.png",
+    "texture_size": [
+      256,
+      256
+    ]
+  },
+  {
+    "id": "stiltewachter",
+    "name": "De Stiltewachter",
+    "body_height_blocks": 2.3,
+    "bounds_units": [
+      [
+        -7.866,
+        0.0,
+        -4.462
+      ],
+      [
+        7.59,
+        36.8,
+        2.76
+      ]
+    ],
+    "total_height_blocks": 2.3,
+    "cube_count": 148,
+    "group_count": 14,
+    "model": "mobs/stiltewachter/stiltewachter.bbmodel",
+    "texture": "mobs/stiltewachter/stiltewachter.png",
+    "texture_size": [
+      256,
+      256
+    ]
+  },
+  {
+    "id": "sleuteldrager",
+    "name": "De Sleuteldrager",
+    "body_height_blocks": 2.3,
+    "bounds_units": [
+      [
+        -7.956045909770288,
+        0.0,
+        -3.864
+      ],
+      [
+        9.251821102856685,
+        36.76498106161997,
+        3.128
+      ]
+    ],
+    "total_height_blocks": 2.2978,
+    "cube_count": 192,
+    "group_count": 14,
+    "model": "mobs/sleuteldrager/sleuteldrager.bbmodel",
+    "texture": "mobs/sleuteldrager/sleuteldrager.png",
+    "texture_size": [
+      256,
+      256
+    ]
+  },
+  {
+    "id": "getuige",
+    "name": "De Getuige",
+    "body_height_blocks": 2.3,
+    "bounds_units": [
+      [
+        -7.59,
+        0.0,
+        -3.864
+      ],
+      [
+        9.89,
+        37.07624540435198,
+        2.622
+      ]
+    ],
+    "total_height_blocks": 2.3173,
+    "cube_count": 102,
+    "group_count": 15,
+    "model": "mobs/getuige/getuige.bbmodel",
+    "texture": "mobs/getuige/getuige.png",
+    "texture_size": [
+      256,
+      256
+    ]
+  }
+]
