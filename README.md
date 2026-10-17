@@ -126,6 +126,10 @@ Server config lives in the NeoForge Millénaire server config (keys under `gener
 
 Optional ceremonial maze dimension (`millenaire:labyrinth`): cold liminal atmosphere, multi-band maze, furnished **reality-bleed** rooms (bedroom/kitchen/study/parlor/nursery), **Configuratie** forms, rotary & relic-gate puzzles, echo loops, Rammelaar chase, 25 hospitable **Gebondenen**, Architect at the Core, Fallen King sequels `fallenking_11` / `fallenking_12`. Server config under `[labyrinth]` (`atmosphere=COLD`, `liminalRoomsEnabled`). See `docs/LABYRINTH_ARCHITECTURE.md`, `docs/LABYRINTH_REVIVAL_WAVES.md`, and `docs/LABYRINTH_LOCAL_VALIDATION.md`.
 
+### De Orde (overworld faith — planned)
+
+Secret-order overlay that brings Gebondenen liturgy into villages: 2-day ritual cadence, Spijkerliturgie / offerings, Configuratie-triggered abduction into the Labyrinth. **Order-first** (not a culture-default faith); IP-clean lore. Design is gated on owner-GO — see `docs/ORDE_FAITH_RELEASE_PLAN.md`, `docs/ORDE_FAITH_ARCHITECTURE.md`, `docs/ORDE_FAITH_LOCAL_VALIDATION.md`.
+
 ## Documentation
 
 - `docs/CIVILIZATION_ARCHITECTURE.md`
@@ -134,6 +138,7 @@ Optional ceremonial maze dimension (`millenaire:labyrinth`): cold liminal atmosp
 - `docs/LIVING_VILLAGES_ARCHITECTURE.md` / `LIVING_VILLAGES_IMPLEMENTATION.md`
 - `docs/RELIGION_ARCHITECTURE.md` / `RELIGION_IMPLEMENTATION.md` / `RELIGION_LOCAL_VALIDATION.md`
 - `docs/LABYRINTH_ARCHITECTURE.md` / `LABYRINTH_LOCAL_VALIDATION.md`
+- `docs/ORDE_FAITH_RELEASE_PLAN.md` / `ORDE_FAITH_ARCHITECTURE.md` / `ORDE_FAITH_LOCAL_VALIDATION.md`
 - Local validation docs describe owner-run checks; this agent does not execute them
 
 ## Development
