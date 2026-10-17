@@ -143,6 +143,7 @@ Secret-order overlay that brings Gebondenen liturgy into villages: 2-day ritual 
 - `docs/RELIGION_ARCHITECTURE.md` / `RELIGION_IMPLEMENTATION.md` / `RELIGION_LOCAL_VALIDATION.md`
 - `docs/LABYRINTH_ARCHITECTURE.md` / `LABYRINTH_LOCAL_VALIDATION.md`
 - `docs/ORDE_FAITH_RELEASE_PLAN.md` / `ORDE_FAITH_ARCHITECTURE.md` / `ORDE_FAITH_LOCAL_VALIDATION.md`
+- `docs/ORDE_BLOCK_CATALOG.md` — example Cenobite/Orde block set (design; LabyrinthMaterials swap targets)
 - Local validation docs describe owner-run checks; this agent does not execute them
 
 ## Development
