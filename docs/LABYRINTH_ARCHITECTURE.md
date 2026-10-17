@@ -4,7 +4,7 @@
 
 Custom Millénaire dimension `millenaire:labyrinth` with a deterministic cellular maze, ceremonial **Gebondenen** (25 kinds, hospitable until provoked), entry via **Configuratie**, exit via **Scharnier** / Configuratie.
 
-**Revival-achtige uitbreiding:** Waves 1–5 + **layout v2** (psyche release P1) per [`LABYRINTH_REVIVAL_RELEASE_PLAN.md`](LABYRINTH_REVIVAL_RELEASE_PLAN.md). No Hellraiser IP; own lore (Configuratie forms, Orde relics, Architect, De Ruit).
+**Revival-achtige uitbreiding:** Waves 1–8 ([`LABYRINTH_REVIVAL_WAVES.md`](LABYRINTH_REVIVAL_WAVES.md)) plus **layout v2** psyche release (P1–P5) per [`LABYRINTH_REVIVAL_RELEASE_PLAN.md`](LABYRINTH_REVIVAL_RELEASE_PLAN.md). Earlier vibe audit / Waves 9–14 notes: [`LABYRINTH_REVIVAL_MASTERPLAN.md`](LABYRINTH_REVIVAL_MASTERPLAN.md). No Hellraiser IP; own lore (Configuratie forms, Orde relics, Architect, De Ruit).
 
 **Breaking:** `labyrinthLayoutVersion=2` — delete/regenerate `millenaire:labyrinth` after upgrading.
 
