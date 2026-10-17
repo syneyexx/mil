@@ -130,6 +130,10 @@ Optional ceremonial maze dimension (`millenaire:labyrinth`): **layout v2** multi
 
 Server config under `[labyrinth]` (`atmosphere=COLD`, `liminalRoomsEnabled`, `layoutVersion=2`).
 
+### De Orde (overworld faith — planned)
+
+Secret-order overlay that brings Gebondenen liturgy into villages: 2-day ritual cadence, Spijkerliturgie / offerings, Configuratie-triggered abduction attempts (**75% player chase** — escape by running or killing hunters; **25% random NPC**), tick-budgeted so the server stays playable. **Order-first** (not a culture-default faith); IP-clean lore. Design is gated on owner-GO — see `docs/ORDE_FAITH_RELEASE_PLAN.md`, `docs/ORDE_FAITH_ARCHITECTURE.md`, `docs/ORDE_FAITH_LOCAL_VALIDATION.md`.
+
 ## Documentation
 
 - `docs/CIVILIZATION_ARCHITECTURE.md`
@@ -138,6 +142,7 @@ Server config under `[labyrinth]` (`atmosphere=COLD`, `liminalRoomsEnabled`, `la
 - `docs/LIVING_VILLAGES_ARCHITECTURE.md` / `LIVING_VILLAGES_IMPLEMENTATION.md`
 - `docs/RELIGION_ARCHITECTURE.md` / `RELIGION_IMPLEMENTATION.md` / `RELIGION_LOCAL_VALIDATION.md`
 - `docs/LABYRINTH_ARCHITECTURE.md` / `LABYRINTH_LOCAL_VALIDATION.md`
+- `docs/ORDE_FAITH_RELEASE_PLAN.md` / `ORDE_FAITH_ARCHITECTURE.md` / `ORDE_FAITH_LOCAL_VALIDATION.md`
 - Local validation docs describe owner-run checks; this agent does not execute them
 
 ## Development
