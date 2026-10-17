@@ -70,9 +70,17 @@ Phase pulses + summons (Rammelaar/Stille) + Core arena shifts when `shiftingEnab
 - `puzzlesEnabled`, `chaseEnabled`, `loopRoomsEnabled`, `vaultEnabled`, `configCombatEnabled`, `liminalRoomsEnabled`
 - `layoutVersion` (default 2) — informational; generation uses `LabyrinthKeys.LAYOUT_VERSION`
 
+## Materials (logical palette)
+
+`LabyrinthMaterials`: `ordeStone` / `ordePanel` / `bleedPlanks` / `coldVault` / `ruitHeart` — vanilla stand-ins shared by stamps (resource-pack / future block swap points).
+
+## Audio
+
+Registered events `millenaire:labyrinth.{drone,metal,whisper,chase_stinger,ruit_drone}` — vanilla placeholders; see `docs/LABYRINTH_AUDIO_SLOTS.md`.
+
 ## Commands
 
-`/millenaire labyrinth enter|leave|status|spawn <kind>|vorm <id>|relic <zegel|masker|koord>` (permission 2)
+`/millenaire labyrinth enter|leave|status|resetdim|spawn <kind>|vorm <id>|relic <zegel|masker|koord>` (permission 2)
 
 ## Quests
 
