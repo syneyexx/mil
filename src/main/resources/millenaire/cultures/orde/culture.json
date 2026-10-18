@@ -1,5 +1,5 @@
 {
-  "display_name": "De Orde",
+  "display_name": "Cenobites",
   "native_language": "nl",
   "map_icon": "millenaire:configuratie",
   "culture_banner_nbt": "{BlockEntityTag:{Base:15,Patterns:[{Pattern:sc,Color:9},{Pattern:cr,Color:0},{Pattern:mc,Color:3}]}}",

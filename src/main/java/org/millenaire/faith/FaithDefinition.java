@@ -27,7 +27,7 @@ public record FaithDefinition(
       return "player_custom".equals(this.id.getPath());
    }
 
-   /** Selectable at player city founding; not tied to a culture default. */
+   /** Cenobites / De Orde faith (culture default for the orde civilization). */
    public boolean isOrde() {
       return "orde".equals(this.id.getPath());
    }

@@ -42,8 +42,23 @@ import org.millenaire.village.VillageSavedData;
 import org.millenaire.village.diplomacy.DiplomacyEventService;
 
 public class VillageCreateWandItem extends Item {
+   /** Civilization key for Cenobites (De Orde) — always available when founding a city. */
+   public static final String CENOBITES_CULTURE_KEY = "orde";
+
    public VillageCreateWandItem(Properties properties) {
       super(properties);
+   }
+
+   public static boolean isCenobitesCultureKey(@Nullable String cultureKey) {
+      if (cultureKey == null || cultureKey.isBlank()) {
+         return false;
+      }
+      String key = cultureKey.trim().toLowerCase(Locale.ROOT);
+      return CENOBITES_CULTURE_KEY.equals(key) || "cenobites".equals(key) || "cenobite".equals(key);
+   }
+
+   public static ResourceLocation cenobitesCultureId() {
+      return ResourceLocation.fromNamespaceAndPath("millenaire", CENOBITES_CULTURE_KEY);
    }
 
    @Override
@@ -228,6 +243,7 @@ public class VillageCreateWandItem extends Item {
       }
       cultures.sort(Comparator.comparing(VillageCreateWizardPayload.CultureOption::displayName, String.CASE_INSENSITIVE_ORDER));
       cultures.add(0, new VillageCreateWizardPayload.CultureOption(customCultureKey, customDisplay));
+      appendCenobitesCultureOption(cultures, types);
       types.sort(Comparator.comparing(VillageCreateWizardPayload.TypeOption::displayName, String.CASE_INSENSITIVE_ORDER));
 
       boolean overlaps = false;
@@ -248,6 +264,32 @@ public class VillageCreateWandItem extends Item {
          cultures,
          types
       );
+   }
+
+   /**
+    * Cenobites (dimension villagers / De Orde) are always offered as a civilization type when
+    * founding a player city — no culture-control unlock required.
+    */
+   private static void appendCenobitesCultureOption(
+      List<VillageCreateWizardPayload.CultureOption> cultures, List<VillageCreateWizardPayload.TypeOption> types
+   ) {
+      ResourceLocation cenobitesId = cenobitesCultureId();
+      for (VillageCreateWizardPayload.CultureOption existing : cultures) {
+         if (isCenobitesCultureKey(existing.cultureKey())) {
+            return;
+         }
+      }
+      VillageType def = resolveDefaultControlledType(cenobitesId);
+      if (def == null) {
+         return;
+      }
+      Culture culture = ModCultures.getCulture(cenobitesId);
+      String display = culture != null
+         ? culture.displayName()
+         : Component.translatable("gui.millenaire.village_create.culture.cenobites").getString();
+      // Keep Eigen cultuur first; insert Cenobites next.
+      cultures.add(1, new VillageCreateWizardPayload.CultureOption(CENOBITES_CULTURE_KEY, display));
+      types.add(new VillageCreateWizardPayload.TypeOption(CENOBITES_CULTURE_KEY, def.id().getPath(), display));
    }
 
    public static VillageCreateHubPayload buildHubPayload(ServerLevel level, ServerPlayer player, Village owned) {

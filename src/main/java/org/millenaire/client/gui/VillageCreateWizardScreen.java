@@ -61,6 +61,8 @@ public class VillageCreateWizardScreen extends AbstractMillenaireScreen {
             Button.builder(Component.translatable("gui.millenaire.village_create.back"), b -> {
                   if (this.step == 4 && !PLAYER_CUSTOM.equals(this.selectedCulture)) {
                      this.step = 2;
+                  } else if (this.step == 5 && VillageCreateWandItem.isCenobitesCultureKey(this.selectedCulture)) {
+                     this.step = 4;
                   } else {
                      this.step--;
                   }
@@ -145,16 +147,28 @@ public class VillageCreateWizardScreen extends AbstractMillenaireScreen {
             this.addRenderableWidget(this.nameField);
             this.setInitialFocus(this.nameField);
 
+            boolean cenobites = VillageCreateWandItem.isCenobitesCultureKey(this.selectedCulture);
             this.addStepButton(
-               Button.builder(Component.translatable("gui.millenaire.village_create.next"), b -> {
-                     String name = VillageCreateWandItem.sanitizeVillageName(this.villageName);
-                     if (name.isEmpty() || this.selectedType.isEmpty()) {
-                        return;
+               Button.builder(
+                     Component.translatable(
+                        cenobites ? "gui.millenaire.village_create.found" : "gui.millenaire.village_create.next"
+                     ),
+                     b -> {
+                        String name = VillageCreateWandItem.sanitizeVillageName(this.villageName);
+                        if (name.isEmpty() || this.selectedType.isEmpty()) {
+                           return;
+                        }
+                        if (cenobites) {
+                           this.faithChoice = VillageCreateConfirmPayload.FAITH_ORDE;
+                           this.faithName = "";
+                           this.sendFoundPacket();
+                           return;
+                        }
+                        this.step = 5;
+                        this.rebuildStep();
                      }
-                     this.step = 5;
-                     this.rebuildStep();
-                  })
-                  .bounds(x + WIDTH - 86, y + HEIGHT - 28, 70, 18)
+                  )
+                  .bounds(x + WIDTH - 100, y + HEIGHT - 28, cenobites ? 84 : 70, 18)
                   .build()
             );
             this.nameField.setResponder(s -> {

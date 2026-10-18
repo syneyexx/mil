@@ -11,12 +11,13 @@ Agent does **not** execute these checks. Run after each wave when implementing.
 
 ## Smoke — O0
 
-1. Boot world; log shows Orde order + rituals loaded; faith `millenaire:orde` registered.
-2. Village create wand → faith step shows three buttons: own faith / **Cenobites** / culture faith.
-3. Found with Cenobites: city `faithId=orde`, Orde chapter seeded, shrine queued; message `faith_orde_started`.
-4. Found with culture / custom still works (regression).
-5. `/millenaire` religion/orde debug (when added): list chapters; force-seed Orde on test village.
-6. Mark villager abducted via debug; confirm no dusk respawn; panel shows taken state.
+1. Boot world; log shows Orde order + rituals loaded; faith `millenaire:orde` registered; culture `millenaire:orde` loaded.
+2. Village create wand → culture step lists **Cenobites** (always, no culture-control unlock). Founding spawns Orde-stad with dimension-style villagers (`native_model` orde_villager/*), `faithId=orde`, Orde chapter seeded.
+3. Village create wand → other cultures still show faith step with own faith / **Cenobites** / culture faith.
+4. Found with faith-only Cenobites (non-Cenobites civ): city `faithId=orde`, Orde chapter seeded, shrine queued; message `faith_orde_started`.
+5. Found with culture / custom still works (regression).
+6. `/millenaire` religion/orde debug (when added): list chapters; force-seed Orde on test village.
+7. Mark villager abducted via debug; confirm no dusk respawn; panel shows taken state.
 
 ## Smoke — O1
 

@@ -1,0 +1,52 @@
+{
+  "culture": "millenaire:orde",
+  "name": "Orde-stad",
+  "weight": 0,
+  "player_controlled": true,
+  "radius": 48,
+  "layout": [
+    {
+      "plan": "millenaire:orde/orde_hall",
+      "role": "centre"
+    },
+    {
+      "plan": "millenaire:orde/orde_cell",
+      "role": "start"
+    },
+    {
+      "plan": "millenaire:orde/orde_forge",
+      "role": "start"
+    },
+    {
+      "plan": "millenaire:orde/orde_inn",
+      "role": "start"
+    },
+    {
+      "plan": "millenaire:orde/orde_cell",
+      "role": "core"
+    },
+    {
+      "plan": "millenaire:orde/orde_forge",
+      "role": "core"
+    },
+    {
+      "plan": "millenaire:orde/orde_inn",
+      "role": "core"
+    },
+    {
+      "plan": "millenaire:orde/orde_cell",
+      "role": "core"
+    }
+  ],
+  "icon": "millenaire:configuratie",
+  "qualifiers": [
+    "van-de-Orde",
+    "aan-de-drempel"
+  ],
+  "path_materials": [
+    "pathgravel"
+  ],
+  "carries_raid": true,
+  "allow_extra_buildings": true,
+  "min_distance_from_spawn": 0
+}
