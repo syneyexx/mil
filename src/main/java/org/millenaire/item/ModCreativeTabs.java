@@ -393,6 +393,10 @@ public final class ModCreativeTabs {
             output.accept((ItemLike)ModBlocks.CROOKED_PAINTING.get());
             output.accept((ItemLike)ModBlocks.ORDE_LAMP.get());
             output.accept((ItemLike)ModBlocks.CEILING_RECESS.get());
+            output.accept((ItemLike)ModBlocks.ORDE_ARCH.get());
+            output.accept((ItemLike)ModBlocks.ORDE_PARAPET.get());
+            output.accept((ItemLike)ModBlocks.GALLERY_RAIL.get());
+            output.accept((ItemLike)ModBlocks.VOID_BEAM.get());
             output.accept((ItemLike)ModBlocks.SCHARNIER.get());
             output.accept((ItemLike)ModItems.CONFIGURATIE.get());
             output.accept((ItemLike)ModItems.LABYRINTH_ZEGEL.get());

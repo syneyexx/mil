@@ -51,12 +51,21 @@ public final class LabyrinthAudienceRoom {
                   set(chunk, x, y, z, wall);
                }
             } else {
-               for (int y = floor + 1; y < naveCeil; y++) {
+               // Open to the sky void — De Ruit beam continues above (layout v3 horizon).
+               for (int y = floor + 1; y <= naveCeil; y++) {
                   set(chunk, x, y, z, AIR);
                }
-               set(chunk, x, naveCeil, z, PACKED);
             }
          }
+      }
+      // Wall-crown parapet on nave rim for walkable frame.
+      for (int x = minX; x <= maxX; x++) {
+         set(chunk, x, naveCeil, minZ, LabyrinthMaterials.parapet());
+         set(chunk, x, naveCeil, maxZ, LabyrinthMaterials.parapet());
+      }
+      for (int z = minZ; z <= maxZ; z++) {
+         set(chunk, minX, naveCeil, z, LabyrinthMaterials.parapet());
+         set(chunk, maxX, naveCeil, z, LabyrinthMaterials.parapet());
       }
 
       // Processional carpet ≥20 blocks toward the south (Core) when footprint allows.
@@ -98,7 +107,10 @@ public final class LabyrinthAudienceRoom {
       for (int y = ruitY + 4; y < naveCeil; y++) {
          set(chunk, centerX, y, centerZ, CHAIN);
       }
-      set(chunk, centerX, naveCeil - 1, centerZ, HANGING);
+      // Sky beam pillar through the open crown (visible across the wellgrid horizon).
+      for (int y = naveCeil; y < LabyrinthKeys.MIN_Y + LabyrinthKeys.GEN_DEPTH; y++) {
+         set(chunk, centerX, y, centerZ, LabyrinthMaterials.voidBeam());
+      }
 
       // Silent pews — iron-bar congregation along both flanks (Approach/Audience presence).
       for (int z = minZ + 3; z <= maxZ - 3; z += 2) {

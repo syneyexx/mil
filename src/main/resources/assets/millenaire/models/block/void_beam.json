@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "millenaire:block/void_beam"
+  },
+  "render_type": "minecraft:translucent"
+}

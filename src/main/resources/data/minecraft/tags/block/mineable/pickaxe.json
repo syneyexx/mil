@@ -163,6 +163,10 @@
     "millenaire:void_gate",
     "millenaire:hanging_hook",
     "millenaire:orde_censer",
-    "millenaire:ceiling_recess"
+    "millenaire:ceiling_recess",
+    "millenaire:orde_arch",
+    "millenaire:orde_parapet",
+    "millenaire:gallery_rail",
+    "millenaire:void_beam"
   ]
 }

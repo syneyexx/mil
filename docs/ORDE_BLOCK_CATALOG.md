@@ -116,6 +116,15 @@
 | 49 | `orde_lantern` | Orde Lantern | Orde-lantaarn | Light 12, cutout |
 | 50 | `void_sconce` | Void Sconce | Leegte-wandlamp | Light 4 |
 
+### 6b. Wellgrid architecture (layout v3)
+
+| # | ID | EN | NL | Notes |
+|---|----|----|----|-------|
+| 51 | `orde_arch` | Orde Arch | Orde-boog | Arch motif / lintels in well walls |
+| 52 | `orde_parapet` | Orde Parapet | Orde-borstwering | Wall crown (WallBlock) |
+| 53 | `gallery_rail` | Gallery Rail | Galerij-reling | Overlook railing (pane) |
+| 54 | `void_beam` | Void Beam | Leegte-bundel | Sky pillar light 15 — De Ruit horizon anchor |
+
 ### 7. Also on The Order tab (existing Labyrinth / faith)
 
 | ID | EN | Type |

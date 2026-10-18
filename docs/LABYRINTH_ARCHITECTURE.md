@@ -4,9 +4,9 @@
 
 Custom Millénaire dimension `millenaire:labyrinth` with a deterministic cellular maze, ceremonial **Gebondenen** (25 kinds, hospitable until provoked), entry via **Configuratie**, exit via **Scharnier** / Configuratie.
 
-**Revival-achtige uitbreiding:** Waves 1–8 ([`LABYRINTH_REVIVAL_WAVES.md`](LABYRINTH_REVIVAL_WAVES.md)) plus **layout v2** psyche release (P1–P5) per [`LABYRINTH_REVIVAL_RELEASE_PLAN.md`](LABYRINTH_REVIVAL_RELEASE_PLAN.md). Earlier vibe audit / Waves 9–14 notes: [`LABYRINTH_REVIVAL_MASTERPLAN.md`](LABYRINTH_REVIVAL_MASTERPLAN.md). No Hellraiser IP; own lore (Configuratie forms, Orde relics, Architect, De Ruit).
+**Revival-achtige uitbreiding:** Waves 1–8 ([`LABYRINTH_REVIVAL_WAVES.md`](LABYRINTH_REVIVAL_WAVES.md)) plus psyche release (P1–P5) per [`LABYRINTH_REVIVAL_RELEASE_PLAN.md`](LABYRINTH_REVIVAL_RELEASE_PLAN.md). **Layout v3 wellgrid:** [`LABYRINTH_WELLGRID_V3.md`](LABYRINTH_WELLGRID_V3.md). Earlier vibe audit: [`LABYRINTH_REVIVAL_MASTERPLAN.md`](LABYRINTH_REVIVAL_MASTERPLAN.md). No Hellraiser IP; own lore (Configuratie forms, Orde relics, Architect, De Ruit).
 
-**Breaking:** `labyrinthLayoutVersion=2` — delete/regenerate `millenaire:labyrinth` after upgrading.
+**Breaking:** `labyrinthLayoutVersion=3` — delete/regenerate `millenaire:labyrinth` after upgrading.
 
 ## Packages
 
@@ -23,15 +23,16 @@ Custom Millénaire dimension `millenaire:labyrinth` with a deterministic cellula
 | `...client` | Model, renderer, fog, ambient |
 | `...command` | `/millenaire labyrinth …` |
 
-## Floor bands
+## Floor bands (wellgrid v3)
 
 | Band | Y | Role |
 |------|---|------|
-| Vault | 48–56 | Lower routes beyond manhattan distance 12 from Arrival |
-| Primary | 64–73 | Arrival, main maze, puzzles |
-| Mezzanine | 74–82 | Hub overlooks (HOST_HALL / GATE / CHAPEL stamps) |
+| Vault | 48–56 | Pit floors / lower bridges (beyond manhattan 12) |
+| Primary | 64–73 | Gallery rings, cross-bridges, doorway arches |
+| Mezzanine | 74–82 | Upper overlooks + wall crowns (`WALL_CROWN_Y`) |
+| Sky void | ≥83 | Open horizon; `void_beam` over Audience/Core |
 
-Corridors use a **3-wide plus-shaped** walk channel (`CORRIDOR_WALK_HALF`) with bars/spikes in cell corners. Chambers claim multi-cell footprints: CORRIDOR 8 / ROOM 16 / SUITE 24 / NAVE 24–32. Zone arc: Arrival → Bleed → Orde → Approach → Core/Audience. Cold palette mixes packed ice into walls/ceilings.
+Each maze cell is an **open well** framed by Orde walls with arcade openings. `NONE` cells stamp crazy hallway archetypes (`LabyrinthHallways`). Chambers claim multi-cell footprints: CORRIDOR 8 / ROOM 16 / SUITE 24 / NAVE 24–32. Zone arc: Arrival → Bleed → Orde → Approach → Core/Audience.
 
 ## Configuratie forms
 
@@ -48,7 +49,7 @@ Relics spawn once per FORGE / ARCHIVE / CHAPEL hub visit.
 
 ## Room types
 
-ARRIVAL (3×3 nave) · CORE (2×2) · **AUDIENCE (3×3 De Ruit)** · ATRIUM · HOST_HALL · FORGE · ARCHIVE · CHAPEL · GATE · NICHE · **ROTARY** · **ECHO_LOOP** · **LIMINAL_*** · CHAMBER_PAD
+ARRIVAL (3×3 nave) · CORE (2×2) · **AUDIENCE (3×3 De Ruit + sky beam)** · WELL_ATRIUM · BRIDGE_NODE · CLOISTER · DEPTH_SHAFT · ATRIUM · HOST_HALL · FORGE · ARCHIVE · CHAPEL · GATE · NICHE · **ROTARY** · **ECHO_LOOP** · **LIMINAL_*** (Bleed only, sparse) · CHAMBER_PAD · `NONE` → hallway archetype
 
 ## Attitude AI
 
@@ -68,13 +69,13 @@ Phase pulses + summons (Rammelaar/Stille) + Core arena shifts when `shiftingEnab
 - `hostileCapPerPlayer`, `frenemyInteractions`, `arrivalRespawn`, `shiftingEnabled`
 - `atmosphere` = `COLD` (default) \| `CLASSIC`
 - `puzzlesEnabled`, `chaseEnabled`, `loopRoomsEnabled`, `vaultEnabled`, `configCombatEnabled`, `liminalRoomsEnabled`
-- `layoutVersion` (default 2) — informational; generation uses `LabyrinthKeys.LAYOUT_VERSION`
+- `layoutVersion` (default 3) — informational; generation uses `LabyrinthKeys.LAYOUT_VERSION`
 
 ## Materials (logical palette)
 
-`LabyrinthMaterials`: `ordeStone` / `ordePanel` / `bleedPlanks` / `coldVault` / `ruitHeart` — vanilla stand-ins shared by stamps (resource-pack / future block swap points).
+`LabyrinthMaterials` drives **all** well/corridor fill: stone/panel/bricks/riveted/bars/grate/spikes/hooks/lanterns/arch/parapet/gallery_rail/void_beam + bleed/ruit accents.
 
-**Target block catalog (design):** see [`ORDE_BLOCK_CATALOG.md`](ORDE_BLOCK_CATALOG.md) — Cenobite/Orde-inspired set keyed to Hellraiser + Hellraiser: Revival mood (IP-clean IDs), ship waves B0–B5.
+**Block catalog:** [`ORDE_BLOCK_CATALOG.md`](ORDE_BLOCK_CATALOG.md). Wellgrid notes: [`LABYRINTH_WELLGRID_V3.md`](LABYRINTH_WELLGRID_V3.md).
 
 ## Audio
 

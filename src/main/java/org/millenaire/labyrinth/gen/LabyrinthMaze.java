@@ -12,8 +12,9 @@ import org.millenaire.labyrinth.LabyrinthKeys;
  * Deterministic per-region maze built with recursive backtracking plus light cycles.
  * Wall openness is stored as N/E/S/W bitflags on each cell.
  *
- * <p>Layout v2: special chambers claim multi-cell footprints. Non-anchor cells are
- * {@link RoomType#CHAMBER_PAD}; stamps run only from the SW anchor.
+ * <p>Layout v3 wellgrid: special chambers claim multi-cell footprints. Non-anchor cells are
+ * {@link RoomType#CHAMBER_PAD}; stamps run only from the SW anchor. Corridor cells
+ * ({@link RoomType#NONE}) receive crazy hallway archetypes from {@link LabyrinthHallways}.
  */
 public final class LabyrinthMaze {
    public static final int WALL_N = 1;
@@ -50,8 +51,25 @@ public final class LabyrinthMaze {
       AUDIENCE,
       /** Vertical atrium / overlook connecting primary ↔ mezzanine. */
       ATRIUM,
+      /** Open multi-level well with overlook rings (layout v3). */
+      WELL_ATRIUM,
+      /** Cross-cell bridge nexus over a deep pit. */
+      BRIDGE_NODE,
+      /** Arcade cloister ring around an open well. */
+      CLOISTER,
+      /** Dramatic vertical shaft linking vault ↔ mezzanine. */
+      DEPTH_SHAFT,
       /** Occupied by a multi-cell chamber; do not stamp — resolve via anchor. */
       CHAMBER_PAD
+   }
+
+   public static boolean isWellSpecial(RoomType type) {
+      return type == RoomType.WELL_ATRIUM
+         || type == RoomType.BRIDGE_NODE
+         || type == RoomType.CLOISTER
+         || type == RoomType.DEPTH_SHAFT
+         || type == RoomType.ATRIUM
+         || type == RoomType.ROTARY;
    }
 
    public static boolean isLiminal(RoomType type) {
@@ -315,7 +333,7 @@ public final class LabyrinthMaze {
    }
 
    private void assignSpecialRooms(Random random) {
-      // Fixed naves / arenas first (layout v2 multi-cell).
+      // Fixed naves / arenas first (layout v3 multi-cell).
       tryClaimGlobal(0, 0, LabyrinthKeys.ARRIVAL_SPAN, RoomType.ARRIVAL);
       tryClaimGlobal(LabyrinthKeys.CORE_CELL_X, LabyrinthKeys.CORE_CELL_Z, LabyrinthKeys.CORE_SPAN, RoomType.CORE);
       tryClaimGlobal(
@@ -335,21 +353,25 @@ public final class LabyrinthMaze {
             int globalZ = this.regionZ * this.regionSize + localZ;
 
             int spacing = LabyrinthKeys.HUB_SPACING;
-            if (globalX % spacing == 0 && globalZ % spacing == 0 && globalX != 0 && globalZ != 0) {
+            LabyrinthKeys.Zone zone = LabyrinthKeys.zoneAt(globalX, globalZ);
+
+            // Hub lattice — majority crazy well types; ceremonial rooms sparse (~1/8).
+            if (globalX % spacing == 0 && globalZ % spacing == 0 && !(globalX == 0 && globalZ == 0)) {
                int hubIndex = Math.floorMod(
                   (globalX / spacing) + (globalZ / spacing) * 3 + this.regionX + this.regionZ * 5,
-                  7
+                  8
                );
                RoomType hub = switch (hubIndex) {
-                  case 0 -> RoomType.HOST_HALL;
-                  case 1 -> RoomType.FORGE;
-                  case 2 -> RoomType.ARCHIVE;
-                  case 3 -> RoomType.CHAPEL;
-                  case 4 -> RoomType.GATE;
-                  case 5 -> RoomType.ROTARY;
-                  default -> (Math.floorMod(globalX + globalZ, 2) == 0)
+                  case 0 -> RoomType.ROTARY;
+                  case 1 -> RoomType.WELL_ATRIUM;
+                  case 2 -> RoomType.BRIDGE_NODE;
+                  case 3 -> RoomType.CLOISTER;
+                  case 4 -> RoomType.DEPTH_SHAFT;
+                  case 5 -> RoomType.GATE;
+                  case 6 -> (Math.floorMod(globalX + globalZ, 2) == 0)
                      ? RoomType.ECHO_LOOP
                      : RoomType.MIRROR_LOOP;
+                  default -> ceremonialHub(globalX, globalZ); // ~12.5% normal rooms
                };
                int span = isLiminal(hub) ? LabyrinthKeys.SUITE_SPAN : LabyrinthKeys.ROOM_SPAN;
                if (!claimLocal(localX, localZ, span, hub)) {
@@ -358,32 +380,47 @@ public final class LabyrinthMaze {
                continue;
             }
 
-            // Rotary waypoints on the approach path toward Core.
+            // Bridge / rotary waypoints denser toward Core.
             if (globalX > 0 && globalZ > 0
                && globalX % (spacing / 2) == 0
                && globalZ % spacing == spacing / 2
-               && LabyrinthKeys.manhattanFromArrival(globalX, globalZ) >= 8) {
-               if (!claimLocal(localX, localZ, LabyrinthKeys.ROOM_SPAN, RoomType.ROTARY)) {
-                  claimLocal(localX, localZ, 1, RoomType.ROTARY);
+               && LabyrinthKeys.manhattanFromArrival(globalX, globalZ) >= 6) {
+               RoomType waypoint = Math.floorMod(globalX + globalZ * 3, 3) == 0
+                  ? RoomType.BRIDGE_NODE
+                  : RoomType.ROTARY;
+               if (!claimLocal(localX, localZ, LabyrinthKeys.ROOM_SPAN, waypoint)) {
+                  claimLocal(localX, localZ, 1, waypoint);
                }
                continue;
             }
 
-            // Vertical atriums in Approach — overlook vocabulary (P1.4).
-            LabyrinthKeys.Zone zone = LabyrinthKeys.zoneAt(globalX, globalZ);
-            if (zone == LabyrinthKeys.Zone.APPROACH
+            // Well atriums / cloisters denser in Orde + Approach.
+            if ((zone == LabyrinthKeys.Zone.ORDE || zone == LabyrinthKeys.Zone.APPROACH)
                && globalX % spacing == spacing / 2
                && globalZ % spacing == 0
                && this.roomTypes[localZ][localX] == RoomType.NONE) {
-               claimLocal(localX, localZ, LabyrinthKeys.ROOM_SPAN, RoomType.ATRIUM);
+               RoomType vertical = zone == LabyrinthKeys.Zone.APPROACH
+                  ? RoomType.WELL_ATRIUM
+                  : RoomType.CLOISTER;
+               claimLocal(localX, localZ, LabyrinthKeys.ROOM_SPAN, vertical);
                continue;
             }
 
-            // Reality-bleed suites — prefer 3×3 when free.
-            if (LabyrinthKeys.manhattanFromArrival(globalX, globalZ) >= 5
+            // Depth shafts on a half-offset lattice in Approach.
+            if (zone == LabyrinthKeys.Zone.APPROACH
+               && globalX % spacing == spacing / 2
+               && globalZ % spacing == spacing / 2
                && this.roomTypes[localZ][localX] == RoomType.NONE) {
-               int bleed = Math.floorMod(globalX * 17 + globalZ * 29 + this.regionX * 7, 11);
-               if (bleed == 0 || bleed == 3 || bleed == 7) {
+               claimLocal(localX, localZ, 1, RoomType.DEPTH_SHAFT);
+               continue;
+            }
+
+            // Reality-bleed suites — Bleed zone only, lower density (contrast islands).
+            if (zone == LabyrinthKeys.Zone.BLEED
+               && LabyrinthKeys.manhattanFromArrival(globalX, globalZ) >= 5
+               && this.roomTypes[localZ][localX] == RoomType.NONE) {
+               int bleed = Math.floorMod(globalX * 17 + globalZ * 29 + this.regionX * 7, 17);
+               if (bleed == 0 || bleed == 8) {
                   RoomType liminal = liminalVariant(globalX, globalZ, random);
                   if (!claimLocal(localX, localZ, LabyrinthKeys.SUITE_SPAN, liminal)
                      && !claimLocal(localX, localZ, LabyrinthKeys.ROOM_SPAN, liminal)) {
@@ -393,18 +430,33 @@ public final class LabyrinthMaze {
                }
             }
 
+            // Dead ends: prefer well niches / choke, rarely liminal.
             if (isDeadEnd(localX, localZ) && this.roomTypes[localZ][localX] == RoomType.NONE) {
-               if (random.nextFloat() < 0.45f) {
+               float roll = random.nextFloat();
+               if (roll < 0.20f && zone == LabyrinthKeys.Zone.BLEED) {
                   RoomType liminal = liminalVariant(globalX, globalZ, random);
                   if (!claimLocal(localX, localZ, LabyrinthKeys.ROOM_SPAN, liminal)) {
                      claimLocal(localX, localZ, 1, liminal);
                   }
-               } else if (random.nextFloat() < 0.35f) {
+               } else if (roll < 0.55f) {
                   claimLocal(localX, localZ, 1, RoomType.NICHE);
+               } else if (roll < 0.75f) {
+                  claimLocal(localX, localZ, 1, RoomType.DEPTH_SHAFT);
                }
+               // else stay NONE → crazy hallway archetype
             }
          }
       }
+   }
+
+   /** Sparse ceremonial hubs so forge/chapel/archive still exist as landmarks. */
+   private static RoomType ceremonialHub(int globalX, int globalZ) {
+      return switch (Math.floorMod(globalX * 5 + globalZ * 11, 4)) {
+         case 0 -> RoomType.HOST_HALL;
+         case 1 -> RoomType.FORGE;
+         case 2 -> RoomType.ARCHIVE;
+         default -> RoomType.CHAPEL;
+      };
    }
 
    private void linkCoreToAudience() {
