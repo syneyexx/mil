@@ -6,7 +6,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.AABB;
-import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.entity.MillVillager;
 import org.millenaire.village.Village;
 import org.millenaire.village.VillagerRecord;
