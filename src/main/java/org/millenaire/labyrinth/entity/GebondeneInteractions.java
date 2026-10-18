@@ -52,6 +52,7 @@ public final class GebondeneInteractions {
          case GETUIGE -> witnessMark(host, serverPlayer, orde);
          case ARCHITECT -> architectMeasure(host, serverPlayer);
          case SPIJKERMEESTER -> spikeBlessing(host, serverPlayer);
+         case NEEDLEGUY -> needlePriestBlessing(host, serverPlayer);
          case SPIEGELGAST -> mirrorShortcut(host, serverPlayer);
          case ECHO -> echoTip(host, serverPlayer);
          case TWEELING -> twinSwap(host, serverPlayer);
@@ -60,7 +61,10 @@ public final class GebondeneInteractions {
    }
 
    private static boolean canReconcile(GebondeneKind kind) {
-      return kind == GebondeneKind.GASTHEER || kind == GebondeneKind.NOTARIS || kind == GebondeneKind.ARCHIVARIS;
+      return kind == GebondeneKind.GASTHEER
+         || kind == GebondeneKind.NOTARIS
+         || kind == GebondeneKind.ARCHIVARIS
+         || kind == GebondeneKind.NEEDLEGUY;
    }
 
    private static InteractionResult reconcile(GebondeneEntity host, ServerPlayer player, LabyrinthOrdeData orde) {
@@ -317,6 +321,21 @@ public final class GebondeneInteractions {
       player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 400, 0));
       play(host, SoundEvents.ANVIL_PLACE, 0.8F);
       player.displayClientMessage(Component.translatable("labyrinth.interact.spijker_ok"), true);
+      return InteractionResult.CONSUME;
+   }
+
+   /**
+    * Needleguy — Orde priest: small offering for a ceremonial blessing (resist + absorb).
+    */
+   private static InteractionResult needlePriestBlessing(GebondeneEntity host, ServerPlayer player) {
+      if (!consumeDenier(player, 2) && !consumeOffer(player, Items.GOLD_NUGGET, 1) && !consumeOffer(player, Items.GOLD_INGOT, 1)) {
+         player.displayClientMessage(Component.translatable("labyrinth.interact.needleguy_pay"), true);
+         return InteractionResult.CONSUME;
+      }
+      player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 500, 0));
+      player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 500, 0));
+      play(host, SoundEvents.ENCHANTMENT_TABLE_USE, 1.05F);
+      player.displayClientMessage(Component.translatable("labyrinth.interact.needleguy_ok"), true);
       return InteractionResult.CONSUME;
    }
 

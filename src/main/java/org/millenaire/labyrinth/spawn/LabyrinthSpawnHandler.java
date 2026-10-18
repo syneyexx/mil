@@ -155,6 +155,15 @@ public final class LabyrinthSpawnHandler {
          if (kind == GebondeneKind.SPIJKERMEESTER && nearCore) {
             weight *= 2;
          }
+         // Needleguy priest: common corridor presence; prefers chapel / cloister / audience.
+         if (kind == GebondeneKind.NEEDLEGUY) {
+            weight *= 2;
+            if (room == LabyrinthMaze.RoomType.CHAPEL
+               || room == LabyrinthMaze.RoomType.CLOISTER
+               || room == LabyrinthMaze.RoomType.AUDIENCE) {
+               weight *= 3;
+            }
+         }
          if (kind.tier() == GebondeneKind.Tier.GATE && room == LabyrinthMaze.RoomType.GATE) {
             weight *= 2;
          }

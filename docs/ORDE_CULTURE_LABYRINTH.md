@@ -38,4 +38,4 @@ Rendering: `VillagerType.native_model` → `NativeJsonEntityModel` in `MillVilla
 1. Enter Labyrinth, explore / wait for chunk gen → Orde kloosters can appear on labyrinth biome chunks.
 2. Or force: stand in Labyrinth → `/millenaire spawn cloister` (or full id `millenaire:orde/cloister`).
 3. Overworld cultures can declare war on Orde via shared standing; physical cross-dim raids are not teleported automatically.
-4. Gebondenen (25 maze entities) remain separate from this culture — villages are Millénaire `MillVillager`s.
+4. Gebondenen (26 maze entities) remain separate from this culture — villages are Millénaire `MillVillager`s.

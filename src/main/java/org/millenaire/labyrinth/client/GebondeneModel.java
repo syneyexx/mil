@@ -114,16 +114,20 @@ public class GebondeneModel<T extends GebondeneEntity> extends HumanoidModel<T> 
 
       boolean showMask = kind == GebondeneKind.ARCHITECT
          || kind == GebondeneKind.SPIJKERMEESTER
+         || kind == GebondeneKind.NEEDLEGUY
          || kind == GebondeneKind.GASTHEER
          || kind == GebondeneKind.SPIEGELGAST
          || kind == GebondeneKind.STILLE;
       boolean showHooks = kind == GebondeneKind.KETTINGZUSTER
          || kind == GebondeneKind.RAMMELAAR
          || kind == GebondeneKind.NAAISTER
-         || kind == GebondeneKind.SPIJKERMEESTER;
+         || kind == GebondeneKind.SPIJKERMEESTER
+         || kind == GebondeneKind.NEEDLEGUY;
       boolean showLantern = kind == GebondeneKind.GIDS || kind == GebondeneKind.PELGRIM;
       boolean showKeys = kind == GebondeneKind.SLEUTELDRAGER || kind == GebondeneKind.POORTWACHTER;
-      boolean showHalo = kind == GebondeneKind.GETUIGE || kind == GebondeneKind.ARCHITECT;
+      boolean showHalo = kind == GebondeneKind.GETUIGE
+         || kind == GebondeneKind.ARCHITECT
+         || kind == GebondeneKind.NEEDLEGUY;
 
       this.mask.visible = showMask;
       this.hookLeft.visible = showHooks;

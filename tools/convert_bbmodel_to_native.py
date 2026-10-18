@@ -112,6 +112,10 @@ def clips_for(groups: list[dict]) -> dict:
         idle_bones["a_body"] = {"position": [[0, [0, 0, 0]], [1, [0, 0.3, 0]], [2, [0, 0, 0]]]}
     if "b_body" in names:
         idle_bones["b_body"] = {"position": [[0, [0, 0, 0]], [1, [0, 0.3, 0]], [2, [0, 0, 0]]]}
+    if "puzzle_cube" in names:
+        idle_bones["puzzle_cube"] = {"rotation": [[0, [0, 0, 0]], [1, [0, 8, 0]], [2, [0, 0, 0]]]}
+    if "pins" in names:
+        idle_bones["pins"] = {"rotation": [[0, [0, 0, 0]], [1, [1.5, 0, 0]], [2, [0, 0, 0]]]}
 
     return {
         "idle": {"length": 2.0, "loop": True, "bones": idle_bones},
@@ -209,6 +213,7 @@ def main():
     all_kinds = {
         "architect",
         "spijkermeester",
+        "needleguy",
         "rammelaar",
         "stille",
         "gids",

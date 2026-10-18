@@ -9,12 +9,14 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * The twenty-five kinds of Gebondene that inhabit the Millénaire Labyrinth.
+ * The twenty-six kinds of Gebondene that inhabit the Millénaire Labyrinth.
  */
 public enum GebondeneKind {
    // Silhouette tiers (P5.3): LEADER tall/broad, GATE armored mid, SOCIAL human-scale — readable in-game.
    ARCHITECT("architect", "architect", 1.25F, 3.4F, 280.0, 14.0, 0.24, 12.0, Tier.LEADER, GebondeneAttitude.GASTVRIJ, 80),
    SPIJKERMEESTER("spijkermeester", "spijkermeester", 0.95F, 2.7F, 120.0, 10.0, 0.26, 8.0, Tier.LEADER, GebondeneAttitude.GASTVRIJ, 40),
+   /** Pin-crowned Orde priest (Needleguy model); regular corridor presence, chapel-biased. */
+   NEEDLEGUY("needleguy", "needleguy", 0.7F, 2.4F, 36.0, 5.0, 0.26, 4.0, Tier.SOCIAL, GebondeneAttitude.GASTVRIJ, 10),
    RAMMELAAR("rammelaar", "rammelaar", 0.55F, 1.65F, 22.0, 3.0, 0.32, 1.0, Tier.COMMON, GebondeneAttitude.GASTVRIJ, 5),
    STILLE("stille", "stille", 0.5F, 1.7F, 20.0, 2.0, 0.28, 1.0, Tier.COMMON, GebondeneAttitude.GASTVRIJ, 5),
    GIDS("gids", "gids", 0.6F, 1.9F, 24.0, 3.0, 0.29, 1.5, Tier.SOCIAL, GebondeneAttitude.GASTVRIJ, 7),
