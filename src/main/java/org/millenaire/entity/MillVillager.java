@@ -973,6 +973,10 @@ public class MillVillager extends PathfinderMob {
          if (warSabotage != null && !goals.contains(warSabotage)) {
             goals.add(warSabotage);
          }
+         VillagerGoal activityMission = registry.get(org.millenaire.goal.impl.ActivityMissionGoal.ID);
+         if (activityMission != null && !goals.contains(activityMission)) {
+            goals.add(activityMission);
+         }
       }
 
       this.goalScheduler = new GoalScheduler(goals);

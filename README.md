@@ -80,6 +80,18 @@ Server config lives in the NeoForge Millénaire server config (keys under `gener
 - `civilizationColonizationOpsBudget` / `CandidateBudget` / `CooldownDays`
 - Village book **Civilization** section + NPC action buttons use server-derived snapshots (`CivilizationPresentationService`); visitors may support needs/view proposals, controllers may prioritize housing and authorize colonization progress (never flips the master switch)
 
+### Regional activity (hunts, patrols, bandits, expedition raids)
+
+- **Implemented** and wired into the server post-tick, goals, raid bridge, culture profiles, and `/millenaire activity` commands.
+- **Verified / measured at runtime:** not claimed here — owner validates locally (Cursor does not run client/server/benchmarks for this feature).
+- `regionalActivity.enabled` — master switch (default true); disabling stops new proposals and drains safe return/cleanup without wiping SavedData or residents.
+- Conservatieve server-wide caps (groups/NPCs/violent/raids/region/activation/nav/candidates/commits) + MSPT pressure HEALTHY/SOFT/HARD; shared with `CommitBudget` and unique legacy raid counting.
+- Expedition village raids use reserved travelling members (`RaidParticipantMode.EXPEDITION_MEMBERS`) and never mix with legacy raid clones on the same operation.
+- Content: `millenaire/cultures/<culture>/activity_profiles.json` (hunters, patrols, rival bandit orgs).
+- Admin: `/millenaire activity status|metrics|inspect|explain|enable|disable|request`
+- Docs: `docs/REGIONAL_ACTIVITY_ARCHITECTURE.md`, `REGIONAL_ACTIVITY_IMPLEMENTATION.md`, `REGIONAL_ACTIVITY_LOCAL_VALIDATION.md`
+- Out of scope: boats/shipping, runtime camp generation, LLM/network services
+
 ### NPC chat
 
 - **LM Studio / Ollama only** (local OpenAI-compatible server). Cloud APIs (OpenAI, xAI/Grok, etc.) are rejected.

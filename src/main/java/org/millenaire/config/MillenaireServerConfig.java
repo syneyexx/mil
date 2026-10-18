@@ -138,6 +138,47 @@ public final class MillenaireServerConfig {
    /** Informational / smoke — generation uses {@link org.millenaire.labyrinth.LabyrinthKeys#LAYOUT_VERSION}. */
    public final IntValue labyrinthLayoutVersion;
 
+   // Regional activity (hunt / patrol / bandits / expedition raids)
+   public final BooleanValue regionalActivityEnabled;
+   public final BooleanValue regionalActivityHuntEnabled;
+   public final BooleanValue regionalActivityPatrolEnabled;
+   public final BooleanValue regionalActivityBanditEnabled;
+   public final BooleanValue regionalActivityRaidEnabled;
+   public final IntValue regionalActivityMaxActiveGroups;
+   public final IntValue regionalActivityMaxActiveNpcs;
+   public final IntValue regionalActivityMaxViolentIncidents;
+   public final IntValue regionalActivityMaxVillageRaids;
+   public final IntValue regionalActivityMaxGroupsPerRegion;
+   public final IntValue regionalActivityActivationWindowTicks;
+   public final IntValue regionalActivityMaxActivationsPerWindow;
+   public final IntValue regionalActivityMaxMaterializationsPerTick;
+   public final IntValue regionalActivityMaxCandidatesPerTick;
+   public final IntValue regionalActivityMaxCommitStepsPerTick;
+   public final IntValue regionalActivityMaxNavRequestsPerTick;
+   public final IntValue regionalActivityMaxPendingProposals;
+   public final IntValue regionalActivityMaxPersistentOps;
+   public final IntValue regionalActivityMaxOutcomeHistory;
+   public final IntValue regionalActivityWarmupTicks;
+   public final IntValue regionalActivityInterestRadius;
+   public final IntValue regionalActivityParkRadius;
+   public final IntValue regionalActivityMaxNavSegment;
+   public final IntValue regionalActivityMaxPreyPerHunt;
+   public final IntValue regionalActivitySourceCooldownTicks;
+   public final IntValue regionalActivityTargetCooldownTicks;
+   public final IntValue regionalActivityNewSettlementGraceTicks;
+   public final IntValue regionalActivityExistingSaveGraceTicks;
+   public final IntValue regionalActivityRaidLootPercent;
+   public final IntValue regionalActivityRaidLootAbsoluteMax;
+   public final BooleanValue regionalActivityRaidBlockDamage;
+   public final BooleanValue regionalActivityCreativeActivates;
+   public final BooleanValue regionalActivitySpectatorActivates;
+   public final DoubleValue regionalActivitySoftMspt;
+   public final DoubleValue regionalActivitySoftP95;
+   public final DoubleValue regionalActivityHardMspt;
+   public final DoubleValue regionalActivityHardP95;
+   public final IntValue regionalActivityRecoveryTicks;
+   public final IntValue regionalActivitySpikeBlockTicks;
+
    public static int getDefaultClearMargin() {
       try {
          return SERVER.minBuildingSpacing.getAsInt();
@@ -597,6 +638,55 @@ public final class MillenaireServerConfig {
          .translation("millenaire.config.logisticsMaxContractsPerVillage")
          .defineInRange("maxContractsPerVillage", 8, 1, 32);
       builder.pop();
+      builder.comment("Regional activity — hunts, patrols, bandits, skirmishes, expedition village raids")
+         .push("regionalActivity");
+      this.regionalActivityEnabled = builder.comment("Master switch. Disabling stops new proposals; running ops drain via return/cleanup.")
+         .translation("millenaire.config.regionalActivityEnabled")
+         .define("enabled", true);
+      this.regionalActivityHuntEnabled = builder.define("kinds.hunt", true);
+      this.regionalActivityPatrolEnabled = builder.define("kinds.patrol", true);
+      this.regionalActivityBanditEnabled = builder.define("kinds.bandit", true);
+      this.regionalActivityRaidEnabled = builder.define("kinds.villageRaid", true);
+      this.regionalActivityMaxActiveGroups = builder.comment("Max physically active new activity groups (server-wide).")
+         .defineInRange("populationCaps.maxActiveGroups", 6, 0, 64);
+      this.regionalActivityMaxActiveNpcs = builder.defineInRange("populationCaps.maxActiveNpcs", 24, 0, 256);
+      this.regionalActivityMaxViolentIncidents = builder.defineInRange("populationCaps.maxViolentIncidents", 2, 0, 32);
+      this.regionalActivityMaxVillageRaids = builder.defineInRange("populationCaps.maxVillageRaids", 1, 0, 8);
+      this.regionalActivityMaxGroupsPerRegion = builder.defineInRange("populationCaps.maxGroupsPerRegion", 2, 0, 16);
+      this.regionalActivityActivationWindowTicks = builder.defineInRange("scheduling.activationWindowTicks", 100, 20, 2000);
+      this.regionalActivityMaxActivationsPerWindow = builder.defineInRange("scheduling.maxActivationsPerWindow", 1, 0, 8);
+      this.regionalActivityMaxMaterializationsPerTick = builder.defineInRange("scheduling.maxMaterializationsPerTick", 1, 0, 8);
+      this.regionalActivityMaxCandidatesPerTick = builder.defineInRange("scheduling.maxCandidatesPerTick", 32, 0, 256);
+      this.regionalActivityMaxCommitStepsPerTick = builder.defineInRange("scheduling.maxCommitStepsPerTick", 4, 0, 32);
+      this.regionalActivityMaxNavRequestsPerTick = builder.defineInRange("navigation.maxNavRequestsPerTick", 1, 0, 16);
+      this.regionalActivityMaxNavSegment = builder.defineInRange("navigation.maxSegmentBlocks", 32, 8, 128);
+      this.regionalActivityMaxPendingProposals = builder.defineInRange("persistenceLimits.maxPendingProposals", 128, 8, 1024);
+      this.regionalActivityMaxPersistentOps = builder.defineInRange("persistenceLimits.maxNonTerminalOps", 512, 16, 4096);
+      this.regionalActivityMaxOutcomeHistory = builder.defineInRange("persistenceLimits.maxOutcomeHistory", 128, 8, 1024);
+      this.regionalActivityWarmupTicks = builder.defineInRange("scheduling.warmupTicks", 200, 0, 5000);
+      this.regionalActivityInterestRadius = builder.defineInRange("scheduling.interestRadius", 128, 32, 512);
+      this.regionalActivityParkRadius = builder.defineInRange("scheduling.parkRadius", 192, 64, 768);
+      this.regionalActivityMaxPreyPerHunt = builder.defineInRange("raidRules.maxPreyPerHunt", 2, 0, 8);
+      this.regionalActivitySourceCooldownTicks = builder.defineInRange("raidRules.sourceCooldownTicks", 12000, 0, 240000);
+      this.regionalActivityTargetCooldownTicks = builder.defineInRange("raidRules.targetCooldownTicks", 12000, 0, 240000);
+      this.regionalActivityNewSettlementGraceTicks = builder.defineInRange("raidRules.newSettlementGraceTicks", 24000, 0, 240000);
+      this.regionalActivityExistingSaveGraceTicks = builder.comment("One-time grace for settlements already present when the feature first registers.")
+         .defineInRange("raidRules.existingSaveGraceTicks", 24000, 0, 240000);
+      this.regionalActivityRaidLootPercent = builder.defineInRange("raidRules.lootPercentOfStock", 10, 0, 100);
+      this.regionalActivityRaidLootAbsoluteMax = builder.defineInRange("raidRules.lootAbsoluteMaxItems", 16, 0, 256);
+      this.regionalActivityRaidBlockDamage = builder.comment("Opt-in block damage for new expedition raids (default off).")
+         .define("raidRules.blockDamage", false);
+      this.regionalActivityCreativeActivates = builder.define("scheduling.creativeActivates", true);
+      this.regionalActivitySpectatorActivates = builder.comment("Spectators do not activate new activity by default.")
+         .define("scheduling.spectatorActivates", false);
+      this.regionalActivitySoftMspt = builder.defineInRange("pressure.softMspt", 35.0, 10.0, 50.0);
+      this.regionalActivitySoftP95 = builder.defineInRange("pressure.softP95", 40.0, 10.0, 50.0);
+      this.regionalActivityHardMspt = builder.defineInRange("pressure.hardMspt", 42.0, 10.0, 50.0);
+      this.regionalActivityHardP95 = builder.defineInRange("pressure.hardP95", 47.0, 10.0, 55.0);
+      this.regionalActivityRecoveryTicks = builder.defineInRange("pressure.recoveryTicks", 200, 20, 5000);
+      this.regionalActivitySpikeBlockTicks = builder.defineInRange("pressure.spikeBlockTicks", 100, 0, 2000);
+      builder.pop();
+
       builder.comment("Labyrinth dimension (Het Labyrint) — ceremonial maze with Gebondenen")
          .push("labyrinth");
       this.labyrinthEnabled = builder.comment("Enable the Labyrinth dimension, Configuratie entry, and Gebondene spawns")

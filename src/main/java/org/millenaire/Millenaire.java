@@ -244,6 +244,7 @@ public class Millenaire {
       goalRegistry.register(new GatherGoodsGoal());
       goalRegistry.register(new LightHearthGoal());
       goalRegistry.register(new HuntMonsterGoal());
+      goalRegistry.register(new org.millenaire.goal.impl.ActivityMissionGoal());
       goalRegistry.register(new RaidVillageGoal());
       goalRegistry.register(new DefendVillageGoal());
       goalRegistry.register(new HideGoal());
@@ -427,6 +428,13 @@ public class Millenaire {
       NeoForge.EVENT_BUS.addListener(LivingDropsEvent.class, InuitHuntingDropHandler::onLivingDrops);
       NeoForge.EVENT_BUS.addListener(net.neoforged.neoforge.event.entity.living.LivingDeathEvent.class, org.millenaire.crime.BountyDeathHandler::onLivingDeath);
       NeoForge.EVENT_BUS.addListener(net.neoforged.neoforge.event.entity.living.LivingDeathEvent.class, org.millenaire.combat.war.WarCampaignService::onPlayerDeath);
+      NeoForge.EVENT_BUS.addListener(net.neoforged.neoforge.event.entity.living.LivingDeathEvent.class, event -> {
+         if (event.getEntity() instanceof org.millenaire.entity.MillVillager mv && mv.level() instanceof ServerLevel sl) {
+            org.millenaire.activity.ActivityCombatBridge.onParticipantDeath(
+               sl, mv.getUUID(), org.millenaire.activity.ActivitySavedData.get(sl)
+            );
+         }
+      });
       NeoForge.EVENT_BUS.addListener(net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerRespawnEvent.class, org.millenaire.crime.BountyDeathHandler::onPlayerRespawn);
       NeoForge.EVENT_BUS.addListener(EventPriority.NORMAL, false, RegisterCommandsEvent.class, event -> {
          SpawnVillageCommand.register(event.getDispatcher());
@@ -442,6 +450,7 @@ public class Millenaire {
          RoadsCommand.register(event.getDispatcher());
          SettlementsCommand.register(event.getDispatcher());
          org.millenaire.labyrinth.command.LabyrinthCommand.register(event.getDispatcher());
+         org.millenaire.command.ActivityCommand.register(event.getDispatcher());
       });
       NeoForge.EVENT_BUS.addListener(ServerStoppingEvent.class, event -> {
          TestPlayerManager.onServerStopping();
@@ -452,6 +461,7 @@ public class Millenaire {
          org.millenaire.combat.war.WarCampaignService.onServerStopping();
          org.millenaire.economy.EconomyService.onServerStopping();
          org.millenaire.logistics.LogisticsService.onServerStopping();
+         org.millenaire.activity.RegionalActivityService.get().onServerStopping();
          org.millenaire.perf.plan.BackgroundWorkGate.get().shutdown();
          VillageOutfitService.clearCache();
          MillenaireStructureLoader.clearCache();
@@ -525,6 +535,8 @@ public class Millenaire {
             org.millenaire.diplomacy.TreatyService.tick(overworld);
             org.millenaire.founding.FoundingService.tick(overworld);
          }
+         // Regional activity: one global admission pass per server tick (all dimensions, fair share)
+         org.millenaire.activity.RegionalActivityService.get().onServerTick(event.getServer());
 
          long serverGameTime = overworld != null ? overworld.getGameTime() : 0L;
          boolean questCadence = serverGameTime % 1000L == 0L;

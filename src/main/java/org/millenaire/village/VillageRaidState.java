@@ -3,7 +3,9 @@ package org.millenaire.village;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import javax.annotation.Nullable;
+import org.millenaire.activity.RaidParticipantMode;
 
 final class VillageRaidState {
    private final Runnable markDirty;
@@ -13,6 +15,9 @@ final class VillageRaidState {
    private long raidStart;
    private long raidStartGameTime;
    private boolean underAttack;
+   private RaidParticipantMode participantMode = RaidParticipantMode.LEGACY_CLONES;
+   @Nullable
+   private UUID expeditionOperationId;
    private final List<String> raidsPerformed = new ArrayList<>();
    private final List<String> raidsSuffered = new ArrayList<>();
 
@@ -99,6 +104,33 @@ final class VillageRaidState {
       this.raidPlanningStart = 0L;
       this.raidStart = 0L;
       this.raidStartGameTime = 0L;
+      this.participantMode = RaidParticipantMode.LEGACY_CLONES;
+      this.expeditionOperationId = null;
+      this.markDirty.run();
+   }
+
+   RaidParticipantMode getParticipantMode() {
+      return this.participantMode;
+   }
+
+   void setParticipantMode(RaidParticipantMode mode) {
+      this.participantMode = mode == null ? RaidParticipantMode.LEGACY_CLONES : mode;
+      this.markDirty.run();
+   }
+
+   @Nullable
+   UUID getExpeditionOperationId() {
+      return this.expeditionOperationId;
+   }
+
+   void setExpeditionOperationId(@Nullable UUID id) {
+      this.expeditionOperationId = id;
+      this.markDirty.run();
+   }
+
+   void clearExpeditionRaid() {
+      this.participantMode = RaidParticipantMode.LEGACY_CLONES;
+      this.expeditionOperationId = null;
       this.markDirty.run();
    }
 

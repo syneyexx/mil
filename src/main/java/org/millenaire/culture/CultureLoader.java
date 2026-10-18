@@ -70,6 +70,7 @@ public final class CultureLoader {
       GatheringHandlerRegistry.clear();
       GatheringHandlerRegistry.registerDefaults();
       TradeGoodsLoader.clear();
+      org.millenaire.activity.ActivityProfileLoader.clear();
       ShopProfileLoader.clear();
       BlockCostRegistry.clear();
       ContentLoadReport.clear();
@@ -153,6 +154,7 @@ public final class CultureLoader {
       try {
          loadTradedGoods(cultureName);
          loadShopProfiles(cultureName);
+         loadActivityProfiles(cultureName);
       } catch (RuntimeException e) {
          LOGGER.error("Error loading commerce data for culture {}: {}", new Object[]{cultureName, e.getMessage(), e});
       }
@@ -193,6 +195,17 @@ public final class CultureLoader {
          }
       } catch (Exception e) {
          LOGGER.error("Error loading traded_goods {}: {}", new Object[]{cultureName, e.getMessage(), e});
+      }
+   }
+
+   private static void loadActivityProfiles(String cultureName) {
+      ResourceLocation cultureId = ResourceLocation.fromNamespaceAndPath("millenaire", cultureName);
+      try {
+         ContentFs cultureFs = CustomContentIndex.current().forCulture(cultureName);
+         List<Resource> resources = cultureFs.findAll("activity_profiles.json");
+         org.millenaire.activity.ActivityProfileLoader.loadFromResources(cultureId, resources);
+      } catch (Exception e) {
+         LOGGER.error("Error loading activity_profiles {}: {}", new Object[]{cultureName, e.getMessage(), e});
       }
    }
 

@@ -1,0 +1,179 @@
+{
+  "profiles": [
+    {
+      "id": "seljuk_hunters",
+      "eligibleRoles": [
+        "hunter",
+        "lumberman",
+        "forester",
+        "jager"
+      ],
+      "eligibleTags": [
+        "hunter",
+        "lumberman"
+      ],
+      "allowedActivityKinds": [
+        "HUNT"
+      ],
+      "huntingPreyTags": [
+        "animal",
+        "minecraft:cow",
+        "minecraft:pig",
+        "minecraft:sheep",
+        "minecraft:chicken",
+        "minecraft:rabbit"
+      ],
+      "groupSizeMin": 2,
+      "groupSizeMax": 3,
+      "aggression": 0.25,
+      "riskTolerance": 0.35,
+      "retreatThreshold": 0.35,
+      "biomePreferences": [
+        "forest",
+        "jungle",
+        "plains",
+        "taiga"
+      ],
+      "routePreferences": [
+        "edge",
+        "cover"
+      ],
+      "activityRange": 256,
+      "minHomeDefense": 2,
+      "maxAwayFraction": 0.2,
+      "cooldowns": 8000,
+      "lootPolicy": "real_drops",
+      "organizationId": "seljuk_village",
+      "rivalOrganizations": [],
+      "hunter": true
+    },
+    {
+      "id": "seljuk_patrol",
+      "eligibleRoles": [
+        "guard",
+        "soldier",
+        "patrol",
+        "garde",
+        "wacht"
+      ],
+      "eligibleTags": [
+        "helpInAttacks",
+        "defensive"
+      ],
+      "allowedActivityKinds": [
+        "PATROL",
+        "RESPONSE"
+      ],
+      "huntingPreyTags": [],
+      "groupSizeMin": 2,
+      "groupSizeMax": 4,
+      "aggression": 0.4,
+      "riskTolerance": 0.4,
+      "retreatThreshold": 0.4,
+      "biomePreferences": [],
+      "routePreferences": [
+        "road",
+        "edge"
+      ],
+      "activityRange": 160,
+      "minHomeDefense": 2,
+      "maxAwayFraction": 0.2,
+      "cooldowns": 4000,
+      "lootPolicy": "none",
+      "organizationId": "seljuk_village",
+      "rivalOrganizations": [],
+      "patrol": true
+    },
+    {
+      "id": "seljuk_bandits_opportunist",
+      "eligibleRoles": [
+        "bandit",
+        "raider",
+        "pillager",
+        "outlaw"
+      ],
+      "eligibleTags": [
+        "hostile",
+        "raider"
+      ],
+      "allowedActivityKinds": [
+        "BANDIT_ROAM",
+        "AMBUSH",
+        "VILLAGE_RAID",
+        "SKIRMISH"
+      ],
+      "huntingPreyTags": [],
+      "groupSizeMin": 3,
+      "groupSizeMax": 5,
+      "aggression": 0.7,
+      "riskTolerance": 0.6,
+      "retreatThreshold": 0.35,
+      "biomePreferences": [
+        "forest",
+        "jungle",
+        "plains",
+        "desert",
+        "mountain"
+      ],
+      "routePreferences": [
+        "road",
+        "edge",
+        "cover"
+      ],
+      "activityRange": 320,
+      "minHomeDefense": 1,
+      "maxAwayFraction": 0.5,
+      "cooldowns": 12000,
+      "lootPolicy": "raid_stock",
+      "organizationId": "seljuk_bandits_a",
+      "rivalOrganizations": [
+        "seljuk_bandits_b"
+      ],
+      "bandit": true
+    },
+    {
+      "id": "seljuk_bandits_rival",
+      "eligibleRoles": [
+        "bandit",
+        "raider",
+        "pillager",
+        "outlaw"
+      ],
+      "eligibleTags": [
+        "hostile",
+        "raider"
+      ],
+      "allowedActivityKinds": [
+        "BANDIT_ROAM",
+        "AMBUSH",
+        "SKIRMISH"
+      ],
+      "huntingPreyTags": [],
+      "groupSizeMin": 3,
+      "groupSizeMax": 5,
+      "aggression": 0.75,
+      "riskTolerance": 0.55,
+      "retreatThreshold": 0.35,
+      "biomePreferences": [
+        "forest",
+        "jungle",
+        "plains"
+      ],
+      "routePreferences": [
+        "road",
+        "edge",
+        "cover"
+      ],
+      "activityRange": 320,
+      "minHomeDefense": 1,
+      "maxAwayFraction": 0.5,
+      "cooldowns": 12000,
+      "lootPolicy": "raid_stock",
+      "organizationId": "seljuk_bandits_b",
+      "rivalOrganizations": [
+        "seljuk_bandits_a"
+      ],
+      "bandit": true
+    }
+  ]
+}

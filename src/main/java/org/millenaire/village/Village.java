@@ -528,6 +528,27 @@ public class Village {
       this.raidState.clearRaid();
    }
 
+   public org.millenaire.activity.RaidParticipantMode getRaidParticipantMode() {
+      return this.raidState.getParticipantMode();
+   }
+
+   public void setRaidParticipantMode(org.millenaire.activity.RaidParticipantMode mode) {
+      this.raidState.setParticipantMode(mode);
+   }
+
+   @Nullable
+   public java.util.UUID getExpeditionOperationId() {
+      return this.raidState.getExpeditionOperationId();
+   }
+
+   public void setExpeditionOperationId(@Nullable java.util.UUID id) {
+      this.raidState.setExpeditionOperationId(id);
+   }
+
+   public void clearExpeditionRaid() {
+      this.raidState.clearExpeditionRaid();
+   }
+
    public VillagePathManager getPathManager() {
       return this.pathManager;
    }
