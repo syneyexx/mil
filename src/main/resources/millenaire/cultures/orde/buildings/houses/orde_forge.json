@@ -1,0 +1,29 @@
+{
+  "culture": "millenaire:orde",
+  "building_id": "orde_forge",
+  "category": "houses",
+  "native_name": "Slotensmederij",
+  "max_count": 3,
+  "male": [
+    "slotenmaker"
+  ],
+  "female": [],
+  "icon": "minecraft:anvil",
+  "variants": [
+    {
+      "variant": "a",
+      "ground_level": 0,
+      "levels": [
+        {
+          "level": 0,
+          "footprint": {
+            "width": 7,
+            "height": 6,
+            "depth": 7
+          },
+          "priority": 250
+        }
+      ]
+    }
+  ]
+}

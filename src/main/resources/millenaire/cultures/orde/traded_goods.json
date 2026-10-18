@@ -1,0 +1,93 @@
+{
+  "goods": [
+    {
+      "id": "orde_stone",
+      "item": "millenaire:orde_stone",
+      "selling_price": 8,
+      "buying_price": 4,
+      "reserved_quantity": 16,
+      "target_quantity": 64,
+      "category": "construction"
+    },
+    {
+      "id": "orde_panel",
+      "item": "millenaire:orde_panel",
+      "selling_price": 10,
+      "buying_price": 5,
+      "category": "construction"
+    },
+    {
+      "id": "orde_grate",
+      "item": "millenaire:orde_grate",
+      "selling_price": 14,
+      "buying_price": 7,
+      "category": "crafting"
+    },
+    {
+      "id": "spike_floor",
+      "item": "millenaire:spike_floor",
+      "selling_price": 18,
+      "buying_price": 9,
+      "category": "weapons"
+    },
+    {
+      "id": "orde_lantern",
+      "item": "millenaire:orde_lantern",
+      "selling_price": 20,
+      "buying_price": 10,
+      "category": "crafting"
+    },
+    {
+      "id": "void_sconce",
+      "item": "millenaire:void_sconce",
+      "selling_price": 16,
+      "buying_price": 8,
+      "category": "crafting"
+    },
+    {
+      "id": "configuratie",
+      "item": "millenaire:configuratie",
+      "selling_price": 500,
+      "buying_price": 0,
+      "reserved_quantity": 1,
+      "target_quantity": 1,
+      "category": "playeritem",
+      "min_reputation": 8192
+    },
+    {
+      "id": "labyrinth_zegel",
+      "item": "millenaire:labyrinth_zegel",
+      "selling_price": 120,
+      "buying_price": 40,
+      "category": "playeritem"
+    },
+    {
+      "id": "bread",
+      "item": "minecraft:bread",
+      "selling_price": 10,
+      "buying_price": 6,
+      "category": "agriculture"
+    },
+    {
+      "id": "iron_ingot",
+      "item": "minecraft:iron_ingot",
+      "selling_price": 24,
+      "buying_price": 12,
+      "category": "tools"
+    },
+    {
+      "id": "chain",
+      "item": "minecraft:chain",
+      "selling_price": 12,
+      "buying_price": 6,
+      "category": "crafting"
+    },
+    {
+      "id": "denier",
+      "item": "millenaire:denier",
+      "selling_price": 0,
+      "buying_price": 0,
+      "category": "playeritem"
+    }
+  ]
+}

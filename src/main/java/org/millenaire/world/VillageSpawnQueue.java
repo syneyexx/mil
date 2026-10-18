@@ -104,12 +104,29 @@ public class VillageSpawnQueue {
    }
 
    public static boolean couldHostAnyVillage(Collection<VillageType> types, Predicate<TagKey<Biome>> biomeTagMatcher) {
+      return couldHostAnyVillage(types, biomeTagMatcher, null);
+   }
+
+   public static boolean couldHostAnyVillage(
+      Collection<VillageType> types,
+      Predicate<TagKey<Biome>> biomeTagMatcher,
+      @Nullable ResourceLocation dimensionId
+   ) {
       for (VillageType vt : types) {
-         if (vt.weight() > 0) {
-            for (TagKey<Biome> tag : vt.biomeTags()) {
-               if (biomeTagMatcher.test(tag)) {
-                  return true;
-               }
+         if (vt.weight() <= 0) {
+            continue;
+         }
+         if (dimensionId != null) {
+            boolean dimOk = vt.dimensions() == null || vt.dimensions().isEmpty()
+               ? dimensionId.equals(ResourceLocation.fromNamespaceAndPath("minecraft", "overworld"))
+               : vt.dimensions().contains(dimensionId);
+            if (!dimOk) {
+               continue;
+            }
+         }
+         for (TagKey<Biome> tag : vt.biomeTags()) {
+            if (biomeTagMatcher.test(tag)) {
+               return true;
             }
          }
       }
@@ -404,6 +421,9 @@ public class VillageSpawnQueue {
       int filteredByMinDist = 0;
 
       for (VillageType vt : biomeCandidates) {
+         if (!vt.allowsDimension(level.dimension())) {
+            continue;
+         }
          if (!loneBuilding && !hamletConfigEnabled && !vt.hamlets().isEmpty()) {
             filteredByHamlets++;
          } else {

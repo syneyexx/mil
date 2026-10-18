@@ -102,6 +102,7 @@ final class TravelBookCategoryAssigner {
                   vt.travelBookMainCultureVillager(),
                   vt.defaultWeapon(),
                   vt.baseAttackStrength(),
+                  vt.nativeModel(),
                   vt.resolvedBringBackHomeGoods(),
                   vt.resolvedCollectGoods(),
                   vt.resolvedRequiredGoods()

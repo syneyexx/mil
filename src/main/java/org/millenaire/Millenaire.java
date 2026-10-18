@@ -496,6 +496,7 @@ public class Millenaire {
       });
       VillageSpawnQueue spawnQueue = new VillageSpawnQueue();
       spawnQueueInstance = spawnQueue;
+      VillageSpawnQueue labyrinthSpawnQueue = new VillageSpawnQueue();
       NeoForge.EVENT_BUS.addListener(ServerTickEvent.Post.class, event -> {
          TestPlayerManager.acknowledgeChunkBatch();
          ServerLevel overworld = event.getServer().getLevel(Level.OVERWORLD);
@@ -526,6 +527,20 @@ public class Millenaire {
             org.millenaire.founding.FoundingService.tick(overworld);
          }
 
+         // Orde / Labyrinth-dimension villages (layout wellgrid culture).
+         ServerLevel labyrinth = event.getServer().getLevel(org.millenaire.labyrinth.LabyrinthKeys.LABYRINTH_LEVEL);
+         if (labyrinth != null) {
+            var labManager = VillageSavedData.get(labyrinth).getVillageManager();
+            labManager.tick(labyrinth);
+            if (!naturalSpawnSuppressed) {
+               labyrinthSpawnQueue.trySpawnNext(labyrinth);
+            }
+            // Share culture war/standing with overworld so other cultures can declare war on Orde.
+            if (overworld != null) {
+               org.millenaire.village.CultureDiplomacySimulator.ensureUpToDate(overworld);
+            }
+         }
+
          long serverGameTime = overworld != null ? overworld.getGameTime() : 0L;
          boolean questCadence = serverGameTime % 1000L == 0L;
          boolean specialCadence = serverGameTime % 10L == 0L;
@@ -547,25 +562,38 @@ public class Millenaire {
          }
       });
       NeoForge.EVENT_BUS.addListener(ChunkEvent.Load.class, event -> {
-         if (event.getLevel() instanceof ServerLevel serverLevel && serverLevel.dimension() == Level.OVERWORLD) {
-            ChunkPos chunkPos = event.getChunk().getPos();
-            var chunkAccess = event.getChunk();
-            boolean isNewChunk = event.isNewChunk();
-            serverLevel.getServer().execute(() -> {
+         if (!(event.getLevel() instanceof ServerLevel serverLevel)) {
+            return;
+         }
+         boolean overworld = serverLevel.dimension() == Level.OVERWORLD;
+         boolean labyrinthDim = serverLevel.dimension() == org.millenaire.labyrinth.LabyrinthKeys.LABYRINTH_LEVEL;
+         if (!overworld && !labyrinthDim) {
+            return;
+         }
+         ChunkPos chunkPos = event.getChunk().getPos();
+         var chunkAccess = event.getChunk();
+         boolean isNewChunk = event.isNewChunk();
+         VillageSpawnQueue queue = overworld ? spawnQueue : labyrinthSpawnQueue;
+         int enqueueY = overworld ? 64 : org.millenaire.labyrinth.LabyrinthKeys.FLOOR_Y;
+         serverLevel.getServer().execute(() -> {
+            if (overworld) {
                VillageDiscovery.onChunkLoad(serverLevel, chunkAccess);
                RoadNetworkService.get().onChunkLoad(serverLevel, chunkPos);
-               if (!naturalSpawnSuppressed) {
-                  spawnQueue.markResolved(chunkPos);
-                  if (isNewChunk) {
-                     BlockPos biomeSamplePos = chunkPos.getMiddleBlockPosition(serverLevel.getMaxBuildHeight() - 1);
-                     Holder<Biome> centerBiome = serverLevel.getBiome(biomeSamplePos);
-                     if (VillageSpawnQueue.couldHostAnyVillage(ModCultures.getAllVillageTypes().values(), tag -> centerBiome.is(tag))) {
-                        spawnQueue.enqueue(chunkPos.getMiddleBlockPosition(64));
-                     }
+            }
+            if (!naturalSpawnSuppressed) {
+               queue.markResolved(chunkPos);
+               if (isNewChunk) {
+                  BlockPos biomeSamplePos = chunkPos.getMiddleBlockPosition(serverLevel.getMaxBuildHeight() - 1);
+                  Holder<Biome> centerBiome = serverLevel.getBiome(biomeSamplePos);
+                  ResourceLocation dimId = serverLevel.dimension().location();
+                  if (VillageSpawnQueue.couldHostAnyVillage(
+                     ModCultures.getAllVillageTypes().values(), tag -> centerBiome.is(tag), dimId
+                  )) {
+                     queue.enqueue(chunkPos.getMiddleBlockPosition(enqueueY));
                   }
                }
-            });
-         }
+            }
+         });
       });
       NeoForge.EVENT_BUS
          .addListener(

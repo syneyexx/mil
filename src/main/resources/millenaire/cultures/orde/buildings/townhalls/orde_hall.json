@@ -1,0 +1,36 @@
+{
+  "culture": "millenaire:orde",
+  "building_id": "orde_hall",
+  "category": "townhalls",
+  "is_town_hall": true,
+  "native_name": "Drempelhal",
+  "shop": "townhall",
+  "max_count": 1,
+  "male": [
+    "drempelhouder",
+    "ruilmeester"
+  ],
+  "female": [],
+  "tags": [
+    "leisure"
+  ],
+  "icon": "millenaire:configuratie",
+  "variants": [
+    {
+      "variant": "a",
+      "ground_level": 0,
+      "levels": [
+        {
+          "level": 0,
+          "footprint": {
+            "width": 11,
+            "height": 8,
+            "depth": 11
+          },
+          "priority": 600,
+          "signs": "0,1,2,3"
+        }
+      ]
+    }
+  ]
+}

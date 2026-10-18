@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Rotation;
 
@@ -15,6 +17,8 @@ public record VillageType(
    String name,
    int weight,
    List<TagKey<Biome>> biomeTags,
+   /** Empty = Overworld only (legacy default). Otherwise only these dimension ids. */
+   List<ResourceLocation> dimensions,
    List<VillageType.LayoutSlot> layout,
    Map<String, Integer> sellingPriceOverrides,
    Map<String, Integer> buyingPriceOverrides,
@@ -84,6 +88,14 @@ public record VillageType(
       return this.terrainQualifiers.ocean();
    }
 
+   /** True if this village type may naturally/command-spawn in {@code dim}. */
+   public boolean allowsDimension(ResourceKey<Level> dim) {
+      if (this.dimensions == null || this.dimensions.isEmpty()) {
+         return Level.OVERWORLD.equals(dim);
+      }
+      return this.dimensions.contains(dim.location());
+   }
+
    public VillageType withLayout(List<VillageType.LayoutSlot> newLayout) {
       return new VillageType(
          this.id,
@@ -91,6 +103,7 @@ public record VillageType(
          this.name,
          this.weight,
          this.biomeTags,
+         this.dimensions,
          newLayout,
          this.sellingPriceOverrides,
          this.buyingPriceOverrides,

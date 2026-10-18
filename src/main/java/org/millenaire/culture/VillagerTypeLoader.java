@@ -173,6 +173,7 @@ final class VillagerTypeLoader {
          boolean travelBookMainCultureVillager = GsonHelper.getAsBoolean(json, "travelbook_main_culture_villager", false);
          ResourceLocation defaultWeapon = json.has("default_weapon") ? ResourceLocation.parse(GsonHelper.getAsString(json, "default_weapon")) : null;
          int baseAttackStrength = GsonHelper.getAsInt(json, "base_attack_strength", 0);
+         String nativeModel = json.has("native_model") ? GsonHelper.getAsString(json, "native_model") : null;
          ModCultures.registerVillagerType(
             new VillagerType(
                id,
@@ -211,6 +212,7 @@ final class VillagerTypeLoader {
                travelBookMainCultureVillager,
                defaultWeapon,
                baseAttackStrength,
+               nativeModel,
                Set.of(),
                Set.of(),
                Map.of()

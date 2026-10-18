@@ -1,0 +1,28 @@
+{
+  "culture": "millenaire:orde",
+  "native_name": "Aswaard",
+  "model": "male",
+  "native_model": "orde_villager/aswaard",
+  "base_scale": 1.05,
+  "textures": [
+    "millenaire:textures/entity/orde_villager/aswaard.png"
+  ],
+  "goals": [
+    "millenaire:idle",
+    "millenaire:socialise",
+    "millenaire:chat",
+    "millenaire:rest",
+    "millenaire:drink_cider"
+  ],
+  "tags": [
+    "helpInAttacks"
+  ],
+  "spawn_weight": 0,
+  "gender": "male",
+  "first_name_list": "men_names",
+  "family_name_list": "family_names",
+  "icon": "minecraft:bread",
+  "max_health": 40,
+  "travel_book_category": "villager",
+  "travelbook_held_item": "minecraft:bread"
+}

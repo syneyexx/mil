@@ -1,0 +1,29 @@
+{
+  "culture": "millenaire:orde",
+  "building_id": "orde_cell",
+  "category": "houses",
+  "native_name": "Cel",
+  "max_count": 6,
+  "male": [
+    "slotenmaker"
+  ],
+  "female": [],
+  "icon": "millenaire:orde_panel",
+  "variants": [
+    {
+      "variant": "a",
+      "ground_level": 0,
+      "levels": [
+        {
+          "level": 0,
+          "footprint": {
+            "width": 7,
+            "height": 6,
+            "depth": 7
+          },
+          "priority": 200
+        }
+      ]
+    }
+  ]
+}

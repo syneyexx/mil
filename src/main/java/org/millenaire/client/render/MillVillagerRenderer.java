@@ -37,12 +37,16 @@ import org.millenaire.client.model.MillFemaleAsymModel;
 import org.millenaire.client.model.MillFemaleSymModel;
 import org.millenaire.client.model.MillMaleModel;
 import org.millenaire.client.model.MillModelLayers;
+import org.millenaire.client.model.NativeJsonEntityModel;
 import org.millenaire.config.MillenaireClientConfig;
+import org.millenaire.culture.ModCultures;
+import org.millenaire.culture.VillagerType;
 import org.millenaire.entity.MillVillager;
 import org.millenaire.entity.ModelType;
 import org.millenaire.item.ModItems;
 import org.millenaire.language.DisplayNameResolver;
 import org.millenaire.language.SpeechResolver;
+import net.minecraft.client.renderer.RenderType;
 
 @OnlyIn(Dist.CLIENT)
 public class MillVillagerRenderer extends MobRenderer<MillVillager, HumanoidModel<MillVillager>> {
@@ -86,6 +90,15 @@ public class MillVillagerRenderer extends MobRenderer<MillVillager, HumanoidMode
    }
 
    public void render(MillVillager entity, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
+      VillagerType vType = ModCultures.getVillagerType(entity.getVillagerTypeId());
+      if (vType != null && vType.hasNativeModel()) {
+         this.renderNative(entity, entityYaw, partialTick, poseStack, bufferSource, packedLight, vType);
+         List<ItemStack> floatingIcons = defineFloatingIcons(entity);
+         if (!floatingIcons.isEmpty()) {
+            this.renderFloatingIcons(entity, floatingIcons, poseStack, bufferSource, packedLight);
+         }
+         return;
+      }
       this.model = switch (entity.getModelType()) {
          case FEMALE_SYM -> this.femaleSymModel;
          case FEMALE_ASYM -> this.femaleAsymModel;
@@ -97,6 +110,37 @@ public class MillVillagerRenderer extends MobRenderer<MillVillager, HumanoidMode
       List<ItemStack> floatingIcons = defineFloatingIcons(entity);
       if (!floatingIcons.isEmpty()) {
          this.renderFloatingIcons(entity, floatingIcons, poseStack, bufferSource, packedLight);
+      }
+   }
+
+   private void renderNative(
+      MillVillager entity,
+      float entityYaw,
+      float partialTick,
+      PoseStack poseStack,
+      MultiBufferSource bufferSource,
+      int packedLight,
+      VillagerType vType
+   ) {
+      NativeJsonEntityModel<MillVillager> nativeModel = NativeJsonEntityModel.get(vType.nativeModel());
+      poseStack.pushPose();
+      this.setupRotations(entity, poseStack, entity.tickCount + partialTick, entityYaw, partialTick, 1.0F);
+      poseStack.scale(-1.0F, -1.0F, 1.0F);
+      float scale = vType.baseScale() > 0 ? vType.baseScale() : 1.0F;
+      poseStack.scale(scale, scale, scale);
+      poseStack.translate(0.0F, -1.501F, 0.0F);
+      float limbSwing = entity.walkAnimation.position(partialTick);
+      float limbSwingAmount = entity.walkAnimation.speed(partialTick);
+      float ageInTicks = entity.tickCount + partialTick;
+      float headYaw = net.minecraft.util.Mth.rotLerp(partialTick, entity.yHeadRotO, entity.yHeadRot) - entityYaw;
+      float headPitch = net.minecraft.util.Mth.lerp(partialTick, entity.xRotO, entity.getXRot());
+      nativeModel.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, headYaw, headPitch);
+      ResourceLocation tex = this.getTextureLocation(entity);
+      var consumer = bufferSource.getBuffer(RenderType.entityCutoutNoCull(tex));
+      nativeModel.renderToBuffer(poseStack, consumer, packedLight, OverlayTexture.NO_OVERLAY, 0xFFFFFFFF);
+      poseStack.popPose();
+      if (this.shouldShowName(entity)) {
+         this.renderNameTag(entity, entity.getDisplayName(), poseStack, bufferSource, packedLight, partialTick);
       }
    }
 

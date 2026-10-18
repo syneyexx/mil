@@ -105,6 +105,10 @@ public final class ModItems {
    public static final DeferredItem<BlockItem> CROOKED_PAINTING_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.CROOKED_PAINTING);
    public static final DeferredItem<BlockItem> ORDE_LAMP_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_LAMP);
    public static final DeferredItem<BlockItem> CEILING_RECESS_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.CEILING_RECESS);
+   public static final DeferredItem<BlockItem> ORDE_ARCH_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_ARCH);
+   public static final DeferredItem<BlockItem> ORDE_PARAPET_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ORDE_PARAPET);
+   public static final DeferredItem<BlockItem> GALLERY_RAIL_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.GALLERY_RAIL);
+   public static final DeferredItem<BlockItem> VOID_BEAM_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.VOID_BEAM);
    public static final DeferredItem<CoinItem> DENIER = ITEMS.registerItem("denier", props -> new CoinItem(props.stacksTo(64)));
    public static final DeferredItem<CoinItem> DENIER_ARGENT = ITEMS.registerItem("denier_argent", props -> new CoinItem(props.stacksTo(64)));
    public static final DeferredItem<CoinItem> DENIER_OR = ITEMS.registerItem("denier_or", props -> new CoinItem(props.stacksTo(64)));

@@ -86,7 +86,10 @@ public final class LabyrinthRooms {
             }
          }
          case AUDIENCE -> LabyrinthAudienceRoom.stamp(chunk, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ);
-         case ATRIUM -> stampAtrium(chunk, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ);
+         case ATRIUM, WELL_ATRIUM -> stampWellAtrium(chunk, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ);
+         case BRIDGE_NODE -> stampBridgeNode(chunk, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ);
+         case CLOISTER -> stampCloister(chunk, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ);
+         case DEPTH_SHAFT -> stampDepthShaft(chunk, cellMinX, cellMinZ, cellMaxX, cellMaxZ, centerX, centerZ);
          default -> {
          }
       }
@@ -177,8 +180,8 @@ public final class LabyrinthRooms {
       set(chunk, maxX - 3, floor + 1, centerZ + 1, Blocks.WHITE_CARPET.defaultBlockState());
    }
 
-   /** Vertical overlook — open shaft + mezzanine gallery (P1.4). */
-   private static void stampAtrium(
+   /** Vertical overlook well — open pit + gallery rings (layout v3). */
+   private static void stampWellAtrium(
       ChunkAccess chunk,
       int minX,
       int minZ,
@@ -187,21 +190,152 @@ public final class LabyrinthRooms {
       int centerX,
       int centerZ
    ) {
-      paveFloor(chunk, minX, minZ, maxX, maxZ, POLISHED);
-      clearInterior(chunk, minX, minZ, maxX, maxZ);
-      stampMezzanine(chunk, minX, minZ, maxX, maxZ, centerX, centerZ);
-      // Gallery rails around the overlook hole.
+      int vault = LabyrinthKeys.VAULT_FLOOR_Y;
+      int floor = LabyrinthKeys.FLOOR_Y;
       int mezz = LabyrinthKeys.MEZZ_FLOOR_Y;
-      for (int dx = -2; dx <= 2; dx++) {
-         for (int dz = -2; dz <= 2; dz++) {
-            if (Math.abs(dx) == 2 || Math.abs(dz) == 2) {
-               set(chunk, centerX + dx, mezz + 1, centerZ + dz, BARS);
+      int crown = LabyrinthKeys.WALL_CROWN_Y;
+      for (int x = minX + 1; x <= maxX - 1; x++) {
+         for (int z = minZ + 1; z <= maxZ - 1; z++) {
+            boolean ring = x == minX + 1 || x == maxX - 1 || z == minZ + 1 || z == maxZ - 1;
+            set(chunk, x, vault, z, LabyrinthMaterials.grate());
+            for (int y = vault + 1; y < crown; y++) {
+               set(chunk, x, y, z, AIR);
+            }
+            if (ring) {
+               set(chunk, x, floor, z, LabyrinthMaterials.ordeStone());
+               set(chunk, x, mezz, z, LabyrinthMaterials.ordePanel());
+               set(chunk, x, floor + 1, z, LabyrinthMaterials.galleryRail());
+               set(chunk, x, mezz + 1, z, LabyrinthMaterials.galleryRail());
+            }
+            set(chunk, x, crown, z, AIR);
+         }
+      }
+      // Cross bridges at primary
+      for (int x = minX + 1; x <= maxX - 1; x++) {
+         set(chunk, x, floor, centerZ, LabyrinthMaterials.bridgeDeck());
+      }
+      for (int z = minZ + 1; z <= maxZ - 1; z++) {
+         set(chunk, centerX, floor, z, LabyrinthMaterials.bridgeDeck());
+      }
+      set(chunk, centerX, vault + 1, centerZ, LabyrinthMaterials.spikeFloor());
+      set(chunk, centerX, mezz + 3, centerZ, LabyrinthMaterials.lantern());
+      // Ladder column
+      for (int y = vault + 1; y < mezz; y++) {
+         set(chunk, centerX - 2, y, centerZ - 2, LADDER_NORTH);
+      }
+   }
+
+   /** Cross-cell bridge nexus over a deep spiked pit. */
+   private static void stampBridgeNode(
+      ChunkAccess chunk,
+      int minX,
+      int minZ,
+      int maxX,
+      int maxZ,
+      int centerX,
+      int centerZ
+   ) {
+      int vault = LabyrinthKeys.VAULT_FLOOR_Y;
+      int floor = LabyrinthKeys.FLOOR_Y;
+      int mezz = LabyrinthKeys.MEZZ_FLOOR_Y;
+      for (int x = minX + 1; x <= maxX - 1; x++) {
+         for (int z = minZ + 1; z <= maxZ - 1; z++) {
+            set(chunk, x, vault, z, LabyrinthMaterials.spikeFloor());
+            for (int y = vault + 1; y < LabyrinthKeys.WALL_CROWN_Y; y++) {
+               set(chunk, x, y, z, AIR);
             }
          }
       }
-      set(chunk, minX + 1, LabyrinthKeys.FLOOR_Y + 1, minZ + 1, SPIKE);
-      set(chunk, maxX - 1, LabyrinthKeys.FLOOR_Y + 1, maxZ - 1, SPIKE);
-      placeHangingLantern(chunk, centerX + 2, LabyrinthKeys.CEILING_Y - 1, centerZ + 2);
+      for (int x = minX + 1; x <= maxX - 1; x++) {
+         set(chunk, x, floor, centerZ, LabyrinthMaterials.ordeTile());
+         set(chunk, x, mezz, centerZ, LabyrinthMaterials.ordePanel());
+         set(chunk, x, floor, centerZ - 1, LabyrinthMaterials.bridgeDeckFull());
+         set(chunk, x, floor, centerZ + 1, LabyrinthMaterials.bridgeDeckFull());
+      }
+      for (int z = minZ + 1; z <= maxZ - 1; z++) {
+         set(chunk, centerX, floor, z, LabyrinthMaterials.ordeTile());
+         set(chunk, centerX, mezz, z, LabyrinthMaterials.ordePanel());
+         set(chunk, centerX - 1, floor, z, LabyrinthMaterials.bridgeDeckFull());
+         set(chunk, centerX + 1, floor, z, LabyrinthMaterials.bridgeDeckFull());
+      }
+      set(chunk, centerX, floor, centerZ, LabyrinthMaterials.riveted());
+      set(chunk, centerX, mezz + 2, centerZ, LabyrinthMaterials.voidSconce());
+   }
+
+   /** Arcade cloister ring around an open well. */
+   private static void stampCloister(
+      ChunkAccess chunk,
+      int minX,
+      int minZ,
+      int maxX,
+      int maxZ,
+      int centerX,
+      int centerZ
+   ) {
+      int vault = LabyrinthKeys.VAULT_FLOOR_Y;
+      int floor = LabyrinthKeys.FLOOR_Y;
+      int mezz = LabyrinthKeys.MEZZ_FLOOR_Y;
+      for (int x = minX + 1; x <= maxX - 1; x++) {
+         for (int z = minZ + 1; z <= maxZ - 1; z++) {
+            boolean ring = x <= minX + 2 || x >= maxX - 2 || z <= minZ + 2 || z >= maxZ - 2;
+            set(chunk, x, vault, z, LabyrinthMaterials.coldVault());
+            for (int y = vault + 1; y < LabyrinthKeys.WALL_CROWN_Y; y++) {
+               set(chunk, x, y, z, AIR);
+            }
+            if (ring) {
+               set(chunk, x, floor, z, LabyrinthMaterials.ordeStone());
+               set(chunk, x, mezz, z, LabyrinthMaterials.ordePanel());
+            }
+         }
+      }
+      // Arch lintels facing the pit on the inner ring
+      for (int x = minX + 2; x <= maxX - 2; x += 2) {
+         set(chunk, x, floor + LabyrinthKeys.ARCH_CLEARANCE, minZ + 2, LabyrinthMaterials.arch());
+         set(chunk, x, floor + LabyrinthKeys.ARCH_CLEARANCE, maxZ - 2, LabyrinthMaterials.arch());
+      }
+      for (int z = minZ + 2; z <= maxZ - 2; z += 2) {
+         set(chunk, minX + 2, floor + LabyrinthKeys.ARCH_CLEARANCE, z, LabyrinthMaterials.arch());
+         set(chunk, maxX - 2, floor + LabyrinthKeys.ARCH_CLEARANCE, z, LabyrinthMaterials.arch());
+      }
+      set(chunk, centerX, mezz + 3, centerZ, LabyrinthMaterials.lantern());
+   }
+
+   /** Dramatic vertical shaft linking vault ↔ wall crown. */
+   private static void stampDepthShaft(
+      ChunkAccess chunk,
+      int minX,
+      int minZ,
+      int maxX,
+      int maxZ,
+      int centerX,
+      int centerZ
+   ) {
+      int vault = LabyrinthKeys.VAULT_FLOOR_Y;
+      int crown = LabyrinthKeys.WALL_CROWN_Y;
+      for (int x = minX + 1; x <= maxX - 1; x++) {
+         for (int z = minZ + 1; z <= maxZ - 1; z++) {
+            set(chunk, x, vault, z, LabyrinthMaterials.spikeFloor());
+            for (int y = vault + 1; y <= crown; y++) {
+               set(chunk, x, y, z, AIR);
+            }
+         }
+      }
+      // Spiral stepping pads
+      int[][] pads = {
+         {centerX + 1, LabyrinthKeys.VAULT_FLOOR_Y + 2, centerZ},
+         {centerX, LabyrinthKeys.VAULT_FLOOR_Y + 4, centerZ + 1},
+         {centerX - 1, LabyrinthKeys.FLOOR_Y - 2, centerZ},
+         {centerX, LabyrinthKeys.FLOOR_Y, centerZ - 1},
+         {centerX + 1, LabyrinthKeys.FLOOR_Y + 3, centerZ},
+         {centerX, LabyrinthKeys.MEZZ_FLOOR_Y, centerZ + 1},
+         {centerX - 1, LabyrinthKeys.MEZZ_FLOOR_Y + 2, centerZ}
+      };
+      for (int[] p : pads) {
+         set(chunk, p[0], p[1], p[2], LabyrinthMaterials.ordeStone());
+      }
+      set(chunk, centerX, crown - 1, centerZ, LabyrinthMaterials.hangingHook());
+      set(chunk, minX + 1, LabyrinthKeys.FLOOR_Y, minZ + 1, LabyrinthMaterials.ordePanel());
+      set(chunk, maxX - 1, LabyrinthKeys.FLOOR_Y, maxZ - 1, LabyrinthMaterials.ordePanel());
    }
 
    private static void stampCore(

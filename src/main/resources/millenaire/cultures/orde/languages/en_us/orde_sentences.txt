@@ -1,0 +1,12 @@
+greeting=Welcome to our well, stranger.
+greeting=The threshold watches you. Behave.
+greeting=Trade is sacred. So is war.
+chief_greeting=I keep the Configuration. Ask wisely.
+chief_greeting=Contracts bind. Breaking them hurts.
+merchant_greeting=Trade fair, or walk on.
+merchant_greeting=Seal, stone, light — everything has a price.
+craft_greeting=Locks open. Or close. Choose.
+inn_greeting=Ash and bread. Rumors free.
+inn_greeting=Stay the night. The well stays longer.
+war_declare=The Order declares war.
+peace=The threshold is quiet again.

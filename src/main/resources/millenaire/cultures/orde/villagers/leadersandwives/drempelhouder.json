@@ -1,0 +1,41 @@
+{
+  "culture": "millenaire:orde",
+  "native_name": "Drempelhouder",
+  "model": "male",
+  "native_model": "orde_villager/drempelhouder",
+  "base_scale": 1.075,
+  "textures": [
+    "millenaire:textures/entity/orde_villager/drempelhouder.png"
+  ],
+  "goals": [
+    "millenaire:idle",
+    "millenaire:socialise",
+    "millenaire:chat",
+    "millenaire:rest",
+    "millenaire:patrol",
+    "millenaire:inspect_construction"
+  ],
+  "tags": [
+    "chief",
+    "helpInAttacks",
+    "raider"
+  ],
+  "spawn_weight": 0,
+  "gender": "male",
+  "first_name_list": "men_names",
+  "family_name_list": "family_names",
+  "icon": "millenaire:configuratie",
+  "max_health": 60,
+  "tool_needed_classes": [
+    "toolssword"
+  ],
+  "base_attack_strength": 4,
+  "default_weapon": "minecraft:iron_sword",
+  "initial_inventory": {
+    "millenaire:configuratie": 1
+  },
+  "travelbook_held_item": "millenaire:configuratie",
+  "travel_book_category": "leader",
+  "travelbook_main_culture_villager": true,
+  "experience_given": 12
+}

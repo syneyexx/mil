@@ -179,6 +179,30 @@ public final class ModBlocks {
    public static final DeferredBlock<Block> CEILING_RECESS = BLOCKS.register(
       "ceiling_recess", key -> new Block(ordeStoneProps().lightLevel(state -> 8))
    );
+   /** Arch motif masonry for cloister / well-wall openings (layout v3). */
+   public static final DeferredBlock<Block> ORDE_ARCH = BLOCKS.registerSimpleBlock("orde_arch", ordeStoneProps());
+   /** Walkable wall-crown / parapet along well tops. */
+   public static final DeferredBlock<WallBlock> ORDE_PARAPET = BLOCKS.register(
+      "orde_parapet", key -> new WallBlock(ordeStoneProps())
+   );
+   /** Overlook railing for gallery rings. */
+   public static final DeferredBlock<IronBarsBlock> GALLERY_RAIL = BLOCKS.register(
+      "gallery_rail", key -> new IronBarsBlock(ordeMetalProps().noOcclusion())
+   );
+   /** Distant vertical light pillar — De Ruit sky anchor (not Leviathan IP). */
+   public static final DeferredBlock<Block> VOID_BEAM = BLOCKS.register(
+      "void_beam",
+      key -> new Block(
+         Properties.of()
+            .mapColor(MapColor.COLOR_LIGHT_BLUE)
+            .strength(1.5F, 12.0F)
+            .sound(SoundType.GLASS)
+            .lightLevel(state -> 15)
+            .noOcclusion()
+            .hasPostProcess((s, l, p) -> true)
+            .emissiveRendering((s, l, p) -> true)
+      )
+   );
    public static final DeferredBlock<Block> TIMBER_FRAME_PLAIN = BLOCKS.registerSimpleBlock(
       "timber_frame_plain", Properties.of().mapColor(MapColor.WOOD).strength(2.0F, 5.0F).sound(SoundType.WOOD).requiresCorrectToolForDrops()
    );

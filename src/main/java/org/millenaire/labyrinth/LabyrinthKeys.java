@@ -10,21 +10,24 @@ import net.minecraft.world.level.dimension.DimensionType;
 /**
  * Registry keys and spatial constants for the Millénaire Labyrinth dimension.
  *
- * <p>Layout v2 keeps an 8×8 connectivity grid but stamps multi-cell footprints
- * (corridor / room / suite / nave) so chambers read as real architecture.
+ * <p>Layout v3 — <b>wellgrid</b>: each maze cell is a deep open well with walkable
+ * wall crowns, arcade openings, gallery rings, and cross-cell bridges. Crazy hallway
+ * archetypes are the default; ceremonial rooms are sparse anchors. Multi-cell
+ * footprints (corridor / room / suite / nave) still apply to stamped chambers.
  *
- * <p>Floor bands (Revival multi-level):
+ * <p>Floor bands (Revival multi-level, now visible together inside wells):
  * <ul>
- *   <li>Band 0 (vault) — Y 48–56, deeper routes toward the Core</li>
- *   <li>Band 1 (primary) — Y 64–73, Arrival and main maze</li>
- *   <li>Band 2 (mezzanine) — Y 74–82, stamped inside atriums / hubs</li>
+ *   <li>Band 0 (vault) — Y 48–56, pit floors / lower tunnels</li>
+ *   <li>Band 1 (primary) — Y 64–73, main gallery ring + bridges</li>
+ *   <li>Band 2 (mezzanine) — Y 74–82, upper overlooks + wall crowns</li>
+ *   <li>Above mezz — open void to the horizon (De Ruit sky anchor)</li>
  * </ul>
  */
 public final class LabyrinthKeys {
    public static final String MODID = "millenaire";
 
    /** Breaking layout generation version — regenerate the Labyrinth dim after bumps. */
-   public static final int LAYOUT_VERSION = 2;
+   public static final int LAYOUT_VERSION = 3;
 
    public static final ResourceKey<Level> LABYRINTH_LEVEL = ResourceKey.create(
       Registries.DIMENSION,
@@ -53,6 +56,20 @@ public final class LabyrinthKeys {
    /** Mezzanine (hub upper) band floor / ceiling. */
    public static final int MEZZ_FLOOR_Y = 74;
    public static final int MEZZ_CEILING_Y = 82;
+
+   /**
+    * Walkable wall-crown Y (parapet tops). Players can traverse the grid along well frames.
+    */
+   public static final int WALL_CROWN_Y = MEZZ_CEILING_Y;
+
+   /** Open void starts above the wall crown — infinite-grid horizon. */
+   public static final int SKY_VOID_Y = MEZZ_CEILING_Y + 1;
+
+   /**
+    * Primary arch opening heights inside shared cell walls (relative to floor).
+    * Door lintels sit at {@code FLOOR_Y + ARCH_HEIGHT}.
+    */
+   public static final int ARCH_CLEARANCE = 3;
 
    /** Blocks per maze cell on X/Z (connectivity grid; footprints span multiple cells). */
    public static final int CELL_SIZE = 8;
@@ -258,7 +275,8 @@ public final class LabyrinthKeys {
    public static Footprint footprintForRoomName(String roomTypeName) {
       return switch (roomTypeName) {
          case "ARRIVAL", "AUDIENCE" -> Footprint.NAVE;
-         case "CORE", "HOST_HALL", "FORGE", "ARCHIVE", "CHAPEL", "GATE", "ROTARY", "ATRIUM" -> Footprint.ROOM;
+         case "CORE", "HOST_HALL", "FORGE", "ARCHIVE", "CHAPEL", "GATE", "ROTARY", "ATRIUM",
+              "WELL_ATRIUM", "BRIDGE_NODE", "CLOISTER", "DEPTH_SHAFT" -> Footprint.ROOM;
          case "ECHO_LOOP", "MIRROR_LOOP", "LIMINAL_BEDROOM", "LIMINAL_KITCHEN", "LIMINAL_STUDY",
               "LIMINAL_PARLOR", "LIMINAL_NURSERY" -> Footprint.SUITE;
          default -> Footprint.CORRIDOR;
