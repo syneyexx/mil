@@ -1,0 +1,29 @@
+[
+  {
+    "id": "needleguy",
+    "name": "Needleguy",
+    "height_blocks": 2.5,
+    "total_height_blocks": 2.5,
+    "bounds_units": [
+      [
+        -8.8432122,
+        0.0,
+        -5.1051625
+      ],
+      [
+        8.592879794087633,
+        40.0,
+        5.1051625
+      ]
+    ],
+    "cube_count": 224,
+    "group_count": 20,
+    "model": "mobs/needleguy/needleguy.bbmodel",
+    "texture": "mobs/needleguy/needleguy.png",
+    "texture_size": [
+      256,
+      256
+    ],
+    "animations_included": false
+  }
+]

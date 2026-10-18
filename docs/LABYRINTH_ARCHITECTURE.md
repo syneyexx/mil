@@ -2,7 +2,7 @@
 
 ## Overview
 
-Custom Millénaire dimension `millenaire:labyrinth` with a deterministic cellular maze, ceremonial **Gebondenen** (25 kinds, hospitable until provoked), entry via **Configuratie**, exit via **Scharnier** / Configuratie.
+Custom Millénaire dimension `millenaire:labyrinth` with a deterministic cellular maze, ceremonial **Gebondenen** (26 kinds, hospitable until provoked), entry via **Configuratie**, exit via **Scharnier** / Configuratie.
 
 **Revival-achtige uitbreiding:** Waves 1–8 ([`LABYRINTH_REVIVAL_WAVES.md`](LABYRINTH_REVIVAL_WAVES.md)) plus psyche release (P1–P5) per [`LABYRINTH_REVIVAL_RELEASE_PLAN.md`](LABYRINTH_REVIVAL_RELEASE_PLAN.md). **Layout v3 wellgrid:** [`LABYRINTH_WELLGRID_V3.md`](LABYRINTH_WELLGRID_V3.md). Earlier vibe audit: [`LABYRINTH_REVIVAL_MASTERPLAN.md`](LABYRINTH_REVIVAL_MASTERPLAN.md). No Hellraiser IP; own lore (Configuratie forms, Orde relics, Architect, De Ruit).
 
@@ -53,7 +53,9 @@ ARRIVAL (3×3 nave) · CORE (2×2) · **AUDIENCE (3×3 De Ruit + sky beam)** · 
 
 ## Attitude AI
 
-`GASTVRIJ` → `GEALARMEERD` → `JACHT`. No auto-agro on sight. Kill escalates nearby Orde; gold/denier_or reconciliation via Gastheer/Notaris/Archivaris.
+`GASTVRIJ` → `GEALARMEERD` → `JACHT`. No auto-agro on sight. Kill escalates nearby Orde; gold/denier_or reconciliation via Gastheer/Notaris/Archivaris/Needleguy (Naaldpriester).
+
+**Needleguy** (`needleguy`): Orde priest frenemy — Blockbench model 2.5 blocks, SOCIAL tier with chapel/cloister/audience spawn bias; right-click blessing for deniers/gold.
 
 ## Chase
 
