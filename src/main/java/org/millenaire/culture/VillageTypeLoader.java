@@ -86,6 +86,13 @@ final class VillageTypeLoader {
             }
          }
 
+         List<ResourceLocation> dimensions = new ArrayList<>();
+         if (json.has("dimensions")) {
+            for (JsonElement e : GsonHelper.getAsJsonArray(json, "dimensions")) {
+               dimensions.add(ResourceLocation.parse(e.getAsString()));
+            }
+         }
+
          List<VillageType.LayoutSlot> layout = new ArrayList<>();
 
          for (JsonElement e : GsonHelper.getAsJsonArray(json, "layout")) {
@@ -218,6 +225,7 @@ final class VillageTypeLoader {
                villageName,
                weight,
                biomeTags,
+               List.copyOf(dimensions),
                layout,
                sellingPriceOverrides,
                buyingPriceOverrides,

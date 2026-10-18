@@ -51,10 +51,18 @@ public record VillagerType(
    boolean travelBookMainCultureVillager,
    @Nullable ResourceLocation defaultWeapon,
    int baseAttackStrength,
+   /**
+    * Optional Blockbench/native JSON model path under {@code models/entity/},
+    * e.g. {@code orde_villager/drempelhouder}. Null = humanoid ModelType skins.
+    */
+   @Nullable String nativeModel,
    Set<Item> resolvedBringBackHomeGoods,
    Set<ResourceLocation> resolvedCollectGoods,
    Map<Item, Integer> resolvedRequiredGoods
 ) {
+   public boolean hasNativeModel() {
+      return this.nativeModel != null && !this.nativeModel.isBlank();
+   }
    public boolean hasTag(String tag) {
       return this.tags.contains(tag);
    }
@@ -204,6 +212,7 @@ public record VillagerType(
          this.travelBookMainCultureVillager,
          this.defaultWeapon,
          this.baseAttackStrength,
+         this.nativeModel,
          Set.copyOf(resolvedBBH),
          Set.copyOf(resolvedCG),
          Map.copyOf(resolvedRG)

@@ -1,0 +1,23 @@
+{
+  "sells": [
+    "orde_stone",
+    "orde_panel",
+    "orde_grate",
+    "orde_lantern",
+    "void_sconce",
+    "spike_floor",
+    "bread",
+    "chain",
+    "labyrinth_zegel",
+    "configuratie"
+  ],
+  "buys": [
+    "iron_ingot",
+    "bread",
+    "chain",
+    "denier"
+  ],
+  "buys_optional": [
+    "orde_stone"
+  ]
+}

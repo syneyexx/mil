@@ -1,0 +1,32 @@
+{
+  "culture": "millenaire:orde",
+  "building_id": "orde_inn",
+  "category": "houses",
+  "native_name": "Asherberg",
+  "max_count": 2,
+  "male": [
+    "aswaard"
+  ],
+  "female": [],
+  "visitors": [
+    "ruilmeester"
+  ],
+  "icon": "minecraft:bread",
+  "variants": [
+    {
+      "variant": "a",
+      "ground_level": 0,
+      "levels": [
+        {
+          "level": 0,
+          "footprint": {
+            "width": 9,
+            "height": 6,
+            "depth": 9
+          },
+          "priority": 220
+        }
+      ]
+    }
+  ]
+}

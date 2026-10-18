@@ -1,0 +1,39 @@
+{
+  "culture": "millenaire:orde",
+  "native_name": "Slotenmaker",
+  "model": "male",
+  "native_model": "orde_villager/slotenmaker",
+  "base_scale": 1.1,
+  "textures": [
+    "millenaire:textures/entity/orde_villager/slotenmaker.png"
+  ],
+  "goals": [
+    "millenaire:idle",
+    "millenaire:socialise",
+    "millenaire:chat",
+    "millenaire:rest",
+    "millenaire:craft_normansword",
+    "millenaire:craft_bow"
+  ],
+  "tags": [
+    "helpInAttacks",
+    "raider"
+  ],
+  "spawn_weight": 0,
+  "gender": "male",
+  "first_name_list": "men_names",
+  "family_name_list": "family_names",
+  "icon": "minecraft:iron_ingot",
+  "max_health": 45,
+  "required_goods": {
+    "minecraft:iron_ingot": 8
+  },
+  "tool_needed_classes": [
+    "pickaxes",
+    "toolssword"
+  ],
+  "default_weapon": "minecraft:iron_sword",
+  "base_attack_strength": 3,
+  "travel_book_category": "villager",
+  "travelbook_held_item": "minecraft:tripwire_hook"
+}

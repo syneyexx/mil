@@ -128,11 +128,6 @@ public final class SpawnVillageCommand {
    }
 
    private static int doSpawn(CommandSourceStack source, ServerLevel level, BlockPos center, String villageTypeArg, int completion) {
-      if (level.dimension() != Level.OVERWORLD) {
-         source.sendFailure(Component.literal("Villages can only be spawned in the Overworld."));
-         return 0;
-      }
-
       ResourceLocation resolvedId = resolveVillageType(villageTypeArg);
       VillageType villageType = ModCultures.getVillageType(resolvedId);
       if (villageType == null) {
@@ -148,6 +143,16 @@ public final class SpawnVillageCommand {
 
       if (villageType.loneBuilding()) {
          source.sendFailure(Component.literal(villageTypeArg + " is a lone building. Use /millenaire spawn_lb instead."));
+         return 0;
+      }
+
+      if (!villageType.allowsDimension(level.dimension())) {
+         source.sendFailure(Component.literal(
+            "Village type " + villageTypeArg + " cannot spawn in this dimension. "
+               + (villageType.dimensions().isEmpty()
+                  ? "Overworld only."
+                  : "Allowed: " + villageType.dimensions())
+         ));
          return 0;
       }
 

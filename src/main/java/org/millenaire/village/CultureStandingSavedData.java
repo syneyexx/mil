@@ -36,8 +36,16 @@ public final class CultureStandingSavedData extends SavedData {
       return new Factory<>(CultureStandingSavedData::new, (tag, registries) -> load(tag), null);
    }
 
+   /**
+    * Culture standings are stored on the Overworld so Labyrinth Orde villages and
+    * Overworld cultures share the same war / alliance matrix.
+    */
    public static CultureStandingSavedData get(ServerLevel level) {
-      return (CultureStandingSavedData)level.getDataStorage().computeIfAbsent(factory(), DATA_NAME);
+      ServerLevel storage = level.getServer().getLevel(net.minecraft.world.level.Level.OVERWORLD);
+      if (storage == null) {
+         storage = level;
+      }
+      return (CultureStandingSavedData)storage.getDataStorage().computeIfAbsent(factory(), DATA_NAME);
    }
 
    public long getLastProcessedDay() {

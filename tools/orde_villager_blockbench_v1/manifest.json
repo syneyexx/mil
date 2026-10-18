@@ -1,0 +1,114 @@
+[
+  {
+    "id": "drempelhouder",
+    "name": "De Drempelhouder",
+    "role_nl": "Dorpsoudste",
+    "height_blocks": 2.15,
+    "total_height_blocks": 2.15,
+    "cube_count": 84,
+    "group_count": 18,
+    "bounds_units": [
+      [
+        -8.557,
+        0.0,
+        -6.106
+      ],
+      [
+        7.697,
+        34.4,
+        4.214
+      ]
+    ],
+    "model": "mobs/drempelhouder/drempelhouder.bbmodel",
+    "texture": "mobs/drempelhouder/drempelhouder.png",
+    "texture_size": [
+      256,
+      256
+    ],
+    "animations_included": false
+  },
+  {
+    "id": "ruilmeester",
+    "name": "De Ruilmeester",
+    "role_nl": "Handelaar",
+    "height_blocks": 2.1,
+    "total_height_blocks": 2.1,
+    "cube_count": 93,
+    "group_count": 19,
+    "bounds_units": [
+      [
+        -7.875,
+        0.0,
+        -5.964
+      ],
+      [
+        7.98,
+        33.6,
+        8.526
+      ]
+    ],
+    "model": "mobs/ruilmeester/ruilmeester.bbmodel",
+    "texture": "mobs/ruilmeester/ruilmeester.png",
+    "texture_size": [
+      256,
+      256
+    ],
+    "animations_included": false
+  },
+  {
+    "id": "slotenmaker",
+    "name": "De Slotenmaker",
+    "role_nl": "Ambachtsman",
+    "height_blocks": 2.2,
+    "total_height_blocks": 2.2,
+    "cube_count": 114,
+    "group_count": 16,
+    "bounds_units": [
+      [
+        -9.24,
+        0.0,
+        -6.248
+      ],
+      [
+        8.536,
+        35.2,
+        3.388
+      ]
+    ],
+    "model": "mobs/slotenmaker/slotenmaker.bbmodel",
+    "texture": "mobs/slotenmaker/slotenmaker.png",
+    "texture_size": [
+      256,
+      256
+    ],
+    "animations_included": false
+  },
+  {
+    "id": "aswaard",
+    "name": "De Aswaard",
+    "role_nl": "Herbergier",
+    "height_blocks": 2.1,
+    "total_height_blocks": 2.1,
+    "cube_count": 104,
+    "group_count": 19,
+    "bounds_units": [
+      [
+        -9.114,
+        0.0,
+        -5.964
+      ],
+      [
+        8.736,
+        33.6,
+        3.612
+      ]
+    ],
+    "model": "mobs/aswaard/aswaard.bbmodel",
+    "texture": "mobs/aswaard/aswaard.png",
+    "texture_size": [
+      256,
+      256
+    ],
+    "animations_included": false
+  }
+]

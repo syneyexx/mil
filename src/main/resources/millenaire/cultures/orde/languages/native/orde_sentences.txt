@@ -1,0 +1,12 @@
+greeting=Welkom in onze put, vreemdeling.
+greeting=De drempel ziet je. Gedraag je.
+greeting=Handel is heilig. Oorlog ook.
+chief_greeting=Ik bewaar de Configuratie. Vraag wijs.
+chief_greeting=Contracten binden. Breken doet pijn.
+merchant_greeting=Ruil waar, of loop verder.
+merchant_greeting=Zegel, steen, licht — alles heeft een prijs.
+craft_greeting=Sloten openen. Of sluiten. Kies.
+inn_greeting=As en brood. Geruchten gratis.
+inn_greeting=Blijf de nacht. De put blijft langer.
+war_declare=De Orde verklaart oorlog.
+peace=De drempel is weer stil.

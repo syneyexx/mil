@@ -1,0 +1,46 @@
+{
+  "display_name": "De Orde",
+  "native_language": "nl",
+  "map_icon": "millenaire:configuratie",
+  "culture_banner_nbt": "{BlockEntityTag:{Base:15,Patterns:[{Pattern:sc,Color:9},{Pattern:cr,Color:0},{Pattern:mc,Color:3}]}}",
+  "known_crops": [],
+  "travel_book": {
+    "villager_categories": ["leader", "villager", "lonevillager", "visitor"],
+    "building_categories": ["townhall", "house", "othervillage", "lonebuilding", "playerbuilding"],
+    "trade_good_categories": ["construction", "agriculture", "crafting", "tools", "weapons", "playeritem"],
+    "category_icons": {
+      "leader": "millenaire:configuratie",
+      "villager": "millenaire:orde_lantern",
+      "lonevillager": "minecraft:compass",
+      "visitor": "minecraft:map",
+      "townhall": "millenaire:orde_stone",
+      "house": "millenaire:orde_panel",
+      "othervillage": "minecraft:barrel",
+      "lonebuilding": "millenaire:void_sconce",
+      "playerbuilding": "minecraft:gold_ingot",
+      "construction": "millenaire:orde_stone",
+      "agriculture": "minecraft:bread",
+      "crafting": "millenaire:orde_grate",
+      "tools": "minecraft:iron_pickaxe",
+      "weapons": "minecraft:iron_sword",
+      "playeritem": "millenaire:configuratie"
+    },
+    "category_names": {
+      "leader": "travelbook.category.leader",
+      "villager": "travelbook.category.villager",
+      "lonevillager": "travelbook.category.lonevillager",
+      "visitor": "travelbook.category.visitor",
+      "townhall": "travelbook.category.townhall",
+      "house": "travelbook.category.house",
+      "othervillage": "travelbook.category.othervillage",
+      "lonebuilding": "travelbook.category.lonebuilding",
+      "playerbuilding": "travelbook.category.playerbuilding",
+      "construction": "travelbook.category.construction",
+      "agriculture": "travelbook.category.agriculture",
+      "crafting": "travelbook.category.crafting",
+      "tools": "travelbook.category.tools",
+      "weapons": "travelbook.category.weapons",
+      "playeritem": "travelbook.category.playeritem"
+    }
+  }
+}
