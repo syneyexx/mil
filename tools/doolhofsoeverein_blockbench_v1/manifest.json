@@ -1,0 +1,29 @@
+[
+  {
+    "id": "doolhofsoeverein",
+    "name": "De Doolhofsoeverein",
+    "height_blocks": 9,
+    "total_height_blocks": 9.0,
+    "bounds_units": [
+      [
+        -39.0,
+        0.0,
+        -21.8
+      ],
+      [
+        39.0,
+        144.0,
+        10.5
+      ]
+    ],
+    "cube_count": 344,
+    "group_count": 24,
+    "model": "mobs/doolhofsoeverein/doolhofsoeverein.bbmodel",
+    "texture": "mobs/doolhofsoeverein/doolhofsoeverein.png",
+    "texture_size": [
+      256,
+      256
+    ],
+    "animations_included": false
+  }
+]

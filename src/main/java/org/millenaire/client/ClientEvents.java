@@ -53,6 +53,7 @@ import org.millenaire.monster.client.ScharlakenKoninginRenderer;
 import org.millenaire.monster.client.ZesarmigeRazernijRenderer;
 import org.millenaire.monster.pack.client.PackMonsterRenderer;
 import org.millenaire.labyrinth.client.GebondeneModel;
+import org.millenaire.labyrinth.client.DoolhofsoevereinRenderer;
 import org.millenaire.labyrinth.client.GebondeneRenderer;
 
 @EventBusSubscriber(modid = "millenaire", value = Dist.CLIENT)
@@ -81,6 +82,7 @@ public final class ClientEvents {
       event.registerEntityRenderer(ModEntities.ZAVA.get(), PackMonsterRenderer::new);
       event.registerEntityRenderer(ModEntities.DISCD.get(), PackMonsterRenderer::new);
       event.registerEntityRenderer(ModEntities.GEBONDENE.get(), GebondeneRenderer::new);
+      event.registerEntityRenderer(ModEntities.DOOLHOFSOVEREIN.get(), DoolhofsoevereinRenderer::new);
       event.registerBlockEntityRenderer((BlockEntityType)ModBlockEntities.LOCKED_CHEST.get(), LockedChestRenderer::new);
       event.registerBlockEntityRenderer((BlockEntityType)ModBlockEntities.VILLAGE_PANEL.get(), VillagePanelRenderer::new);
       event.registerBlockEntityRenderer((BlockEntityType)ModBlockEntities.FIRE_PIT.get(), FirePitRenderer::new);

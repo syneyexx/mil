@@ -100,8 +100,8 @@ public final class LabyrinthAudienceRoom {
          set(chunk, c[0], naveCeil - 1, c[1], HANGING);
       }
 
-      // Larger De Ruit for multi-cell nave.
-      int ruitY = floor + (depth >= 20 ? 8 : 6);
+      // De Ruit floats above De Doolhofsoeverein (9-block god on the dais).
+      int ruitY = floor + 12;
       stampRuit(chunk, centerX, ruitY, centerZ, depth >= 20 ? 1 : 0);
 
       for (int y = ruitY + 4; y < naveCeil; y++) {

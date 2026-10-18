@@ -16,6 +16,7 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import org.millenaire.config.MillenaireServerConfig;
 import org.millenaire.entity.ModEntities;
 import org.millenaire.labyrinth.LabyrinthKeys;
+import org.millenaire.labyrinth.entity.DoolhofsoevereinEntity;
 import org.millenaire.labyrinth.entity.GebondeneAttitude;
 import org.millenaire.labyrinth.entity.GebondeneEntity;
 import org.millenaire.labyrinth.entity.GebondeneKind;
@@ -70,6 +71,7 @@ public final class LabyrinthSpawnHandler {
          trySpawnNearPlayer(labyrinth, player);
          maybeSpawnGatekeeper(labyrinth, player);
          maybeSpawnArchitect(labyrinth, player);
+         maybeSpawnSovereign(labyrinth, player);
       }
    }
 
@@ -219,6 +221,41 @@ public final class LabyrinthSpawnHandler {
          return;
       }
       spawnGebondene(level, gatePos, GebondeneKind.POORTWACHTER, GebondeneAttitude.GASTVRIJ);
+   }
+
+   /**
+    * Ensures exactly one Doolhofsoeverein stands in the Audience nave (god of the dimension).
+    * Requires open vertical clearance for the 9-block model.
+    */
+   private static void maybeSpawnSovereign(ServerLevel level, ServerPlayer player) {
+      int audX = LabyrinthKeys.audienceCenterBlockX();
+      int audZ = LabyrinthKeys.audienceCenterBlockZ();
+      BlockPos dais = new BlockPos(audX, LabyrinthKeys.FLOOR_Y + 1, audZ);
+      if (player.blockPosition().distSqr(dais) > 64.0 * 64.0) {
+         return;
+      }
+      if (!level.isLoaded(dais)) {
+         return;
+      }
+      AABB nave = new AABB(dais).inflate(20.0, 12.0, 20.0);
+      if (!level.getEntitiesOfClass(DoolhofsoevereinEntity.class, nave).isEmpty()) {
+         return;
+      }
+      // Need headroom for 9-block visual (collision uses 7.5).
+      for (int dy = 0; dy < 9; dy++) {
+         BlockPos air = dais.above(dy);
+         if (!level.getBlockState(air).isAir() && !level.getBlockState(air).canBeReplaced()) {
+            return;
+         }
+      }
+      DoolhofsoevereinEntity god = ModEntities.DOOLHOFSOVEREIN.get().create(level);
+      if (god == null) {
+         return;
+      }
+      // Face toward Core / processional south.
+      god.moveTo(audX + 0.5, LabyrinthKeys.FLOOR_Y + 1.0, audZ + 0.5, 0.0F, 0.0F);
+      god.anchorInPlace();
+      level.addFreshEntity(god);
    }
 
    private static void maybeSpawnArchitect(ServerLevel level, ServerPlayer player) {
