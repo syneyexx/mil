@@ -22,8 +22,8 @@ import org.millenaire.quest.QuestRegistry;
 import org.millenaire.village.PlayerQuestData;
 
 /**
- * First audience with De Ruit: quest tag, Orde notice, cinematic whisper.
- * Millénaire analogue of "audience with god" — no Hellraiser IP.
+ * First audience with De Doolhofsoeverein (and De Ruit above): quest tag, Orde notice.
+ * Millénaire analogue of "audience with the god of the Labyrinth" — no Hellraiser IP.
  */
 @EventBusSubscriber(modid = LabyrinthKeys.MODID)
 public final class AudienceChamberHandler {
@@ -83,12 +83,12 @@ public final class AudienceChamberHandler {
             labyrinth.sendParticles(
                ParticleTypes.END_ROD,
                audX + 0.5,
-               LabyrinthKeys.FLOOR_Y + 7.0,
+               LabyrinthKeys.FLOOR_Y + 5.0,
                audZ + 0.5,
-               40,
-               0.8,
-               1.2,
-               0.8,
+               48,
+               1.0,
+               2.5,
+               1.0,
                0.02
             );
             SESSION_GREETED.add(player.getUUID());

@@ -21,6 +21,7 @@ import org.millenaire.monster.ScharlakenKoninginEntity;
 import org.millenaire.monster.ZesarmigeRazernijEntity;
 import org.millenaire.monster.pack.MobKind;
 import org.millenaire.monster.pack.PackMonster;
+import org.millenaire.labyrinth.entity.DoolhofsoevereinEntity;
 import org.millenaire.labyrinth.entity.GebondeneEntity;
 
 public final class ModEntities {
@@ -161,6 +162,16 @@ public final class ModEntities {
          .build("millenaire:gebondene")
    );
 
+   /** Labyrinth god-presence — 9-block visual, collision sized for Audience nave. */
+   public static final DeferredHolder<EntityType<?>, EntityType<DoolhofsoevereinEntity>> DOOLHOFSOVEREIN = ENTITY_TYPES.register(
+      "doolhofsoeverein",
+      () -> Builder.of(DoolhofsoevereinEntity::new, MobCategory.CREATURE)
+         .sized(DoolhofsoevereinEntity.COLLISION_WIDTH, DoolhofsoevereinEntity.COLLISION_HEIGHT)
+         .clientTrackingRange(16)
+         .fireImmune()
+         .build("millenaire:doolhofsoeverein")
+   );
+
    private ModEntities() {
    }
 
@@ -189,6 +200,7 @@ public final class ModEntities {
       event.put(ZAVA.get(), PackMonster.attributes(MobKind.ZAVA).build());
       event.put(DISCD.get(), PackMonster.attributes(MobKind.DISCD).build());
       event.put(GEBONDENE.get(), GebondeneEntity.createAttributes().build());
+      event.put(DOOLHOFSOVEREIN.get(), DoolhofsoevereinEntity.createAttributes().build());
    }
 
    private static void onSpawnPlacements(RegisterSpawnPlacementsEvent event) {
