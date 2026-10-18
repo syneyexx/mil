@@ -401,6 +401,12 @@ public class VillageSavedData extends SavedData {
       if (village.isUnderAttack()) {
          villageTag.putBoolean("under_attack", true);
       }
+      if (village.getRaidParticipantMode() == org.millenaire.activity.RaidParticipantMode.EXPEDITION_MEMBERS) {
+         villageTag.putString("raid_participant_mode", "EXPEDITION_MEMBERS");
+      }
+      if (village.getExpeditionOperationId() != null) {
+         villageTag.putUUID("expedition_operation_id", village.getExpeditionOperationId());
+      }
 
       if (village.getJobPriorityRole() != null) {
          villageTag.putString("job_priority_role", village.getJobPriorityRole());
@@ -803,6 +809,14 @@ public class VillageSavedData extends SavedData {
 
             if (villageTag.contains("under_attack")) {
                village.setUnderAttack(villageTag.getBoolean("under_attack"));
+            }
+            if (villageTag.contains("raid_participant_mode")) {
+               village.setRaidParticipantMode(
+                  org.millenaire.activity.RaidParticipantMode.fromId(villageTag.getString("raid_participant_mode"))
+               );
+            }
+            if (villageTag.hasUUID("expedition_operation_id")) {
+               village.setExpeditionOperationId(villageTag.getUUID("expedition_operation_id"));
             }
 
             if (villageTag.contains("raids_performed")) {

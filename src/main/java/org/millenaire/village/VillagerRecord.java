@@ -50,6 +50,9 @@ public class VillagerRecord {
    private UUID hiredBy;
    private long hiredUntil;
    private boolean aggressiveStance;
+   /** Exclusive regional-activity reservation; null when free. */
+   @Nullable
+   private UUID activityOperationId;
    private final List<String> questTags = new ArrayList<>();
    @Nullable
    private UUID faithInstanceId;
@@ -269,6 +272,15 @@ public class VillagerRecord {
       if (owner == null) {
          this.aggressiveStance = false;
       }
+   }
+
+   @Nullable
+   public UUID getActivityOperationId() {
+      return this.activityOperationId;
+   }
+
+   public void setActivityOperationId(@Nullable UUID activityOperationId) {
+      this.activityOperationId = activityOperationId;
    }
 
    public int getMilitaryStrength() {
@@ -554,6 +566,9 @@ public class VillagerRecord {
          tag.putUUID("hired_by", this.hiredBy);
          tag.putLong("hired_until", this.hiredUntil);
       }
+      if (this.activityOperationId != null) {
+         tag.putUUID("activity_operation_id", this.activityOperationId);
+      }
 
       CompoundTag invTag = new CompoundTag();
       this.inventory.save(invTag);
@@ -650,6 +665,9 @@ public class VillagerRecord {
          if (tag.hasUUID("hired_by")) {
             record.hiredBy = tag.getUUID("hired_by");
             record.hiredUntil = tag.getLong("hired_until");
+         }
+         if (tag.hasUUID("activity_operation_id")) {
+            record.activityOperationId = tag.getUUID("activity_operation_id");
          }
 
          if (tag.contains("inventory")) {

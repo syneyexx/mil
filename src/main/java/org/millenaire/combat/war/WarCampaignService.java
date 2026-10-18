@@ -714,6 +714,18 @@ public final class WarCampaignService {
       return data.findOpenInvolving(village.getCultureId());
    }
 
+   /** Open campaigns contribute to shared admission load (not stacked as free extra capacity). */
+   public static int countActiveCampaignLoad(ServerLevel level) {
+      WarCampaignSavedData data = WarCampaignSavedData.get(level);
+      int n = 0;
+      for (WarCampaign c : data.openCampaigns()) {
+         if (c.isOpen()) {
+            n++;
+         }
+      }
+      return n;
+   }
+
    private static boolean isNearFront(BlockPos playerPos, Village front) {
       long r = 64L;
       return playerPos.distSqr(front.getCenter()) <= r * r;

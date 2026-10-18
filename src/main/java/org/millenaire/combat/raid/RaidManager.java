@@ -18,6 +18,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
+import org.millenaire.activity.RaidParticipantMode;
 import org.millenaire.advancement.MillAdvancements;
 import org.millenaire.building.BuildingInstance;
 import org.millenaire.building.BuildingInventory;
@@ -37,6 +38,8 @@ import org.millenaire.village.VillageManager;
 import org.millenaire.village.VillageSavedData;
 import org.millenaire.village.VillagerRecord;
 import org.slf4j.Logger;
+import java.util.HashSet;
+import java.util.Set;
 
 public final class RaidManager {
    private static final Logger LOGGER = LogUtils.getLogger();
@@ -115,7 +118,7 @@ public final class RaidManager {
                   if (rate > 0) {
                      if (ThreadLocalRandom.current().nextInt(100) < rate) {
                         int maxConcurrent = MillenaireServerConfig.SERVER.maxConcurrentRaids.getAsInt();
-                        if (countActiveRaids(VillageSavedData.get(level).getVillageManager()) >= maxConcurrent) {
+                        if (countUniqueActiveRaids(VillageSavedData.get(level).getVillageManager()) >= maxConcurrent) {
                            TickPerfCounters.RAID_PLANS_SKIPPED_CAP.incrementAndGet();
                            return;
                         }
@@ -240,7 +243,7 @@ public final class RaidManager {
       }
 
       if (village.isUnderAttack()) {
-         VillageId attackerId = findAttackerId(village);
+         VillageId attackerId = findAttackerId(village, level);
          Village attacker = attackerId != null ? VillageSavedData.get(level).getVillageManager().getVillage(attackerId) : null;
          if (attacker == null) {
             cleanupClones(village, level);
@@ -314,6 +317,8 @@ public final class RaidManager {
          if (sent == 0) {
             attacker.clearRaid();
          } else {
+            attacker.setRaidParticipantMode(RaidParticipantMode.LEGACY_CLONES);
+            attacker.setExpeditionOperationId(null);
             target.setUnderAttack(true);
             attacker.setRaidStart(level.getDayTime());
             attacker.setRaidStartGameTime(level.getGameTime());
@@ -336,16 +341,88 @@ public final class RaidManager {
       }
    }
 
-   private static int countActiveRaids(VillageManager vm) {
-      int count = 0;
-
+   /**
+    * Counts unique active raids by canonical attacking source (or expedition operation),
+    * not by summing attacker+defender village flags.
+    */
+   public static int countUniqueActiveRaids(VillageManager vm) {
+      Set<String> unique = new HashSet<>();
+      Set<VillageId> defendedByKnownAttacker = new HashSet<>();
       for (Village v : vm.getAllVillages()) {
-         if (v.getRaidStart() > 0L || v.isUnderAttack()) {
-            count++;
+         if (v.getRaidStart() > 0L && v.getRaidTarget() != null) {
+            if (v.getExpeditionOperationId() != null) {
+               unique.add("exp:" + v.getExpeditionOperationId());
+            } else {
+               unique.add("atk:" + v.getId().uuid());
+            }
+            defendedByKnownAttacker.add(v.getRaidTarget());
          }
       }
+      for (Village v : vm.getAllVillages()) {
+         if (v.isUnderAttack() && !defendedByKnownAttacker.contains(v.getId())) {
+            // Orphan underAttack flag without a matching attacker record
+            unique.add("def:" + v.getId().uuid());
+         }
+      }
+      return unique.size();
+   }
 
-      return count;
+   /** @deprecated use {@link #countUniqueActiveRaids(VillageManager)} */
+   static int countActiveRaids(VillageManager vm) {
+      return countUniqueActiveRaids(vm);
+   }
+
+   /**
+    * Starts a physical village attack using already-reserved expedition members.
+    * Does not spawn legacy raid clones. Marks underAttack only at call time.
+    */
+   public static boolean beginExpeditionRaid(
+      Village attacker, Village target, ServerLevel level, UUID operationId, List<UUID> participantIds
+   ) {
+      if (attacker == null || target == null || operationId == null || participantIds == null || participantIds.isEmpty()) {
+         return false;
+      }
+      if (target.isUnderAttack()) {
+         return false;
+      }
+      if (attacker.getRaidParticipantMode() == RaidParticipantMode.LEGACY_CLONES
+         && attacker.getRaidStart() > 0L
+         && attacker.getExpeditionOperationId() == null) {
+         // Already in a legacy clone raid — do not mix representations
+         return false;
+      }
+      int marked = 0;
+      for (UUID id : participantIds) {
+         VillagerRecord r = attacker.getVillagerRecords().get(id);
+         if (r == null || r.isKilled()) {
+            continue;
+         }
+         r.setAwayRaiding(true);
+         marked++;
+      }
+      if (marked == 0) {
+         return false;
+      }
+      attacker.setRaidTarget(target.getId());
+      attacker.setRaidParticipantMode(RaidParticipantMode.EXPEDITION_MEMBERS);
+      attacker.setExpeditionOperationId(operationId);
+      attacker.setRaidStart(level.getDayTime());
+      attacker.setRaidStartGameTime(level.getGameTime());
+      target.setUnderAttack(true);
+      if (shouldCancelTargetOwnRaid(target.getRaidStart())) {
+         target.clearRaid();
+      }
+      attacker.invalidateDefenderCountAndReevaluate(level);
+      broadcastNear(
+         level,
+         target.getCenter(),
+         Component.translatable(
+            "millenaire.combat.raid_started",
+            new Object[]{Component.literal(nameOf(attacker)), Component.literal(nameOf(target)), Component.literal(String.valueOf(marked))}
+         )
+      );
+      LOGGER.info("[Millenaire] Expedition raid started: {} (op {}) with {} members -> {}.", nameOf(attacker), operationId, marked, nameOf(target));
+      return true;
    }
 
    static boolean sendVillagerOnRaid(VillagerRecord original, Village attacker, Village target, ServerLevel level) {
@@ -366,6 +443,14 @@ public final class RaidManager {
    }
 
    static void materializeRaiders(Village target, ServerLevel level, long now) {
+      VillageId attackerId = findAttackerId(target, level);
+      if (attackerId != null) {
+         Village attacker = VillageSavedData.get(level).getVillageManager().getVillage(attackerId);
+         if (attacker != null && attacker.getRaidParticipantMode() == RaidParticipantMode.EXPEDITION_MEMBERS) {
+            // Expedition path never materializes legacy clones for the same operation.
+            return;
+         }
+      }
       List<UUID> cloneUuids = new ArrayList<>();
 
       for (VillagerRecord r : target.getVillagerRecords().values()) {
@@ -436,6 +521,13 @@ public final class RaidManager {
    }
 
    static void checkBattleStatus(Village target, ServerLevel level) {
+      VillageId attackerId = findAttackerId(target, level);
+      Village attacker = attackerId != null ? VillageSavedData.get(level).getVillageManager().getVillage(attackerId) : null;
+      // Expedition raids are ended by ActivityRaidBridge to keep a single outcome path.
+      if (attacker != null && attacker.getRaidParticipantMode() == RaidParticipantMode.EXPEDITION_MEMBERS) {
+         return;
+      }
+
       int liveAttackers = 0;
       int liveDefenders = 0;
       boolean raiderAtPos = false;
@@ -467,8 +559,6 @@ public final class RaidManager {
       }
 
       if (shouldEndRaid(liveAttackers, liveDefenders, raiderAtPos)) {
-         VillageId attackerId = findAttackerId(target);
-         Village attacker = attackerId != null ? VillageSavedData.get(level).getVillageManager().getVillage(attackerId) : null;
          if (attacker == null) {
             cleanupClones(target, level);
             target.setUnderAttack(false);
@@ -490,6 +580,15 @@ public final class RaidManager {
    }
 
    static void endRaid(Village attacker, Village target, ServerLevel level) {
+      if (attacker.getRaidParticipantMode() == RaidParticipantMode.EXPEDITION_MEMBERS) {
+         // Expedition outcome is owned by ActivityRaidBridge — avoid double loot/chronicle.
+         cleanupClones(target, level);
+         attacker.clearRaid();
+         target.setUnderAttack(false);
+         attacker.markDirty();
+         target.markDirty();
+         return;
+      }
       int defending = target.getVillageDefendingStrength();
       int attacking = target.getVillageAttackerStrength();
       float defFactor = 1.0F + ThreadLocalRandom.current().nextFloat();
@@ -723,13 +822,18 @@ public final class RaidManager {
    }
 
    @Nullable
-   private static VillageId findAttackerId(Village target) {
+   private static VillageId findAttackerId(Village target, ServerLevel level) {
       for (VillagerRecord r : target.getVillagerRecords().values()) {
          if (r.isRaidingVillage() && r.getOriginalVillageId() != null) {
             return r.getOriginalVillageId();
          }
       }
-
+      VillageManager vm = VillageSavedData.get(level).getVillageManager();
+      for (Village v : vm.getAllVillages()) {
+         if (target.getId().equals(v.getRaidTarget()) && v.getRaidStart() > 0L) {
+            return v.getId();
+         }
+      }
       return null;
    }
 
