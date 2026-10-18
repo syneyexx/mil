@@ -98,7 +98,9 @@ Triggers (any one — all event-driven):
 
 ## Player city founding
 
-Wizard faith step offers three choices:
+Wizard **culture** step always offers **Cenobites** (`millenaire:orde`) — Labyrinth dimension villagers (`native_model` `orde_villager/*`), Orde-stad layout, no culture-control unlock. Founding as that civilization forces Orde faith + chapter seed.
+
+Wizard faith step (other civilizations) still offers three choices:
 
 | Choice | Packet `faithChoice` | Effect |
 |--------|----------------------|--------|
@@ -106,7 +108,7 @@ Wizard faith step offers three choices:
 | **Cenobites** | `orde` | `startOrdeFaithInstance` + force-seed `order_orde` chapter |
 | Culture NPC faith | `culture` | Keep spawn default |
 
-Faith template: `millenaire:orde` (`faiths/orde.json`). UI label: Cenobites.
+Faith template: `millenaire:orde` (`faiths/orde.json`). UI label: Cenobites. Culture default for `millenaire:orde` only (not for Norman/Mayan/…).
 
 ## Non-goals
 

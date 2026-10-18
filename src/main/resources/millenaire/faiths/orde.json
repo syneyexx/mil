@@ -1,7 +1,7 @@
 {
   "id": "millenaire:orde",
   "display_name": "Cenobites",
-  "culture": null,
+  "culture": "millenaire:orde",
   "clergy_tags": ["religious"],
   "church_building_tags": ["sacrifices", "praying", "religious"],
   "holy_shop": "holy_shop",

@@ -127,20 +127,24 @@ public record VillageCreateConfirmPayload(
             return;
          }
 
-         String faithChoice = normalizeFaithChoice(payload.faithChoice());
+         boolean customOutfit = "player_custom".equals(payload.cultureKey());
+         boolean cenobitesCiv = VillageCreateWandItem.isCenobitesCultureKey(payload.cultureKey());
+         // Founding as Cenobites civilization always uses Orde faith + chapter seed.
+         String faithChoice = cenobitesCiv ? FAITH_ORDE : normalizeFaithChoice(payload.faithChoice());
          if (FAITH_ORDE.equals(faithChoice) && FaithRegistry.get(FaithRegistry.ordeId()) == null) {
             player.sendSystemMessage(Component.translatable("gui.millenaire.village_create.faith_orde_unavailable"));
             return;
          }
 
-         boolean customOutfit = "player_custom".equals(payload.cultureKey());
          VillageType villageType = resolveVillageType(payload, customOutfit);
          if (villageType == null || !villageType.playerControlled()) {
             player.sendSystemMessage(Component.translatable("ui.wand.village_type_not_found", payload.typeKey));
             return;
          }
          PlayerCultureReputation cultureRep = PlayerCultureReputation.get(serverLevel);
-         if (!customOutfit && !cultureRep.hasCultureControl(player.getUUID(), villageType.culture())) {
+         if (!customOutfit
+            && !cenobitesCiv
+            && !cultureRep.hasCultureControl(player.getUUID(), villageType.culture())) {
             player.sendSystemMessage(Component.translatable("millenaire.error.no_culture_control", villageType.name()));
             return;
          }
@@ -250,6 +254,12 @@ public record VillageCreateConfirmPayload(
          }
          VillageType resolved = VillageCreateWandItem.resolveDefaultControlledType(clientType.culture());
          return resolved != null ? resolved : clientType;
+      }
+      if (VillageCreateWandItem.isCenobitesCultureKey(payload.cultureKey())) {
+         VillageType resolved = VillageCreateWandItem.resolveDefaultControlledType(VillageCreateWandItem.cenobitesCultureId());
+         if (resolved != null) {
+            return resolved;
+         }
       }
       ResourceLocation cultureId = ResourceLocation.fromNamespaceAndPath("millenaire", payload.cultureKey);
       VillageType resolved = VillageCreateWandItem.resolveDefaultControlledType(cultureId);
