@@ -1,10 +1,11 @@
 # Millénaire Exact Rebuild in Horizon (Rust) — Plan v1
 
-**Status:** wacht op owner-GO. Docs only — geen code tot GO.  
-**Bron (gedrag + content):** [`syneyexx/mil`](https://github.com/syneyexx/mil) — Millénaire NeoForge 1.21.1 zoals die hier werkt.  
-**Doel-engine:** [`horizon-rust/horizon`](https://github.com/horizon-rust/horizon) — Minecraft Java **26.3** in Rust.  
-**Architectuur:** [`HORIZON_PORT_ARCHITECTURE.md`](HORIZON_PORT_ARCHITECTURE.md)  
-**Eerdere dunne-MVP-schets:** [`HORIZON_PORT_PLAN.md`](HORIZON_PORT_PLAN.md) — **vervangen door dit document** als authoritatief port-plan.
+**Status:** owner-GO ontvangen — **in-engine implementatie gestart**.  
+**Bron (gedrag + content):** [`syneyexx/mil`](https://github.com/syneyexx/mil) — Millénaire NeoForge 1.21.1.  
+**Doel-engine:** **vendored Horizon fork** in-repo onder `horizon/` (base [`horizon-rust/horizon`](https://github.com/horizon-rust/horizon) @ `59e71f0`).  
+**Integratie:** `horizon/crates/millenaire` + `millenaire_bridge` in `horizon-client` (niet alleen externe `.hnmod`).  
+**Architectuur:** [`HORIZON_PORT_ARCHITECTURE.md`](HORIZON_PORT_ARCHITECTURE.md) · Ledger: [`HORIZON_PARITY_LEDGER.md`](HORIZON_PARITY_LEDGER.md)  
+**Note:** GitHub API kon `syneyexx/horizon` niet forken (403); `horizon/` in deze PR **is** de fork working tree tot die remote bestaat.
 
 ---
 
@@ -60,27 +61,23 @@ Geen “voelt ongeveer hetzelfde” zonder ledger-rij op `PARITY`.
 
 ---
 
-## 4. Engine-integratie (hoe mil ín Horizon komt)
+## 4. Engine-integratie (fork-in-tree)
 
 ```
-syneyexx/mil (Java SoT)
-  │
-  ├─ resources/millenaire/** + assets + data  ──► tools/horizon/content_port ──► millenaire.hmod
-  │
-  └─ org.millenaire.* gedrag                 ──► millenaire-horizon/native (Rust)
-         culture_loader, village, goals, building, faith, activity,
-         labyrinth, combat, quest, economy, … 1:1 modules
-         │
-         ▼
-Horizon native build (horizon-mixins + hooks)
-  hooks: world_lifecycle, server_tick, commands, menus, blocks, …
-  mixins: entity spawn/AI, block place, dim (waar hooks tekort schieten)
+syneyexx/mil/
+  src/main/java + resources/millenaire   ← NeoForge SoT
+  horizon/                               ← VENDORED FORK (horizon-rust/horizon)
+    crates/millenaire/                   ← exacte Rust-nabouw IN de engine
+    crates/horizon-client/
+      src/game/millenaire_bridge.rs
+      src/game/native_hooks.rs           ← wired: tick / lifecycle / commands
 ```
 
 **Runtime authority (exact):**
-- Canonical sim = Rust Millénaire Core (zoals `VillageManager` + SavedData in mil).
-- Fysieke wereld = Horizon `Level` (plaatsen/breken/entities) via hooks/mixins — zelfde intent-regels als mil.
-- Geen “Java sidecar”; alles native Rust in de `.hnmod`-bundle (interne modulegrenzen wél toegestaan).
+- Canonical sim = `millenaire::Engine` in-process in `horizon-client`.
+- World data: `native_world_dir()/millenaire/`.
+- Content: `MILLENAIRE_CONTENT` of `src/main/resources/millenaire`.
+- Geen Java jar. Losse `.hnmod`-path is deprecated (`millenaire-horizon/README.md`).
 
 ---
 
@@ -88,14 +85,16 @@ Horizon native build (horizon-mixins + hooks)
 
 Elke golf: **port Java → Rust** + **parity tests/checklist t.o.v. mil** + ledger update. Geen golf “klaar” zonder speelbare DoD.
 
-### R0 — Horizon scaffold + parity machinery
+### R0 — Horizon fork-in-tree + parity machinery
 
 **DoD:**
-1. `millenaire-horizon/` native template bouwt tegen gepinde Horizon Nightly / hooks API.
-2. Stub `.hmod` + `/millenaire status` in SP.
-3. `docs/HORIZON_PARITY_LEDGER.md` met alle top-packages uit mil (958-file inventory).
-4. `docs/HORIZON_PORT_LOCAL_VALIDATION.md` build/run stappen.
-5. CI of owner-script: `cargo check` op native tree.
+1. `horizon/` vendored fork + `crates/millenaire` workspace member.
+2. Bridge wired: lifecycle, server tick end, `/millenaire` commands, mods list.
+3. `docs/HORIZON_PARITY_LEDGER.md` + `HORIZON_PORT_LOCAL_VALIDATION.md`.
+4. `cargo test -p millenaire` (owner toolchain / edition 2024).
+5. Optional: publish remote `syneyexx/horizon` from this tree.
+
+**Status:** R0 **gestart** in deze PR (crate + bridge + persist/content/tick).
 
 ### R1 — Content pipeline (hele `millenaire/` tree)
 
@@ -178,27 +177,14 @@ Shared surface die wél 1:1 blijft: `src/main/resources/millenaire/**` (culture 
 ## 7. Repo-layout
 
 ```
-millenaire-horizon/           # nieuw parallel product
-  content/                    # → millenaire.hmod
-  native/                     # → millenaire.hnmod (Rust exact core)
-    horizon-mixin.toml
-    src/
-      lib.rs
-      tick.rs                 # mil post-tick order
-      persist/                # SavedData equivalents
-      village/ goal/ building/ world/ faith/ …
-  README.md
-tools/horizon/
-  content_port/               # jar/resources → hmod + ID map
-  parity_ledger_gen/          # optioneel: scan Java packages → ledger stubs
-docs/
-  HORIZON_EXACT_REBUILD_PLAN.md   # dit plan
-  HORIZON_PORT_ARCHITECTURE.md
-  HORIZON_PARITY_LEDGER.md        # bij R0
-  HORIZON_PORT_LOCAL_VALIDATION.md
+horizon/                      # FORK working tree (full Horizon sources)
+  MILLENAIRE_FORK.md
+  crates/millenaire/          # in-engine Millénaire
+  crates/horizon-client/.../millenaire_bridge.rs
+docs/HORIZON_*.md
+src/main/...                  # NeoForge mil unchanged SoT
+millenaire-horizon/           # deprecated mixin sketch (pointer README)
 ```
-
-`src/main/java` (NeoForge) wijzigt niet voor de port, behalve als content-schema’s bewust gedeeld moeten worden.
 
 ---
 
@@ -246,11 +232,9 @@ Als een gap **exacte** nabouw blokkeert: stop de betreffende golf, open upstream
 
 ## GO
 
-Bevestig om te starten met **R0** onder dit exact-rebuild mandaat:
+- [x] Owner-GO: exacte nabouw + **fork-in-tree** (`horizon/`)
+- [x] R0 scaffold gestart (crate + bridge + ledger)
+- [ ] Owner: `cargo test -p millenaire` / SP `/millenaire status`
+- [ ] Owner: publiceer `syneyexx/horizon` wanneer GitHub dat toelaat (push deze `horizon/` tree)
 
-- [ ] Owner-GO: **exacte** nabouw van `syneyexx/mil` in Horizon Rust (dit plan)
-- [ ] E1–E9 geaccepteerd (of noteer afwijkingen)
-- [ ] Eerste implementatie-PR = **R0 only** (scaffold + parity ledger)
-- [ ] Geen stille scope-cut zonder ledger `DEFERRED` + owner initialen
-
-Zonder GO: analyse/plan only.
+Volgende: R1–R3 parity vullen (buildings, goals AI, entities).

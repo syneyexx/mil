@@ -1,7 +1,7 @@
 # Millénaire → Horizon — Architecture mapping
 
 **Status:** plan only. Geen runtime-claims. Geen code tot owner-GO op [`HORIZON_EXACT_REBUILD_PLAN.md`](HORIZON_EXACT_REBUILD_PLAN.md).  
-**Mandaat:** bouw `syneyexx/mil` **exact** na in de Horizon Rust-engine (native `.hnmod` + content `.hmod`).  
+**Mandaat:** bouw `syneyexx/mil` **exact** na **in** de Horizon-engine (vendored fork `horizon/`, crate `crates/millenaire`).  
 **Bronnen (2026-10-30 Europe/Amsterdam):**
 - Horizon engine: [`horizon-rust/horizon`](https://github.com/horizon-rust/horizon) (Minecraft Java **26.3** in Rust, MIT)
 - Horizon mods docs: [playhorizon.dev/docs/mods](https://playhorizon.dev/docs/mods), `docs/native-mods.md`, `NATIVE_HOOKS_API = 10`
