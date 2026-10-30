@@ -5,7 +5,7 @@
 - Horizon engine: [`horizon-rust/horizon`](https://github.com/horizon-rust/horizon) (Minecraft Java **26.3** in Rust, MIT)
 - Horizon mods docs: [playhorizon.dev/docs/mods](https://playhorizon.dev/docs/mods), `docs/native-mods.md`, `NATIVE_HOOKS_API = 10`
 - Native tooling: [`horizon-mixins`](https://github.com/horizon-rust/horizon-mixins), [`horizon-native-mod-template`](https://github.com/horizon-rust/horizon-native-mod-template)
-- Dit repo: Millénaire **9.0.2** / NeoForge **1.21.1** / Java 21 (~958 `.java`, ~4k culture/content files, ~3k assets)
+- Dit repo: Millénaire **9.0.2** / NeoForge **1.21.1** / Java 21 (**958** `.java`, ~**88 MB** resources)
 
 ---
 
@@ -57,31 +57,61 @@ Millénaire is ordes groter dan die voorbeelden. De architectuur moet die schaal
 
 ## 2. Millénaire-subsystemen → Horizon-lagen
 
-Inventaris (java-bestanden per top-package, snapshot main):
+Inventaris (Java-bestanden per top-package, snapshot `main`; A–E = portklasse):
 
-| Package | ~files | Horizon-laag | Toelichting |
-|---------|-------:|--------------|-------------|
-| `village` | 108 | **native** (+ SavedData-achtige world dir) | Dorpskern, panels, diplomacy, paths — tick + persistent state |
-| `goal` | 93 | **native** | NPC goal machine; geen datapack-equivalent |
-| `network` / `net` | 82 | **native** (of herontwerp) | Custom payloads → Horizon heeft geen NeoForge networking; menus/commands/hooks i.p.v. packets waar mogelijk |
-| `block` | 63 | **content** + stukje **native** | Templates in `.hmod`; BE/logic (locked chest, silk worm, …) native of vereenvoudigd |
-| `client` | 58 | **native** (client hooks) / later UI | GUIs, render; GeckoLib → herbouw of static models |
-| `world` | 52 | **native** (+ later worldgen API) | Settlement plan/materialize/roads; Horizon content worldgen is beperkt |
-| `content` | 47 | **content pipeline** | Loaders van `millenaire/` JSON — poort naar Rust readers |
-| `command` | 46 | **native** hooks API 8+ | `/millenaire …` → `native_register_commands` |
-| `labyrinth` | 44 | **fase later / native++** | Custom dim + entities + chase — grootste API-gap |
-| `item` | 36 | **content** (+ gedrag native) | Declaratief waar template volstaat |
-| `building` | 34 | **native** + structure data | Plan-sets / placement; structures deels content |
-| `faith` | 31 | **native** + JSON content | Ritual pipeline blijft code |
-| `entity` | 23 | **native++** | Custom villagers — Horizon heeft nog geen “registreer mob”-mod API |
-| `activity` | 22 | **native** | Regional activity state machine |
-| `culture` | 21 | **content** | Culture packs blijven data |
-| `combat` / `quest` / `economy` / … | rest | **native** | Simulatie-logica |
+| Package | files | Klasse | Horizon-laag | Toelichting |
+|---------|------:|:------:|--------------|-------------|
+| `village` | 108 | B+D | **native** + world-dir | Manager, growth, paths, panels, diplomacy |
+| `goal` | 93 | B | **native** | ~43 goal impls + scheduler; geen datapack-equivalent |
+| `network` | 75 | D | **herontwerp** | CustomPacketPayloads → menus/commands/hooks i.p.v. NeoForge packets |
+| `block` | 63 | A+B | **content** + native | Templates in `.hmod`; BE/logic native of vereenvoudigd |
+| `client` | 58 | D | **later / native** | ~32 screens; GeckoLib → static of herbouw |
+| `world` | 52 | C | **native** | Spawn queue, roads, settlements, processors |
+| `content` | 47 | A | **content pipeline** | FS loaders → Rust readers van `millenaire/` |
+| `command` | 46 | D | **native** hooks ≥8 | `/millenaire …` |
+| `labyrinth` | 44 | B+C | **fase later** | Custom dim + entities + chase — grootste API-gap |
+| `item` | 36 | A+B | **content** (+ gedrag) | Declaratief waar template volstaat |
+| `building` | 34 | A+B | **native** + NBT/JSON | Plan-sets; ~1815 structure NBTs blijven data |
+| `faith` | 31 | A+B | **native** + JSON | Ritual pipeline = code |
+| `entity` | 23 | B | **native++ / projection** | `MillVillager` — geen stabiele Horizon entity-mod API |
+| `activity` | 22 | B | **later native** | Regional hunts/patrols/raids |
+| `culture` | 21 | A | **content** | 10 cultures (norman…orde; nederland/illagers thinner) |
+| `monster` | 20 | B+E | **later / drop v0** | GeckoLib `GeoEntity` pack monsters |
+| `combat` | 20 | B | **later native** | Raids / war |
+| `quest` | 16 | A+B | **later** | Definitions JSON + runtime |
+| `economy` / `logistics` / `founding` / `diplomacy` / `story` | ~27 | B | **later native** | Civ-orchestration |
+| `perf` | 7 | B | **native** | `CommitBudget`, stagger — hergebruik in Core |
+| `net` | 7 | — | **skip/optional** | Version/donor HTTP, geen gameplay |
+| `compat` | 4 | E | **skip v0** | Waystones / TacZ optional |
+| `catalog` | 17 | E | **skip v0** | Incl. één `LevelRenderer` mixin |
 
-Resources (orde-grootte):
-- `millenaire/cultures/*` — 10 cultures, ~1150 JSON
-- `millenaire/` totaal — ~4100 files (languages, plans, faith, encyclopedia, …)
-- `assets/millenaire` — ~3000 files (textures, models, geo, lang)
+**Portklassen:** **A** data/assets · **B** entity/AI/tick · **C** worldgen/dim · **D** UI/network · **E** NeoForge/GeckoLib/extern.
+
+### 2.1 Resources (~88 MB)
+
+| Tree | Schaal |
+|------|--------|
+| `millenaire/` | ~31 MB — cultures, buildings (~573 JSON), village/villager types, shops, quests (~130), faiths, languages (~27 locales) |
+| `assets/millenaire/` | ~45 MB — ~1210 textures, ~1169 models, ~256 blockstates, geo/animations (GeckoLib) |
+| `data/` | ~13 MB — structures, recipes, loot, advancements, `millenaire:labyrinth` dim, biome modifiers |
+| Cultures | byzantines, indian, inuits, japanese, mayan, norman, seljuk, orde (+ thinner nederland, illagers) |
+| Structure NBT | ~1815 under cultures (+ mirrors under `data/millenaire/structure/`) |
+
+### 2.2 Tick + persistence (wat Core moet nabootsen)
+
+**Entrypoint:** `Millenaire.java` — NeoForge `ServerTickEvent.Post` orkestreert o.a. `CommitBudget` → `VillageManager.tick` → spawn/roads/settlement → religion/war/economy/logistics/story/treaty/founding → `RegionalActivityService` → labyrinth dim tick → quest cadence.
+
+**SavedData (14+):** `VillageSavedData`, `CultureStandingSavedData`, `DiplomacyEventSavedData`, `ReligionSavedData`, `ActivitySavedData`, `LogisticsSavedData`, `WarCampaignSavedData`, `PlayerBountySavedData`, `RoadNetworkSavedData`, `SettlementSavedData`, `TreatySavedData`, `FoundingSavedData`, `KnowledgeSavedData`, `StorySavedData` (+ player quest state). Horizon-vertaling: bestanden onder `native_world_dir()/millenaire/` met eigen schema’s — **geen** 1.21.1 save-compat.
+
+### 2.3 Hard blockers (non-Java)
+
+1. ~342 files raken `ServerLevel`; ~147 importeren NeoForge — geen JVM-shim.
+2. `MillVillager` + goals koppelen aan vanilla pathfinding/attributes/`ItemStack`.
+3. Structures/processors/chunk tickets = MC-specifiek.
+4. Custom dim + biome modifiers (Labyrinth) zonder Horizon dim-mod API.
+5. 75 network payloads + ~32 screens → volledige D-laag herbouw.
+6. **GeckoLib required** voor pack monsters; catalog-mixin droppable.
+7. Geen schone “logic core” jar — port = **behavioral reimplementation**, A-content als voornaamste portable asset.
 
 ---
 
