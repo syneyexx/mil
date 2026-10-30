@@ -146,6 +146,10 @@ Server config under `[labyrinth]` (`atmosphere=COLD`, `liminalRoomsEnabled`, `la
 
 Secret-order overlay that brings Gebondenen liturgy into villages: 2-day ritual cadence, Spijkerliturgie / offerings, Configuratie-triggered abduction attempts (**75% player chase** — escape by running or killing hunters; **25% random NPC**), tick-budgeted so the server stays playable. **Order-first** for NPC villages; **player city founding** offers **Cenobites** as a civilization type (Labyrinth dimension villagers + Orde faith) and also as a third religion choice beside own faith / culture faith. See `docs/ORDE_FAITH_RELEASE_PLAN.md`, `docs/ORDE_FAITH_ARCHITECTURE.md`, `docs/ORDE_FAITH_LOCAL_VALIDATION.md`.
 
+### Horizon (Rust Minecraft 26.3 — planned port)
+
+The NeoForge jar does **not** run on [Horizon](https://github.com/horizon-rust/horizon) (Minecraft Java 26.3 rewritten in Rust). Planned path: parallel hybrid port — content `.hmod` + native Millénaire Core `.hnmod` on Horizon’s hook API — NeoForge 1.21.1 stays. **Docs only until owner-GO.** See `docs/HORIZON_PORT_PLAN.md` and `docs/HORIZON_PORT_ARCHITECTURE.md`.
+
 ## Documentation
 
 - `docs/CIVILIZATION_ARCHITECTURE.md`
@@ -156,6 +160,7 @@ Secret-order overlay that brings Gebondenen liturgy into villages: 2-day ritual 
 - `docs/LABYRINTH_ARCHITECTURE.md` / `LABYRINTH_LOCAL_VALIDATION.md`
 - `docs/ORDE_FAITH_RELEASE_PLAN.md` / `ORDE_FAITH_ARCHITECTURE.md` / `ORDE_FAITH_LOCAL_VALIDATION.md`
 - `docs/ORDE_BLOCK_CATALOG.md` — example Cenobite/Orde block set (design; LabyrinthMaterials swap targets)
+- `docs/HORIZON_PORT_PLAN.md` / `HORIZON_PORT_ARCHITECTURE.md` — Millénaire → Horizon Rust engine (plan; waiting on GO)
 - Local validation docs describe owner-run checks; this agent does not execute them
 
 ## Development
