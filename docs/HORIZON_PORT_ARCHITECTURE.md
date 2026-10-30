@@ -1,11 +1,12 @@
 # Millénaire → Horizon — Architecture mapping
 
-**Status:** plan only. Geen runtime-claims. Geen code tot owner-GO op [`HORIZON_PORT_PLAN.md`](HORIZON_PORT_PLAN.md).  
+**Status:** plan only. Geen runtime-claims. Geen code tot owner-GO op [`HORIZON_EXACT_REBUILD_PLAN.md`](HORIZON_EXACT_REBUILD_PLAN.md).  
+**Mandaat:** bouw `syneyexx/mil` **exact** na in de Horizon Rust-engine (native `.hnmod` + content `.hmod`).  
 **Bronnen (2026-10-30 Europe/Amsterdam):**
 - Horizon engine: [`horizon-rust/horizon`](https://github.com/horizon-rust/horizon) (Minecraft Java **26.3** in Rust, MIT)
 - Horizon mods docs: [playhorizon.dev/docs/mods](https://playhorizon.dev/docs/mods), `docs/native-mods.md`, `NATIVE_HOOKS_API = 10`
 - Native tooling: [`horizon-mixins`](https://github.com/horizon-rust/horizon-mixins), [`horizon-native-mod-template`](https://github.com/horizon-rust/horizon-native-mod-template)
-- Dit repo: Millénaire **9.0.2** / NeoForge **1.21.1** / Java 21 (**958** `.java`, ~**88 MB** resources)
+- Gedrag-SoT: dit repo Millénaire **9.0.2** / NeoForge **1.21.1** / Java 21 (**958** `.java`, ~**88 MB** resources)
 
 ---
 
@@ -115,49 +116,47 @@ Inventaris (Java-bestanden per top-package, snapshot `main`; A–E = portklasse)
 
 ---
 
-## 3. Gekozen architectuur: hybride “Core + Content”
+## 3. Gekozen architectuur: exacte Rust-nabouw in Horizon
 
 ### 3.1 Besluit
 
 | Optie | Oordeel |
 |-------|---------|
-| A. Alleen `.hmod` content-extract | **Onvoldoende** — dorpen/NPC/goals/tick verdwijnen |
-| B. Volledige 1:1 Java→Rust rewrite in één `.hnmod` | **Te groot** als eerste levering; Nightly-pin hell |
-| C. **Hybride (keuze):** `.hmod` content + dunne native **Millénaire Core** op stable hooks, sim in eigen crate/world-dir | **Ja** — past bij Horizon’s model én bij LivingMods-achtige authority-split |
-| D. Fork Horizon (eigen engine-API) | Alleen als upstream hooks structureel tekort schieten (Labyrinth/entities); niet default |
+| A. Alleen `.hmod` content-extract | **Nee** — geen dorpen/AI |
+| B. Dunne MVP forever | **Nee** — owner eist **exacte** nabouw van mil |
+| C. **Exacte hybride nabouw (keuze):** volledige mil-gedrag in Rust `.hnmod` + content `.hmod`; mil Java = SoT | **Ja** |
+| D. Fork Horizon | **Toegestaan per golf** waar hooks entity/dim/UI blokkeren — nooit stille feature-cut |
 
 ### 3.2 Runtime sketch
 
 ```
 Horizon 26.3 (native-build instance)
-  ├─ millenaire.hmod          # blocks/items/assets/tags die content-API aankan
-  ├─ millenaire.hnmod         # mixins + Rust modules
-  │     hooks: lifecycle, server_tick, commands, menus, block observe
-  │     millenaire_core::
-  │       culture_loader  ← embedded of world-dir copy of millenaire/ JSON
-  │       village_sim     ← SavedData-equivalent under world/millenaire/
-  │       goals / faith / activity (gefaseerd)
-  │       projection      ← spawn/despawn/place via beschikbare world APIs
-  └─ (optioneel later) millenaire_labyrinth als aparte bundle
+  ├─ millenaire.hmod          # ALLE poortbare blocks/items/assets/tags/structures
+  ├─ millenaire.hnmod         # EXACTE Rust-nabouw van org.millenaire.*
+  │     hooks + mixins naar behoefte
+  │     modules 1:1 met mil packages:
+  │       village, goal, entity, building, world, faith, activity,
+  │       labyrinth, combat, quest, economy, logistics, founding, …
+  │     persist/ = alle SavedData-equivalenten
+  │     tick.rs  = zelfde post-tick orde als Millenaire.java
+  └─ content blijft gedeeld vanuit mil resources waar mogelijk
 ```
 
 **Authority:**
-- Canonical dorps-/civ-state: **Millénaire Core** (Rust), niet vanilla villagers.
-- Fysieke blokken: Horizon `Level` via hooks / toekomstige write-API (vandaag: observe + beperkte mutatie-paden; write moet upstream of mixin zijn — expliciet in plan-golven).
-- Speler-UI v0: chat commands + chest menus (API 8–10), geen volledige NeoForge Screen-port.
+- Canonical sim = Rust Millénaire Core — **zelfde** invariants als mil Java.
+- Fysieke wereld = Horizon `Level` via hooks/mixins (write-pad per golf hard maken, niet versimpelen).
+- UI: Horizon-native mag, **flows/data** = mil exact.
+- Projection-entities alleen als tijdelijke brug met ledger `DEFERRED` — einddoel echte `MillVillager`-pariteit.
 
-### 3.3 Wat we bewust níet meenemen in v0–v1
+### 3.3 Scope
 
-- Labyrinth-dimensie, Gebondenen chase, Orde-horror ship bar
-- TACZ / externe soft-integrations
-- GeckoLib geo 1:1
-- Volledige village book GUI / alle client screens
-- Dedicated Horizon server native mods (upstream gap)
-- Save-compatibiliteit met NeoForge 1.21.1 werelden
+**In scope (exact, gefaseerd R0–R9):** hele mil-feature set inclusief Labyrinth, faith/Orde, activity, civ, quests, commerce UI.  
+**Niet exact-claimbaar zonder ledger:** TacZ/Waystones/GeckoLib/LLM als Horizon geen equivalent heeft — dan `DEFERRED` + mil-referentie, geen stille drop.  
+**Geen:** NeoForge 1.21.1 save openen in Horizon; Java jar execution.
 
 ### 3.4 Relatie tot LivingMods (`syneyexx/Minecraft`)
 
-LivingMods splitst plan / sidecar-sim / NeoForge-presentatie. Voor Horizon is het **lespatroon** bruikbaar (canonical sim + projection), maar de **codebase** is een ander product (Java sidecar + NeoForge). Geen merge aannemen. Wel: Millénaire Core mag intern een “sidecar-achtige” modulegrens houden (sim thread vs tick hook) zonder apart JVM-proces tenzij metingen dat eisen.
+LivingMods is een **ander** product. Voor Horizon-nabouw van mil: geen merge. Optioneel hergebruik van “canonical state + projection”-denken binnen één Rust `.hnmod`.
 
 ---
 
@@ -167,15 +166,15 @@ LivingMods splitst plan / sidecar-sim / NeoForge-presentatie. Voor Horizon is he
 |---------------------|-----------------|--------|
 | Custom blocks/items (statisch) | Content `.hmod` templates | Poortbaar |
 | Custom block entity / machine | Niet als content; native/mixin | Vereenvoudigen of later |
-| Custom NPC entities + AI | Geen stabiele entity-mod API | **Projectie** op vanilla villagers/armor stands óf diepe mixins |
-| Server tick budget / governor | `native_server_tick` (API 4) | Kernpad OK |
-| Commands | API 8 | OK |
-| Trade UI | API 10 chest menus | MVP OK; rich GUI later |
-| Worldgen settlements | Content structures beperkt; custom planners = native | Native materializer |
-| Custom dimension (Labyrinth) | Geen mod-dim API | **Later / fork-risk** |
-| Networking packets | Geen NeoForge channel | Herontwerp op hooks/menus |
-| Persistence | `native_world_dir()` + eigen bestanden | OK |
-| Multiplayer dedicated | Native mods nog niet op dedicated pipeline | SP/LAN-first |
+| Custom NPC entities + AI | Geen stabiele entity-mod API | **Exact:** mixins/upstream; projection alleen tijdelijk + ledger |
+| Server tick budget / governor | `native_server_tick` (API 4) | Kernpad OK — mil tick-orde 1:1 |
+| Commands | API 8 | OK — alle mil commands |
+| Trade / rich UI | API 10 chest menus + mixins | Exacte flows; screens mogen native zijn |
+| Worldgen settlements | Content structures beperkt; planners = native | Exacte materializer/budgets |
+| Custom dimension (Labyrinth) | Geen mod-dim API | Exact via mixin/fork — niet schrappen |
+| Networking packets | Geen NeoForge channel | Zelfde contracts op hooks/menus/UI |
+| Persistence | `native_world_dir()` + eigen bestanden | Alle SavedData 1:1 |
+| Multiplayer dedicated | Native mods nog niet op dedicated pipeline | SP/LAN exact eerst; dedicated = R9 blocker |
 
 ---
 
@@ -196,20 +195,20 @@ Tooling (later implementatie, niet nu): `tools/horizon/` exporter die `.hmod` + 
 | Risico | Impact | Mitigatie |
 |--------|--------|-----------|
 | Nightly pin drift | Build breekt | Alleen stable `hooks` API waar mogelijk; pin + upgrade-golf |
-| Entity API ontbreekt | “Living villages” voelen dood | Projection MVP + upstream feature requests documenteren |
-| Schaal tick-kosten | MSPT spike | Hergebruik tick-governor ideeën; budgetten in Core |
-| Scope creep (Labyrinth/Orde) | Plan sterft | Strikte golven; Labyrinth = eigen GO |
-| Licentie/content | “All Rights Reserved” mod | Horizon-port blijft in dit repo/eigen distributie; geen claim op Mojang/Horizon endorsement |
-| 1.21.1 → 26.3 item/block IDs | Content breaks | Mapping-tabel per golf; start met subset cultures |
+| Entity API ontbreekt | Exacte villagers geblokkeerd | Mixins/fork/upstream; geen permanente projection |
+| Schaal tick-kosten | MSPT spike | Zelfde `CommitBudget`/stagger als mil |
+| Labyrinth dim gap | R7 geblokkeerd | Fork/upstream — feature niet schrappen |
+| Licentie/content | “All Rights Reserved” mod | Horizon-port in dit repo/eigen distributie; geen Mojang/Horizon endorsement |
+| 1.21.1 → 26.3 item/block IDs | Content breaks | Volledige mapping-tabel in R1; `UNMAPPED` in ledger |
 
 ---
 
 ## 7. Definition of architecture-ready
 
 Dit document is **architecture-ready** wanneer owner akkoord is met:
-1. Hybride Core + Content (optie C)
-2. SP/LAN-first, NeoForge jar blijft parallel bestaan
-3. Labyrinth/Orde buiten v0–v1
-4. Entity-strategie = projection tot betere API
+1. Exacte Rust-nabouw van mil in Horizon (optie C)
+2. mil Java/resources = gedrags-SoT; NeoForge blijft parallel tot ship
+3. Hele feature set in scope via R0–R9 (geen stille cuts)
+4. Entity/dim gaps → mixin/fork, niet versimpelen
 
-Implementatie start alleen na GO in [`HORIZON_PORT_PLAN.md`](HORIZON_PORT_PLAN.md) §GO.
+Implementatie start alleen na GO in [`HORIZON_EXACT_REBUILD_PLAN.md`](HORIZON_EXACT_REBUILD_PLAN.md) §GO.

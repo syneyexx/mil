@@ -1,10 +1,9 @@
-# Millénaire op Horizon — Port Plan (v1)
+# Millénaire op Horizon — Port Plan (v1, superseded)
 
-**Status:** wacht op owner-GO. Docs only — **geen implementatie** tot GO.  
-**Versie:** 1 — eerste analyse van [`horizon-rust/horizon`](https://github.com/horizon-rust/horizon) t.o.v. dit NeoForge-repo.  
-**Authoritatief architectuurplaatje:** [`HORIZON_PORT_ARCHITECTURE.md`](HORIZON_PORT_ARCHITECTURE.md)
+**Status:** **SUPERSEDED.** Authoritatief plan = [`HORIZON_EXACT_REBUILD_PLAN.md`](HORIZON_EXACT_REBUILD_PLAN.md) (exacte Rust-nabouw van `syneyexx/mil` in Horizon).  
+**Architectuur:** [`HORIZON_PORT_ARCHITECTURE.md`](HORIZON_PORT_ARCHITECTURE.md)
 
-**Doel van deze PR:** antwoord op “hoe verwerken we Millénaire in de Horizon Rust-engine?” met een uitvoerbaar, gefaseerd plan — niet een half-bakken rewrite-start.
+Dit v1-document was een dunne MVP-schets. Owner-mandaad is **exact nabouwen** — gebruik R0–R9 in het exact-rebuild plan. Onderstaande tekst blijft als historische context.
 
 ---
 
