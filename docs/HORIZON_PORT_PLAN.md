@@ -21,7 +21,8 @@ Horizon is Minecraft **26.3 herschreven in Rust**. Onze jar is NeoForge **1.21.1
 | Horizon README / mods docs | Content mods + native mixins; Java jars = data/assets extract only |
 | `native-mods.md` + `native_hooks.rs` | Stable hooks t/m API **10** (tick, lifecycle, commands, items, menus, block observe) |
 | Native template / Spider-Man / Orbital | Kleine native mods werken; grote gameplay/API-gaps → mixins of forks |
-| Dit repo | ~958 Java files, 10 cultures, Labyrinth/faith/activity/civ layers — zwaar code-gedreven |
+| Dit repo | **958** Java files, ~**88 MB** resources, 10 cultures, 14+ SavedData, Labyrinth/faith/activity/civ — zwaar code-gedreven |
+| Package inventory | Zie architecture §2 (A–E klassen, tick-governor, GeckoLib/Waystones/TacZ) |
 | LivingMods (`syneyexx/Minecraft`) | Sidecar-sim patroon als **inspiratie**, geen drop-in voor Horizon |
 
 Snapshot Horizon `main` bij analyse: commit prefix `ab6851d5a8a0` (2026-10-30 UTC) — alleen referentie; pins volgen later per golf.
